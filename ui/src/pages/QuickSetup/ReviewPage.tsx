@@ -1,33 +1,4 @@
 import React, { useState, useEffect } from 'react';
-
-import DamlLedger from '@daml/react';
-import { useWellKnownParties } from '@daml/hub-react/lib';
-
-import _ from 'lodash';
-import classNames from 'classnames';
-
-import { PublishedInstance, getAutomationInstances } from '../../automation';
-import {
-  httpBaseUrl,
-  wsBaseUrl,
-  useVerifiedParties,
-  isHubDeployment,
-  publicParty,
-} from '../../config';
-import QueryStreamProvider from '../../websocket/queryStream';
-import Credentials from '../../Credentials';
-
-import { ServicesProvider, useServiceContext } from '../../context/ServicesContext';
-import { OffersProvider } from '../../context/OffersContext';
-import { retrieveParties } from '../../Parties';
-import { RolesProvider, useRolesContext } from '../../context/RolesContext';
-import { AutomationProvider } from '../../context/AutomationContext';
-
-import { formatTriggerName } from './SelectRolesPage';
-import RequestServicesPage from './RequestServicesPage';
-import SelectRolesPage from './SelectRolesPage';
-import AddAccountPage from './AddAccountPage';
-
 import ReactFlow, {
   FlowElement,
   addEdge,
@@ -41,9 +12,35 @@ import ReactFlow, {
   Background,
   MiniMap,
 } from 'react-flow-renderer';
-import dagre from 'dagre';
-import { IconChevronDown, IconChevronUp } from '../../icons/icons';
 import { Loader } from 'semantic-ui-react';
+import classNames from 'classnames';
+import dagre from 'dagre';
+import _ from 'lodash';
+
+import DamlLedger from '@daml/react';
+import { PartyToken, useAdminParty } from '@daml/hub-react';
+
+import { PublishedInstance, getAutomationInstances } from '../../automation';
+import {
+  httpBaseUrl,
+  wsBaseUrl,
+  useVerifiedParties,
+  isHubDeployment,
+  publicParty,
+} from '../../config';
+import QueryStreamProvider from '../../websocket/queryStream';
+
+import { ServicesProvider, useServiceContext } from '../../context/ServicesContext';
+import { OffersProvider } from '../../context/OffersContext';
+import { retrieveParties } from '../../Parties';
+import { IconChevronDown, IconChevronUp } from '../../icons/icons';
+import { RolesProvider, useRolesContext } from '../../context/RolesContext';
+import { AutomationProvider } from '../../context/AutomationContext';
+
+import { formatTriggerName } from './SelectRolesPage';
+import RequestServicesPage from './RequestServicesPage';
+import SelectRolesPage from './SelectRolesPage';
+import AddAccountPage from './AddAccountPage';
 
 const NODE_WIDTH = 200;
 const NODE_HEIGHT = 130;
@@ -54,7 +51,7 @@ enum ReviewForms {
   NEW_ACCOUNT = 'New Account',
 }
 
-const ReviewPage = (props: { adminCredentials: Credentials }) => {
+const ReviewPage = (props: { adminCredentials: PartyToken }) => {
   const { adminCredentials } = props;
   const [openForm, setOpenForm] = useState<ReviewForms>();
 
@@ -163,7 +160,7 @@ const ReviewItems = () => {
     return [...acc.filter(i => i !== providerDetails), { provider, services, customer }];
   }, [] as GroupedCustomerServices);
 
-  const operator = useWellKnownParties().parties?.userAdminParty || 'Operator';
+  const operator = useAdminParty() || 'Operator';
 
   const serviceEdges = groupedServices
     .filter(s => s.provider !== s.customer && s.provider !== operator)

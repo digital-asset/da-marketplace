@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-
 import { Button, Form } from 'semantic-ui-react';
 
 import DamlLedger, { useLedger } from '@daml/react';
+import { PartyToken, useAdminParty } from '@daml/hub-react';
 
 import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
 import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties, usePartyName } from '../../config';
-import Credentials, { computeToken } from '../../Credentials';
+import { computeToken } from '../../Credentials';
 import QueryStreamProvider from '../../websocket/queryStream';
 import { useStreamQueries } from '../../Main';
 import { itemListAsText } from '../../pages/page/utils';
@@ -30,8 +30,6 @@ import {
   ServiceOffer,
 } from '../../context/OffersContext';
 import { RoleKind } from '../../context/RolesContext';
-
-import { useWellKnownParties } from '@daml/hub-react/lib';
 import { retrieveUserParties } from '../../Parties';
 
 interface IOfferServiceInfo {
@@ -40,7 +38,7 @@ interface IOfferServiceInfo {
   services?: OfferServiceKind[];
 }
 
-const OfferServicesPage = (props: { adminCredentials: Credentials }) => {
+const OfferServicesPage = (props: { adminCredentials: PartyToken }) => {
   const { adminCredentials } = props;
   const userParties = retrieveUserParties() || [];
 
@@ -299,7 +297,7 @@ const CreateServiceOffers = (props: { offerInfo: IOfferServiceInfo; onFinish: ()
 
   const ledger = useLedger();
 
-  const operator = useWellKnownParties().parties?.userAdminParty || 'Operator';
+  const operator = useAdminParty() || 'Operator';
 
   const { contracts: tradingRoles, loading: tradingRoleLoading } = useStreamQueries(TradingRole);
   const { contracts: clearingRoles, loading: clearingRoleLoading } = useStreamQueries(ClearingRole);

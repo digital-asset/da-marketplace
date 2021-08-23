@@ -1,64 +1,73 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
-import { partyNameFromJwtToken, useWellKnownParties } from '@daml/hub-react';
-import { Parties } from '@daml/hub-react/lib/WellKnownParties';
-import _ from 'lodash';
 import { useCallback, useMemo } from 'react';
+import _ from 'lodash';
+
+import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
+import {
+  DefaultParties,
+  isRunningOnHub,
+  useDefaultParties,
+  detectAppDomainType,
+  DomainType,
+} from '@daml/hub-react';
+
 import { retrieveCredentials } from './Credentials';
 import { useStreamQueries } from './Main';
 import { retrieveParties } from './Parties';
 
 export enum DeploymentMode {
   DEV,
-  PROD_DABL,
+  PROD_DAML_HUB,
   PROD_OTHER,
 }
 
-export const dablHostname = window.location.hostname.split('.').slice(1).join('.');
+export const hubHostname = window.location.hostname.split('.').slice(1).join('.');
 
 export const deploymentMode: DeploymentMode =
   process.env.NODE_ENV === 'development'
     ? DeploymentMode.DEV
-    : dablHostname.includes('projectdabl')
-    ? DeploymentMode.PROD_DABL
+    : isRunningOnHub()
+    ? DeploymentMode.PROD_DAML_HUB
     : DeploymentMode.PROD_OTHER;
 
-export const isHubDeployment = deploymentMode === DeploymentMode.PROD_DABL;
+export const isHubDeployment = deploymentMode === DeploymentMode.PROD_DAML_HUB;
 
 // Decide the ledger ID based on the deployment mode first,
 // then an environment variable, falling back on the sandbox ledger ID.
 export const ledgerId: string =
-  deploymentMode === DeploymentMode.PROD_DABL
+  deploymentMode === DeploymentMode.PROD_DAML_HUB
     ? window.location.hostname.split('.')[0]
     : process.env.REACT_APP_LEDGER_ID ?? 'da-marketplace-sandbox';
 
 export const httpBaseUrl =
-  deploymentMode === DeploymentMode.PROD_DABL
-    ? `https://api.${dablHostname}/data/${ledgerId}/`
+  detectAppDomainType() === DomainType.APP_DOMAIN
+    ? `/`
+    : detectAppDomainType() === DomainType.LEGACY_DOMAIN
+    ? `https://api.${hubHostname}/data/${ledgerId}/`
     : undefined;
 
 export const wsBaseUrl = deploymentMode === DeploymentMode.DEV ? 'ws://localhost:7575/' : undefined;
 
 export const publicParty = deploymentMode === DeploymentMode.DEV ? 'Public' : `public-${ledgerId}`;
 
-const inferPartyName = (party: string, wellKnownParties: Parties | null): string | undefined => {
+const inferPartyName = (party: string, defaultParties: DefaultParties): string | undefined => {
   // Check if we can extract a readable party name from any data we have client-side.
   // Inspect token claims, parties.json, and cross-reference Daml Hub's well-known parties.
 
   const creds = retrieveCredentials();
 
   if (party === creds?.party) {
-    return partyNameFromJwtToken(creds.token) || undefined;
+    return creds.partyName || undefined;
   }
 
-  if (party === wellKnownParties?.userAdminParty) {
-    return 'Operator';
-  }
-
-  if (party === wellKnownParties?.publicParty) {
+  if (party === defaultParties[0]) {
     return 'Public';
+  }
+
+  if (party === defaultParties[1]) {
+    return 'Operator';
   }
 
   return retrieveParties()?.find(p => p.party === party)?.partyName;
@@ -66,7 +75,7 @@ const inferPartyName = (party: string, wellKnownParties: Parties | null): string
 
 export const usePartyName = (party: string) => {
   const { contracts: verifiedIdentities } = useStreamQueries(VerifiedIdentity);
-  const { parties: wellKnownParties } = useWellKnownParties();
+  const defaultParties = useDefaultParties();
 
   const getName = useCallback(
     (party: string): string => {
@@ -78,7 +87,7 @@ export const usePartyName = (party: string) => {
         return legalName;
       }
 
-      const inferredName: string | undefined = inferPartyName(party, wellKnownParties);
+      const inferredName: string | undefined = inferPartyName(party, defaultParties);
 
       if (inferredName) {
         return inferredName;
@@ -87,7 +96,7 @@ export const usePartyName = (party: string) => {
       // Cannot find an identity contract or infer the party name, so fallback to party ID
       return party;
     },
-    [wellKnownParties, verifiedIdentities]
+    [defaultParties, verifiedIdentities]
   );
 
   const name = useMemo(() => getName(party), [party, getName]);

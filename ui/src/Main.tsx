@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { HashRouter, Redirect, Route, Switch } from 'react-router-dom';
 
 import DamlLedger, { QueryResult } from '@daml/react';
-import { PublicLedger, WellKnownPartiesProvider } from '@daml/hub-react/lib';
+import DamlHub from '@daml/hub-react';
 import { Template } from '@daml/types';
 
 import ErrorComponent from './pages/error/Error';
@@ -12,8 +12,7 @@ import { App } from './App';
 import QuickSetup from './pages/QuickSetup/QuickSetup';
 import { ServicesProvider } from './context/ServicesContext';
 import { MessagesProvider } from './context/MessagesContext';
-import { httpBaseUrl, ledgerId, publicParty, wsBaseUrl } from './config';
-import { computeCredentials } from './Credentials';
+import { httpBaseUrl, wsBaseUrl } from './config';
 import QueryStreamProvider, { useContractQuery } from './websocket/queryStream';
 import { RolesProvider } from './context/RolesContext';
 import { RequestsProvider } from './context/RequestsContext';
@@ -34,24 +33,22 @@ export default function Main({ defaultPath }: MainProps) {
           path={paths.app.root}
           component={() => {
             return (
-              <WellKnownPartiesProvider>
-                <PublicDamlProvider
-                  party={user.party}
-                  token={user.token}
-                  httpBaseUrl={httpBaseUrl}
-                  wsBaseUrl={wsBaseUrl}
-                >
-                  <MessagesProvider>
-                    <ServicesProvider>
-                      <RolesProvider>
-                        <RequestsProvider>
-                          <App />
-                        </RequestsProvider>
-                      </RolesProvider>
-                    </ServicesProvider>
-                  </MessagesProvider>
-                </PublicDamlProvider>
-              </WellKnownPartiesProvider>
+              <UnifiedDamlProvider
+                party={user.party}
+                token={user.token}
+                httpBaseUrl={httpBaseUrl}
+                wsBaseUrl={wsBaseUrl}
+              >
+                <MessagesProvider>
+                  <ServicesProvider>
+                    <RolesProvider>
+                      <RequestsProvider>
+                        <App />
+                      </RequestsProvider>
+                    </RolesProvider>
+                  </ServicesProvider>
+                </MessagesProvider>
+              </UnifiedDamlProvider>
             );
           }}
         />
@@ -93,29 +90,25 @@ export default function Main({ defaultPath }: MainProps) {
   }
 }
 
-type PublicDamlProviderProps = {
+type UnifiedDamlProviderProps = {
   party: string;
   token: string;
   httpBaseUrl?: string;
   wsBaseUrl?: string;
 };
 
-export const PublicDamlProvider: React.FC<PublicDamlProviderProps> = ({
+export const UnifiedDamlProvider: React.FC<UnifiedDamlProviderProps> = ({
   children,
   party,
   token,
   httpBaseUrl,
   wsBaseUrl,
 }) => (
-  <DamlLedger party={party} token={token} httpBaseUrl={httpBaseUrl} wsBaseUrl={wsBaseUrl}>
-    <PublicLedger
-      ledgerId={ledgerId}
-      publicParty={publicParty}
-      defaultToken={computeCredentials(publicParty).token}
-    >
+  <DamlHub token={token}>
+    <DamlLedger party={party} token={token} httpBaseUrl={httpBaseUrl} wsBaseUrl={wsBaseUrl}>
       <QueryStreamProvider>{children}</QueryStreamProvider>
-    </PublicLedger>
-  </DamlLedger>
+    </DamlLedger>
+  </DamlHub>
 );
 
 export function useStreamQueries<T extends object, K, I extends string>(

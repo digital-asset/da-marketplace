@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
-
 import { Button, Loader } from 'semantic-ui-react';
-
 import {
   useHistory,
   Switch,
@@ -12,20 +10,18 @@ import {
   Redirect,
 } from 'react-router-dom';
 
-import { WellKnownPartiesProvider } from '@daml/hub-react/lib';
+import DamlHub, { PartyToken } from '@daml/hub-react';
 
-import { ledgerId, isHubDeployment } from '../../config';
-
-import Credentials, { computeCredentials } from '../../Credentials';
-import { retrieveParties } from '../../Parties';
-
+import Widget from '../../components/Widget/Widget';
 import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
+import { computeCredentials } from '../../Credentials';
+import { isHubDeployment } from '../../config';
+import { retrieveParties } from '../../Parties';
+import paths from '../../paths';
 
 import AddPartiesPage from './AddPartiesPage';
 import ReviewPage from './ReviewPage';
 import FinishPage from './FinishPage';
-import paths from '../../paths';
-import Widget from '../../components/Widget/Widget';
 
 export enum MenuItems {
   ADD_PARTIES = 'add-parties',
@@ -40,7 +36,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   const matchPath = props.match.path;
   const matchUrl = props.match.url;
 
-  const [adminCredentials, setAdminCredentials] = useState<Credentials>(localCreds);
+  const [adminCredentials, setAdminCredentials] = useState<PartyToken>(localCreds);
   const [activeMenuItem, setActiveMenuItem] = useState<MenuItems>();
 
   useEffect(() => {
@@ -55,13 +51,13 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
     if (isHubDeployment) {
       const adminParty = parties.find(p => p.partyName === 'UserAdmin');
       if (adminParty) {
-        setAdminCredentials({ token: adminParty.token, party: adminParty.party, ledgerId });
+        setAdminCredentials(adminParty);
       }
     }
   }, [history.location]);
 
   return (
-    <WellKnownPartiesProvider>
+    <DamlHub>
       <Widget
         subtitle={
           activeMenuItem === MenuItems.LOG_IN
@@ -108,7 +104,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
           </Switch>
         </div>
       </Widget>
-    </WellKnownPartiesProvider>
+    </DamlHub>
   );
 });
 

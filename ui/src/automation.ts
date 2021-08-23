@@ -1,4 +1,4 @@
-import { dablHostname, deploymentMode, DeploymentMode, httpBaseUrl, ledgerId } from './config';
+import { hubHostname, deploymentMode, DeploymentMode, httpBaseUrl, ledgerId } from './config';
 import { computeCredentials } from './Credentials';
 
 export const TRIGGER_HASH = process.env.REACT_APP_TRIGGER_HASH;
@@ -106,7 +106,7 @@ export const getPublicAutomation = async (
         Authorization: `Bearer ${token?.toString()}`,
         'Content-Type': 'application/json',
       };
-      const url = `https://${ledgerId}.${dablHostname}/.hub/v1/published`;
+      const url = `https://${ledgerId}.${hubHostname}/.hub/v1/published`;
       const result: Promise<PublicAutomationAPIResult> = fetch(url, {
         method: 'GET',
         headers: publicHeaders,
@@ -124,7 +124,7 @@ export const getAutomationInstances = async (
     Authorization: `Bearer ${token?.toString()}`,
     'Content-Type': 'application/json',
   };
-  const url = `https://${ledgerId}.${dablHostname}/.hub/v1/published/instance`;
+  const url = `https://${ledgerId}.${hubHostname}/.hub/v1/published/instance`;
   const result: Promise<PublishedInstanceAPIResult> = fetch(url, {
     method: 'GET',
     headers,
@@ -146,7 +146,7 @@ export const deployAutomation = async (
         Authorization: `Bearer ${token?.toString()}`,
         'Content-Type': 'application/json',
       };
-      const deployUrl = `https://${ledgerId}.${dablHostname}/.hub/v1/published/deploy`;
+      const deployUrl = `https://${ledgerId}.${hubHostname}/.hub/v1/published/deploy`;
       fetch(deployUrl, {
         method: 'POST',
         headers: headers,
@@ -165,7 +165,7 @@ export const undeployAutomation = async (token: string, instanceId: string, owne
     Authorization: `Bearer ${token?.toString()}`,
     'Content-Type': 'application/json',
   };
-  const deployUrl = `https://${ledgerId}.${dablHostname}/.hub/v1/published/instance/delete`;
+  const deployUrl = `https://${ledgerId}.${hubHostname}/.hub/v1/published/instance/delete`;
   await fetch(deployUrl, {
     method: 'POST',
     headers: headers,

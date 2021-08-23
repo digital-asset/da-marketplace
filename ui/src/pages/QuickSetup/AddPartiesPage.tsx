@@ -1,39 +1,31 @@
 import React, { useState, useEffect } from 'react';
-
-import { DablPartiesInput, PartyDetails } from '@daml/hub-react';
-
-import DamlLedger, { useLedger } from '@daml/react';
-
+import { useHistory } from 'react-router-dom';
 import { Button } from 'semantic-ui-react';
 
-import { useHistory } from 'react-router-dom';
-
-import { storeParties, retrieveUserParties } from '../../Parties';
-
-import QueryStreamProvider from '../../websocket/queryStream';
-
-import { PublicDamlProvider, useStreamQueries } from '../../Main';
-import { httpBaseUrl, wsBaseUrl, ledgerId, publicParty, isHubDeployment } from '../../config';
-
-import Credentials, { computeCredentials } from '../../Credentials';
-
-import { halfSecondPromise } from '../page/utils';
-
-import { LoadingWheel, MenuItems } from './QuickSetup';
+import { PartyToken, DamlHubLogin, useAdminParty } from '@daml/hub-react';
+import DamlLedger, { useLedger } from '@daml/react';
 
 import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
 import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
 import {
   IdentityVerificationRequest,
   Service as RegulatorService,
+  Offer as RegulatorOffer,
 } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
-import { Offer as RegulatorOffer } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
-import { makeDamlSet } from '../common';
-import { retrieveParties } from '../../Parties';
 
-import QuickSetupPage from './QuickSetupPage';
+import { httpBaseUrl, wsBaseUrl, publicParty, isHubDeployment } from '../../config';
+import { storeParties, retrieveParties, retrieveUserParties } from '../../Parties';
 import { deployAutomation, MarketplaceTrigger, TRIGGER_HASH } from '../../automation';
+import { UnifiedDamlProvider, useStreamQueries } from '../../Main';
+import { computeCredentials } from '../../Credentials';
+import QueryStreamProvider from '../../websocket/queryStream';
+
+import { halfSecondPromise } from '../page/utils';
+import { makeDamlSet } from '../common';
+
+import { LoadingWheel, MenuItems } from './QuickSetup';
+import QuickSetupPage from './QuickSetupPage';
 
 enum LoadingStatus {
   CREATING_ADMIN_CONTRACTS = 'Confirming Admin role....',
@@ -45,9 +37,10 @@ const AddPartiesPage = () => {
   const localCreds = computeCredentials('Operator');
 
   const [error, setError] = useState<string>();
-  const [parties, setParties] = useState<PartyDetails[]>([]);
+  const [parties, setParties] = useState<PartyToken[]>([]);
   const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>();
-  const [adminCredentials, setAdminCredentials] = useState<Credentials>(localCreds);
+  const [adminCredentials, setAdminCredentials] = useState<PartyToken>(localCreds);
+  const userAdminId = useAdminParty();
 
   useEffect(() => {
     const parties = retrieveParties() || [];
@@ -58,25 +51,37 @@ const AddPartiesPage = () => {
     }
 
     if (isHubDeployment) {
-      const adminParty = parties.find(p => p.partyName === 'UserAdmin');
+      const adminParty = parties.find(p => p.party === userAdminId);
       if (adminParty) {
-        setAdminCredentials({ token: adminParty.token, party: adminParty.party, ledgerId });
+        setAdminCredentials(adminParty);
       }
     }
-  }, [loadingStatus]);
+  }, [loadingStatus, userAdminId]);
 
   const uploadButton = (
-    <label className="custom-file-upload button ui">
-      <DablPartiesInput
-        ledgerId={ledgerId}
-        onError={error => setError(error)}
-        onLoad={partyDetails => {
-          storeParties(partyDetails);
-          setParties(partyDetails);
-        }}
-      />
-      <p>Upload {parties.length > 0 ? 'a new ' : ''}.JSON file</p>
-    </label>
+    <DamlHubLogin
+      withFile
+      onLogin={() => {}}
+      options={{
+        method: {
+          file: {
+            render: () => (
+              <label className="custom-file-upload button ui">
+                <p>Upload a {parties.length > 0 ? 'new ' : ''}parties.JSON file</p>
+              </label>
+            ),
+          },
+        },
+      }}
+      onPartiesLoad={(parties, err) => {
+        if (parties) {
+          storeParties(parties);
+          setParties(parties);
+        } else {
+          setError(err);
+        }
+      }}
+    />
   );
 
   if (loadingStatus) {
@@ -100,7 +105,7 @@ const AddPartiesPage = () => {
         ) : (
           loadingStatus === LoadingStatus.WAITING_FOR_TRIGGERS &&
           parties.map(p => (
-            <PublicDamlProvider
+            <UnifiedDamlProvider
               party={p.party}
               token={p.token}
               httpBaseUrl={httpBaseUrl}
@@ -112,7 +117,7 @@ const AddPartiesPage = () => {
                   onComplete={() => history.push(MenuItems.REVIEW)}
                 />
               </QueryStreamProvider>
-            </PublicDamlProvider>
+            </UnifiedDamlProvider>
           ))
         )}
       </QuickSetupPage>
@@ -157,7 +162,7 @@ const AddPartiesPage = () => {
   );
 };
 
-const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDetails }) => {
+const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyToken }) => {
   const { onComplete, party } = props;
   const ledger = useLedger();
   const userParties = retrieveUserParties() || [];
@@ -228,7 +233,7 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
   return null;
 };
 
-const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => void }) => {
+const AdminLedger = (props: { adminCredentials: PartyToken; onComplete: () => void }) => {
   const { adminCredentials, onComplete } = props;
 
   const userParties = retrieveUserParties() || [];

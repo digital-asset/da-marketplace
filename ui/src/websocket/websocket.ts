@@ -80,20 +80,18 @@ function useDamlStreamQuery<T extends object, K, I extends string>(
   const [active, setActive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState<StreamErrors>();
-  const [timer, setTimer] = useState<ReturnType<typeof setInterval>>(
-    setInterval(() => clearInterval(timer), 1000)
-  );
+  const [timer, setTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [retries, setRetries] = useState(0);
 
   const messageHandlerScoped = useCallback(
     (templateMap: Map<string, Template<T, K, I>>) => {
       return (message: { data: string }) => {
         if (timer !== null) {
-          clearInterval(timer);
+          clearTimeout(timer);
           setTimer(
-            setInterval(() => {
+            setTimeout(() => {
               setActive(false);
-              clearInterval(timer);
+              clearTimeout(timer);
             }, TIME_UNTIL_INACTIVE)
           );
         }
@@ -189,7 +187,7 @@ function useDamlStreamQuery<T extends object, K, I extends string>(
 
   useEffect(() => {
     if (websocket === null) {
-      clearInterval(timer);
+      timer && clearTimeout(timer);
     }
   }, [websocket, timer]);
 

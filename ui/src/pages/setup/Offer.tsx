@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { useHistory } from 'react-router';
 
 import { useParty } from '@daml/react';
+import { useAdminParty } from '@daml/hub-react';
 
 import { Offer as MarketClearingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
 import { Offer as CustodyOffer } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
@@ -12,10 +14,8 @@ import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Tra
 import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
 import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 
-import { ServiceOfferDialog } from '../../components/InputDialog/ServiceDialog';
 import { ServiceKind, ServiceOffer, ServiceRoleOfferChoice } from '../../context/ServicesContext';
-import { useHistory } from 'react-router';
-import { useWellKnownParties } from '@daml/hub-react/lib';
+import { ServiceOfferDialog } from '../../components/InputDialog/ServiceDialog';
 import { useVerifiedParties } from '../../config';
 
 interface RequestInterface {
@@ -29,7 +29,7 @@ interface RequestInterface {
 const Offer: React.FC<{ service: ServiceKind }> = ({ service }) => {
   const provider = useParty();
   const history = useHistory();
-  const operator = useWellKnownParties().parties?.userAdminParty || 'Operator';
+  const operator = useAdminParty() || 'Operator';
 
   const { identities, legalNames } = useVerifiedParties();
 

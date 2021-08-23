@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { encode } from 'jwt-simple';
-import { expiredToken } from '@daml/hub-react';
+import { PartyToken } from '@daml/hub-react';
 
 import { ledgerId, publicParty } from './config';
 
@@ -13,13 +13,13 @@ const APPLICATION_ID: string = 'da-marketplace';
 // see https://docs.daml.com/app-dev/authentication.html.
 const SECRET_KEY: string = 'secret';
 
-type Credentials = {
-  party: string;
-  token: string;
-  ledgerId: string;
-};
+// type Credentials = {
+//   party: string;
+//   token: string;
+//   ledgerId: string;
+// };
 
-function isCredentials(credentials: any): credentials is Credentials {
+function isCredentials(credentials: any): credentials is PartyToken {
   return (
     typeof credentials.party === 'string' &&
     typeof credentials.token === 'string' &&
@@ -29,7 +29,7 @@ function isCredentials(credentials: any): credentials is Credentials {
 
 const CREDENTIALS_STORAGE_KEY = 'credentials';
 
-export function storeCredentials(credentials?: Credentials): void {
+export function storeCredentials(credentials?: PartyToken): void {
   sessionStorage.setItem(CREDENTIALS_STORAGE_KEY, JSON.stringify(credentials));
 }
 
@@ -37,7 +37,7 @@ export function clearCredentials(): void {
   sessionStorage.removeItem(CREDENTIALS_STORAGE_KEY);
 }
 
-export function retrieveCredentials(): Credentials | undefined {
+export function retrieveCredentials(): PartyToken | undefined {
   const credentialsJson = sessionStorage.getItem(CREDENTIALS_STORAGE_KEY);
 
   if (!credentialsJson) {
@@ -46,7 +46,7 @@ export function retrieveCredentials(): Credentials | undefined {
 
   try {
     const credentials = JSON.parse(credentialsJson);
-    if (isCredentials(credentials) && !expiredToken(credentials.token)) {
+    if (isCredentials(credentials) && !credentials.isExpired) {
       return credentials;
     }
   } catch {
@@ -58,19 +58,23 @@ export function retrieveCredentials(): Credentials | undefined {
 
 export function computeToken(party: string): string {
   const payload = {
+    exp: new Date().getTime() / 1000 + 1000000,
     'https://daml.com/ledger-api': {
       ledgerId: ledgerId,
       applicationId: APPLICATION_ID,
       actAs: [party],
       readAs: [party, publicParty],
     },
+    party,
+    ledgerId,
+    partyName: party,
   };
   return encode(payload, SECRET_KEY, 'HS256');
 }
 
-export const computeCredentials = (party: string): Credentials => {
+export const computeCredentials = (party: string): PartyToken => {
   const token = computeToken(party);
-  return { party, token, ledgerId };
+  return new PartyToken(token);
 };
 
-export default Credentials;
+// export default Credentials;

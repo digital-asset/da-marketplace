@@ -1,27 +1,22 @@
 import React from 'react';
-
 import { useHistory, Link } from 'react-router-dom';
 
 import DamlLedger from '@daml/react';
+import { PartyToken } from '@daml/hub-react';
 
-import { ArrowRightIcon } from '../../icons/icons';
-
-import { loginUser, useUserDispatch } from '../../context/UserContext';
+import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
 import { RolesProvider, useRolesContext } from '../../context/RolesContext';
-
-import Credentials, { computeCredentials } from '../../Credentials';
-
+import { loginUser, useUserDispatch } from '../../context/UserContext';
+import { computeCredentials } from '../../Credentials';
+import QueryStreamProvider from '../../websocket/queryStream';
+import { ArrowRightIcon } from '../../icons/icons';
 import { retrieveParties } from '../../Parties';
+import paths from '../../paths';
 
 import { LoadingWheel } from './QuickSetup';
-
-import QueryStreamProvider from '../../websocket/queryStream';
 import QuickSetupPage from './QuickSetupPage';
 
-import paths from '../../paths';
-import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
-
-const FinishPage = (props: { adminCredentials: Credentials }) => {
+const FinishPage = (props: { adminCredentials: PartyToken }) => {
   const { adminCredentials } = props;
   return (
     <DamlLedger
