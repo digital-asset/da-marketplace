@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 import inspect
@@ -74,6 +75,8 @@ def main():
 
         return list(matches.items())[0]
 
+    async def find_one_timeout(template_name, match, timeout):
+        return await asyncio.wait_for(client.find_one(template_name, match), timeout)
 
     def find_highest_sid():
         current_highest = 0
@@ -125,17 +128,17 @@ def main():
         SID = find_highest_sid() + 1
 
         return collect_run_commands([
-            # (MARKETPLACE.ExberrySID, handle_exberry_SID),
+            (MARKETPLACE.ExberrySID, handle_exberry_SID),
             (MARKETPLACE.MarketPair, handle_new_market_pair),
-            (EXBERRY.ExecutionReport, handle_execution_report),
-            (MARKETPLACE.ClearedOrderRequest, handle_cleared_order_request),
             (MARKETPLACE.OrderRequest, handle_order_request),
+            (MARKETPLACE.ClearedOrderRequest, handle_cleared_order_request),
             (EXBERRY.NewOrderSuccess, handle_new_order_success),
             (EXBERRY.NewOrderFailure, handle_new_order_failure),
             (MARKETPLACE.OrderCancelRequest, handle_order_cancel_request),
             (MARKETPLACE.ClearedOrderCancelRequest, handle_cleared_order_cancel_request),
             (EXBERRY.CancelOrderSuccess, handle_cancel_order_success),
             (EXBERRY.CancelOrderFailure, handle_cancel_order_failure),
+            (EXBERRY.ExecutionReport, handle_execution_report),
             (MARKETPLACE.ResetMarketRequest, handle_clear_market)
         ])
 
@@ -400,7 +403,7 @@ def main():
 
     # Marketplace <-- Exberry
     @client.ledger_created(EXBERRY.ExecutionReport)
-    def handle_execution_report(event):
+    async def handle_execution_report(event):
         logging.info(f"Handling execution report")
 
         execution = event.cdata
@@ -419,12 +422,12 @@ def main():
                 logging.info(f"Processing cleared order report")
 
                 try:
-                    taker_cid, taker = find_first(MARKETPLACE.ClearedOrder, {
+                    taker_cid, taker = await find_one_timeout(MARKETPLACE.ClearedOrder, {
                         'orderId': execution['takerMpOrderId']
-                    })
-                    maker_cid, maker = find_first(MARKETPLACE.ClearedOrder, {
+                    }, 5)
+                    maker_cid, maker = await find_one_timeout(MARKETPLACE.ClearedOrder, {
                         'orderId': execution['makerMpOrderId']
-                    })
+                    }, 5)
 
                     ccp = taker['ccp'] if (taker['ccp'] == maker['ccp']) else None
 
@@ -463,12 +466,12 @@ def main():
             else:
                 logging.info(f"Processing collateralized order report")
                 try:
-                    taker_cid, taker = find_first(MARKETPLACE.Order, {
+                    taker_cid, taker = await find_one_timeout(MARKETPLACE.Order, {
                         'orderId': execution['takerMpOrderId']
-                    })
-                    maker_cid, maker = find_first(MARKETPLACE.Order, {
+                    }, 5)
+                    maker_cid, maker = await find_one_timeout(MARKETPLACE.Order, {
                         'orderId': execution['makerMpOrderId']
-                    })
+                    }, 5)
 
                     commands.append(exercise(taker_cid, 'Order_Fill', {
                         'fillQty': execution['executedQuantity'],
