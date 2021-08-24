@@ -424,10 +424,10 @@ def main():
                 try:
                     taker_cid, taker = await find_one_timeout(MARKETPLACE.ClearedOrder, {
                         'orderId': execution['takerMpOrderId']
-                    }, 5)
+                    }, 10)
                     maker_cid, maker = await find_one_timeout(MARKETPLACE.ClearedOrder, {
                         'orderId': execution['makerMpOrderId']
-                    }, 5)
+                    }, 10)
 
                     ccp = taker['ccp'] if (taker['ccp'] == maker['ccp']) else None
 
@@ -468,10 +468,10 @@ def main():
                 try:
                     taker_cid, taker = await find_one_timeout(MARKETPLACE.Order, {
                         'orderId': execution['takerMpOrderId']
-                    }, 5)
+                    }, 10)
                     maker_cid, maker = await find_one_timeout(MARKETPLACE.Order, {
                         'orderId': execution['makerMpOrderId']
-                    }, 5)
+                    }, 10)
 
                     commands.append(exercise(taker_cid, 'Order_Fill', {
                         'fillQty': execution['executedQuantity'],

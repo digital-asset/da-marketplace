@@ -25,7 +25,7 @@ runMatchingTest lp@LedgerParties{userAdmin = operator; btcIssuer = issuer; ..} =
   -- Onboard and create relationships
   handleOnboarding lp
 
-  -- onbard investors
+  -- Onboard investors
   onboardInvestor lp alice "Alice the Investor"
   onboardInvestor lp bob "Bob the Investor"
 
@@ -44,7 +44,6 @@ runMatchingTest lp@LedgerParties{userAdmin = operator; btcIssuer = issuer; ..} =
 
   let testPair = (testTokenId, usdTokenId)
 
-  -- the exchange adds support for BTC/USDT pair
   exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_AddPair
       with baseTokenId = testTokenId, baseType = TokenAsset, quoteTokenId = usdTokenId, quoteType = TokenAsset
            minQuantity = 0.01, maxQuantity = 10000.0, clearedMarket = False, defaultCCP = None

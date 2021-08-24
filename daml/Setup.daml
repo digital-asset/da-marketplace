@@ -52,10 +52,10 @@ getExistingParties : Script LedgerParties
 getExistingParties = do
   [operator, custodian, exchange, btcIssuer, usdtIssuer, alice, bob, broker, public]
     <- retrieve ["Operator", "Custodian", "Exchange", "BtcIssuer", "UsdtIsser", "Alice", "Bob", "Broker", "Public"]
-  pure $ LedgerParties with userAdmin = operator; ..
+  return $ LedgerParties with userAdmin = operator, ..
   where
     retrieve : [Text] -> Script [Party]
-    retrieve parties = pure . fromSome $ mapA partyFromText parties
+    retrieve parties = return . fromSome $ mapA partyFromText parties
 
 setup : Script ()
 setup = allocateParties >>= doSetup
