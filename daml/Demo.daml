@@ -15,14 +15,16 @@ import Marketplace.Issuance.CFI qualified as CFI
 import Tests.Utils
 
 demo : Script ()
-demo = do
+demo = allocateParties >>= runDemo
 
-  providers@Providers{..} <- onboardProviders
+runDemo : Parties -> Script ()
+runDemo parties@Parties{..} = do
+  providers@Providers{..} <- onboardProviders parties
 
-  issuer      <- onboardCustomer providers "Issuer"
-  alice       <- onboardCustomer providers "Alice"
-  bob         <- onboardCustomer providers "Bob"
-  charlie     <- onboardCustomer providers "Charlie"
+  issuer      <- onboardCustomer providers "Issuer" issuer
+  alice       <- onboardCustomer providers "Alice" alice
+  bob         <- onboardCustomer providers "Bob" bob
+  charlie     <- onboardCustomer providers "Charlie" charlie
 
   assets@Assets{..} <- onboardAssets providers issuer
 

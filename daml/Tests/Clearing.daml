@@ -12,11 +12,12 @@ import DA.Action (void)
 testClearingTransfers : Script ()
 testClearingTransfers = do
   time <- getTime
-  providers@Providers{clearinghouse} <- onboardProviders
+  parties@Parties{..} <- allocateParties
+  providers@Providers{clearinghouse} <- onboardProviders parties
 
-  alice <- onboardCustomer providers "Alice"
-  bob   <- onboardCustomer providers "Bob"
-  issuer <- onboardCustomer providers "Issuer"
+  alice  <- onboardCustomer providers "Alice" alice
+  bob    <- onboardCustomer providers "Bob" bob
+  issuer <- onboardCustomer providers "Issuer" issuer
 
   Assets{usd; tsla} <- onboardAssets providers issuer
   -- Assets
@@ -48,11 +49,12 @@ testClearingTransfers = do
 testMarginCalls : Script ()
 testMarginCalls = do
   time <- getTime
-  providers@Providers{clearinghouse; operator} <- onboardProviders
+  parties@Parties{..} <- allocateParties
+  providers@Providers{clearinghouse; operator} <- onboardProviders parties
 
-  alice <- onboardCustomer providers "Alice"
-  bob   <- onboardCustomer providers "Bob"
-  issuer <- onboardCustomer providers "Issuer"
+  alice  <- onboardCustomer providers "Alice" alice
+  bob    <- onboardCustomer providers "Bob" bob
+  issuer <- onboardCustomer providers "Issuer" issuer
 
   Assets{usd; tsla} <- onboardAssets providers issuer
 
@@ -96,11 +98,12 @@ testMarginCalls = do
 testMarkToMarket : Script ()
 testMarkToMarket = do
   time <- getTime
-  providers@Providers{clearinghouse} <- onboardProviders
+  parties@Parties{..} <- allocateParties
+  providers@Providers{clearinghouse} <- onboardProviders parties
 
-  alice <- onboardCustomer providers "Alice"
-  bob   <- onboardCustomer providers "Bob"
-  issuer <- onboardCustomer providers "Issuer"
+  alice  <- onboardCustomer providers "Alice" alice
+  bob    <- onboardCustomer providers "Bob" bob
+  issuer <- onboardCustomer providers "Issuer" issuer
 
   Assets{usd; tsla} <- onboardAssets providers issuer
 
