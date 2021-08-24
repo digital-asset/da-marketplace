@@ -487,8 +487,7 @@ def main():
                         'counterOrderId': taker['orderId'],
                         'timeMatched': execution['eventTimestamp']
                     }))
-                except:
-                    logging.error(f'Could not find orders for execution: {execution}')
+                except: logging.error(f'Could not find orders for execution: {execution}')
 
             return commands
         else:
