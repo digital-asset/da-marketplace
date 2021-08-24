@@ -1,7 +1,7 @@
 import React from 'react';
 import { History } from 'history';
 
-import { PartyToken } from '@daml/hub-react';
+import { PartyToken, damlHubLogout } from '@daml/hub-react';
 
 import { clearCredentials, retrieveCredentials, storeCredentials } from '../Credentials';
 import paths from '../paths';
@@ -96,6 +96,7 @@ async function loginUser(dispatch: React.Dispatch<any>, history: History, creden
 
 function signOut(dispatch: React.Dispatch<any>, history: History) {
   clearCredentials();
+  damlHubLogout();
   dispatch({ type: 'SIGN_OUT_SUCCESS' });
   history.push(paths.login);
 }

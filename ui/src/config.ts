@@ -7,10 +7,9 @@ import _ from 'lodash';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import {
   DefaultParties,
+  damlHubEnvironment,
   isRunningOnHub,
   useDefaultParties,
-  detectAppDomainType,
-  DomainType,
 } from '@daml/hub-react';
 
 import { retrieveCredentials } from './Credentials';
@@ -23,7 +22,12 @@ export enum DeploymentMode {
   PROD_OTHER,
 }
 
-export const hubHostname = window.location.hostname.split('.').slice(1).join('.');
+export const {
+  hostname: hubHostname,
+  baseURL: httpBaseUrl,
+  wsURL: hubWsURL,
+  ledgerId: hubLedgerId,
+} = damlHubEnvironment();
 
 export const deploymentMode: DeploymentMode =
   process.env.NODE_ENV === 'development'
@@ -38,17 +42,10 @@ export const isHubDeployment = deploymentMode === DeploymentMode.PROD_DAML_HUB;
 // then an environment variable, falling back on the sandbox ledger ID.
 export const ledgerId: string =
   deploymentMode === DeploymentMode.PROD_DAML_HUB
-    ? window.location.hostname.split('.')[0]
+    ? hubLedgerId || ''
     : process.env.REACT_APP_LEDGER_ID ?? 'da-marketplace-sandbox';
 
-export const httpBaseUrl =
-  detectAppDomainType() === DomainType.APP_DOMAIN
-    ? `/`
-    : detectAppDomainType() === DomainType.LEGACY_DOMAIN
-    ? `https://api.${hubHostname}/data/${ledgerId}/`
-    : undefined;
-
-export const wsBaseUrl = deploymentMode === DeploymentMode.DEV ? 'ws://localhost:7575/' : undefined;
+export const wsBaseUrl = deploymentMode === DeploymentMode.DEV ? 'ws://localhost:7575/' : hubWsURL;
 
 export const publicParty = deploymentMode === DeploymentMode.DEV ? 'Public' : `public-${ledgerId}`;
 
