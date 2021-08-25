@@ -1,3 +1,5 @@
+import asyncio
+import inspect
 import logging
 import os
 
@@ -52,23 +54,23 @@ def main():
 
     client = network.aio_party(exchange_party)
 
-    def find_and_run(template_name, fn):
+    async def find_and_run(template_name, fn):
         commands = []
         templates = client.find_active(template_name)
 
         for (cid,item) in templates.items():
             event = FakeContractEvent(cid, item)
-            result = fn(event)
+            result = await fn(event) if inspect.iscoroutinefunction(fn) else fn(event)
             if isinstance(result, list):
                 commands.extend(result)
             else:
                 commands.append(result)
         return commands
 
-    def collect_run_commands(template_pairs):
+    async def collect_run_commands(template_pairs):
         commands = []
         for (template, fn) in template_pairs:
-            commands.extend(find_and_run(template, fn))
+            commands.extend(await find_and_run(template, fn))
         return commands
 
     @client.ledger_ready()
@@ -76,7 +78,6 @@ def main():
         logging.info("DA Marketplace <> Exberry adapter is ready!")
 
         return collect_run_commands([
-            (EXBERRY.ExecutionReport, handle_execution_report),
 
             (MARKETPLACE.CreateListingRequest, handle_new_listing),
             (MARKETPLACE.CreateOrderRequest, handle_order_request),
@@ -86,6 +87,8 @@ def main():
 
             (EXBERRY.NewOrderSuccess, handle_new_order_success),
             (EXBERRY.NewOrderFailure, handle_new_order_failure),
+
+            (EXBERRY.ExecutionReport, handle_execution_report),
 
             (MARKETPLACE.CancelOrderRequest, handle_order_cancel_request),
 
