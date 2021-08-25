@@ -1,0 +1,26 @@
+sdk-version: 1.12.0
+name: marketplace-matching-test
+source: daml
+parties:
+  - Alice
+  - Bob
+  - Dana
+  - Carl
+  - Operator
+  - Public
+  - Exchange
+  - Ccp
+  - Broker
+  - Bank
+  - Issuer
+version: 0.2.0
+# trigger-dependencies-begin
+dependencies:
+  - daml-prim
+  - daml-stdlib
+  - daml-trigger
+  - ../../.daml/dist/da-marketplace-0.1.19.dar
+sandbox-options:
+  - --wall-clock-time
+build-options:
+  - --ghc-option=-Wno-deprecations

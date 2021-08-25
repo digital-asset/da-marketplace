@@ -1,5 +1,7 @@
+import asyncio
 import logging
 import os
+import inspect
 from datetime import datetime
 
 import dazl
@@ -44,6 +46,8 @@ class MARKETPLACE:
     MarketPair = 'Marketplace.Token:MarketPair'
     ExberrySID = 'Marketplace.Utils:ExberrySID'
 
+
+
 class FakeContractEvent():
     def __init__(self, cid, cdata):
         self.cid = cid
@@ -64,6 +68,15 @@ def main():
     logging.info(f'Integration will run under party: {exchange_party}')
 
     client = network.aio_party(exchange_party)
+    def find_first(template_name, match):
+        matches = client.find_active(template_name, match)
+        if not len(matches):
+            raise Exception
+
+        return list(matches.items())[0]
+
+    async def find_one_timeout(template_name, match, timeout):
+        return await asyncio.wait_for(client.find_one(template_name, match), timeout)
 
     def find_highest_sid():
         current_highest = 0
@@ -84,23 +97,23 @@ def main():
         return current_highest
 
 
-    def find_and_run(template_name, fn):
+    async def find_and_run(template_name, fn):
         commands = []
         templates = client.find_active(template_name)
 
         for (cid,item) in templates.items():
             event = FakeContractEvent(cid, item)
-            result = fn(event)
+            result = await fn(event) if inspect.iscoroutinefunction(fn) else fn(event)
             if isinstance(result, list):
                 commands.extend(result)
             else:
                 commands.append(result)
         return commands
 
-    def collect_run_commands(template_pairs):
+    async def collect_run_commands(template_pairs):
         commands = []
         for (template, fn) in template_pairs:
-            commands.extend(find_and_run(template, fn))
+            commands.extend(await find_and_run(template, fn))
         return commands
 
     @client.ledger_ready()
@@ -117,15 +130,15 @@ def main():
         return collect_run_commands([
             (MARKETPLACE.ExberrySID, handle_exberry_SID),
             (MARKETPLACE.MarketPair, handle_new_market_pair),
-            (EXBERRY.ExecutionReport, handle_execution_report),
-            (MARKETPLACE.ClearedOrderRequest, handle_cleared_order_request),
             (MARKETPLACE.OrderRequest, handle_order_request),
+            (MARKETPLACE.ClearedOrderRequest, handle_cleared_order_request),
             (EXBERRY.NewOrderSuccess, handle_new_order_success),
             (EXBERRY.NewOrderFailure, handle_new_order_failure),
             (MARKETPLACE.OrderCancelRequest, handle_order_cancel_request),
             (MARKETPLACE.ClearedOrderCancelRequest, handle_cleared_order_cancel_request),
             (EXBERRY.CancelOrderSuccess, handle_cancel_order_success),
             (EXBERRY.CancelOrderFailure, handle_cancel_order_failure),
+            (EXBERRY.ExecutionReport, handle_execution_report),
             (MARKETPLACE.ResetMarketRequest, handle_clear_market)
         ])
 
@@ -249,25 +262,34 @@ def main():
         logging.info(f"Handling NewOrderSuccess")
 
         event_sid = event.cdata['sid']
+
+        if not event_sid in sid_to_order:
+            logging.error(f'Order {event.cdata} not found in adapter state')
+            return exercise(event.cid, 'Archive', {})
+
         order = sid_to_order.pop(event_sid)
 
         sid_is_cleared[event_sid] = order['isCleared']
 
         query = { 'order': order }
-
+        commands = [exercise(event.cid, 'Archive', {})]
         if order['isCleared']:
             logging.info(f"Acknowledging Cleared Order Success")
-            req_cid, _ = await client.find_one(MARKETPLACE.ClearedOrderRequest, query)
-
-            return [exercise(req_cid, 'ClearedOrderRequest_Ack', {
-                'orderId': event_sid
-            }), exercise(event.cid, 'Archive', {})]
+            try:
+                req_cid, _ = find_first(MARKETPLACE.ClearedOrderRequest, query)
+                commands.append(exercise(req_cid, 'ClearedOrderRequest_Ack', {
+                    'orderId': event_sid
+                }))
+            except: logging.error(f'Cleared Order request not found for {order}')
         else:
             logging.info(f"Acknowledging Order Success")
-            req_cid, _ = await client.find_one(MARKETPLACE.OrderRequest, query)
-            return [exercise(req_cid, 'OrderRequest_Ack', {
-                'orderId': event_sid
-            }), exercise(event.cid, 'Archive', {})]
+            try:
+                req_cid, _ = find_first(MARKETPLACE.OrderRequest, query)
+                commands.append(exercise(req_cid, 'OrderRequest_Ack', {
+                    'orderId': event_sid
+                }))
+            except: logging.error(f'Order request not found for {order}')
+        return commands
 
     # Marketplace <-- Exberry
     @client.ledger_created(EXBERRY.NewOrderFailure)
@@ -278,17 +300,21 @@ def main():
         order = sid_to_order.pop(event_sid)
 
         query = { 'order': order }
+        commands = [exercise(event.cid, 'Archive', {})]
 
         if order['isCleared']:
             logging.info(f"Acknowledging Cleared Order Failure")
-            req_cid, _ = await client.find_one(MARKETPLACE.ClearedOrderRequest, query)
-            return [exercise(req_cid, 'ClearedOrderRequest_Reject', {}),
-                    exercise(event.cid, 'Archive', {})]
+            try:
+                req_cid, _ = find_first(MARKETPLACE.ClearedOrderRequest, query)
+                commands.append(exercise(req_cid, 'ClearedOrderRequest_Reject', {}))
+            except: logging.warning(f'Cleared order request not found for: {order}')
         else:
             logging.info(f"Acknowledging Order Failure")
-            req_cid, _ = await client.find_one(MARKETPLACE.OrderRequest, query)
-            return [exercise(req_cid, 'OrderRequest_Reject', {}),
-                    exercise(event.cid, 'Archive', {})]
+            try:
+                req_cid, _ = find_first(MARKETPLACE.OrderRequest, query)
+                commands.append(exercise(req_cid, 'OrderRequest_Reject', {}))
+            except: logging.warning(f'Order request not found for: {order}')
+        return commands
 
     # Marketplace --> Exberry
     @client.ledger_created(MARKETPLACE.MarketPair)
@@ -307,8 +333,6 @@ def main():
         status = pair['status'][10:]
 
         market_pairs[symbol] = pair
-
-        logging.info(f"New market_pairs is {market_pairs}")
 
         return create(EXBERRY.CreateInstrumentRequest, {
             'integrationParty': client.party,
@@ -374,7 +398,7 @@ def main():
 
         return [exercise_by_key(MARKETPLACE.OrderCancelRequest,
                                 {'_1': client.party, '_2': event.cdata['sid']},
-                                'OrderCancel_Reject', {}),
+                                'OrderCancel_Ack', {}),
                 exercise(event.cid, 'Archive', {})]
 
     # Marketplace <-- Exberry
@@ -384,6 +408,7 @@ def main():
 
         execution = event.cdata
         instrument_name = execution['instrument']
+        commands = [exercise(event.cid, 'Archive', {})]
         if instrument_name in market_pairs:
             cleared_market = market_pairs[instrument_name]['clearedMarket']
             base_token_id = market_pairs[instrument_name]['baseTokenId']
@@ -395,78 +420,79 @@ def main():
 
             if cleared_market:
                 logging.info(f"Processing cleared order report")
-                commands = [exercise(event.cid, 'Archive', {})]
 
-                taker_cid, taker = await client.find_one(MARKETPLACE.ClearedOrder, {
-                    'orderId': execution['takerMpOrderId']
-                })
-                maker_cid, maker = await client.find_one(MARKETPLACE.ClearedOrder, {
-                    'orderId': execution['makerMpOrderId']
-                })
+                try:
+                    taker_cid, taker = await find_one_timeout(MARKETPLACE.ClearedOrder, {
+                        'orderId': execution['takerMpOrderId']
+                    }, 10)
+                    maker_cid, maker = await find_one_timeout(MARKETPLACE.ClearedOrder, {
+                        'orderId': execution['makerMpOrderId']
+                    }, 10)
 
-                ccp = taker['ccp'] if (taker['ccp'] == maker['ccp']) else None
+                    ccp = taker['ccp'] if (taker['ccp'] == maker['ccp']) else None
 
-                if not ccp:
-                    logging.error(f"Error: non-matching ccp parties: {taker['ccp']} !== {maker['ccp']}")
-                    return commands
+                    if not ccp:
+                        logging.error(f"Error: non-matching ccp parties: {taker['ccp']} !== {maker['ccp']}")
+                        return commands
 
-                pair = market_pairs[execution['instrument']]
-                (buyer, seller) = determine_participants(maker, taker)
+                    pair = market_pairs[execution['instrument']]
+                    (buyer, seller) = determine_participants(maker, taker)
 
-                commands.append(create(MARKETPLACE.ClearedTrade, {
-                    'ccp': ccp,
-                    'exchange': client.party,
-                    'eventId': execution['eventId'],
-                    'timeMatched': execution['eventTimestamp'],
-                    'instrument': pair['id'],
-                    'pair': token_pair,
-                    'trackingNumber': execution['trackingNumber'],
-                    'buyer': buyer['exchParticipant'],
-                    'buyerOrderId': buyer['orderId'],
-                    'seller': seller['exchParticipant'],
-                    'sellerOrderId': seller['orderId'],
-                    'matchId': execution['matchId'],
-                    'executedQuantity': execution['executedQuantity'],
-                    'executedPrice': execution['executedPrice']
-                }))
-                commands.append(exercise(taker_cid, 'ClearedOrder_Fill', {
-                    'fillQty': execution['executedQuantity'],
-                    'fillPrice': execution['executedPrice']
-                }))
-                commands.append(exercise(maker_cid, 'ClearedOrder_Fill', {
-                    'fillQty': execution['executedQuantity'],
-                    'fillPrice': execution['executedPrice']
-                }))
+                    commands.append(create(MARKETPLACE.ClearedTrade, {
+                        'ccp': ccp,
+                        'exchange': client.party,
+                        'eventId': execution['eventId'],
+                        'timeMatched': execution['eventTimestamp'],
+                        'instrument': pair['id'],
+                        'pair': token_pair,
+                        'trackingNumber': execution['trackingNumber'],
+                        'buyer': buyer['exchParticipant'],
+                        'buyerOrderId': buyer['orderId'],
+                        'seller': seller['exchParticipant'],
+                        'sellerOrderId': seller['orderId'],
+                        'matchId': execution['matchId'],
+                        'executedQuantity': execution['executedQuantity'],
+                        'executedPrice': execution['executedPrice']
+                    }))
+                    commands.append(exercise(taker_cid, 'ClearedOrder_Fill', {
+                        'fillQty': execution['executedQuantity'],
+                        'fillPrice': execution['executedPrice']
+                    }))
+                    commands.append(exercise(maker_cid, 'ClearedOrder_Fill', {
+                        'fillQty': execution['executedQuantity'],
+                        'fillPrice': execution['executedPrice']
+                    }))
+                except: logging.error(f'Did not find matching orders for execution report: {execution}')
             else:
                 logging.info(f"Processing collateralized order report")
+                try:
+                    taker_cid, taker = await find_one_timeout(MARKETPLACE.Order, {
+                        'orderId': execution['takerMpOrderId']
+                    }, 10)
+                    maker_cid, maker = await find_one_timeout(MARKETPLACE.Order, {
+                        'orderId': execution['makerMpOrderId']
+                    }, 10)
 
-                taker_cid, taker = await client.find_one(MARKETPLACE.Order, {
-                    'orderId': execution['takerMpOrderId']
-                })
-                maker_cid, maker = await client.find_one(MARKETPLACE.Order, {
-                    'orderId': execution['makerMpOrderId']
-                })
-
-                commands = [exercise(event.cid, 'Archive', {})]
-                commands.append(exercise(taker_cid, 'Order_Fill', {
-                    'fillQty': execution['executedQuantity'],
-                    'fillPrice': execution['executedPrice'],
-                    'counterOrderId': maker['orderId'],
-                    'counterParty': maker['exchParticipant'],
-                    'timeMatched': execution['eventTimestamp']
-                }))
-                commands.append(exercise(maker_cid, 'Order_Fill', {
-                    'fillQty': execution['executedQuantity'],
-                    'fillPrice': execution['executedPrice'],
-                    'counterParty': taker['exchParticipant'],
-                    'counterOrderId': taker['orderId'],
-                    'timeMatched': execution['eventTimestamp']
-                }))
+                    commands.append(exercise(taker_cid, 'Order_Fill', {
+                        'fillQty': execution['executedQuantity'],
+                        'fillPrice': execution['executedPrice'],
+                        'counterOrderId': maker['orderId'],
+                        'counterParty': maker['exchParticipant'],
+                        'timeMatched': execution['eventTimestamp']
+                    }))
+                    commands.append(exercise(maker_cid, 'Order_Fill', {
+                        'fillQty': execution['executedQuantity'],
+                        'fillPrice': execution['executedPrice'],
+                        'counterParty': taker['exchParticipant'],
+                        'counterOrderId': taker['orderId'],
+                        'timeMatched': execution['eventTimestamp']
+                    }))
+                except: logging.error(f'Could not find orders for execution: {execution}')
 
             return commands
         else:
             logging.info(f"Instrument: {instrument_name} does not exist, ignoring ExecutionReport.")
-            commands = [exercise(event.cid, 'Archive', {})]
+            return commands
 
     network.run_forever()
 
