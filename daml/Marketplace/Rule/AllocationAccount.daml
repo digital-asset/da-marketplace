@@ -36,7 +36,7 @@ template AllocationAccountRule
         deposit <- fetch depositCid
         exerciseByKey @AssetSettlementRule deposit.account.id AssetSettlement_Debit with ..
       credit : Asset -> Update (ContractId AssetDeposit)
-      credit = \asset -> create AssetDeposit with observers = insert nominee observers; ..
+      credit = \asset -> create AssetDeposit with lock = None; observers = insert nominee observers; ..
       creditAccount : Account -> Asset -> Update (ContractId AssetDeposit)
       creditAccount = \account asset -> do
         depositCid <- exerciseByKey @AssetSettlementRule account.id AssetSettlement_Credit with ctrl = nominee, ..
