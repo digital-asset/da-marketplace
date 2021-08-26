@@ -1,7 +1,7 @@
 module Tests.Bond where
 -- ^ This module tests the full lifecycle of a binary option
 
-import Common (Customer, Providers, onboardProviders, onboardCustomer)
+import Common (allocateParties, Parties(..), Customer, Providers, onboardProviders, onboardCustomer)
 import ContingentClaims.Claim (serialize)
 import DA.Date (date, Month(Jan, Oct))
 import DA.Finance.Types (Id(..), Asset(..))
@@ -83,7 +83,8 @@ getMoneyAssetsFor party =
 
 requestExerciseBond: Decimal -> Decimal -> Decimal -> [Date] -> Script (Party, Providers, Customer, ContractId AssetDeposit, AssetDescription, ContractId Service, ContractId AssetDeposit)
 requestExerciseBond usdAmount notional coupon dates = script do
-  providers <- onboardProviders
+  parties@Parties{..} <- allocateParties
+  providers <- onboardProviders parties
 
   let usdId = Id with
                 signatories = Set.singleton providers.bank
@@ -91,8 +92,8 @@ requestExerciseBond usdAmount notional coupon dates = script do
                 version = 0
       usdAsset = Asset with id = usdId, quantity = usdAmount
 
-  alice <- onboardCustomer providers "Alice"
-  bob <- onboardCustomer providers "Bob"
+  alice <- onboardCustomer providers "Alice" alice
+  bob <- onboardCustomer providers "Bob" bob
 
   -- Alice originates the bond
   let boClaims = bond usdId notional coupon dates
