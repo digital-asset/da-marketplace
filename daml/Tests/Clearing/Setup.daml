@@ -137,7 +137,7 @@ makeTrade Providers{..} listingId buyer seller price qty currentId = do
             orderType = Order.Limit with price
 
   let buyerOrderId = show (currentId + 1)
-  Right (buyerOrderCid, buyerCreateOrderRequestCid, _) <- submitMulti [buyer.customer] [public] $ do
+  Right (buyerOrderCid, buyerCreateOrderRequestCid, _) <- submit buyer.customer $ do
     exerciseCmd buyer.tradingServiceCid Trading.RequestCreateOrder with
         collateral = Order.Cleared clearinghouse
         details = Order.Details with
