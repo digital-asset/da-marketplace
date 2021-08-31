@@ -176,7 +176,6 @@ onboardCustomer Providers{..} party customer = do
 
   -- Trading and Listing services
   tradingServiceOfferCid <- submit exchange do exerciseCmd exchangeRoleCid Exchange.OfferTradingService with ..
-  -- tradingServiceCid <- submit customer do exerciseCmd tradingServiceOfferCid Trading.Accept with tradingAccount = mainAccount; allocationAccount = exchangeLockedAccount
   tradingServiceCid <- submit customer do exerciseCmd tradingServiceOfferCid Trading.Accept
   listingServiceOfferCid <- submit exchange do exerciseCmd exchangeRoleCid Exchange.OfferListingService with ..
   listingServiceCid <- submit customer do exerciseCmd listingServiceOfferCid Listing.Accept
