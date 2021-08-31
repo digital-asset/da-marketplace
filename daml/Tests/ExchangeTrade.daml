@@ -58,6 +58,7 @@ setup = do
       with
         details = Order.Details with
           id = "123"
+          receivableAccount = alice.mainAccount
           listingId
           asset = shareAsset
           optExchangeFee = None
@@ -73,6 +74,7 @@ setup = do
       with
         details = Order.Details with
           id = "456"
+          receivableAccount = bob.mainAccount
           listingId
           asset = shareAsset
           optExchangeFee = None
@@ -144,6 +146,7 @@ partialExecutionsTest = do
       with
         details = Order.Details with
           id = "001"
+          receivableAccount = alice.mainAccount
           listingId
           asset = shareAsset
           orderType = Order.Limit with price = 100.0
@@ -159,6 +162,7 @@ partialExecutionsTest = do
       with
         details = Order.Details with
           id = "100"
+          receivableAccount = bob.mainAccount
           listingId
           asset = shareAsset with quantity = 50.0
           orderType = Order.Limit with price = 100.0
@@ -173,6 +177,7 @@ partialExecutionsTest = do
       with
         details = Order.Details with
           id = "101"
+          receivableAccount = bob.mainAccount
           listingId
           asset = shareAsset with quantity = 50.0
           orderType = Order.Limit with price = 100.0
@@ -187,6 +192,7 @@ partialExecutionsTest = do
       with
         details = Order.Details with
           id = "102"
+          receivableAccount = bob.mainAccount
           listingId
           asset = shareAsset with quantity = 50.0
           orderType = Order.Limit with price = 100.0
@@ -201,6 +207,7 @@ partialExecutionsTest = do
       with
         details = Order.Details with
           id = "103"
+          receivableAccount = bob.mainAccount
           listingId
           asset = shareAsset with quantity = 50.0
           orderType = Order.Limit with price = 100.0

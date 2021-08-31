@@ -1,9 +1,7 @@
 module Marketplace.Trading.Confirmation.Model where
 
-import DA.List (head)
 import DA.Foldable (forA_)
 import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..))
-import DA.Finance.Types (Account(..))
 import DA.Finance.Utils (fetchAndArchive)
 import DA.Set (Set, insert)
 import Marketplace.Settlement.Model qualified as Settlement
@@ -11,15 +9,6 @@ import Marketplace.Trading.Model qualified as Order
 import DA.Optional.Total (optionalToList)
 
 -- TODO: Try to turn this into a service
-
-data CustomerAccounts = CustomerAccounts with
-    customer : Party
-    allocationAccount : Account
-    tradingAccount : Account
-  deriving (Eq, Show)
-
-getAccount : [CustomerAccounts] -> (CustomerAccounts -> Account) -> Party -> Account
-getAccount accounts accountType customer = accountType . head $ filter (\account -> account.customer == customer) accounts
 
 type T = Confirmation
 
@@ -29,7 +18,6 @@ template Confirmation
     provider : Party
     buyer : Party
     seller : Party
-    accounts : [CustomerAccounts]
     execution : Order.Execution
     signed : Set Party
   where
@@ -38,14 +26,11 @@ template Confirmation
     choice Sign : ContractId Confirmation
       with
         ctrl : Party
-        allocationAccount : Account
-        tradingAccount : Account
       controller ctrl
       do
         assert (ctrl == buyer || ctrl == seller)
         create this with
           signed = insert ctrl signed
-          accounts = (CustomerAccounts with customer = ctrl; ..) :: accounts
 
     controller provider can
       ProcessCleared : ()
@@ -80,7 +65,7 @@ template Confirmation
           -- TODO: Check that price matches limit order price, quantity is less than order qty, rounding, etc
           -- paymentCurrencyId <- (.quotedAssetId) . snd <$> fetchByKey @Listing (operator, provider, buyOrder.details.symbol)
 
-          details <- concat <$> forA [(buyOrder, buyer, seller), (sellOrder, seller, buyer)] (\(order, party, counterparty) -> do
+          details <- concat <$> forA [(buyOrder, sellOrder.details.receivableAccount), (sellOrder, buyOrder.details.receivableAccount)] (\(order, counterPartyAccount) -> do
             let
               isPartialFill = execution.quantity < order.remainingQuantity
               executions = execution :: order.executions
@@ -88,13 +73,12 @@ template Confirmation
               quantities = [case order.details.side of
                 Order.Buy  -> execution.quantity * execution.price
                 Order.Sell -> execution.quantity]
-              getAllocationAccount = getAccount accounts (.allocationAccount)
-              getTradingAccount    = getAccount accounts (.tradingAccount)
 
             let createFeeDetails : ContractId AssetDeposit -> Update Settlement.SettlementDetails
                 createFeeDetails depositCid = do
                   feeAccount <- (.feeAccount) . snd <$> fetchByKey @Order.FeeSchedule (operator, provider)
-                  pure $ Settlement.SettlementDetails with depositCid; senderAccount = getAllocationAccount party; receiverAccount = feeAccount
+                  senderAccount <- (.account) <$> fetch depositCid
+                  pure $ Settlement.SettlementDetails with depositCid; senderAccount; receiverAccount = feeAccount
 
             let (Order.Collateral depositCid) = order.collateral
             (depositCid, optFeeDetails) <- if isPartialFill
@@ -123,7 +107,8 @@ template Confirmation
                   status = Order.FullyExecuted, details = order.details with optExchangeFee = None
                 pure (depositCid, optFeeDetails)
 
-            let tradeDetails = Settlement.SettlementDetails with depositCid; senderAccount = getAllocationAccount party; receiverAccount = getTradingAccount counterparty
+            senderAccount <- (.account) <$> fetch depositCid
+            let tradeDetails = Settlement.SettlementDetails with depositCid; senderAccount; receiverAccount = counterPartyAccount
             pure $ optionalToList optFeeDetails <> [tradeDetails]
             )
 

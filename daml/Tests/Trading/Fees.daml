@@ -80,6 +80,7 @@ setup = do
       with
         details = Order.Details with
           id = "123"
+          receivableAccount = alice.mainAccount
           listingId
           asset = shareAsset
           optExchangeFee = Some aliceFeeDepositCid
@@ -96,6 +97,7 @@ setup = do
         details = Order.Details with
           id = "456"
           listingId
+          receivableAccount = bob.mainAccount
           asset = shareAsset
           optExchangeFee = Some bobFeeDepositCid
           orderType = Order.Limit with

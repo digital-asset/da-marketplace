@@ -34,6 +34,7 @@ data TimeInForce
 data Details = Details with
     id : Text
     listingId : Text
+    receivableAccount : Account
     asset : Asset
     side : Side
     orderType : OrderType
@@ -68,6 +69,7 @@ type T = Order
 data TradeCollateral
     = Cleared with
         clearinghouse: Party
+        -- clearingAccount : Account -- << leave clearing out for now
     | Collateral (ContractId AssetDeposit)
   deriving (Show, Eq)
 

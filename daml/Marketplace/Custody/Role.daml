@@ -4,6 +4,7 @@ import Marketplace.Custody.Service qualified as Custody
 import Marketplace.Issuance.Service qualified as Issuance
 import Marketplace.Utils
 import DA.Set (Set)
+import DA.Finance.Types (Account)
 
 template Role
   with
@@ -71,6 +72,8 @@ template Offer
     controller provider can
       Accept : (ContractId Role, ContractId Issuance.Service, ContractId Custody.Service)
         do
+          let account = Custody.createAccount provider provider
+
           custodyCid  <- createOrLookup Custody.Service with customer = provider, ..
           issuanceCid <- createOrLookup Issuance.Service with customer = provider, ..
           roleCid     <- createOrLookup Role with ..
@@ -92,6 +95,8 @@ template Request
         with
           observers : Set Party
         do
+          let account = Custody.createAccount provider provider
+
           custodyCid  <- createOrLookup Custody.Service with customer = provider, ..
           issuanceCid <- createOrLookup Issuance.Service with customer = provider, ..
           roleCid     <- createOrLookup Role with ..

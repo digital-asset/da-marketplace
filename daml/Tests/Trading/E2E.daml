@@ -62,6 +62,7 @@ tradingEndToEndTest = do
         collateral = Order.Collateral aliceDepositCid
         details = Order.Details with
             id = aliceOrderId
+            receivableAccount = alice.mainAccount
             listingId
             asset = tsla with quantity = 200.0
             side = Order.Sell
@@ -76,6 +77,7 @@ tradingEndToEndTest = do
         collateral = Order.Collateral bobDepositCid
         details = Order.Details with
             id = bobOrderId
+            receivableAccount = bob.mainAccount
             listingId
             asset = shareAsset
             side = Order.Buy

@@ -8,6 +8,8 @@ module Marketplace.Custody.Model (
   , TransferDepositRequest(..)
   , LifecycleRequest(..)
   , Process(..)
+  , DepositRequest (..)
+  , WithdrawlRequest (..)
 ) where
 
 import ContingentClaims.Claim (Claim(Zero), deserialize, serialize)
@@ -93,6 +95,25 @@ template TransferDepositRequest
     customer : Party
     accountId : Id
     transfer : AssetSettlement_Transfer
+  where
+    signatory operator, provider, customer
+
+template DepositRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    asset : Asset
+    observers : Set Party
+  where
+    signatory operator, provider, customer
+
+template WithdrawlRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    depositCid : ContractId AssetDeposit
   where
     signatory operator, provider, customer
 

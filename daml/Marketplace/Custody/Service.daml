@@ -11,6 +11,7 @@ import DA.Set
 import Marketplace.Issuance.AssetDescription (Claims)
 import Marketplace.Rule.AllocationAccount (AllocationAccountRule(..))
 import Marketplace.Custody.Model qualified as Custody
+-- import Marketplace.Trading.Model qualified as Trading
 import Marketplace.Utils
 
 template Service
@@ -18,6 +19,7 @@ template Service
     operator : Party
     provider : Party
     customer : Party
+    account : Account
   where
     signatory operator, provider, customer
 
@@ -75,6 +77,25 @@ template Service
           choice: Claims
         do
           create Custody.LifecycleRequest with ..
+
+      nonconsuming RequestDeposit : ContractId Custody.DepositRequest
+        with
+          asset : Asset
+          observers : Set Party
+        do
+          create Custody.DepositRequest with ..
+
+      nonconsuming RequestWithdrawl : ContractId Custody.WithdrawlRequest
+        with
+          depositCid : ContractId AssetDeposit
+        do
+          create Custody.WithdrawlRequest with ..
+
+      -- nonconsuming SignInstructions : ContractId Trading.OrderSettlementInstructions
+      --   with
+      --     instructionsCid : ContractId Trading.OrderSettlementInstructions
+      --   do
+      --     exercise instructionsCid Trading.Sign with signer = provider
 
     controller provider can
       nonconsuming OpenAccount : ContractId AssetSettlementRule
@@ -143,11 +164,56 @@ template Service
         do
           exercise lifecycleRequestCid Custody.Process with investor = customer; ..
 
+      nonconsuming Deposit : ContractId AssetDeposit
+        with
+          depositRequestCid : ContractId Custody.DepositRequest
+        do
+          Custody.DepositRequest{asset, observers} <- fetchAndArchive depositRequestCid
+          create AssetDeposit with lockers = empty; ..
+
+      nonconsuming Withdrawl : ()
+        with
+          withdrawlRequestCid : ContractId Custody.WithdrawlRequest
+        do
+          Custody.WithdrawlRequest{depositCid} <- fetchAndArchive withdrawlRequestCid
+          archive depositCid
+
+    nonconsuming choice Transfer : Either Asset (ContractId AssetDeposit)
+      with
+        transferDetails : TransferDetails
+        submitter : Party
+      controller customer, submitter
+      do
+        let accountCheck = \transferAccount -> assertMsg "Cannot execute transfer due to account mismatch." $ transferAccount == account
+
+        case transferDetails of
+          Send{senderAccount, depositCid} -> do
+            accountCheck senderAccount
+
+            deposit <- fetchAndArchive depositCid
+            assertMsg "Cannot execute transfer. Transaction submitter is not the locker of the deposit." $ submitter `member` deposit.lockers
+            pure $ Left deposit.asset
+          Receive{receiverAccount, asset} -> do
+            accountCheck receiverAccount
+            Right <$> create AssetDeposit with lockers = empty; observers = empty; .. -- TODO: Who should the observers be ?
+
     choice Terminate : ()
       with
         ctrl : Party
       controller ctrl
       do pure ()
+
+data TransferDetails
+  = Send with
+      senderAccount : Account
+      depositCid : ContractId AssetDeposit
+  | Receive with
+      receiverAccount : Account
+      asset : Asset
+  deriving (Eq, Show)
+
+createAccount : Party -> Party -> Account
+createAccount provider customer = Account with provider; owner = customer; id = Id with signatories = fromList [customer, provider]; label = partyToText customer <> "@" <> partyToText provider; version = 0
 
 template Offer
   with
@@ -160,6 +226,7 @@ template Offer
     controller customer can
       Accept : ContractId Service
         do
+          let account = createAccount provider customer
           createOrLookup Service with ..
 
       Decline : ()
@@ -190,4 +257,5 @@ template Request
         operator : Party
       controller operator, provider
       do
+        let account = createAccount provider customer
         createOrLookup Service with ..

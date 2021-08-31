@@ -129,6 +129,7 @@ makeTrade Providers{..} listingId buyer seller price qty currentId = do
         collateral = Order.Cleared clearinghouse
         details = Order.Details with
             id = sellerOrderId
+            receivableAccount = seller.mainAccount
             optExchangeFee = None
             listingId
             asset = Asset with id = listing.tradedAssetId; quantity = qty
@@ -142,6 +143,7 @@ makeTrade Providers{..} listingId buyer seller price qty currentId = do
         collateral = Order.Cleared clearinghouse
         details = Order.Details with
             id = buyerOrderId
+            receivableAccount = buyer.mainAccount
             listingId
             asset = Asset with id = listing.quotedAssetId; quantity = price * qty
             optExchangeFee = None

@@ -74,6 +74,7 @@ clearedTradingTest = do
         collateral = Order.Cleared clearinghouse
         details = Order.Details with
             id = aliceOrderId
+            receivableAccount = alice.mainAccount
             optExchangeFee = None
             listingId
             asset = tsla with quantity = 200.0
@@ -88,6 +89,7 @@ clearedTradingTest = do
         collateral = Order.Cleared clearinghouse
         details = Order.Details with
             id = bobOrderId
+            receivableAccount = bob.mainAccount
             listingId
             asset = shareAsset
             optExchangeFee = None
@@ -145,6 +147,7 @@ clearedTradingTest = do
         collateral = Order.Cleared clearinghouse
         details = Order.Details with
             id = bobOrderId2
+            receivableAccount = bob.mainAccount
             listingId
             asset = shareAsset
             optExchangeFee = None
@@ -163,6 +166,7 @@ clearedTradingTest = do
         collateral = Order.Cleared clearinghouse
         details = Order.Details with
             id = charlieOrderId
+            receivableAccount = charlie.mainAccount
             listingId
             asset = shareAsset
             optExchangeFee = None

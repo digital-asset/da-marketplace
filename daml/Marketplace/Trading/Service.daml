@@ -1,17 +1,14 @@
-
 module Marketplace.Trading.Service where
 
 import DA.Foldable (sequence_)
 import DA.Set qualified as Set
-import DA.Finance.Asset (AssetDeposit)
-import DA.Finance.Asset.Settlement (AssetSettlementRule)
-import DA.Finance.Types (Account)
+import DA.Finance.Asset (AssetDeposit, AssetDeposit_Lock(..), AssetDeposit_Unlock(..))
 import DA.Finance.Utils (fetchAndArchive)
+import Marketplace.Custody.Service qualified as Custody
 import Marketplace.Trading.Model qualified as Order
 import Marketplace.Clearing.Service qualified as Clearing
 import Marketplace.Trading.Confirmation.Model qualified as Confirmation
 import Marketplace.Trading.Error (Error (..))
-import qualified Marketplace.Rule.AllocationAccount as AllocationAccountRule (T, Deposit(..), Withdraw(..))
 import Marketplace.Utils
 
 type T = Service
@@ -25,8 +22,6 @@ template Service
     operator : Party
     provider : Party
     customer : Party
-    tradingAccount : Account
-    allocationAccount : Account
   where
     signatory operator, provider, customer
 
@@ -37,14 +32,12 @@ template Service
       withdrawFromAllocationAccount : Order.TradeCollateral -> Update Order.TradeCollateral
       withdrawFromAllocationAccount = \case
         (Order.Cleared party)         -> return $ Order.Cleared party
-        (Order.Collateral depositCid) -> Order.Collateral <$> exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Withdraw with transferTo = tradingAccount, ..
+        (Order.Collateral depositCid) -> Order.Collateral <$> exercise depositCid AssetDeposit_Unlock
 
       withdrawFeesFromAllocationAccount : Optional (ContractId AssetDeposit) -> Update (Optional (ContractId AssetDeposit))
       withdrawFeesFromAllocationAccount = \case
         None            -> return None
-        Some depositCid -> Some <$> exerciseByKey @AllocationAccountRule.T allocationAccount.id
-                                      AllocationAccountRule.Withdraw with transferTo = tradingAccount, ..
-
+        Some depositCid -> Some <$> exercise depositCid AssetDeposit_Unlock
 
     controller customer can
       nonconsuming RequestCreateOrder : Either (ContractId Order.T)
@@ -53,30 +46,33 @@ template Service
           collateral : Order.TradeCollateral
           details : Order.Details
         do
+          createdAt <- getTime
+
           let
             status = Order.New
             providerOrderId = None
             executions = []
             remainingQuantity = details.asset.quantity
-
-          let detailsWithDepositedFees : Update Order.Details
-              detailsWithDepositedFees = case details.optExchangeFee of
-                  Some feeDepositCid -> do
-                    newDepositCid <- exerciseByKey @AllocationAccountRule.T allocationAccount.id
-                                        AllocationAccountRule.Deposit with depositCid = feeDepositCid; ..
-                    return details with optExchangeFee = Some newDepositCid
-                  None -> return details
-
-          createdAt <- getTime
+            detailsWithDepositedFees : Update Order.Details
+            detailsWithDepositedFees = case details.optExchangeFee of
+              Some feeDepositCid -> do
+                newDepositCid <- exercise feeDepositCid AssetDeposit_Lock with newLockers = Set.fromList [ provider ]
+                return details with optExchangeFee = Some newDepositCid
+              None -> return details
 
           case collateral of
             (Order.Collateral depositCid) -> do
-                details <- detailsWithDepositedFees
-                collateral <- Order.Collateral <$> exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Deposit with ..
-                createOrderRequestCid <- create CreateOrderRequest with ..
-                orderCid <- create Order.Order with ..
+                lookupByKey @Custody.Service (operator, details.receivableAccount.provider, customer) >>= \case
+                  None -> do
+                    let reason = Error with code = "3003"; message = "Customer does not have a custodial relationship with the custodian of the quoted asset"
+                    Left <$> create Order.Order with status = Order.Rejected{reason}; ..
+                  Some _ -> do
+                    details <- detailsWithDepositedFees
+                    collateral <- Order.Collateral <$> exercise depositCid AssetDeposit_Lock with newLockers = Set.fromList [ provider ]
+                    createOrderRequestCid <- create CreateOrderRequest with ..
+                    orderCid <- create Order.Order with ..
 
-                return $ Right (orderCid, createOrderRequestCid, collateral)
+                    return $ Right (orderCid, createOrderRequestCid, collateral)
 
             (Order.Cleared clearinghouse) -> do
               optClearingService <- lookupByKey @Clearing.Service (operator,clearinghouse,customer)
@@ -202,17 +198,6 @@ template Service
       controller ctrl
       do pure ()
 
-assertAccounts : Party -> Account -> Account -> Update ()
-assertAccounts provider tradingAccount allocationAccount = do
-  (_,allocationAccountRule) <- fetchByKey @AllocationAccountRule.T allocationAccount.id
-  assertMsg "provider must be nominee on allocation account" $ allocationAccountRule.nominee == provider
-
-  (_,tradingAccountRule) <- fetchByKey @AssetSettlementRule tradingAccount.id
-  assertMsg "provider must be an observer, ctrl, or the provider on the trading account"
-    $ Set.member provider tradingAccountRule.observers
-   || Set.member provider tradingAccountRule.ctrls
-   || tradingAccount.provider == provider
-
 template Offer
   with
     operator : Party
@@ -224,10 +209,7 @@ template Offer
     controller customer can
       Accept : ContractId Service
         with
-          tradingAccount : Account
-          allocationAccount : Account
         do
-          assertAccounts provider tradingAccount allocationAccount
           createOrLookup Service with ..
 
       Decline : ()
@@ -242,8 +224,6 @@ template Request
   with
     customer : Party
     provider : Party
-    tradingAccount : Account
-    allocationAccount : Account
   where
     signatory customer
 
@@ -260,7 +240,6 @@ template Request
         operator : Party
       controller operator, provider
       do
-        assertAccounts provider tradingAccount allocationAccount
         createOrLookup Service with ..
 
 template CreateOrderRequest
