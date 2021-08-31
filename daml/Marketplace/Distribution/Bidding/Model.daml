@@ -56,9 +56,8 @@ template Bid
     assetId : Id
     details : Details
     quotedAssetId : Id
-    tradingAccount : Account
-    allocationAccount : Account
     depositCid : ContractId AssetDeposit
+    receivableAccount : Account
     allowPublishing : Bool
     status : Status
   where

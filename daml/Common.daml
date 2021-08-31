@@ -86,8 +86,6 @@ data Customer = Customer
     custodyServiceCid : ContractId Custody.Service
     biddingServiceCid : ContractId Bidding.Service
     mainAccount : Account
-    exchangeLockedAccount : Account
-    auctionLockedAccount : Account
     clearingAccount : Account
     marginAccount : Account
 
@@ -147,13 +145,9 @@ onboardCustomer : Providers -> Text -> Party -> Script Customer
 onboardCustomer Providers{..} party customer = do
   let
     mainAccountId           = Id with signatories = fromList [ bank, customer ]; label = "MainAccount-" <> party; version = 0
-    exchangeLockedAccountId = Id with signatories = fromList [ bank, customer ]; label = "ExchangeLockedAccount-" <> party; version = 0
-    auctionLockedAccountId  = Id with signatories = fromList [ bank, customer ]; label = "AuctionLockedAccount-" <> party; version = 0
     clearingAccountId       = Id with signatories = fromList [ bank, customer ]; label = "ClearingAccount-" <> party; version = 0
     marginAccountId         = Id with signatories = fromList [ bank, customer ]; label = "MarginAccount-" <> party; version = 0
     mainAccount             = Account with provider = bank; owner = customer; id = mainAccountId
-    exchangeLockedAccount   = Account with provider = bank; owner = customer; id = exchangeLockedAccountId
-    auctionLockedAccount    = Account with provider = bank; owner = customer; id = auctionLockedAccountId
     clearingAccount         = Account with provider = bank; owner = customer; id = clearingAccountId
     marginAccount           = Account with provider = bank; owner = customer; id = marginAccountId
 
@@ -164,10 +158,6 @@ onboardCustomer Providers{..} party customer = do
   -- Accounts
   openAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = mainAccountId; observers = [exchange, bank]; ctrls = [bank, customer]
   submit bank do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = openAccountRequestCid
-  openAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAllocationAccount with accountId = exchangeLockedAccountId; observers = empty; nominee = exchange
-  submit bank do exerciseCmd custodyServiceCid Custody.OpenAllocationAccount with openAllocationAccountRequestCid = openAccountRequestCid
-  openAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAllocationAccount with accountId = auctionLockedAccountId; observers = empty; nominee = bank
-  submit bank do exerciseCmd custodyServiceCid Custody.OpenAllocationAccount with openAllocationAccountRequestCid = openAccountRequestCid
 
   openAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = clearingAccountId; observers = [bank, clearinghouse]; ctrls = [bank, customer]
   submit bank do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = openAccountRequestCid
@@ -196,7 +186,7 @@ onboardCustomer Providers{..} party customer = do
 
   -- Bidding Service
   biddingServiceOfferCid <- submit bank do exerciseCmd distributorRoleCid Distributor.OfferBiddingService with ..
-  biddingServiceCid <- submit customer do exerciseCmd biddingServiceOfferCid Bidding.Accept with tradingAccount = mainAccount; allocationAccount = auctionLockedAccount
+  biddingServiceCid <- submit customer do exerciseCmd biddingServiceOfferCid Bidding.Accept
 
   pure $ Customer with ..
 

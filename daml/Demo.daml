@@ -36,7 +36,7 @@ runDemo parties@Parties{..} = do
   bobUsdClearing   <- depositAsset providers bob       (usd with quantity = 1_000_000.0) bob.clearingAccount.id
 
   auctionOfferCid <- submit bank do exerciseCmd distributorRoleCid Distributor.OfferAuctionService with customer = issuer.customer; ..
-  auctionServiceCid <- submit issuer.customer do exerciseCmd auctionOfferCid Auction.Accept with tradingAccount = issuer.mainAccount; allocationAccount = issuer.auctionLockedAccount; receivableAccount = issuer.mainAccount
+  auctionServiceCid <- submit issuer.customer do exerciseCmd auctionOfferCid Auction.Accept
 
   examples providers assets issuer
 
