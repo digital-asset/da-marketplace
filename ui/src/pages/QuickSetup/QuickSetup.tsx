@@ -27,18 +27,23 @@ import FinishPage from './FinishPage';
 import paths from '../../paths';
 import Widget from '../../components/Widget/Widget';
 import InstructionsPage from './Instructions';
+import RequestServicesPage from './RequestServicesPage';
+import AddAccountPage from './AddAccountPage';
 
 export enum MenuItems {
   ADD_PARTIES = 'add-parties',
-  INSTRUCTIONS = 'instructions',
+  ASSIGN_ROLES = 'assign-roles',
   REVIEW = 'review',
   LOG_IN = 'log-in-parties',
+  REQUEST_SERVICES = 'request-services',
+  NEW_ACCOUNT = 'new-account',
 }
 
 const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   const localCreds = computeCredentials('Operator');
 
   const history = useHistory();
+  const parties = retrieveParties() || [];
 
   const matchPath = props.match.path;
   const matchUrl = props.match.url;
@@ -47,13 +52,9 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   const [activeMenuItem, setActiveMenuItem] = useState<MenuItems>();
 
   useEffect(() => {
-    const parties = retrieveParties() || [];
     const newSegment = history.location?.pathname.split('/quick-setup')[1].replace('/', '');
     const activeMenuItem = Object.values(MenuItems).find(s => s === newSegment);
-
-    if (activeMenuItem) {
-      setActiveMenuItem(activeMenuItem);
-    }
+    setActiveMenuItem(activeMenuItem);
 
     if (isHubDeployment) {
       const adminParty = parties.find(p => p.partyName === 'UserAdmin');
@@ -67,17 +68,20 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
     <WellKnownPartiesProvider>
       <Widget
         subtitle={
-          activeMenuItem === MenuItems.LOG_IN
-            ? 'Log In'
-            : activeMenuItem === MenuItems.REVIEW
-            ? 'Review'
-            : 'Market Set-Up'
+          activeMenuItem
+            ? activeMenuItem.replace('-', ' ').replace(/(?:^|\s)\S/g, res => {
+                return res.toUpperCase();
+              })
+            : 'Quick Setup'
         }
         pageControls={{
           left: (
-            <Button className="ghost dark control-button" onClick={() => history.push(paths.login)}>
+            <Button
+              className="ghost dark control-button"
+              onClick={() => history.push(activeMenuItem ? '/quick-setup' : paths.login)}
+            >
               <ArrowLeftIcon color={'white'} />
-              Back
+              Back {activeMenuItem ? 'To Quick Setup' : 'To Login'}
             </Button>
           ),
           right:
@@ -92,14 +96,56 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
         }}
       >
         <div className="quick-setup">
+          {!activeMenuItem && (
+            <div className="setup-page main-select">
+              <h4 className="dark title">What would you like to do?</h4>
+              <NavLink to={`${matchUrl}${MenuItems.ADD_PARTIES}`}>
+                <Button className="main-button">
+                  Add Parties <ArrowRightIcon />
+                </Button>
+              </NavLink>
+              <NavLink to={`${matchUrl}${MenuItems.ASSIGN_ROLES}`}>
+                <Button className="main-button">
+                  Assign Roles
+                  <ArrowRightIcon />
+                </Button>
+              </NavLink>
+              <NavLink to={`${matchUrl}${MenuItems.REQUEST_SERVICES}`}>
+                <Button className="main-button">
+                  Request Services
+                  <ArrowRightIcon />
+                </Button>
+              </NavLink>
+              <NavLink to={`${matchUrl}${MenuItems.NEW_ACCOUNT}`}>
+                <Button className="main-button">
+                  Create Accounts
+                  <ArrowRightIcon />
+                </Button>
+              </NavLink>
+              <NavLink to={`${matchUrl}${MenuItems.REVIEW}`}>
+                <Button className="main-button">
+                  Review
+                  <ArrowRightIcon />
+                </Button>
+              </NavLink>
+            </div>
+          )}
           <Switch>
             <Route
               path={`${matchPath}/${MenuItems.ADD_PARTIES}`}
               component={() => <AddPartiesPage />}
             />
             <Route
-              path={`${matchPath}/${MenuItems.INSTRUCTIONS}`}
+              path={`${matchPath}/${MenuItems.ASSIGN_ROLES}`}
               component={() => <InstructionsPage adminCredentials={adminCredentials} />}
+            />
+            <Route
+              path={`${matchPath}/${MenuItems.REQUEST_SERVICES}`}
+              component={() => <RequestServicesPage adminCredentials={adminCredentials} />}
+            />
+            <Route
+              path={`${matchPath}/${MenuItems.NEW_ACCOUNT}`}
+              component={() => <AddAccountPage adminCredentials={adminCredentials} />}
             />
             <Route
               path={`${matchPath}/${MenuItems.REVIEW}`}
@@ -109,9 +155,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
               path={`${matchPath}/${MenuItems.LOG_IN}`}
               component={() => <FinishPage adminCredentials={adminCredentials} />}
             />
-            <Redirect
-              to={`${matchPath}/${isHubDeployment ? MenuItems.ADD_PARTIES : MenuItems.REVIEW}`}
-            />
+            <Redirect to={`${matchPath}/${isHubDeployment ? MenuItems.ADD_PARTIES : ''}`} />
           </Switch>
         </div>
       </Widget>

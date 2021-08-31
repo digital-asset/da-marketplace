@@ -16,7 +16,6 @@ import { retrieveParties } from '../../Parties';
 import { LoadingWheel } from './QuickSetup';
 
 import QueryStreamProvider from '../../websocket/queryStream';
-import QuickSetupPage from './QuickSetupPage';
 
 import paths from '../../paths';
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
@@ -50,9 +49,9 @@ const LoginTileGrid = () => {
 
   if (rolesLoading || identitiesLoading) {
     return (
-      <QuickSetupPage className="loading">
+      <div>
         <LoadingWheel label="Loading Log In Data..." />
-      </QuickSetupPage>
+      </div>
     );
   }
 
@@ -67,7 +66,7 @@ const LoginTileGrid = () => {
   }
 
   return (
-    <QuickSetupPage className="finish">
+    <div>
       <p className="dark details">cmd + click on a tile to launch a new tab </p>
       <div className="log-in-tile-grid">
         {identities.map(p => (
@@ -92,7 +91,7 @@ const LoginTileGrid = () => {
           </Link>
         ))}
       </div>
-    </QuickSetupPage>
+    </div>
   );
 
   async function handleLogin(party: string) {

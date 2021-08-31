@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import DamlLedger, { useLedger } from '@daml/react';
+import { useLedger } from '@daml/react';
 import { Party, Optional } from '@daml/types';
 import _ from 'lodash';
 
@@ -9,16 +9,10 @@ import {
   OnboardingInstruction,
 } from '@daml-ui.js/da-marketplace-ui/lib/UI/Onboarding';
 
-import { RolesProvider } from '../../context/RolesContext';
-import { OffersProvider } from '../../context/OffersContext';
-import { AutomationProvider } from '../../context/AutomationContext';
-
-import QueryStreamProvider from '../../websocket/queryStream';
 import { useStreamQueries } from '../../Main';
 import Credentials from '../../Credentials';
-import { httpBaseUrl, wsBaseUrl, publicParty, useVerifiedParties } from '../../config';
+import { useVerifiedParties } from '../../config';
 import QuickSetupPage from './QuickSetupPage';
-import { MenuItems } from './QuickSetup';
 import {
   Form,
   Button,
@@ -30,27 +24,20 @@ import {
   DropdownItemProps,
 } from 'semantic-ui-react';
 import { createDropdownProp } from '../common';
+import { ArrowRightIcon } from '../../icons/icons';
+import SelectRolesPage from './SelectRolesPage';
 
 const InstructionsPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
 
   return (
-    <DamlLedger
-      token={adminCredentials.token}
-      party={adminCredentials.party}
-      httpBaseUrl={httpBaseUrl}
-      wsBaseUrl={wsBaseUrl}
+    <QuickSetupPage
+      className="instructions"
+      title="Assign Roles"
+      adminCredentials={adminCredentials}
     >
-      <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
-        <AutomationProvider publicParty={publicParty}>
-          <RolesProvider>
-            <OffersProvider>
-              <TestInstructions />
-            </OffersProvider>
-          </RolesProvider>
-        </AutomationProvider>
-      </QueryStreamProvider>
-    </DamlLedger>
+      <TestInstructions />
+    </QuickSetupPage>
   );
 };
 
@@ -296,7 +283,7 @@ const TestInstructions = () => {
 
   const [onboardParty, setOnboardParty] = useState('');
   const [instructionFields, setInstructionFields] = useState<InstFieldsWithType[]>([]);
-  const [currentAddInstruction, setCurrentAddInstruction] = useState<string>('');
+  const [manualAssignment, setManualAssignment] = useState<boolean>(false);
 
   const { contracts: onboardingContracts } = useStreamQueries(OperatorOnboarding);
 
@@ -318,58 +305,61 @@ const TestInstructions = () => {
       }
     );
     setOnboardParty('');
+    setInstructionFields([]);
   }
 
   return (
-    <QuickSetupPage
-      className="test-instructions"
-      title="Create Instructions List"
-      nextItem={MenuItems.REVIEW}
-    >
-      <div className="page-row">
-        <div className="add-clear">
-          <Form>
-            <Form.Group>
-              <Form.Select
-                options={[
-                  createDropdownProp('Trading', InstructionType.TRADING),
-                  createDropdownProp('Custody', InstructionType.CUSTODY),
-                  createDropdownProp('Bidding', InstructionType.BIDDING),
-                  createDropdownProp('Clearing', InstructionType.CLEARING),
-                  createDropdownProp('Issuance', InstructionType.ISSUANCE),
-                  createDropdownProp('Auction', InstructionType.AUCTION),
-                  createDropdownProp('Investor (template)', 'INVESTOR_TEMPLATE'),
-                  createDropdownProp('Issuer (template)', 'ISSUER_TEMPLATE'),
-                ].filter(dtp => !instructionFields.find(et => et.instructionType === dtp.value))}
-                onChange={(_, data) => {
-                  if ((data.value as string) === 'INVESTOR_TEMPLATE') {
-                    setInstructionFields(investorInstructions());
-                  } else if ((data.value as string) === 'ISSUER_TEMPLATE') {
-                    setInstructionFields(issuerInstructions());
-                  } else {
-                    setInstructionFields([
-                      ...instructionFields,
-                      {
-                        instructionType: data.value as InstructionType,
-                        fields: newInstructionFields(data.value as InstructionType),
-                      },
-                    ]);
-                  }
-                }}
-                value={currentAddInstruction}
-              />
-              <Button
-                onClick={() => {
-                  setInstructionFields([]);
-                  setCurrentAddInstruction('');
-                }}
-              >
-                Clear
-              </Button>
-            </Form.Group>
-          </Form>
+    <>
+      {manualAssignment ? (
+        <>
+          <SelectRolesPage />
+          <Button
+            onClick={() => {
+              setInstructionFields([]);
+              setManualAssignment(false);
+            }}
+          >
+            Back
+          </Button>
+        </>
+      ) : instructionFields.length === 0 ? (
+        <div className="role-list">
+          {[
+            createDropdownProp(InstructionType.TRADING, InstructionType.TRADING),
+            createDropdownProp(InstructionType.CUSTODY, InstructionType.CUSTODY),
+            createDropdownProp(InstructionType.BIDDING, InstructionType.BIDDING),
+            createDropdownProp(InstructionType.CLEARING, InstructionType.CLEARING),
+            createDropdownProp(InstructionType.ISSUANCE, InstructionType.ISSUANCE),
+            createDropdownProp(InstructionType.AUCTION, InstructionType.AUCTION),
+            createDropdownProp('Investor', 'INVESTOR_TEMPLATE'),
+            createDropdownProp('Issuer', 'ISSUER_TEMPLATE'),
+          ].map(data => (
+            <Button
+              className="ghost"
+              onClick={() => {
+                if ((data.value as string) === 'INVESTOR_TEMPLATE') {
+                  setInstructionFields(investorInstructions());
+                } else if ((data.value as string) === 'ISSUER_TEMPLATE') {
+                  setInstructionFields(issuerInstructions());
+                } else {
+                  setInstructionFields([
+                    {
+                      instructionType: data.value as InstructionType,
+                      fields: newInstructionFields(data.value as InstructionType),
+                    },
+                  ]);
+                }
+              }}
+            >
+              {data.text}
+            </Button>
+          ))}
+          <Button className="ghost" onClick={() => setManualAssignment(true)}>
+            Other
+          </Button>
         </div>
-        <div className="test">
+      ) : (
+        <div className="instruction-list">
           <Segment basic>
             <Form>
               {instructionFields.map((fields, idx) => (
@@ -392,12 +382,22 @@ const TestInstructions = () => {
                 options={partyOptions}
                 value={onboardParty}
               />
-              <Button onClick={doRunOnboarding}>Go!</Button>
+              <Button className="ghost submit" onClick={doRunOnboarding}>
+                Submit
+              </Button>
             </Form>
           </Segment>
+          <Button
+            onClick={() => {
+              setInstructionFields([]);
+              setManualAssignment(false);
+            }}
+          >
+            Back
+          </Button>
         </div>
-      </div>
-    </QuickSetupPage>
+      )}
+    </>
   );
 };
 

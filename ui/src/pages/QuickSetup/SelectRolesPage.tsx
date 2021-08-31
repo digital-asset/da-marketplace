@@ -8,6 +8,7 @@ import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace
 import { useRolesContext, RoleKind, terminateRole } from '../../context/RolesContext';
 import { useOffers } from '../../context/OffersContext';
 import { useAutomations } from '../../context/AutomationContext';
+import Credentials from '../../Credentials';
 
 import { useStreamQueries } from '../../Main';
 import { MarketplaceTrigger, deployAutomation } from '../../automation';
@@ -65,7 +66,7 @@ const SelectRolesPage = () => {
   );
 
   return (
-    <div className="assign-roles">
+    <>
       <Form>
         <Form.Select
           className="request-select"
@@ -109,7 +110,7 @@ const SelectRolesPage = () => {
           </Button>
         </div>
       </Form>
-    </div>
+    </>
   );
 
   async function handleTerminateRole() {

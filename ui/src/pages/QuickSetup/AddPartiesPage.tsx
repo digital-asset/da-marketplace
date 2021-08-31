@@ -81,79 +81,83 @@ const AddPartiesPage = () => {
 
   if (loadingStatus) {
     return (
-      <QuickSetupPage>
-        <LoadingWheel label={loadingStatus} />
-        {loadingStatus === LoadingStatus.CREATING_ADMIN_CONTRACTS ? (
-          <DamlLedger
-            token={adminCredentials.token}
-            party={adminCredentials.party}
-            httpBaseUrl={httpBaseUrl}
-            wsBaseUrl={wsBaseUrl}
-          >
-            <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
-              <AdminLedger
-                adminCredentials={adminCredentials}
-                onComplete={() => setLoadingStatus(LoadingStatus.WAITING_FOR_TRIGGERS)}
-              />
-            </QueryStreamProvider>
-          </DamlLedger>
-        ) : (
-          loadingStatus === LoadingStatus.WAITING_FOR_TRIGGERS &&
-          parties.map(p => (
-            <PublicDamlProvider
-              party={p.party}
-              token={p.token}
+      <div className="setup-page">
+        <div className="add-parties-page">
+          <LoadingWheel label={loadingStatus} />
+          {loadingStatus === LoadingStatus.CREATING_ADMIN_CONTRACTS ? (
+            <DamlLedger
+              token={adminCredentials.token}
+              party={adminCredentials.party}
               httpBaseUrl={httpBaseUrl}
               wsBaseUrl={wsBaseUrl}
             >
-              <QueryStreamProvider defaultPartyToken={p.token}>
-                <CreateVerifiedIdentity
-                  party={p}
-                  onComplete={() => history.push(MenuItems.REVIEW)}
+              <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
+                <AdminLedger
+                  adminCredentials={adminCredentials}
+                  onComplete={() => setLoadingStatus(LoadingStatus.WAITING_FOR_TRIGGERS)}
                 />
               </QueryStreamProvider>
-            </PublicDamlProvider>
-          ))
-        )}
-      </QuickSetupPage>
+            </DamlLedger>
+          ) : (
+            loadingStatus === LoadingStatus.WAITING_FOR_TRIGGERS &&
+            parties.map(p => (
+              <PublicDamlProvider
+                party={p.party}
+                token={p.token}
+                httpBaseUrl={httpBaseUrl}
+                wsBaseUrl={wsBaseUrl}
+              >
+                <QueryStreamProvider defaultPartyToken={p.token}>
+                  <CreateVerifiedIdentity
+                    party={p}
+                    onComplete={() => history.push('/quick-setup')}
+                  />
+                </QueryStreamProvider>
+              </PublicDamlProvider>
+            ))
+          )}
+        </div>
+      </div>
     );
   }
 
   return (
-    <QuickSetupPage className="add-parties">
-      {parties.length > 0 ? (
-        <>
-          <div className="page-row">
-            <div>
-              <p className="bold">Parties</p>
-              <div className="party-names uploaded">
-                {parties.map(p => (
-                  <p className="party-name" key={p.party}>
-                    {p.partyName}
-                  </p>
-                ))}
+    <div className="setup-page">
+      <div className="add-parties-page">
+        {parties.length > 0 ? (
+          <>
+            <div className="page-row">
+              <div>
+                <p className="bold">Parties</p>
+                <div className="party-names uploaded">
+                  {parties.map(p => (
+                    <p className="party-name" key={p.party}>
+                      {p.partyName}
+                    </p>
+                  ))}
+                </div>
               </div>
+              <div className="upload-parties uploaded">{uploadButton}</div>
             </div>
-            <div className="upload-parties uploaded">{uploadButton}</div>
+            <Button
+              className="ghost"
+              disabled={parties.length === 0}
+              onClick={() => setLoadingStatus(LoadingStatus.CREATING_ADMIN_CONTRACTS)}
+            >
+              Submit
+            </Button>
+          </>
+        ) : (
+          <div className="upload-parties">
+            <p className="details">
+              Download the .json file from the Users tab on Daml Hub, and upload it here.
+            </p>
+            {uploadButton}
+            <span className="login-details dark">{error}</span>
           </div>
-          <Button
-            className="ghost next"
-            disabled={parties.length === 0}
-            onClick={() => setLoadingStatus(LoadingStatus.CREATING_ADMIN_CONTRACTS)}
-          >
-            Next
-          </Button>
-        </>
-      ) : (
-        <div className="upload-parties">
-          <p className="details">
-            Download the .json file from the Users tab on Daml Hub, and upload it here.
-          </p>
-          {uploadButton}
-          <span className="login-details dark">{error}</span>
-        </div>
-      )}
-    </QuickSetupPage>
+        )}
+      </div>
+    </div>
   );
 };
 

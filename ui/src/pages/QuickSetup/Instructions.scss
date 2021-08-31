@@ -1,0 +1,36 @@
+@use 'themes/variables' as *;
+
+@mixin instructions {
+  .instructions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+
+    .role-list {
+      margin-top: $spacing-xl;
+      display: grid;
+      grid-gap: $spacing-xl;
+      grid-template-columns: repeat(3, 1fr);
+      button.ghost {
+        display: flex;
+        justify-content: center;
+      }
+    }
+
+    .instruction-list {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      .instruction-fields {
+        width: 100%;
+        .fields {
+          display: grid;
+          grid-gap: $spacing-s;
+
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+    }
+  }
+}

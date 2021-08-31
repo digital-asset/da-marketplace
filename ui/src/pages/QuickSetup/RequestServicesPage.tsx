@@ -13,7 +13,7 @@ import {
   usePartyName,
 } from '../../config';
 import { itemListAsText } from '../../pages/page/utils';
-import { computeToken } from '../../Credentials';
+import Credentials, { computeToken } from '../../Credentials';
 import QueryStreamProvider from '../../websocket/queryStream';
 
 import { Request as AuctionRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
@@ -39,6 +39,7 @@ import { CreateEvent } from '@daml/ledger';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import AccountSelection, { AccountType, AccountInfos } from './AccountSelection';
+import QuickSetupPage from './QuickSetupPage';
 
 export type AccountsForServices = {
   clearingAccount?: Account;
@@ -71,7 +72,8 @@ const SUPPORTED_REQUESTS = [
   ServiceKind.BIDDING,
 ];
 
-const RequestServicesPage = () => {
+const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
+  const { adminCredentials } = props;
   const userParties = retrieveUserParties() || [];
 
   const [requestInfo, setRequestInfo] = useState<IRequestServiceInfo>();
@@ -91,14 +93,21 @@ const RequestServicesPage = () => {
   }, [userParties, customer]);
 
   return (
-    <div className="request-services">
-      <RequestForm
-        requestInfo={requestInfo}
-        setRequestInfo={setRequestInfo}
-        createRequest={() => setCreatingRequest(true)}
-        creatingRequest={creatingRequest}
-        token={token}
-      />
+    <>
+      <QuickSetupPage
+        className="request-service"
+        title="Request Services"
+        adminCredentials={adminCredentials}
+      >
+        <RequestForm
+          requestInfo={requestInfo}
+          setRequestInfo={setRequestInfo}
+          createRequest={() => setCreatingRequest(true)}
+          creatingRequest={creatingRequest}
+          token={token}
+        />
+      </QuickSetupPage>
+
       {creatingRequest && requestInfo && requestInfo.provider && requestInfo.customer && token && (
         <DamlLedger
           token={token}
@@ -119,7 +128,7 @@ const RequestServicesPage = () => {
           </QueryStreamProvider>
         </DamlLedger>
       )}
-    </div>
+    </>
   );
 };
 

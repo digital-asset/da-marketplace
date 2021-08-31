@@ -7,6 +7,22 @@ import { NewAccount } from '../custody/New';
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
 import { computeToken } from '../../Credentials';
 import { Form } from 'semantic-ui-react';
+import Credentials from '../../Credentials';
+import QuickSetupPage from './QuickSetupPage';
+
+const AddAccount = (props: { adminCredentials: Credentials }) => {
+  const { adminCredentials } = props;
+
+  return (
+    <QuickSetupPage
+      className="add-account"
+      title="Create Account"
+      adminCredentials={adminCredentials}
+    >
+      <AddAccountPage />
+    </QuickSetupPage>
+  );
+};
 
 const AddAccountPage = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<string>();
@@ -62,4 +78,4 @@ const AddAccountPage = () => {
   );
 };
 
-export default AddAccountPage;
+export default AddAccount;
