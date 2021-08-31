@@ -249,8 +249,7 @@ const getFields = (inst: InstFieldsWithType) => {
       };
     }
     default: {
-      return {
-      }
+      return {};
     }
   }
 };
