@@ -25,9 +25,9 @@ checkOrderStatusMatches orderCid party status = do
   order.status === status
   pure ()
 
-setupClearingCustomer : Providers -> Assets -> Text -> Script Customer
-setupClearingCustomer providers@Providers{clearinghouse} Assets{..} name = do
-  customer <- onboardCustomer providers name
+setupClearingCustomer : Providers -> Assets -> Text -> Party -> Script Customer
+setupClearingCustomer providers@Providers{clearinghouse} Assets{..} name party = do
+  customer <- onboardCustomer providers name party
   let
     cashAsset = usd with quantity = 2000000.0
 
@@ -44,17 +44,20 @@ setupClearingCustomer providers@Providers{clearinghouse} Assets{..} name = do
   return customer
 
 clearedTradingTest : Script ()
-clearedTradingTest = do
+clearedTradingTest = allocateParties >>= runClearedTradingTest
 
-  providers@Providers{operator; exchange; matchingServiceCid; clearinghouse, clearingRoleCid, bank, public} <- onboardProviders
+runClearedTradingTest : Parties -> Script ()
+runClearedTradingTest parties@Parties{..} = do
 
-  issuer <- onboardCustomer providers "Issuer"
+  providers@Providers{operator; exchange; matchingServiceCid; clearinghouse, clearingRoleCid, bank, public} <- onboardProviders parties
+
+  issuer <- onboardCustomer providers "Issuer" issuer
   assets@Assets{usd} <- onboardAssets providers issuer
 
-  alice <- setupClearingCustomer providers assets "Alice"
-  bob <- setupClearingCustomer providers assets "Bob"
-  charlie <- setupClearingCustomer providers assets "Charlie"
-  dana <- setupClearingCustomer providers assets "Dana"
+  alice   <- setupClearingCustomer providers assets "Alice" alice
+  bob     <- setupClearingCustomer providers assets "Bob" bob
+  charlie <- setupClearingCustomer providers assets "Charlie" charlie
+  dana    <- setupClearingCustomer providers assets "Dana" dana
 
 
   -- Setup clearing market service
@@ -134,7 +137,7 @@ makeTrade Providers{..} listingId buyer seller price qty currentId = do
             orderType = Order.Limit with price
 
   let buyerOrderId = show (currentId + 1)
-  Right (buyerOrderCid, buyerCreateOrderRequestCid, _) <- submitMulti [buyer.customer] [public] $ do
+  Right (buyerOrderCid, buyerCreateOrderRequestCid, _) <- submit buyer.customer $ do
     exerciseCmd buyer.tradingServiceCid Trading.RequestCreateOrder with
         collateral = Order.Cleared clearinghouse
         details = Order.Details with

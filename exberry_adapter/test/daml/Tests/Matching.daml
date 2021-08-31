@@ -1,0 +1,98 @@
+module Tests.Matching where
+
+import Daml.Script
+import Common
+import DA.List
+import Marketplace.Trading.Service qualified as Trading
+import Marketplace.Trading.Model qualified as Order
+import Marketplace.Listing.Service qualified as Listing
+import Marketplace.Listing.Model qualified as Listing
+
+import Utils
+
+checkOrderStatusMatches : Text -> Party -> Order.Status -> Script Bool
+checkOrderStatusMatches orderId party status = do
+  Some (_, order) <- queryContractKey @Order.T party (party, orderId)
+  return $ order.status == status
+
+matchingTest : Script ()
+matchingTest = getExistingParties >>= runMatchingTest
+
+runMatchingTest : Parties -> Script ()
+runMatchingTest parties@Parties{userAdmin = operator; ..} = do
+
+  debug "Onboarding providers..."
+  providers@Providers{exchange; matchingServiceCid; bank} <- onboardProviders parties
+
+  debug "Onboarding customers..."
+  alice <- onboardCustomer providers "Alice" alice
+  bob <- onboardCustomer providers "Bob" bob
+  issuer <- onboardCustomer providers "Issuer" issuer
+
+  debug "Requesting listing..."
+  Assets{usd; tsla} <- onboardAssets providers issuer
+  let
+    shareAsset = tsla with quantity = 200.0
+    cashAsset = usd with quantity = 20000.0
+  aliceDepositCid <- depositAsset providers alice shareAsset alice.mainAccount.id
+  bobDepositCid <- depositAsset providers bob cashAsset bob.mainAccount.id
+
+  listingTestNumber <- getRandom 1 5000
+  let listingId = "TSLAUSDTEST" <> show listingTestNumber
+  -- List a Security to trade
+  (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
+  let
+    symbol = listingId
+    listingType = Listing.CollateralizedRequest
+    calendarId = "1261007448"
+    description = "Tesla Inc. (Match Test)"
+    tradedAssetId = tsla.id
+    quotedAssetId = usd.id
+    tradedAssetPrecision = 2
+    quotedAssetPrecision = 2
+    minimumTradableQuantity = 1.0
+    maximumTradableQuantity = 1000000.0
+    providerId = "123"
+    observers = []
+  createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
+
+  debug "Waiting for listing to be accepted..."
+  (listingCid, Listing.Listing{listingId}) <- waitQuery 10.0 (queryContractKey @Listing.Listing exchange (operator, exchange, listingId))
+  debug $ listingId
+
+  -- -- Create orders
+  orderNumber <- getRandom 5000 10000
+
+  let aliceOrderId = show orderNumber
+  Right (aliceOrderCid, aliceCreateOrderRequestCid, aliceAssetDepositCid) <- alice.customer `submit` do
+    exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with
+        collateral = Order.Collateral aliceDepositCid
+        details = Order.Details with
+            id = aliceOrderId
+            listingId
+            asset = tsla with quantity = 200.0
+            side = Order.Sell
+            timeInForce = Order.GTC
+            optExchangeFee = None
+            orderType = Order.Limit with price = 100.0
+
+  debug "Waiting for Alice's order to be accepted..."
+  waitUntil 5.0 $ checkOrderStatusMatches aliceOrderId exchange Order.PendingExecution
+
+  let bobOrderId = show $ orderNumber + 1
+  Right (bobOrderCid, bobCreateOrderRequestCid, bobAssetDepositCid) <- bob.customer `submit` do
+    exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with
+        collateral = Order.Collateral bobDepositCid
+        details = Order.Details with
+            id = bobOrderId
+            listingId
+            asset = shareAsset
+            side = Order.Buy
+            optExchangeFee = None
+            timeInForce = Order.GTC
+            orderType = Order.Limit with price = 100.0
+
+  debug "Waiting for orders to be executed..."
+  waitUntil 10.0 $ checkOrderStatusMatches aliceOrderId exchange Order.FullyExecuted
+  waitUntil 10.0 $ checkOrderStatusMatches bobOrderId exchange Order.FullyExecuted
+  debug "Test passed!"

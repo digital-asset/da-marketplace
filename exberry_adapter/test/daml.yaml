@@ -1,12 +1,9 @@
 sdk-version: 1.12.0
-name: da-marketplace
+name: marketplace-matching-test
 source: daml
-# init-script: UI.Test:setupTest
 parties:
   - Alice
   - Bob
-  - Dana
-  - Charlie
   - Operator
   - Public
   - Exchange
@@ -15,17 +12,13 @@ parties:
   - Bank
   - Issuer
 version: 0.2.0
+# trigger-dependencies-begin
 dependencies:
   - daml-prim
   - daml-stdlib
-  - daml-script
-start-navigator: no
+  - daml-trigger
+  - ../../.daml/dist/da-marketplace-0.2.0.dar
 sandbox-options:
   - --wall-clock-time
-  - --ledgerid=da-marketplace-sandbox
-codegen:
-  js:
-    output-directory: daml.js
-    npm-scope: daml.js
 build-options:
   - --ghc-option=-Wno-deprecations

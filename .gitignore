@@ -2,6 +2,7 @@
 /.daml
 triggers/.daml
 integrationTesting/.daml
+exberry_adapter/test/.daml
 pkg
 
 da-marketplace*.dar

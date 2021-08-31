@@ -21,11 +21,12 @@ checkOrderStatusMatches orderCid party status = do
 
 tradingEndToEndTest : Script ()
 tradingEndToEndTest = do
-  providers@Providers{exchange; matchingServiceCid; bank} <- onboardProviders
+  parties@Parties{..} <- allocateParties
+  providers@Providers{exchange; matchingServiceCid; bank} <- onboardProviders parties
 
-  alice <- onboardCustomer providers "Alice"
-  bob <- onboardCustomer providers "Bob"
-  issuer <- onboardCustomer providers "Issuer"
+  alice <- onboardCustomer providers "Alice" alice
+  bob <- onboardCustomer providers "Bob" bob
+  issuer <- onboardCustomer providers "Issuer" issuer
 
   Assets{usd; tsla} <- onboardAssets providers issuer
   let
