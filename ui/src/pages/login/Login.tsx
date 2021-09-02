@@ -104,7 +104,10 @@ const QuickSetupButton = () => {
   const history = useHistory();
 
   return (
-    <Button className="ghost dark" onClick={() => history.push(paths.quickSetup.root)}>
+    <Button
+      className="ghost dark"
+      onClick={() => history.push(paths.quickSetup.root + '/add-parties')}
+    >
       Quick Setup
     </Button>
   );

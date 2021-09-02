@@ -19,7 +19,7 @@
 6. Wait for all auto-approve triggers for all parties to deploy...
 7. Assign roles to specific parties:
     - Exchange: Pick party `Exchange`
-      - Market Clearing Service Contract (optional): `CCp` as provider
+      - Market Clearing Service Contract (optional): `CCp` as provider, `Bank` as custodian
     - Bank: Pick party `Bank`
     - Clearing House: Pick party `Ccp`
         - Clearing House Role Contract: `Bank` as the custodian and `Clearing-Bank` for the clearing account
@@ -29,9 +29,9 @@
         - Bidding Service Contract: `Bank` as provider and custodian, and enter `Bidding-TradingAccount` for the trading account
         - Clearing Service Contract (optional): `Ccp` as provider, `Bank` as custodian and enter `Clearing-ClearingAccount` for clearing account
     - Issuer: Pick party `Issuer`
+        - Custody Service Contract: `Bank` as provider
         - Issuance Service Contract: `Bank` as provider and custodian, and enter `Issuance-optSafekeepingAccount` for the safekeeping account
         - Auction Service Contract: `Bank` as provider and custodian, enter `Auction-TradingAccount` for the trading account and enter `Auction-ReceivableAccount` for the  receivable account
-        - Custody Service Contract: `Bank` as provider
 
 ## Issuing new assets
 

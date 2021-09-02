@@ -170,7 +170,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
               path={`${matchPath}/${MenuItems.LOG_IN}`}
               component={() => <LoginPage adminCredentials={adminCredentials} />}
             />
-            <Redirect to={`${matchPath}${isHubDeployment ? `/${MenuItems.ADD_PARTIES}` : ''}`} />
+            <Redirect to={matchPath} />
           </Switch>
         </div>
       </Widget>

@@ -714,11 +714,7 @@ const InstructionFieldInputs: React.FC<InstructionFieldsProps> = ({
                   placeholder="Select..."
                   onChange={updateInstructionTypes}
                   options={partyOptions}
-                  value={
-                    (k === 'custodian' && (custodianName || custodian)) ||
-                    (instructionFields[idx].fields || {})[k] ||
-                    ''
-                  }
+                  value={(instructionFields[idx].fields || {})[k] || ''}
                 />
               );
             } else {
