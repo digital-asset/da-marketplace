@@ -5,6 +5,9 @@ integrationTesting/.daml
 exberry_adapter/test/.daml
 pkg
 
+daml-ui.js
+ui/.daml
+
 da-marketplace*.dar
 da-marketplace*.tmp
 da-marketplace*.dit

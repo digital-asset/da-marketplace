@@ -278,6 +278,7 @@ stop-settlement-trigger: |$(STATE_DIR)
 .PHONY: clean-ui
 clean-ui:
 	rm -rf daml.js
+	rm -rf daml-ui.js
 	cd $(UI_DIR) && rm -rf build node_modules
 
 .PHONY: clean-daml
