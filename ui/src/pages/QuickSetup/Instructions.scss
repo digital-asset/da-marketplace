@@ -5,7 +5,41 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    height: 100%;
+
+    button.main-button {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      width: 50%;
+      padding: var(--spacing-m);
+      margin-bottom: $spacing-m;
+    }
+
+    .checkbox-cleared {
+      display: flex;
+      flex-direction: row;
+      padding-top: $spacing-s;
+
+      p.p2.cleared-exchange {
+        padding-left: $spacing-xs;
+      }
+    }
+
+    h2 {
+      margin: 0px;
+      position: relative;
+    }
+
+    h4 {
+      margin-top: 0px;
+    }
+
+    .control-button {
+      position: absolute;
+      top: var(--spacing-m);
+      left: var(--spacing-m);
+      border: none;
+    }
 
     .role-list {
       margin-top: $spacing-xl;
@@ -30,19 +64,32 @@
       width: 100%;
       display: flex;
       flex-direction: column;
+      background-color: var(--white);
 
       .request-select {
         width: 1fr;
       }
-      .instruction-fields {
+
+      .instruction-forms {
         background-color: var(--cool-grey-100);
         border: 1px solid var(--cool-grey-80);
         padding: $spacing-s;
         border-radius: 4px;
         margin-bottom: $spacing-s;
+        max-height: 270px;
+        overflow-y: auto;
 
         h3 {
           margin-bottom: $spacing-s;
+        }
+
+        .instruction-fields {
+          padding-top: $spacing-s;
+          border-bottom: 1px solid var(--cool-grey-80);
+
+          &:last-of-type {
+            border: none;
+          }
         }
       }
 
@@ -51,21 +98,6 @@
         display: grid;
         grid-gap: $spacing-s;
         grid-template-columns: repeat(3, 1fr);
-      }
-      .contract-browse-buttons {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        width: 100%;
-
-        button.ghost {
-          &.icon-right .icon {
-            margin: 0 0 0 $spacing-xs;
-          }
-          &.browse {
-            border: none;
-          }
-        }
       }
     }
   }

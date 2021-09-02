@@ -24,7 +24,6 @@ import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
 import AddPartiesPage from './AddPartiesPage';
 import ReviewPage from './ReviewPage';
 import FinishPage from './FinishPage';
-import paths from '../../paths';
 import Widget from '../../components/Widget/Widget';
 import InstructionsPage from './Instructions';
 import RequestServicesPage from './RequestServicesPage';
@@ -50,7 +49,6 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
 
   const [adminCredentials, setAdminCredentials] = useState<Credentials>(localCreds);
   const [activeMenuItem, setActiveMenuItem] = useState<MenuItems>();
-  const [isClearedExchange, setIsClearedExchange] = useState<boolean>(false);
 
   useEffect(() => {
     const parties = retrieveParties() || [];
@@ -72,20 +70,6 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
       <Widget
         subtitle={'Quick Setup'}
         pageControls={{
-          left: (
-            <Button
-              className="ghost dark control-button"
-              onClick={() =>
-                activeMenuItem &&
-                activeMenuItem !== MenuItems.ADD_PARTIES &&
-                storedParties.length > 0 &&
-                history.push(paths.login)
-              }
-            >
-              <ArrowLeftIcon color={'white'} />
-              Back
-            </Button>
-          ),
           right:
             activeMenuItem === MenuItems.ADD_PARTIES &&
             storedParties.length == 0 ? undefined : activeMenuItem === MenuItems.REVIEW ? (
@@ -113,12 +97,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
             />
             <Route
               path={`${matchPath}/${MenuItems.ASSIGN_ROLES}`}
-              component={() => (
-                <InstructionsPage
-                  adminCredentials={adminCredentials}
-                  isClearedExchange={isClearedExchange}
-                />
-              )}
+              component={() => <InstructionsPage adminCredentials={adminCredentials} />}
             />
             <Route
               path={`${matchPath}/${MenuItems.ADD_RELATIONSHIPS}`}
@@ -142,13 +121,6 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
               }`}
             />
           </Switch>
-          <div className="checkbox-cleared">
-            <Checkbox
-              active={isClearedExchange}
-              onClick={() => setIsClearedExchange(!isClearedExchange)}
-            />
-            <p className="p2 dark cleared-exchange"> Cleared Exchange</p>
-          </div>
         </div>
       </Widget>
     </WellKnownPartiesProvider>

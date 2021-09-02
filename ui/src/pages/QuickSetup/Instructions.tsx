@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { useLedger } from '@daml/react';
 import { Party, Optional } from '@daml/types';
@@ -8,7 +8,7 @@ import {
   OperatorOnboarding,
   OnboardingInstruction,
 } from '@daml-ui.js/da-marketplace-ui/lib/UI/Onboarding';
-
+import { useHistory } from 'react-router-dom';
 import { useStreamQueries } from '../../Main';
 import Credentials from '../../Credentials';
 import { useVerifiedParties } from '../../config';
@@ -17,13 +17,14 @@ import {
   Form,
   Button,
   Header,
+  Checkbox,
   Segment,
   DropdownProps,
   InputOnChangeData,
   DropdownItemProps,
 } from 'semantic-ui-react';
 import { createDropdownProp } from '../common';
-import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
+import { ArrowLeftIcon } from '../../icons/icons';
 
 interface InstFieldsWithTitle {
   title: string;
@@ -36,19 +37,19 @@ enum FieldType {
 }
 
 enum InstructionType {
-  MARKETCLEARING = 'Market Clearing Service Request',
-  CLEARING = 'Clearing Service Request',
-  TRADING = 'Trading Service Request',
-  CUSTODY = 'Custody Service Request',
-  BIDDING = 'Bidding Service Request',
-  ISSUANCE = 'Issuance Service Request',
-  AUCTION = 'Auction Service Request',
+  MARKETCLEARING = 'Market Clearing Service',
+  CLEARING = 'Clearing Service',
+  TRADING = 'Trading Service',
+  CUSTODY = 'Custody Service ',
+  BIDDING = 'Bidding Service',
+  ISSUANCE = 'Issuance Service',
+  AUCTION = 'Auction Service',
 
-  CLEARINGHOUSE = 'Clearing House',
+  CUSTODIAN = 'Custodian Role',
+  DISTRIBUTOR = 'Distributor Role',
+  CLEARINGHOUSE = 'Clearing House Role',
+
   EXCHANGE = 'Exchange',
-  CUSTODIAN = 'Custodian',
-  DISTRIBUTOR = 'Distributor',
-
   INVESTOR = 'Investor',
   ISSUER = 'Issuer',
   BANK = 'Bank',
@@ -119,10 +120,13 @@ type InstFieldsWithType = {
   fields?: InstructionFields;
 };
 
-const InstructionsPage = (props: { adminCredentials: Credentials; isClearedExchange: boolean }) => {
-  const { adminCredentials, isClearedExchange } = props;
+const InstructionsPage = (props: { adminCredentials: Credentials }) => {
+  const { adminCredentials } = props;
+
+  const history = useHistory();
 
   const [instructionFields, setInstructionFields] = useState<InstFieldsWithTitle>();
+  const [isClearedExchange, setIsClearedExchange] = useState(false);
 
   const instructionTemplates = [
     InstructionType.EXCHANGE,
@@ -132,25 +136,48 @@ const InstructionsPage = (props: { adminCredentials: Credentials; isClearedExcha
     InstructionType.ISSUER,
   ];
 
+  useEffect(() => {
+    if (instructionFields) {
+      handleNewInstructionFields(instructionFields?.title as InstructionType);
+    }
+  }, [isClearedExchange]);
+
   return (
     <QuickSetupPage className="instructions" adminCredentials={adminCredentials}>
+      <Button
+        className="ghost dark control-button"
+        onClick={() => (instructionFields ? setInstructionFields(undefined) : history.goBack())}
+      >
+        <ArrowLeftIcon color={'white'} />
+        Back
+      </Button>
       {!!instructionFields ? (
         <>
           <Header as="h2">{instructionFields.title}</Header>
+          {(instructionFields.title === InstructionType.INVESTOR ||
+            instructionFields.title === InstructionType.EXCHANGE) && (
+            <div className="checkbox-cleared">
+              <Checkbox
+                active={isClearedExchange}
+                onClick={() => setIsClearedExchange(!isClearedExchange)}
+              />
+              <p className="p2 cleared-exchange"> Cleared Exchange</p>
+            </div>
+          )}
           <Instructions
             instructionFields={instructionFields?.instructions || []}
             setInstructionFields={setInstructionFields}
           />
         </>
       ) : (
-        <div className="setup-page main-select">
+        <>
           <h4 className="title">Select a role to set up:</h4>
           {instructionTemplates.map(inst => (
-            <Button className="main-button dark" onClick={_ => handleNewInstructionFields(inst)}>
+            <Button className="main-button ghost" onClick={_ => handleNewInstructionFields(inst)}>
               {inst}
             </Button>
           ))}
-        </div>
+        </>
       )}
     </QuickSetupPage>
   );
@@ -456,7 +483,6 @@ const Instructions = (props: {
   const { identities } = useVerifiedParties();
 
   const [onboardParty, setOnboardParty] = useState('');
-  const [instructionIndex, setInstructionIndex] = useState(0);
 
   const { contracts: onboardingContracts } = useStreamQueries(OperatorOnboarding);
 
@@ -504,49 +530,23 @@ const Instructions = (props: {
             options={partyOptions}
             value={onboardParty}
           />
+          {instructionFieldsToDisplay.length > 0 && <h4>2. Configure roles and services:</h4>}
           {instructionFieldsToDisplay.length > 0 && (
-            <h4>2. Configure this role's relationships:</h4>
+            <div className="instruction-forms">
+              {instructionFieldsToDisplay.map((fields, idx) => (
+                <InstructionFieldInputs
+                  currentFields={fields}
+                  idx={idx}
+                  instructionFields={instructionFields}
+                  setInstructionFields={setInstructionFields}
+                  partyOptions={partyOptions}
+                />
+              ))}
+            </div>
           )}
-          {instructionFieldsToDisplay.map((fields, idx) =>
-            idx === instructionIndex ? (
-              <InstructionFieldInputs
-                currentFields={fields}
-                idx={idx}
-                instructionFields={instructionFields}
-                setInstructionFields={setInstructionFields}
-                partyOptions={partyOptions}
-              />
-            ) : null
-          )}
-          <div className="contract-browse-buttons">
-            {instructionFieldsToDisplay.length > 1 && (
-              <>
-                {instructionIndex > 0 && (
-                  <Button
-                    className="ghost browse"
-                    onClick={() => setInstructionIndex(instructionIndex - 1)}
-                  >
-                    <ArrowLeftIcon /> Previous
-                  </Button>
-                )}
-
-                {instructionIndex < instructionFieldsToDisplay.length - 1 && (
-                  <Button
-                    className="ghost submit icon-right browse"
-                    onClick={() => setInstructionIndex(instructionIndex + 1)}
-                  >
-                    Next <ArrowRightIcon />
-                  </Button>
-                )}
-              </>
-            )}
-
-            {instructionIndex >= instructionFieldsToDisplay.length - 1 && (
-              <Button className="ghost submit" onClick={doRunOnboarding}>
-                Submit
-              </Button>
-            )}
-          </div>
+          <Button className="ghost submit" onClick={doRunOnboarding}>
+            Submit
+          </Button>
         </Form>
       </Segment>
     </div>
