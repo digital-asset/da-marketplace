@@ -130,7 +130,7 @@ const AssignRolesPage = (props: { adminCredentials: Credentials }) => {
   const history = useHistory();
 
   const [instructionFields, setInstructionFields] = useState<InstFieldsWithTitle>();
-  const [isClearedExchange, setIsClearedExchange] = useState(true);
+  const [isClearedExchange, setIsClearedExchange] = useState(false);
 
   const instructionTemplates = [
     InstructionType.EXCHANGE,
@@ -165,8 +165,7 @@ const AssignRolesPage = (props: { adminCredentials: Credentials }) => {
             instructionFields.title === InstructionType.EXCHANGE) && (
             <div className="checkbox-cleared">
               <Checkbox
-                defaultChecked
-                active={isClearedExchange}
+                checked={isClearedExchange}
                 onClick={() => setIsClearedExchange(!isClearedExchange)}
               />
               <p className="cleared-exchange"> Cleared Exchange</p>
@@ -547,9 +546,11 @@ const Instructions = (props: {
   useEffect(() => {
     setInstructionIndex(0);
   }, [isClearedExchange]);
+
   if (loadingInstructions || loading) {
     return <LoadingWheel label={''} />;
   }
+
   if (!onboardingContracts.length)
     return (
       <div className="missing-contract">
@@ -567,6 +568,9 @@ const Instructions = (props: {
     setLoadingInstructions(true);
     await Promise.all(
       onboardParties.map(async party => {
+        console.log(party);
+        console.log(instructions);
+
         await ledger.exercise(
           OperatorOnboarding.OperatorOnboard_Onboard,
           onboardingContract.contractId,
@@ -576,11 +580,13 @@ const Instructions = (props: {
           }
         );
       })
-    ).then(_ => {
-      setOnboardParties([]);
-      setInstructionFields(undefined);
-      setLoadingInstructions(false);
-    });
+    )
+      .then(_ => {
+        setOnboardParties([]);
+        setInstructionFields(undefined);
+        setLoadingInstructions(false);
+      })
+      .catch(_ => setLoadingInstructions(false));
   }
 
   return (
@@ -636,7 +642,11 @@ const Instructions = (props: {
           )}
 
           {instructionIndex === instructionFields.instructions.length - 1 && (
-            <Button className="ghost submit" onClick={doRunOnboarding}>
+            <Button
+              className="ghost submit"
+              onClick={doRunOnboarding}
+              disabled={onboardParties.length == 0}
+            >
               Submit
             </Button>
           )}
@@ -661,9 +671,25 @@ const InstructionFieldInputs: React.FC<InstructionFieldsProps> = ({
   setInstructionFields,
   partyOptions,
 }) => {
+  const { identities } = useVerifiedParties();
+
   const fields = getFields(currentFields);
   const custodian = instructionFields.find(i => i.instructionType === InstructionType.CUSTODY)
     ?.fields?.provider;
+  const custodianName = identities.find(id => id.payload.customer === custodian)?.payload.legalName;
+
+  useEffect(() => {
+    if (custodian && custodianName) {
+      setInstructionFields(old => {
+        let listCopy = [...(old?.instructions || [])];
+        let instCopy = { ...currentFields };
+        (instCopy.fields || {})['custodian'] = custodian;
+        listCopy[idx] = instCopy;
+        return { title: old?.title || '', instructions: listCopy };
+      });
+    }
+  }, []);
+
   return (
     <div className="instruction-fields">
       <Header as="h3">{currentFields.instructionType}</Header>
@@ -689,7 +715,7 @@ const InstructionFieldInputs: React.FC<InstructionFieldsProps> = ({
                   onChange={updateInstructionTypes}
                   options={partyOptions}
                   value={
-                    (k === 'custodian' && custodian) ||
+                    (k === 'custodian' && (custodianName || custodian)) ||
                     (instructionFields[idx].fields || {})[k] ||
                     ''
                   }

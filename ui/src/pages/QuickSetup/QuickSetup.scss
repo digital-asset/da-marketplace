@@ -13,7 +13,7 @@
     flex-direction: column;
     height: 100%;
     width: 100%;
-
+    animation: fadeIn 0.5s;
     .info {
       padding-bottom: $spacing-s;
     }
@@ -30,10 +30,11 @@
         padding-left: $spacing-xs;
       }
     }
+
     .setup-page {
       display: flex;
       flex-direction: column;
-      animation: fadeIn 0.2s;
+      animation: fadeIn 0.5s;
       padding: $spacing-m;
       background-color: var(--white);
       border-radius: 4px 4px;
@@ -86,6 +87,7 @@
         width: 500px;
         height: fit-content;
         justify-self: flex-start;
+        animation: fadeIn 0.5s;
 
         h4 {
           text-align: center;

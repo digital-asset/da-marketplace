@@ -37,6 +37,7 @@ import { makeDamlSet } from '../common';
 import { retrieveParties } from '../../Parties';
 
 import { deployAutomation, MarketplaceTrigger, TRIGGER_HASH } from '../../automation';
+import { ArrowRightIcon } from '../../icons/icons';
 
 enum LoadingStatus {
   CREATING_ADMIN_CONTRACTS = 'Confirming Admin role....',
@@ -141,15 +142,17 @@ const AddPartiesPage = () => {
                   ))}
                 </div>
               </div>
-              <div className="upload-parties uploaded">{uploadButton}</div>
+              <div className="upload-parties uploaded">
+                {uploadButton}
+                <Button
+                  className="button ghost icon-right"
+                  disabled={parties.length === 0}
+                  onClick={() => setLoadingStatus(LoadingStatus.CREATING_ADMIN_CONTRACTS)}
+                >
+                  Onboard Parties <ArrowRightIcon />
+                </Button>
+              </div>
             </div>
-            <Button
-              className="button ghost submit"
-              disabled={parties.length === 0}
-              onClick={() => setLoadingStatus(LoadingStatus.CREATING_ADMIN_CONTRACTS)}
-            >
-              Onboard Parties
-            </Button>
           </>
         ) : (
           <div className="upload-parties">
@@ -174,19 +177,14 @@ const CreateVerifiedIdentity = (props: {
   const ledger = useLedger();
   const userParties = retrieveUserParties() || [];
 
-  const { contracts: regulatorServices, loading: regulatorServicesLoading } = useStreamQueries(
-    RegulatorService
-  );
-  const { contracts: verifiedIdentities, loading: verifiedIdentitiesLoading } = useStreamQueries(
-    VerifiedIdentity
-  );
-  const { contracts: partyOnboarding, loading: partyOnboardingLoading } = useStreamQueries(
-    PartyOnboarding
-  );
-  const {
-    contracts: verifiedIdentityRequests,
-    loading: verifiedIdentityRequestsLoading,
-  } = useStreamQueries(IdentityVerificationRequest);
+  const { contracts: regulatorServices, loading: regulatorServicesLoading } =
+    useStreamQueries(RegulatorService);
+  const { contracts: verifiedIdentities, loading: verifiedIdentitiesLoading } =
+    useStreamQueries(VerifiedIdentity);
+  const { contracts: partyOnboarding, loading: partyOnboardingLoading } =
+    useStreamQueries(PartyOnboarding);
+  const { contracts: verifiedIdentityRequests, loading: verifiedIdentityRequestsLoading } =
+    useStreamQueries(IdentityVerificationRequest);
 
   useEffect(() => {
     const hasPartyOnboarding = !!partyOnboarding.find(c => c.payload.party === party.party);
@@ -276,20 +274,15 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
   const parties = retrieveParties() || [];
   const ledger = useLedger();
 
-  const { contracts: operatorService, loading: operatorServiceLoading } = useStreamQueries(
-    OperatorService
-  );
-  const { contracts: operatorOnboarding, loading: operatorOnboardingLoading } = useStreamQueries(
-    OperatorOnboarding
-  );
+  const { contracts: operatorService, loading: operatorServiceLoading } =
+    useStreamQueries(OperatorService);
+  const { contracts: operatorOnboarding, loading: operatorOnboardingLoading } =
+    useStreamQueries(OperatorOnboarding);
 
-  const { contracts: regulatorRoles, loading: regulatorRolesLoading } = useStreamQueries(
-    RegulatorRole
-  );
-  const {
-    contracts: regulatorServiceOffers,
-    loading: regulatorServiceOffersLoading,
-  } = useStreamQueries(RegulatorOffer);
+  const { contracts: regulatorRoles, loading: regulatorRolesLoading } =
+    useStreamQueries(RegulatorRole);
+  const { contracts: regulatorServiceOffers, loading: regulatorServiceOffersLoading } =
+    useStreamQueries(RegulatorOffer);
 
   useEffect(() => {
     const createOperatorService = async () => {
