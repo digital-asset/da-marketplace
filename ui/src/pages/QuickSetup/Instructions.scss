@@ -1,21 +1,40 @@
 @use 'themes/variables' as *;
 
 @mixin instructions {
-  .instructions {
+  &.instructions {
     display: flex;
     flex-direction: column;
     align-items: center;
     height: 100%;
 
-    .role-list {
-      margin-top: $spacing-xl;
-      display: grid;
-      grid-gap: $spacing-xl;
-      grid-template-columns: repeat(3, 1fr);
-      button.ghost {
-        display: flex;
-        justify-content: center;
+    button.ghost.main-button {
+      justify-content: center;
+    }
+
+    .checkbox-cleared {
+      display: flex;
+      flex-direction: row;
+      padding: $spacing-s 0 0 $spacing-s ;
+        align-self: flex-start;
+      p.cleared-exchange {
+        padding-left: $spacing-xs;
       }
+    }
+
+    h2 {
+      margin: 0px;
+      position: relative;
+    }
+
+    h4 {
+      margin-top: 0px;
+    }
+
+    .control-button {
+      position: absolute;
+      top: var(--spacing-m);
+      left: var(--spacing-m);
+      border: none;
     }
 
     .missing-contract {
@@ -30,19 +49,34 @@
       width: 100%;
       display: flex;
       flex-direction: column;
+      background-color: var(--white);
 
+      .party-select {
+        margin-bottom: $spacing-m;
+      }
       .request-select {
         width: 1fr;
       }
+
       .instruction-fields {
         background-color: var(--cool-grey-100);
         border: 1px solid var(--cool-grey-80);
         padding: $spacing-s;
         border-radius: 4px;
         margin-bottom: $spacing-s;
+        min-height: 128px;
 
         h3 {
-          margin-bottom: $spacing-s;
+          margin-bottom: $spacing-m;
+        }
+
+        .instruction-fields {
+          padding-top: $spacing-s;
+          border-bottom: 1px solid var(--cool-grey-80);
+
+          &:last-of-type {
+            border: none;
+          }
         }
       }
 
@@ -52,6 +86,7 @@
         grid-gap: $spacing-s;
         grid-template-columns: repeat(3, 1fr);
       }
+
       .contract-browse-buttons {
         display: flex;
         flex-direction: row;

@@ -3,7 +3,6 @@
 @use './ReviewPage';
 @use './FinishPage';
 @use './AddPartiesPage';
-@use './RequestServicesPage';
 @use './Instructions';
 
 @mixin quick-setup {
@@ -42,11 +41,32 @@
       height: 550px;
 
       @include AddPartiesPage.add-parties-page;
-      @include RequestServicesPage.request-services-page;
       @include Instructions.instructions;
 
-      h4.title {
+      h2.title {
         text-align: center;
+      }
+
+      form {
+          display: grid;
+          grid-gap: $spacing-s;
+          grid-template-columns: repeat(3, 1fr);
+          background-color: var(--cool-grey-100);
+          border: 1px solid var(--cool-grey-80);
+          padding: $spacing-s;
+          border-radius: 4px;
+          margin-bottom: $spacing-s;
+
+          
+        &.form-error-handled {
+            grid-template-columns: repeat(2, 1fr);
+             button {
+                height: 44px;
+                width: fit-content;
+                justify-self: flex-end;
+                align-self: flex-end;
+              }
+        }
       }
 
       button.ui.button.ghost.submit,
@@ -55,21 +75,30 @@
         margin-left: auto;
       }
 
+      .empty {
+        height: 100%;
+        width: 100%;
+        text-align: center;
+        margin-top: $spacing-l;
+      }
+
       &.main-select {
-        // background-color: var(--cool-grey-10);
+        background-color: var(--cool-grey-10);
         width: 500px;
         height: fit-content;
         justify-self: flex-start;
 
+        h4 {
+          text-align: center;
+        }
+
         button.main-button {
           display: flex;
           flex-direction: row;
-          justify-content: center;
+          justify-content: space-between;
           width: 100%;
           padding: var(--spacing-m);
-          //   background-color: var(--cool-grey-10);
           margin-bottom: $spacing-m;
-          //   color: var(--white);
         }
       }
 
@@ -79,6 +108,15 @@
 
         p.p2.dark.cleared-exchange {
           padding-left: $spacing-xs;
+        }
+
+        &.submit-actions {
+          padding-top: $spacing-xs;
+          justify-content: flex-end;
+
+          button {
+            margin-right: $spacing-m;
+          }
         }
       }
 

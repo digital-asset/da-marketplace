@@ -16,7 +16,21 @@ import { retrieveParties } from '../../Parties';
 import { computeToken } from '../../Credentials';
 import { publicParty, isHubDeployment, useVerifiedParties } from '../../config';
 import { Form, Button } from 'semantic-ui-react';
+import QuickSetupPage from './QuickSetupPage';
 
+const SelectRoles = (props: { adminCredentials: Credentials }) => {
+  const { adminCredentials } = props;
+
+  return (
+    <QuickSetupPage
+      className="select-roles"
+      title="Assign Providers"
+      adminCredentials={adminCredentials}
+    >
+      <SelectRolesPage />
+    </QuickSetupPage>
+  );
+};
 const SelectRolesPage = () => {
   const ledger = useLedger();
   const automations = useAutomations();
@@ -47,7 +61,7 @@ const SelectRolesPage = () => {
       s => s !== RoleKind.REGULATOR && s !== RoleKind.MATCHING && s !== RoleKind.CLEARING_PENDING
     )
     .map(i => {
-      return { text: i, value: i };
+      return { text: `${i } Service`, value: i };
     });
 
   if (rolesLoading || offersLoading || operatorLoading || identitiesLoading) {
@@ -67,7 +81,7 @@ const SelectRolesPage = () => {
 
   return (
     <>
-      <Form>
+      <Form >
         <Form.Select
           className="request-select"
           label={<p className="input-label">Party:</p>}
@@ -78,38 +92,38 @@ const SelectRolesPage = () => {
         />
         <Form.Select
           className="request-select"
-          label={<p className="input-label">Role:</p>}
+          label={<p className="input-label">Provides:</p>}
           placeholder="Select..."
           multiple
           value={selectedRoles || []}
           onChange={(_, data: any) => setSelectedRoles(data.value)}
           options={roleOptions}
         />
-        <div className="submit-actions">
-          <Button
-            disabled={selectedRoles.length === 0 || !selectedParty || hasRole}
-            className="ghost"
-            onClick={() => {
-              if (!!selectedParty && selectedRoles.length > 0) {
-                createRoleContract(selectedParty, selectedRoles);
-              }
-            }}
-          >
-            Assign
-          </Button>
-          <Button
-            disabled={selectedRoles.length === 0 || !selectedParty || !hasRole}
-            className="ghost"
-            onClick={() => {
-              if (!!selectedParty && selectedRoles.length > 0) {
-                handleTerminateRole();
-              }
-            }}
-          >
-            Remove
-          </Button>
-        </div>
       </Form>
+      <div className="page-row submit-actions ">
+        <Button
+          disabled={selectedRoles.length === 0 || !selectedParty || hasRole}
+          className="ghost"
+          onClick={() => {
+            if (!!selectedParty && selectedRoles.length > 0) {
+              createRoleContract(selectedParty, selectedRoles);
+            }
+          }}
+        >
+          Assign
+        </Button>
+        <Button
+          disabled={selectedRoles.length === 0 || !selectedParty || !hasRole}
+          className="ghost"
+          onClick={() => {
+            if (!!selectedParty && selectedRoles.length > 0) {
+              handleTerminateRole();
+            }
+          }}
+        >
+          Remove
+        </Button>
+      </div>
     </>
   );
 
@@ -211,4 +225,4 @@ export function formatTriggerName(name: string) {
     .trim();
 }
 
-export default SelectRolesPage;
+export default SelectRoles;

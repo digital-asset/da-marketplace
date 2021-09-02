@@ -24,18 +24,19 @@ import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
 import AddPartiesPage from './AddPartiesPage';
 import ReviewPage from './ReviewPage';
 import FinishPage from './FinishPage';
-import paths from '../../paths';
 import Widget from '../../components/Widget/Widget';
 import InstructionsPage from './Instructions';
 import RequestServicesPage from './RequestServicesPage';
 import AddAccountPage from './AddAccountPage';
+import SelectRolesPage from './SelectRolesPage';
 
 export enum MenuItems {
   ADD_PARTIES = 'add-parties',
-  ASSIGN_ROLES = 'assign-roles',
+  INSTRUCTIONS = 'instructions',
+  ASSIGN_ROLES = 'assign-providers',
   REVIEW = 'review',
   LOG_IN = 'log-in-parties',
-  ADD_RELATIONSHIPS = 'add-relationships',
+  REQUEST_SERVICES = 'request-services',
   NEW_ACCOUNT = 'new-account',
 }
 
@@ -50,7 +51,6 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
 
   const [adminCredentials, setAdminCredentials] = useState<Credentials>(localCreds);
   const [activeMenuItem, setActiveMenuItem] = useState<MenuItems>();
-  const [isClearedExchange, setIsClearedExchange] = useState<boolean>(false);
 
   useEffect(() => {
     const parties = retrieveParties() || [];
@@ -70,22 +70,22 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   return (
     <WellKnownPartiesProvider>
       <Widget
-        subtitle={'Quick Setup'}
+        subtitle={
+          <NavLink to="/quick-setup">
+            <h2>Quick Setup</h2>
+          </NavLink>
+        }
         pageControls={{
-          left: (
-            <Button
-              className="ghost dark control-button"
-              onClick={() =>
-                activeMenuItem &&
-                activeMenuItem !== MenuItems.ADD_PARTIES &&
-                storedParties.length > 0 &&
-                history.push(paths.login)
-              }
-            >
-              <ArrowLeftIcon color={'white'} />
-              Back
-            </Button>
-          ),
+          left:
+            (activeMenuItem === MenuItems.ADD_PARTIES && storedParties.length == 0) ||
+            activeMenuItem === MenuItems.INSTRUCTIONS ? undefined : (
+              <NavLink to={!!activeMenuItem ? `${matchUrl}` : '/'}>
+                <Button className="button ghost dark control-button">
+                  <ArrowLeftIcon color={'white'} />
+                  Back
+                </Button>
+              </NavLink>
+            ),
           right:
             activeMenuItem === MenuItems.ADD_PARTIES &&
             storedParties.length == 0 ? undefined : activeMenuItem === MenuItems.REVIEW ? (
@@ -112,16 +112,15 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
               component={() => <AddPartiesPage />}
             />
             <Route
-              path={`${matchPath}/${MenuItems.ASSIGN_ROLES}`}
-              component={() => (
-                <InstructionsPage
-                  adminCredentials={adminCredentials}
-                  isClearedExchange={isClearedExchange}
-                />
-              )}
+              path={`${matchPath}/${MenuItems.INSTRUCTIONS}`}
+              component={() => <InstructionsPage adminCredentials={adminCredentials} />}
             />
             <Route
-              path={`${matchPath}/${MenuItems.ADD_RELATIONSHIPS}`}
+              path={`${matchPath}/${MenuItems.ASSIGN_ROLES}`}
+              component={() => <SelectRolesPage adminCredentials={adminCredentials} />}
+            />
+            <Route
+              path={`${matchPath}/${MenuItems.REQUEST_SERVICES}`}
               component={() => <RequestServicesPage adminCredentials={adminCredentials} />}
             />
             <Route
@@ -136,19 +135,46 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
               path={`${matchPath}/${MenuItems.LOG_IN}`}
               component={() => <FinishPage adminCredentials={adminCredentials} />}
             />
-            <Redirect
-              to={`${matchPath}/${
-                isHubDeployment ? MenuItems.ADD_PARTIES : MenuItems.ASSIGN_ROLES
-              }`}
+            <Route
+              path={`${matchPath}`}
+              component={() => (
+                <div className="setup-page main-select">
+                  <h4 className="dark">What would you like to do?</h4>
+                  <NavLink to={`${matchUrl}/${MenuItems.INSTRUCTIONS}`}>
+                    <Button className="main-button ghost dark">
+                      Assign Roles
+                      <ArrowRightIcon />
+                    </Button>
+                  </NavLink>
+                  <NavLink to={`${matchUrl}/${MenuItems.ASSIGN_ROLES}`}>
+                    <Button className="main-button ghost dark">
+                      Assign Providers
+                      <ArrowRightIcon />
+                    </Button>
+                  </NavLink>
+                  <NavLink to={`${matchUrl}/${MenuItems.REQUEST_SERVICES}`}>
+                    <Button className="main-button ghost dark">
+                      Provide Services
+                      <ArrowRightIcon />
+                    </Button>
+                  </NavLink>
+                  <NavLink to={`${matchUrl}/${MenuItems.NEW_ACCOUNT}`}>
+                    <Button className="main-button ghost dark">
+                      Create accounts
+                      <ArrowRightIcon />
+                    </Button>
+                  </NavLink>
+                  <NavLink to={`${matchUrl}/${MenuItems.ADD_PARTIES}`}>
+                    <Button className="main-button ghost dark">
+                      Add Parties
+                      <ArrowRightIcon />
+                    </Button>
+                  </NavLink>
+                </div>
+              )}
             />
+            <Redirect to={`${matchPath}/${isHubDeployment ? MenuItems.ADD_PARTIES : ''}`} />
           </Switch>
-          <div className="checkbox-cleared">
-            <Checkbox
-              active={isClearedExchange}
-              onClick={() => setIsClearedExchange(!isClearedExchange)}
-            />
-            <p className="p2 dark cleared-exchange"> Cleared Exchange</p>
-          </div>
         </div>
       </Widget>
     </WellKnownPartiesProvider>

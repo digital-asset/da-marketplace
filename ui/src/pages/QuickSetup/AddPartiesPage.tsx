@@ -144,7 +144,7 @@ const AddPartiesPage = () => {
               disabled={parties.length === 0}
               onClick={() => setLoadingStatus(LoadingStatus.CREATING_ADMIN_CONTRACTS)}
             >
-              Continue
+              Onboard Parties
             </Button>
           </>
         ) : (

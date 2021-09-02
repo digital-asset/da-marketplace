@@ -50,18 +50,20 @@ const AddAccountPage = () => {
   }
 
   return (
-    <Form className="add-account">
-      <Form.Select
-        label={<p className="input-label">As:</p>}
-        value={selectedCustomer || ''}
-        placeholder="Select..."
-        onChange={(_, data: any) =>
-          setSelectedCustomer(
-            identities.find(p => p.payload.customer === data.value)?.payload.customer
-          )
-        }
-        options={partyOptions}
-      />
+    <div className="add-account">
+      <Form >
+        <Form.Select
+          label={<p className="input-label">Account Owner</p>}
+          value={selectedCustomer || ''}
+          placeholder="Select..."
+          onChange={(_, data: any) =>
+            setSelectedCustomer(
+              identities.find(p => p.payload.customer === data.value)?.payload.customer
+            )
+          }
+          options={partyOptions}
+        />
+      </Form>
       <div className="add-account-form">
         {selectedCustomer && token && (
           <DamlLedger
@@ -74,7 +76,7 @@ const AddAccountPage = () => {
           </DamlLedger>
         )}
       </div>
-    </Form>
+    </div>
   );
 };
 
