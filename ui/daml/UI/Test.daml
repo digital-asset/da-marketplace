@@ -25,25 +25,6 @@ setupTest : Script ()
 setupTest = do
   Parties{..} <- setupParties
   ooCid <- operator `submit` createCmd OperatorOnboarding with ..
-
-  -- -- Onboard Custodian
-  -- let instructions = [ OnboardCustodian ]
-  -- operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = bank; ..
-  --
-  -- -- Onboard Distributor
-  -- let instructions = [ OnboardDistributor ]
-  -- operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = auctionhouse; ..
-  --
-  -- -- Onboard Clearinghouse
-  -- let instructions = [ OnboardClearinghouse with custodian = bank, optClearingAccount = None ]
-  -- operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = ccp; ..
-  --
-  -- -- Onboard Exchange
-  -- let instructions = [ OnboardExchange
-  --                    , OnboardMarketClearing with provider = ccp
-  --                    ]
-  -- operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = exchange; ..
-
   return ()
 
 setupParty : Party -> Party -> Text -> Script Party
@@ -61,14 +42,14 @@ setupParty operator public name = do
 
 setupParties : Script Parties
 setupParties = do
-  operator     <- allocatePartyWithHint "Operator" $ PartyIdHint "Operator"
-  public     <- allocatePartyWithHint "Public"     $ PartyIdHint "Public"
+  operator <- allocatePartyWithHint "Operator" $ PartyIdHint "Operator"
+  public   <- allocatePartyWithHint "Public"     $ PartyIdHint "Public"
 
   operatorRoleCid
     <- operator `submit` createCmd Operator.Role with observers = Set.fromList [public]; ..
 
-  regulatorRoleOfferCid     <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferRegulatorRole with provider = operator
-  regulatorRoleCid          <- submit operator  do exerciseCmd regulatorRoleOfferCid Regulator.Accept
+  regulatorRoleOfferCid <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferRegulatorRole with provider = operator
+  regulatorRoleCid      <- submit operator  do exerciseCmd regulatorRoleOfferCid Regulator.Accept
 
   bank         <- setupParty operator public "Bank"
   auctionhouse <- setupParty operator public "AuctionHouse"
@@ -76,9 +57,9 @@ setupParties = do
   issuer       <- setupParty operator public "Issuer"
   ccp          <- setupParty operator public "Ccp"
 
-  alice  <- setupParty operator public "Alice"
-  bob    <- setupParty operator public "Bob"
-  charlie    <- setupParty operator public "Charlie"
+  alice   <- setupParty operator public "Alice"
+  bob     <- setupParty operator public "Bob"
+  charlie <- setupParty operator public "Charlie"
   dana    <- setupParty operator public "Dana"
 
   return Parties with ..
@@ -92,20 +73,20 @@ testListOnboarding = do
 
   let investorInstructions =
         [ OnboardCustody  with provider = bank
-        , OnboardTrading  with provider = exchange,     custodian = bank, optTradingAccount  = Some "MainAccount"
-        , OnboardBidding  with provider = auctionhouse, custodian = bank, optTradingAccount  = Some "MainAccount"
-        , OnboardClearing with provider = ccp,          custodian = bank, optClearingAccount = Some "ClearingAccount"
+        , OnboardTrading  with provider = exchange;     custodian = bank; optTradingAccount  = Some "MainAccount"
+        , OnboardBidding  with provider = auctionhouse; custodian = bank; optTradingAccount  = Some "MainAccount"
+        , OnboardClearing with provider = ccp;          custodian = bank; optClearingAccount = Some "ClearingAccount"
         ]
 
   let issuerInstructions =
         [ OnboardCustody  with provider = bank
-        , OnboardIssuance with provider = bank,         custodian = bank, optSafekeepingAccount = Some "MainAccount"
-        , OnboardAuction  with provider = auctionhouse, custodian = bank, optTradingAccount     = Some "MainAccount", optReceivableAccount = None
+        , OnboardIssuance with provider = bank;         custodian = bank; optSafekeepingAccount = Some "MainAccount"
+        , OnboardAuction  with provider = auctionhouse; custodian = bank; optTradingAccount     = Some "MainAccount"; optReceivableAccount = None
         ]
 
   let exchangeInstructions =
         [ OnboardExchange
-        , OnboardMarketClearing with provider = ccp
+        , OnboardMarketClearing with provider = ccp; custodian = bank
         ]
 
   let partyInstructions =
@@ -113,7 +94,7 @@ testListOnboarding = do
           requestFor bank         [ OnboardCustodian ]
         , requestFor auctionhouse [ OnboardDistributor ]
         , requestFor ccp          [ OnboardClearinghouse with custodian = bank, optClearingAccount = None ]
-        , requestFor exchange     [ OnboardExchange, OnboardMarketClearing with provider = ccp ]
+        , requestFor exchange     [ OnboardExchange, OnboardMarketClearing with provider = ccp, custodian = bank ]
 
         , requestFor alice investorInstructions
         , requestFor bob investorInstructions
@@ -159,15 +140,15 @@ testOnboarding = do
 
   -- Onboard Exchange
   let instructions = [ OnboardExchange
-                     , OnboardMarketClearing with provider = ccp
+                     , OnboardMarketClearing with provider = ccp, custodian = bank
                      ]
   operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = exchange; ..
 
   -- Onboard Investors
   let instructions = [ OnboardCustody  with provider = bank
-                     , OnboardTrading  with provider = exchange,     custodian = bank, optTradingAccount  = Some "MainAccount"
-                     , OnboardBidding  with provider = auctionhouse, custodian = bank, optTradingAccount  = Some "MainAccount"
-                     , OnboardClearing with provider = ccp,          custodian = bank, optClearingAccount = Some "ClearingAccount"
+                     , OnboardTrading  with provider = exchange;     custodian = bank; optTradingAccount  = Some "MainAccount"
+                     , OnboardBidding  with provider = auctionhouse; custodian = bank; optTradingAccount  = Some "MainAccount"
+                     , OnboardClearing with provider = ccp;          custodian = bank; optClearingAccount = Some "ClearingAccount"
                      ]
 
   operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = alice; ..
@@ -176,8 +157,8 @@ testOnboarding = do
 
   -- Onboard Issuer
   let instructions = [ OnboardCustody  with provider = bank
-                     , OnboardIssuance with provider = bank,         custodian = bank, optSafekeepingAccount = Some "MainAccount"
-                     , OnboardAuction  with provider = auctionhouse, custodian = bank, optTradingAccount     = Some "MainAccount", optReceivableAccount = None ]
+                     , OnboardIssuance with provider = bank;         custodian = bank; optSafekeepingAccount = Some "MainAccount"
+                     , OnboardAuction  with provider = auctionhouse; custodian = bank; optTradingAccount     = Some "MainAccount", optReceivableAccount = None ]
   operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = issuer; ..
 
   return ()
