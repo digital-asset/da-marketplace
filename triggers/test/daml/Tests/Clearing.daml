@@ -16,9 +16,6 @@ marginTest = getExistingParties >>= runMarginTest
 runMarginTest : Parties -> Script ()
 runMarginTest parties@Parties{userAdmin = operator; ..} = do
   debug "Running margin test..."
-  time <- getTime
-
-  -- parties@Parties{..} <- allocateParties
 
   debug "Onboarding parties and providers..."
   providers@Providers{clearinghouse; operator} <- onboardProviders parties
@@ -48,7 +45,6 @@ runMarginTest parties@Parties{userAdmin = operator; ..} = do
   waitUntil 5.0 $ depositsQuantityEquals alice.customer alice.marginAccount 1000.0
 
   debug "Performing failed margin calculation..."
-  -- Fail margin calculation
   calculationCid <- submit clearinghouse $
     exerciseCmd alice.clearingServiceCid Clearing.CreateMarginCalculation with
       currency = usd.id; targetAmount = 50_000.0; calculationId = "34556"
@@ -65,7 +61,6 @@ markToMarketTest = getExistingParties >>= runMarkToMarketTest
 runMarkToMarketTest : Parties -> Script ()
 runMarkToMarketTest parties@Parties{userAdmin = operator; ..} = do
   debug "Running mark to market test..."
-  time <- getTime
 
   debug "Allocating providers and parties..."
   providers@Providers{clearinghouse} <- onboardProviders parties

@@ -102,10 +102,12 @@ tag:
 		dabl-meta.yaml \
 		daml.yaml \
 		triggers/daml.yaml \
+		triggers/test/daml.yaml \
 		exberry_adapter/setup.py \
 		$(UI_DIR)/package.json \
 		docs/local_development.md \
-		docs/damlhub_deployment.md
+		docs/damlhub_deployment.md \
+		triggers/test/README.md
 
 .PHONY: release
 release_tag := da-marketplace-v$(VERSION)
