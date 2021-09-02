@@ -22,7 +22,7 @@ import { retrieveParties } from '../../Parties';
 import { RolesProvider, useRolesContext } from '../../context/RolesContext';
 import { AutomationProvider } from '../../context/AutomationContext';
 
-import { formatTriggerName } from './AssignProvidersPage';
+import { formatTriggerName } from './ConfigureProvidersPage';
 
 import ReactFlow, {
   FlowElement,

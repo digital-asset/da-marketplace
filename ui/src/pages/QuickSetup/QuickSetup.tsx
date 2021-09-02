@@ -28,11 +28,11 @@ import Widget from '../../components/Widget/Widget';
 import AssignRolesPage from './AssignRolesPage';
 import ProvideServicesPage from './ProvideServicesPage';
 import CreateAccountPage from './CreateAccountPage';
-import AssignProvidersPage from './AssignProvidersPage';
+import ConfigureProvidersPage from './ConfigureProvidersPage';
 
 export enum MenuItems {
   ADD_PARTIES = 'add-parties',
-  ASSIGN_PROVIDERS = 'assign-providers',
+  CONFIGURE_PROVIDERS = 'configure-providers',
   ASSIGN_ROLES = 'assign-roles',
   REVIEW = 'review',
   LOG_IN = 'log-in-parties',
@@ -116,8 +116,8 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
               component={() => <AssignRolesPage adminCredentials={adminCredentials} />}
             />
             <Route
-              path={`${matchPath}/${MenuItems.ASSIGN_PROVIDERS}`}
-              component={() => <AssignProvidersPage adminCredentials={adminCredentials} />}
+              path={`${matchPath}/${MenuItems.CONFIGURE_PROVIDERS}`}
+              component={() => <ConfigureProvidersPage adminCredentials={adminCredentials} />}
             />
             <Route
               path={`${matchPath}/${MenuItems.PROVIDE_SERVICES}`}
@@ -136,7 +136,6 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
               component={() => <LoginPage adminCredentials={adminCredentials} />}
             />
             <Redirect to={`${matchPath}/${isHubDeployment ? MenuItems.ADD_PARTIES : ''}`} />
-
             <Route
               path={`${matchPath}`}
               component={() => (
@@ -148,9 +147,9 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
                       <ArrowRightIcon />
                     </Button>
                   </NavLink>
-                  <NavLink to={`${matchUrl}/${MenuItems.ASSIGN_PROVIDERS}`}>
+                  <NavLink to={`${matchUrl}/${MenuItems.CONFIGURE_PROVIDERS}`}>
                     <Button className="main-button ghost dark">
-                      Assign Providers
+                      Configure Providers
                       <ArrowRightIcon />
                     </Button>
                   </NavLink>
@@ -175,7 +174,6 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
                 </div>
               )}
             />
-            <Redirect to={`${matchPath}/${isHubDeployment ? MenuItems.ADD_PARTIES : ''}`} />
           </Switch>
         </div>
       </Widget>

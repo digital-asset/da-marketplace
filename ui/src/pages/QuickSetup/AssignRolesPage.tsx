@@ -530,7 +530,7 @@ const Instructions = (props: {
   const [instructionIndex, setInstructionIndex] = useState(0);
   const [loadingInstructions, setLoadingInstructions] = useState(false);
 
-  const { contracts: onboardingContracts } = useStreamQueries(OperatorOnboarding);
+  const { contracts: onboardingContracts, loading } = useStreamQueries(OperatorOnboarding);
 
   const partyOptions = identities.map(p => {
     return createDropdownProp(p.payload.legalName.replaceAll("'", ''), p.payload.customer);
@@ -547,7 +547,9 @@ const Instructions = (props: {
   useEffect(() => {
     setInstructionIndex(0);
   }, [isClearedExchange]);
-
+  if (loadingInstructions || loading) {
+    return <LoadingWheel label={''} />;
+  }
   if (!onboardingContracts.length)
     return (
       <div className="missing-contract">
@@ -579,10 +581,6 @@ const Instructions = (props: {
       setInstructionFields(undefined);
       setLoadingInstructions(false);
     });
-  }
-
-  if (loadingInstructions) {
-    return <LoadingWheel label={''} />;
   }
 
   return (

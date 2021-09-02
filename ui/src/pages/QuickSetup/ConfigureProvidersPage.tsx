@@ -18,17 +18,17 @@ import { publicParty, isHubDeployment, useVerifiedParties } from '../../config';
 import { Form, Button } from 'semantic-ui-react';
 import QuickSetupPage from './QuickSetupPage';
 
-const AssignProviders = (props: { adminCredentials: Credentials }) => {
+const ConfigureProviders = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
 
   return (
-    <QuickSetupPage title="Assign Providers" adminCredentials={adminCredentials}>
-      <AssignProvidersPage />
+    <QuickSetupPage title="Configure Providers" adminCredentials={adminCredentials}>
+      <ConfigureProvidersPage />
     </QuickSetupPage>
   );
 };
 
-const AssignProvidersPage = () => {
+const ConfigureProvidersPage = () => {
   const ledger = useLedger();
   const automations = useAutomations();
 
@@ -39,8 +39,9 @@ const AssignProvidersPage = () => {
   const [selectedParty, setSelectedParty] = useState<string>();
   const [selectedRoles, setSelectedRoles] = useState<RoleKind[]>([]);
 
-  const { contracts: operatorService, loading: operatorLoading } =
-    useStreamQueries(OperatorService);
+  const { contracts: operatorService, loading: operatorLoading } = useStreamQueries(
+    OperatorService
+  );
 
   const allTriggers =
     automations?.flatMap(auto => {
@@ -222,4 +223,4 @@ export function formatTriggerName(name: string) {
     .trim();
 }
 
-export default AssignProviders;
+export default ConfigureProviders;

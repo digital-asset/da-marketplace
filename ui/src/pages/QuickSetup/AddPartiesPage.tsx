@@ -27,7 +27,10 @@ import {
   IdentityVerificationRequest,
   Service as RegulatorService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
-import { OperatorOnboarding } from '@daml-ui.js/da-marketplace-ui/lib/UI/Onboarding';
+import {
+  OperatorOnboarding,
+  PartyOnboarding,
+} from '@daml-ui.js/da-marketplace-ui/lib/UI/Onboarding';
 import { Offer as RegulatorOffer } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import { makeDamlSet } from '../common';
@@ -166,12 +169,16 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
   const ledger = useLedger();
   const userParties = retrieveUserParties() || [];
 
-  const { contracts: regulatorServices, loading: regulatorServicesLoading } =
-    useStreamQueries(RegulatorService);
-  const { contracts: verifiedIdentities, loading: verifiedIdentitiesLoading } =
-    useStreamQueries(VerifiedIdentity);
-  const { contracts: verifiedIdentityRequests, loading: verifiedIdentityRequestsLoading } =
-    useStreamQueries(IdentityVerificationRequest);
+  const { contracts: regulatorServices, loading: regulatorServicesLoading } = useStreamQueries(
+    RegulatorService
+  );
+  const { contracts: verifiedIdentities, loading: verifiedIdentitiesLoading } = useStreamQueries(
+    VerifiedIdentity
+  );
+  const {
+    contracts: verifiedIdentityRequests,
+    loading: verifiedIdentityRequestsLoading,
+  } = useStreamQueries(IdentityVerificationRequest);
 
   useEffect(() => {
     if (regulatorServicesLoading || verifiedIdentitiesLoading || verifiedIdentityRequestsLoading) {
@@ -239,12 +246,22 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
   const parties = retrieveParties() || [];
   const ledger = useLedger();
 
-  const { contracts: operatorService, loading: operatorServiceLoading } =
-    useStreamQueries(OperatorService);
-  const { contracts: regulatorRoles, loading: regulatorRolesLoading } =
-    useStreamQueries(RegulatorRole);
-  const { contracts: regulatorServiceOffers, loading: regulatorServiceOffersLoading } =
-    useStreamQueries(RegulatorOffer);
+  const { contracts: operatorService, loading: operatorServiceLoading } = useStreamQueries(
+    OperatorService
+  );
+  const { contracts: operatorOnboarding, loading: operatorOnboardingLoading } = useStreamQueries(
+    OperatorOnboarding
+  );
+  const { contracts: partyOnboarding, loading: partyOnboardingLoading } = useStreamQueries(
+    PartyOnboarding
+  );
+  const { contracts: regulatorRoles, loading: regulatorRolesLoading } = useStreamQueries(
+    RegulatorRole
+  );
+  const {
+    contracts: regulatorServiceOffers,
+    loading: regulatorServiceOffersLoading,
+  } = useStreamQueries(RegulatorOffer);
 
   useEffect(() => {
     const createOperatorService = async () => {
@@ -288,7 +305,30 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
       );
     };
 
-    if (operatorServiceLoading || regulatorRolesLoading || regulatorServiceOffersLoading) {
+    const createPartyOnboarding = async (party: string) => {
+      return await ledger.create(PartyOnboarding, {
+        operator: adminCredentials.party,
+        party,
+      });
+    };
+
+    const createPartiesOnboarding = async () => {
+      await Promise.all(
+        userParties.map(async party => {
+          if (!partyOnboarding.find(c => c.payload.party === party.party)) {
+            await createPartyOnboarding(party.party);
+          }
+        })
+      );
+    };
+
+    if (
+      operatorServiceLoading ||
+      regulatorRolesLoading ||
+      regulatorServiceOffersLoading ||
+      operatorOnboardingLoading ||
+      partyOnboardingLoading
+    ) {
       return;
     }
 
@@ -322,9 +362,11 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
       createOperatorService();
     } else if (regulatorRoles.length === 0) {
       createRegulatorRole();
-    } else {
+    } else if (operatorOnboarding.length === 0) {
       createOperatorOnboarding();
+    } else {
       offerRegulatorServices();
+      createPartiesOnboarding();
       deployAllTriggers();
       return onComplete();
     }
@@ -336,6 +378,10 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
     regulatorRolesLoading,
     operatorServiceLoading,
     regulatorServiceOffersLoading,
+    operatorOnboardingLoading,
+    operatorOnboarding,
+    partyOnboardingLoading,
+    partyOnboarding,
     regulatorRoles,
     operatorService,
     regulatorServiceOffers,
