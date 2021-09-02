@@ -96,7 +96,7 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
     <>
       <QuickSetupPage
         className="request-services-page"
-        title="Add Relationships"
+        title="Provide Services"
         adminCredentials={adminCredentials}
       >
         <RequestForm
@@ -174,7 +174,7 @@ const RequestForm = (props: {
   const [accountsForParty, setAccountsForParty] = useState<IPartyAccounts>();
 
   const serviceOptions = SUPPORTED_REQUESTS.map(i => {
-    return { text: i, value: i };
+    return { text: `${i} Service`, value: i };
   });
 
   const partyOptions = identities.map(p => {
@@ -316,17 +316,17 @@ const RequestForm = (props: {
 
   return (
     <>
-      <Form>
+      <Form >
         <Form.Select
           disabled={creatingRequest}
           className="request-select"
-          label={<p className="input-label">As:</p>}
-          value={requestInfo?.customer || ''}
+          label={<p className="input-label">Party:</p>}
           placeholder="Select..."
+          value={requestInfo?.provider || ''}
           onChange={(_, data: any) =>
             setRequestInfo({
               ...requestInfo,
-              customer: identities.find(p => p.payload.customer === data.value)?.payload.customer,
+              provider: identities.find(p => p.payload.customer === data.value)?.payload.customer,
               accounts: {},
             })
           }
@@ -335,7 +335,7 @@ const RequestForm = (props: {
         <Form.Select
           disabled={creatingRequest}
           className="request-select"
-          label={<p className="input-label">Request Service:</p>}
+          label={<p className="input-label">Provides:</p>}
           placeholder="Select..."
           value={requestInfo?.services || []}
           multiple
@@ -344,16 +344,17 @@ const RequestForm = (props: {
           }
           options={serviceOptions}
         />
+
         <Form.Select
           disabled={creatingRequest}
           className="request-select"
-          label={<p className="input-label">From:</p>}
+          label={<p className="input-label">To:</p>}
+          value={requestInfo?.customer || ''}
           placeholder="Select..."
-          value={requestInfo?.provider || ''}
           onChange={(_, data: any) =>
             setRequestInfo({
               ...requestInfo,
-              provider: identities.find(p => p.payload.customer === data.value)?.payload.customer,
+              customer: identities.find(p => p.payload.customer === data.value)?.payload.customer,
               accounts: {},
             })
           }
@@ -398,7 +399,7 @@ const RequestForm = (props: {
           </DamlLedger>
         )}
       </Form>
-      <div className="submit-actions">
+      <div className="page-row submit-actions">
         <Button
           className="ghost request"
           disabled={

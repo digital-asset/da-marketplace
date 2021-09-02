@@ -10,7 +10,7 @@ interface WidgetProps {
     left?: Control;
     right?: Control;
   };
-  subtitle?: string;
+  subtitle?: string | JSX.Element;
 }
 
 const Widget: React.FC<WidgetProps> = ({ children, className, pageControls, subtitle }) => {

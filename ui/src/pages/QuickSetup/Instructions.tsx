@@ -24,7 +24,7 @@ import {
   DropdownItemProps,
 } from 'semantic-ui-react';
 import { createDropdownProp } from '../common';
-import { ArrowLeftIcon } from '../../icons/icons';
+import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
 
 interface InstFieldsWithTitle {
   title: string;
@@ -49,10 +49,10 @@ enum InstructionType {
   DISTRIBUTOR = 'Distributor Role',
   CLEARINGHOUSE = 'Clearing House Role',
 
-  EXCHANGE = 'Exchange',
-  INVESTOR = 'Investor',
-  ISSUER = 'Issuer',
-  BANK = 'Bank',
+  EXCHANGE = 'Exchange Role',
+  INVESTOR = 'Investor Role',
+  ISSUER = 'Issuer Role',
+  BANK = 'Bank Role',
 }
 
 enum OnboardingTemplate {
@@ -126,7 +126,7 @@ const InstructionsPage = (props: { adminCredentials: Credentials }) => {
   const history = useHistory();
 
   const [instructionFields, setInstructionFields] = useState<InstFieldsWithTitle>();
-  const [isClearedExchange, setIsClearedExchange] = useState(false);
+  const [isClearedExchange, setIsClearedExchange] = useState(true);
 
   const instructionTemplates = [
     InstructionType.EXCHANGE,
@@ -158,6 +158,7 @@ const InstructionsPage = (props: { adminCredentials: Credentials }) => {
             instructionFields.title === InstructionType.EXCHANGE) && (
             <div className="checkbox-cleared">
               <Checkbox
+                defaultChecked
                 active={isClearedExchange}
                 onClick={() => setIsClearedExchange(!isClearedExchange)}
               />
@@ -165,8 +166,9 @@ const InstructionsPage = (props: { adminCredentials: Credentials }) => {
             </div>
           )}
           <Instructions
-            instructionFields={instructionFields?.instructions || []}
+            instructionFields={instructionFields}
             setInstructionFields={setInstructionFields}
+            isClearedExchange={isClearedExchange}
           />
         </>
       ) : (
@@ -174,7 +176,7 @@ const InstructionsPage = (props: { adminCredentials: Credentials }) => {
           <h4 className="title">Select a role to set up:</h4>
           {instructionTemplates.map(inst => (
             <Button className="main-button ghost" onClick={_ => handleNewInstructionFields(inst)}>
-              {inst}
+              {inst.replace('Role', '')}
             </Button>
           ))}
         </>
@@ -405,36 +407,60 @@ const getFields = (inst: InstFieldsWithType) => {
       };
     }
     default: {
-      return {};
+      return undefined;
     }
   }
 };
 
-const newInstructionFields = (it: InstructionType) => {
+const newInstructionFields = (it: InstructionType, provider?: string, custodian?: string) => {
   switch (it) {
     case InstructionType.TRADING: {
-      return {} as TradingInstructionFields;
+      return {
+        provider,
+        custodian,
+        tradingAccount: 'Exchange-TradingAccount',
+      } as TradingInstructionFields;
     }
     case InstructionType.CUSTODY: {
-      return {} as CustodyInstructionFields;
+      return { provider } as CustodyInstructionFields;
     }
     case InstructionType.CLEARING: {
-      return {} as ClearingInstructionFields;
+      return {
+        provider,
+        custodian,
+        clearingAccount: 'Clearing-ClearingAccount',
+      } as ClearingInstructionFields;
     }
     case InstructionType.AUCTION: {
-      return {} as AuctionInstructionFields;
+      return {
+        provider,
+        custodian,
+        tradingAccount: 'Auction-TradingAccount',
+        receivableAccount: 'Auction-ReceivableAccount',
+      } as AuctionInstructionFields;
     }
     case InstructionType.MARKETCLEARING: {
-      return {} as MarketClearingInstructionFields;
+      return { provider } as MarketClearingInstructionFields;
     }
     case InstructionType.CLEARINGHOUSE: {
-      return {} as ClearingHouseInstructionFields;
+      return {
+        custodian,
+        clearingAccount: 'Clearing-Bank',
+      } as ClearingHouseInstructionFields;
     }
     case InstructionType.BIDDING: {
-      return {} as BiddingInstructionFields;
+      return {
+        provider,
+        custodian,
+        tradingAccount: 'Bidding-TradingAccount',
+      } as BiddingInstructionFields;
     }
     case InstructionType.ISSUANCE: {
-      return {} as IssuanceInstructionFields;
+      return {
+        provider,
+        custodian,
+        safekeepingAccount: 'Issuance-optSafekeepingAccount',
+      } as IssuanceInstructionFields;
     }
     default:
       return undefined;
@@ -468,27 +494,44 @@ const exchangeInstructions = (isClearedExchange: boolean) => {
 };
 
 const issuerInstructions = () => {
-  return [InstructionType.ISSUANCE, InstructionType.AUCTION, InstructionType.CUSTODY].map(it => {
+  return [InstructionType.CUSTODY, InstructionType.ISSUANCE, InstructionType.AUCTION].map(it => {
     return { instructionType: it, fields: newInstructionFields(it) };
   });
 };
 
 const Instructions = (props: {
-  instructionFields: InstFieldsWithType[];
+  instructionFields: InstFieldsWithTitle;
   setInstructionFields: React.Dispatch<React.SetStateAction<InstFieldsWithTitle | undefined>>;
+  isClearedExchange: boolean;
 }) => {
-  const { instructionFields, setInstructionFields } = props;
+  const { instructionFields, setInstructionFields, isClearedExchange } = props;
 
   const ledger = useLedger();
   const { identities } = useVerifiedParties();
 
-  const [onboardParty, setOnboardParty] = useState('');
+  const [onboardParty, setOnboardParty] = useState<{ name: string; value: string }>();
+  const [instructionIndex, setInstructionIndex] = useState(0);
 
   const { contracts: onboardingContracts } = useStreamQueries(OperatorOnboarding);
 
   const partyOptions = identities.map(p => {
     return createDropdownProp(p.payload.legalName.replaceAll("'", ''), p.payload.customer);
   });
+
+  useEffect(() => {
+    const currentParty = partyOptions.find(d => instructionFields.title.includes(d.text as string));
+
+    if (currentParty) {
+      setOnboardParty({
+        name: currentParty.text as string,
+        value: currentParty.value as string,
+      });
+    }
+  }, [identities]);
+
+  useEffect(() => {
+    setInstructionIndex(0);
+  }, [isClearedExchange]);
 
   if (!onboardingContracts.length)
     return (
@@ -500,54 +543,80 @@ const Instructions = (props: {
   const onboardingContract = onboardingContracts[0];
 
   async function doRunOnboarding() {
-    const instructions = instructionFields.map(inst => makeInstruction(inst));
+    const instructions = instructionFields.instructions.map(inst => makeInstruction(inst));
+    if (!onboardParty) {
+      return;
+    }
     await ledger.exercise(
       OperatorOnboarding.OperatorOnboard_Onboard,
       onboardingContract.contractId,
       {
         instructions,
-        party: onboardParty,
+        party: onboardParty.value,
       }
     );
-    setOnboardParty('');
+    setOnboardParty(undefined);
     setInstructionFields(undefined);
   }
-
-  const instructionFieldsToDisplay = instructionFields.filter(i => !!i.fields);
 
   return (
     <div className="instruction-list">
       <Segment basic>
-        <Form>
+        <div className="party-select">
           <h4>1. Select a party:</h4>
           <Form.Select
             disabled={false}
             className="request-select party"
             placeholder="Select..."
             onChange={(_, data: any) => {
-              setOnboardParty(data.value as string);
+              setOnboardParty({ name: data.text, value: data.value as string });
             }}
             options={partyOptions}
-            value={onboardParty}
+            search
+            value={onboardParty?.name}
           />
-          {instructionFieldsToDisplay.length > 0 && <h4>2. Configure roles and services:</h4>}
-          {instructionFieldsToDisplay.length > 0 && (
-            <div className="instruction-forms">
-              {instructionFieldsToDisplay.map((fields, idx) => (
-                <InstructionFieldInputs
-                  currentFields={fields}
-                  idx={idx}
-                  instructionFields={instructionFields}
-                  setInstructionFields={setInstructionFields}
-                  partyOptions={partyOptions}
-                />
-              ))}
-            </div>
+        </div>
+        {instructionFields.instructions.length > 0 && <h4>2. Configure roles and services:</h4>}
+        {instructionFields.instructions.map((fields, idx) =>
+          idx === instructionIndex ? (
+            <InstructionFieldInputs
+              currentFields={fields}
+              idx={idx}
+              instructionFields={instructionFields.instructions || []}
+              setInstructionFields={setInstructionFields}
+              partyOptions={partyOptions}
+            />
+          ) : null
+        )}
+        <div className="contract-browse-buttons">
+          {instructionFields.instructions.length > 1 && (
+            <>
+              {instructionIndex > 0 && (
+                <Button
+                  className="ghost browse"
+                  onClick={() => setInstructionIndex(instructionIndex - 1)}
+                >
+                  <ArrowLeftIcon /> Previous
+                </Button>
+              )}
+
+              {instructionIndex < instructionFields.instructions.length - 1 && (
+                <Button
+                  className="ghost submit icon-right browse"
+                  onClick={() => setInstructionIndex(instructionIndex + 1)}
+                >
+                  Contract {instructionIndex+1}/{instructionFields.instructions.length} <ArrowRightIcon />
+                </Button>
+              )}
+            </>
           )}
-          <Button className="ghost submit" onClick={doRunOnboarding}>
-            Submit
-          </Button>
-        </Form>
+
+          {instructionIndex === instructionFields.instructions.length - 1 && (
+            <Button className="ghost submit" onClick={doRunOnboarding}>
+              Submit
+            </Button>
+          )}
+        </div>
       </Segment>
     </div>
   );
@@ -568,46 +637,57 @@ const InstructionFieldInputs: React.FC<InstructionFieldsProps> = ({
   setInstructionFields,
   partyOptions,
 }) => {
+  const fields = getFields(currentFields);
+  const custodian = instructionFields.find(i => i.instructionType === InstructionType.CUSTODY)
+    ?.fields?.provider;
   return (
     <div className="instruction-fields">
       <Header as="h3">{currentFields.instructionType}</Header>
-      <Form.Group>
-        {_.toPairs(getFields(currentFields)).map(([k, field]) => {
-          const updateInstructionTypes = (_: any, data: DropdownProps | InputOnChangeData) => {
-            setInstructionFields(old => {
-              let listCopy = [...(old?.instructions || [])];
-              let instCopy = { ...currentFields };
-              (instCopy.fields || {})[k] = data.value as string;
-              listCopy[idx] = instCopy;
-              return { title: old?.title || '', instructions: listCopy };
-            });
-          };
-          if (field === FieldType.PARTIES) {
-            return (
-              <Form.Select
-                disabled={false}
-                className="request-select"
-                label={<p className="input-label">{formatCamelcaseToString(k)}</p>}
-                placeholder="Select..."
-                onChange={updateInstructionTypes}
-                options={partyOptions}
-                value={(instructionFields[idx].fields || {})[k] || ''}
-              />
-            );
-          } else {
-            return (
-              <Form.Input
-                disabled={false}
-                className="request-select"
-                label={<p className="input-label">{formatCamelcaseToString(k)}</p>}
-                placeholder="Select..."
-                onChange={updateInstructionTypes}
-                value={(instructionFields[idx].fields || {})[k]}
-              />
-            );
-          }
-        })}
-      </Form.Group>
+      {!!fields ? (
+        <Form.Group>
+          {_.toPairs(fields).map(([k, field]) => {
+            const updateInstructionTypes = (_: any, data: DropdownProps | InputOnChangeData) => {
+              setInstructionFields(old => {
+                let listCopy = [...(old?.instructions || [])];
+                let instCopy = { ...currentFields };
+                (instCopy.fields || {})[k] = data.value as string;
+                listCopy[idx] = instCopy;
+                return { title: old?.title || '', instructions: listCopy };
+              });
+            };
+            if (field === FieldType.PARTIES) {
+              return (
+                <Form.Select
+                  disabled={false}
+                  className="request-select"
+                  label={<p className="input-label">{formatCamelcaseToString(k)}</p>}
+                  placeholder="Select..."
+                  onChange={updateInstructionTypes}
+                  options={partyOptions}
+                  value={
+                    (k === 'custodian' && custodian) ||
+                    (instructionFields[idx].fields || {})[k] ||
+                    ''
+                  }
+                />
+              );
+            } else {
+              return (
+                <Form.Input
+                  disabled={false}
+                  className="request-select"
+                  label={<p className="input-label">{formatCamelcaseToString(k)}</p>}
+                  placeholder="Select..."
+                  onChange={updateInstructionTypes}
+                  value={(instructionFields[idx].fields || {})[k]}
+                />
+              );
+            }
+          })}
+        </Form.Group>
+      ) : (
+        <p>This contract has nothing to configure.</p>
+      )}
     </div>
   );
 };

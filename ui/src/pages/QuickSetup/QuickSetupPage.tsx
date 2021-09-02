@@ -4,6 +4,8 @@ import classNames from 'classnames';
 
 import DamlLedger from '@daml/react';
 
+import { Header } from 'semantic-ui-react';
+
 import Credentials from '../../Credentials';
 
 import { httpBaseUrl, wsBaseUrl, publicParty } from '../../config';
@@ -40,7 +42,11 @@ const QuickSetupPage: React.FC<QuickSetupPageProps> = ({
               <OffersProvider>
                 <div className="setup-page">
                   <div className={classNames(className)}>
-                    {!!title && <h4>{title}</h4>}
+                    {!!title && (
+                      <Header as="h2" className="title">
+                        {title}
+                      </Header>
+                    )}
                     {children}
                   </div>
                 </div>

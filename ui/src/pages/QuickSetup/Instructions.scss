@@ -5,6 +5,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    height: 100%;
 
     button.main-button {
       display: flex;
@@ -18,8 +19,8 @@
     .checkbox-cleared {
       display: flex;
       flex-direction: row;
-      padding-top: $spacing-s;
-
+      padding: $spacing-s 0 0 $spacing-s ;
+        align-self: flex-start;
       p.p2.cleared-exchange {
         padding-left: $spacing-xs;
       }
@@ -41,17 +42,6 @@
       border: none;
     }
 
-    .role-list {
-      margin-top: $spacing-xl;
-      display: grid;
-      grid-gap: $spacing-xl;
-      grid-template-columns: repeat(3, 1fr);
-      button.ghost {
-        display: flex;
-        justify-content: center;
-      }
-    }
-
     .missing-contract {
       height: 100%;
       width: 100%;
@@ -66,21 +56,23 @@
       flex-direction: column;
       background-color: var(--white);
 
+      .party-select {
+        margin-bottom: $spacing-m;
+      }
       .request-select {
         width: 1fr;
       }
 
-      .instruction-forms {
+      .instruction-fields {
         background-color: var(--cool-grey-100);
         border: 1px solid var(--cool-grey-80);
         padding: $spacing-s;
         border-radius: 4px;
         margin-bottom: $spacing-s;
-        max-height: 270px;
-        overflow-y: auto;
+        min-height: 128px;
 
         h3 {
-          margin-bottom: $spacing-s;
+          margin-bottom: $spacing-m;
         }
 
         .instruction-fields {
@@ -98,6 +90,22 @@
         display: grid;
         grid-gap: $spacing-s;
         grid-template-columns: repeat(3, 1fr);
+      }
+
+      .contract-browse-buttons {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        width: 100%;
+
+        button.ghost {
+          &.icon-right .icon {
+            margin: 0 0 0 $spacing-xs;
+          }
+          &.browse {
+            border: none;
+          }
+        }
       }
     }
   }
