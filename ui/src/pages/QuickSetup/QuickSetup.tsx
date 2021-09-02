@@ -181,10 +181,10 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   );
 });
 
-export const LoadingWheel = (props: { label?: string }) => {
+export const LoadingWheel = (props: { label?: string; dark?: boolean }) => {
   return (
     <Loader active indeterminate size="small">
-      <p>{props.label || 'Loading...'}</p>
+      <p className={classNames({ dark })}>{props.label || 'Loading...'}</p>
     </Loader>
   );
 };

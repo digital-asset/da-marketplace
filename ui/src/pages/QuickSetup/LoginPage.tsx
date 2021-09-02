@@ -50,7 +50,7 @@ const LoginTileGrid = () => {
   if (rolesLoading || identitiesLoading) {
     return (
       <div>
-        <LoadingWheel label="Loading Log In Data..." />
+        <LoadingWheel label="Loading Log In Data..." dark />
       </div>
     );
   }
