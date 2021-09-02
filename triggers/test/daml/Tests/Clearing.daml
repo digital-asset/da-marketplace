@@ -35,21 +35,21 @@ runMarginTest parties@Parties{userAdmin = operator; ..} = do
     exerciseCmd alice.clearingServiceCid Clearing.CreateMarginCalculation with
       currency = usd.id; targetAmount = 4000.0; calculationId = "123456"; ..
 
-  waitUntil 5.0 $ depositsQuantityEquals alice.customer alice.marginAccount 4000.0
+  waitUntil 10.0 $ depositsQuantityEquals alice.customer alice.marginAccount 4000.0
 
   debug "Performing second margin calculation..."
   calculationCid <- submit clearinghouse $
     exerciseCmd alice.clearingServiceCid Clearing.CreateMarginCalculation with
       currency = usd.id; targetAmount = 1000.0; calculationId = "456789"
 
-  waitUntil 5.0 $ depositsQuantityEquals alice.customer alice.marginAccount 1000.0
+  waitUntil 10.0 $ depositsQuantityEquals alice.customer alice.marginAccount 1000.0
 
   debug "Performing failed margin calculation..."
   calculationCid <- submit clearinghouse $
     exerciseCmd alice.clearingServiceCid Clearing.CreateMarginCalculation with
       currency = usd.id; targetAmount = 50_000.0; calculationId = "34556"
 
-  waitUntil 5.0 $ do
+  waitUntil 10.0 $ do
     (Some (_,aliceStanding)) <- queryContractKey @MemberStanding clearinghouse (clearinghouse, alice.customer)
     return $ not aliceStanding.marginSatisfied
 
