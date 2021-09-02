@@ -118,6 +118,7 @@ tag:
 		daml.yaml \
 		triggers/daml.yaml \
 		triggers/test/daml.yaml \
+		ui/daml.yaml \
 		exberry_adapter/setup.py \
 		$(UI_DIR)/package.json \
 		docs/local_development.md \

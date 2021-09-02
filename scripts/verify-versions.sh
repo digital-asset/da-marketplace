@@ -63,6 +63,12 @@ if [[ daml_trigger_test_version -ne 2 ]] ; then
     return_code=1
 fi
 
+daml_ui_version=`cat ui/daml.yaml | grep $short_version | wc -l`
+if [[ daml_ui_version -ne 2 ]] ; then
+    decorate_error "  Mismatched version(s) in %s" ui/daml.yaml
+    return_code=1
+fi
+
 exberry_adapter_version=`cat exberry_adapter/setup.py | grep "version='$short_version" | wc -l`
 if [[ exberry_adapter_version -ne 1 ]] ; then
     decorate_error "  Mismatched version in %s" exberry_adapter/setup.py
