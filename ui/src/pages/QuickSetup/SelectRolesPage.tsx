@@ -1,24 +1,24 @@
 import React, { useState } from 'react';
+import { Form, Button } from 'semantic-ui-react';
 
 import { useLedger } from '@daml/react';
 import { Choice, ContractId } from '@daml/types';
+import { useAutomationInstances, useAutomations } from '@daml/hub-react';
 
 import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
 
 import { useRolesContext, RoleKind, terminateRole } from '../../context/RolesContext';
 import { useOffers } from '../../context/OffersContext';
-import { useAutomations } from '../../context/AutomationContext';
 
 import { useStreamQueries } from '../../Main';
-import { MarketplaceTrigger, deployAutomation } from '../../automation';
 import { retrieveParties } from '../../Parties';
 import { computeToken } from '../../Credentials';
-import { publicParty, isHubDeployment, useVerifiedParties } from '../../config';
-import { Form, Button } from 'semantic-ui-react';
+import { isHubDeployment, useVerifiedParties, MarketplaceTrigger } from '../../config';
 
 const SelectRolesPage = () => {
   const ledger = useLedger();
-  const automations = useAutomations();
+  const { automations } = useAutomations();
+  const { deployAutomation } = useAutomationInstances();
 
   const { identities, loading: identitiesLoading } = useVerifiedParties();
   const { roles: allRoles, loading: rolesLoading } = useRolesContext();
@@ -32,7 +32,7 @@ const SelectRolesPage = () => {
 
   const allTriggers =
     automations?.flatMap(auto => {
-      if (auto.automationEntity.tag === 'DamlTrigger') {
+      if (!!auto.automationEntity.value.triggerNames) {
         return auto.automationEntity.value.triggerNames.map(tn => {
           return `${tn}#${auto.artifactHash}`;
         });
@@ -187,8 +187,8 @@ const SelectRolesPage = () => {
     if (trigger) {
       const [name, hash] = trigger.split('#');
 
-      if (hash) {
-        deployAutomation(hash, name, token, publicParty);
+      if (hash && deployAutomation) {
+        deployAutomation(hash, name);
       }
     }
   }

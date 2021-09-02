@@ -1,22 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Button, DropdownItemProps, Form, Modal, Header } from 'semantic-ui-react';
-import { publicParty } from '../../config';
-import {
-  deployAutomation,
-  getAutomationInstances,
-  PublicAutomation,
-  PublishedInstance,
-  undeployAutomation,
-} from '../../automation';
+
+import { Automation, Instance, useAutomationInstances, useAutomations } from '@daml/hub-react';
+
 import { handleSelectMultiple } from '../common';
 import StripedTable from '../../components/Table/StripedTable';
-import { useUserState } from '../../context/UserContext';
-import { useAutomations } from '../../context/AutomationContext';
 
-export const makeAutomationOptions = (automations?: PublicAutomation[]): DropdownItemProps[] => {
+export const makeAutomationOptions = (automations?: Automation[]): DropdownItemProps[] => {
   return (
     automations?.flatMap(auto => {
-      if (auto.automationEntity.tag === 'DamlTrigger') {
+      if (!!auto.automationEntity.value.triggerNames) {
         return auto.automationEntity.value.triggerNames.map(tn => {
           return {
             key: tn,
@@ -42,49 +35,48 @@ type SetupAutomationProps = {
 
 export const SetupAutomation: React.FC<SetupAutomationProps> = ({
   title,
-  token,
   modalTrigger,
   isModal,
 }) => {
   const [open, setOpen] = React.useState(false);
-  const user = useUserState();
-  const userToken = token || user.token;
 
-  const [deployedAutomations, setDeployedAutomations] = useState<PublishedInstance[]>([]);
+  const [deployedAutomations, setDeployedAutomations] = useState<Instance[]>([]);
   const [toDeploy, setToDeploy] = useState<string[]>([]);
   const [undeploying, setUndeploying] = useState<Map<string, boolean>>(new Map());
   const [deploying, setDeploying] = useState<boolean>(false);
 
-  const automations = useAutomations();
+  const { automations } = useAutomations();
+  const { instances, deployAutomation, deleteInstance } = useAutomationInstances();
 
-  const triggerOptions: DropdownItemProps[] = makeAutomationOptions(automations);
+  const triggerOptions: DropdownItemProps[] =
+    (automations && makeAutomationOptions(automations)) || [];
 
-  const handleDeployment = async (token: string) => {
+  const handleDeployment = async () => {
     setDeploying(true);
     for (const auto of toDeploy) {
       const [name, hash] = auto.split('#');
-      if (hash) {
-        await deployAutomation(hash, name, token, publicParty);
+      if (hash && deployAutomation) {
+        await deployAutomation(hash, name);
       }
     }
     setToDeploy([]);
     setDeploying(false);
   };
 
-  const handleUndeploy = async (instance: PublishedInstance) => {
-    setUndeploying(prev => new Map(prev).set(instance.config.value.name, true));
-    await undeployAutomation(userToken, instance.id, instance.owner);
-    setUndeploying(prev => new Map(prev).set(instance.config.value.name, false));
+  const handleUndeploy = async (instance: Instance) => {
+    if (deleteInstance) {
+      setUndeploying(prev => new Map(prev).set(instance.config.value.name, true));
+      await deleteInstance(instance.id, instance.owner);
+      setUndeploying(prev => new Map(prev).set(instance.config.value.name, false));
+    }
   };
 
   useEffect(() => {
     const timer = setInterval(() => {
-      getAutomationInstances(userToken).then(pd => {
-        setDeployedAutomations(pd || []);
-      });
+      setDeployedAutomations(instances || []);
     }, 1000);
     return () => clearInterval(timer);
-  }, [token, userToken]);
+  }, [instances]);
 
   const currentTriggerOptions = triggerOptions.filter(
     to =>
@@ -111,7 +103,7 @@ export const SetupAutomation: React.FC<SetupAutomationProps> = ({
             positive
             type="submit"
             className="ghost"
-            onClick={() => handleDeployment(userToken)}
+            onClick={() => handleDeployment()}
           >
             Deploy
           </Button>

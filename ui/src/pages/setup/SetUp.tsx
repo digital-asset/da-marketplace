@@ -5,9 +5,8 @@ import { useParty } from '@daml/react';
 import { SetupAutomation } from './SetupAutomation';
 import RoleRequestMenu from '../landing/RoleRequestMenu';
 
-import { isHubDeployment, publicParty } from '../../config';
+import { isHubDeployment } from '../../config';
 
-import { AutomationProvider } from '../../context/AutomationContext';
 import { useRolesContext } from '../../context/RolesContext';
 import { useRoleRequestKinds } from '../../context/RequestsContext';
 
@@ -44,9 +43,7 @@ const RoleSetUp: React.FC = () => {
 export const AutomationSetup = () => {
   return isHubDeployment ? (
     <div className="link-tile">
-      <AutomationProvider publicParty={publicParty}>
-        <SetupAutomation />
-      </AutomationProvider>
+      <SetupAutomation />
     </div>
   ) : null;
 };

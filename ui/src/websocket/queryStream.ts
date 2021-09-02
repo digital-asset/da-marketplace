@@ -3,7 +3,7 @@ import _ from 'lodash';
 
 import { Template } from '@daml/types';
 import { CreateEvent } from '@daml/ledger';
-import { fetchPublicToken } from '@daml/hub-react';
+import { fetchPublicToken, usePublicToken } from '@daml/hub-react';
 
 import { computeCredentials, retrieveCredentials } from '../Credentials';
 import { DeploymentMode, deploymentMode } from '../config';
@@ -45,9 +45,10 @@ const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken
   const [partyTemplateIds, setPartyTemplateIds] = useState<string[]>([]);
 
   const [partyToken, setPartyToken] = useState<string>();
-  const [publicToken, setPublicToken] = useState<string>();
+  const publicToken = usePublicToken();
 
   const [streamErrors, setStreamErrors] = useState<StreamErrors[]>();
+
   useEffect(() => {
     if (defaultPartyToken) {
       setPartyToken(defaultPartyToken);
@@ -60,16 +61,13 @@ const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken
   }, [defaultPartyToken]);
 
   useEffect(() => {
-    getPublicToken().then(token => {
-      if (token) {
-        setPublicToken(token);
-        setQueryStream(queryStream => ({
-          ...queryStream,
-          publicToken: token,
-        }));
-      }
-    });
-  }, []);
+    if (publicToken) {
+      setQueryStream(queryStream => ({
+        ...queryStream,
+        publicToken: publicToken.token,
+      }));
+    }
+  }, [publicToken]);
 
   const {
     contracts: partyContracts,
@@ -82,7 +80,7 @@ const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken
     contracts: publicContracts,
     errors: publicStreamErrors,
     loading: publicLoading,
-  } = useDamlStreamQuery(publicTemplateIds, templateMap, publicToken);
+  } = useDamlStreamQuery(publicTemplateIds, templateMap, publicToken?.token);
 
   useEffect(() => {
     if (partyStreamErrors) {
@@ -117,7 +115,6 @@ const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken
     subscribeTemplate,
     publicLoading,
     partyLoading,
-    publicToken,
     connectionActive,
     templateMap,
   });

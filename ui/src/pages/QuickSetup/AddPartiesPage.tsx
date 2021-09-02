@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import { Button } from 'semantic-ui-react';
 
-import { PartyToken, DamlHubLogin, useAdminParty } from '@daml/hub-react';
+import { PartyToken, DamlHubLogin, useAdminParty, useAutomationInstances } from '@daml/hub-react';
 import DamlLedger, { useLedger } from '@daml/react';
 
 import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
@@ -14,9 +14,15 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 
-import { httpBaseUrl, wsBaseUrl, publicParty, isHubDeployment } from '../../config';
+import {
+  httpBaseUrl,
+  wsBaseUrl,
+  publicParty,
+  isHubDeployment,
+  MarketplaceTrigger,
+  TRIGGER_HASH,
+} from '../../config';
 import { storeParties, retrieveParties, retrieveUserParties } from '../../Parties';
-import { deployAutomation, MarketplaceTrigger, TRIGGER_HASH } from '../../automation';
 import { UnifiedDamlProvider, useStreamQueries } from '../../Main';
 import { computeCredentials } from '../../Credentials';
 import QueryStreamProvider from '../../websocket/queryStream';
@@ -240,6 +246,8 @@ const AdminLedger = (props: { adminCredentials: PartyToken; onComplete: () => vo
   const parties = retrieveParties() || [];
   const ledger = useLedger();
 
+  const { deployAutomation } = useAutomationInstances();
+
   const { contracts: operatorService, loading: operatorServiceLoading } =
     useStreamQueries(OperatorService);
   const { contracts: regulatorRoles, loading: regulatorRolesLoading } =
@@ -291,7 +299,7 @@ const AdminLedger = (props: { adminCredentials: PartyToken; onComplete: () => vo
       if (isHubDeployment && parties.length > 0) {
         const artifactHash = TRIGGER_HASH;
 
-        if (!artifactHash || !adminCredentials) {
+        if (!artifactHash || !adminCredentials || !deployAutomation) {
           return;
         }
 
@@ -301,14 +309,7 @@ const AdminLedger = (props: { adminCredentials: PartyToken; onComplete: () => vo
             {
               ...adminCredentials,
             },
-          ].map(p => {
-            return deployAutomation(
-              artifactHash,
-              MarketplaceTrigger.AutoApproveTrigger,
-              p.token,
-              publicParty
-            );
-          })
+          ].map(p => deployAutomation(artifactHash, MarketplaceTrigger.AutoApproveTrigger, p.token))
         );
       }
     }

@@ -18,16 +18,9 @@ import dagre from 'dagre';
 import _ from 'lodash';
 
 import DamlLedger from '@daml/react';
-import { PartyToken, useAdminParty } from '@daml/hub-react';
+import { PartyToken, useAdminParty, useAutomationInstances } from '@daml/hub-react';
 
-import { PublishedInstance, getAutomationInstances } from '../../automation';
-import {
-  httpBaseUrl,
-  wsBaseUrl,
-  useVerifiedParties,
-  isHubDeployment,
-  publicParty,
-} from '../../config';
+import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
 import QueryStreamProvider from '../../websocket/queryStream';
 
 import { ServicesProvider, useServiceContext } from '../../context/ServicesContext';
@@ -35,7 +28,6 @@ import { OffersProvider } from '../../context/OffersContext';
 import { retrieveParties } from '../../Parties';
 import { IconChevronDown, IconChevronUp } from '../../icons/icons';
 import { RolesProvider, useRolesContext } from '../../context/RolesContext';
-import { AutomationProvider } from '../../context/AutomationContext';
 
 import { formatTriggerName } from './SelectRolesPage';
 import RequestServicesPage from './RequestServicesPage';
@@ -63,44 +55,42 @@ const ReviewPage = (props: { adminCredentials: PartyToken }) => {
       wsBaseUrl={wsBaseUrl}
     >
       <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
-        <AutomationProvider publicParty={publicParty}>
-          <ServicesProvider>
-            <RolesProvider>
-              <OffersProvider>
-                <p className="dark info">
-                  Use the form on the left to assign roles and request services. Move nodes to
-                  organize your network and select nodes to highlight customer relationships.
-                </p>
-                <div className="review">
-                  <div className="side-bar">
-                    <SideBarItem
-                      reviewFormType={ReviewForms.ASSIGN_ROLES}
-                      isOpen={openForm === ReviewForms.ASSIGN_ROLES}
-                      setIsOpen={setOpenForm}
-                    >
-                      <SelectRolesPage />
-                    </SideBarItem>
-                    <SideBarItem
-                      reviewFormType={ReviewForms.REQUEST_SERVICES}
-                      isOpen={openForm === ReviewForms.REQUEST_SERVICES}
-                      setIsOpen={setOpenForm}
-                    >
-                      <RequestServicesPage />
-                    </SideBarItem>
-                    <SideBarItem
-                      reviewFormType={ReviewForms.NEW_ACCOUNT}
-                      isOpen={openForm === ReviewForms.NEW_ACCOUNT}
-                      setIsOpen={setOpenForm}
-                    >
-                      <AddAccountPage />
-                    </SideBarItem>
-                  </div>
-                  <ReviewItems />
+        <ServicesProvider>
+          <RolesProvider>
+            <OffersProvider>
+              <p className="dark info">
+                Use the form on the left to assign roles and request services. Move nodes to
+                organize your network and select nodes to highlight customer relationships.
+              </p>
+              <div className="review">
+                <div className="side-bar">
+                  <SideBarItem
+                    reviewFormType={ReviewForms.ASSIGN_ROLES}
+                    isOpen={openForm === ReviewForms.ASSIGN_ROLES}
+                    setIsOpen={setOpenForm}
+                  >
+                    <SelectRolesPage />
+                  </SideBarItem>
+                  <SideBarItem
+                    reviewFormType={ReviewForms.REQUEST_SERVICES}
+                    isOpen={openForm === ReviewForms.REQUEST_SERVICES}
+                    setIsOpen={setOpenForm}
+                  >
+                    <RequestServicesPage />
+                  </SideBarItem>
+                  <SideBarItem
+                    reviewFormType={ReviewForms.NEW_ACCOUNT}
+                    isOpen={openForm === ReviewForms.NEW_ACCOUNT}
+                    setIsOpen={setOpenForm}
+                  >
+                    <AddAccountPage />
+                  </SideBarItem>
                 </div>
-              </OffersProvider>
-            </RolesProvider>
-          </ServicesProvider>
-        </AutomationProvider>
+                <ReviewItems />
+              </div>
+            </OffersProvider>
+          </RolesProvider>
+        </ServicesProvider>
       </QueryStreamProvider>
     </DamlLedger>
   );
@@ -329,7 +319,7 @@ const RoleNode = (props: { data: { label: string; partyId: string } }) => {
   const { roles, loading: rolesLoading } = useRolesContext();
   const parties = retrieveParties() || [];
 
-  const [deployedAutomations, setDeployedAutomations] = useState<PublishedInstance[]>([]);
+  const { instances } = useAutomationInstances();
 
   const { label, partyId } = props.data;
 
@@ -338,11 +328,7 @@ const RoleNode = (props: { data: { label: string; partyId: string } }) => {
 
   useEffect(() => {
     if (token && isHubDeployment) {
-      const timer = setInterval(() => {
-        getAutomationInstances(token).then(pd => {
-          setDeployedAutomations(pd || []);
-        });
-      }, 1000);
+      const timer = setInterval(() => {}, 1000);
       return () => clearInterval(timer);
     }
   }, [token]);
@@ -356,7 +342,7 @@ const RoleNode = (props: { data: { label: string; partyId: string } }) => {
       <h4>{label}</h4>
       <p className="p2">{roleList.map(r => r.roleKind).join(', ')}</p>
       <p className="p2">
-        {deployedAutomations.map(da => formatTriggerName(da.config.value.name)).join(', ')}
+        {instances?.map(da => formatTriggerName(da.config.value.name)).join(', ')}
       </p>
       <Handle
         type="source"

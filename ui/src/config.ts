@@ -111,3 +111,16 @@ export function getTemplateId(t: string) {
   const parts = t.split(':').slice(1);
   return parts[0] + '.' + parts[1];
 }
+
+export const TRIGGER_HASH = process.env.REACT_APP_TRIGGER_HASH;
+
+// Do we want to keep this?
+// ts-prune-ignore-next
+export const EXBERRY_HASH = process.env.REACT_APP_EXBERRY_HASH;
+
+export enum MarketplaceTrigger {
+  AutoApproveTrigger = 'AutoApproval:autoApprovalTrigger',
+  ClearingTrigger = 'ClearingTrigger:handleClearing',
+  MatchingEngine = 'MatchingEngine:handleMatching',
+  SettlementInstructionTrigger = 'SettlementInstructionTrigger:handleSettlementInstruction',
+}
