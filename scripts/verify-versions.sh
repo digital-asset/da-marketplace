@@ -57,6 +57,12 @@ if [[ daml_trigger_version -ne 2 ]] ; then
     return_code=1
 fi
 
+daml_trigger_test_version=`cat triggers/daml.yaml | grep $short_version | wc -l`
+if [[ daml_trigger_test_version -ne 2 ]] ; then
+    decorate_error "  Mismatched version(s) in %s" triggers/test/daml.yaml
+    return_code=1
+fi
+
 exberry_adapter_version=`cat exberry_adapter/setup.py | grep "version='$short_version" | wc -l`
 if [[ exberry_adapter_version -ne 1 ]] ; then
     decorate_error "  Mismatched version in %s" exberry_adapter/setup.py
@@ -78,6 +84,12 @@ fi
 damlhub_docs_version=`cat docs/damlhub_deployment.md | grep $short_version | wc -l`
 if [[ damlhub_docs_version -ne 3 ]] ; then
     decorate_error "  Mismatched version(s) in %s" docs/damlhub_deployment.md
+    return_code=1
+fi
+
+trigger_test_docs_version=`cat triggers/test/README.md | grep $short_version | wc -l`
+if [[ trigger_test_docs_version -ne 1 ]] ; then
+    decorate_error "  Mismatched version in %s" triggers/test/README.md
     return_code=1
 fi
 

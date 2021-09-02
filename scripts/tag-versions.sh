@@ -20,11 +20,12 @@ echo "Application version is $app_version, short version is $short_version."
 dabl_meta=$2
 daml_yaml=$3
 daml_yaml_triggers=$4
-daml_yaml_it=$5
+daml_yaml_trigger_test=$5
 exberry_setup=$6
 package_json=$7
 docs_localdev=$8
 docs_damlhub=$9
+docs_trigger_test=${10}
 
 echo "Retagging versions in all files..."
 
@@ -43,6 +44,11 @@ yq w -i $daml_yaml_triggers 'version' "$short_version"
 yq w -i $daml_yaml_triggers 'data-dependencies' ""
 yq w -i $daml_yaml_triggers 'data-dependencies[+]' "../.daml/dist/da-marketplace-$short_version.dar"
 
+echo "  Tagging automation tests daml.yaml"
+yq w -i $daml_yaml_trigger_test 'version' "$short_version"
+yq w -i $daml_yaml_trigger_test 'dependencies' ""
+yq w -i $daml_yaml_trigger_test 'dependencies[+]' "../../.daml/dist/da-marketplace-$short_version.dar"
+
 echo "  Tagging exberry_adapter setup.py"
 sed -ri "s/version='$vregex/version='$short_version/" $exberry_setup
 
@@ -56,5 +62,6 @@ sed -ri "s/da-marketplace\-$vregex/da-marketplace\-$short_version/" $docs_locald
 sed -ri "s/da-marketplace\-$vregex.dit/da-marketplace\-$app_version.dit/" $docs_damlhub
 sed -ri "s/da-marketplace\-$vregex.dar/da-marketplace\-$short_version.dar/" $docs_damlhub
 sed -ri "s/da-marketplace-exberry-adapter\-$vregex/da-marketplace-exberry-adapter\-$short_version/" $docs_damlhub
+sed -ri "s/marketplace-matching-test\-$vregex/marketplace-matching-test\-$short_version/" $docs_trigger_test
 
 echo "Tagged all files... check results before committing"
