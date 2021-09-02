@@ -114,6 +114,7 @@ type AuctionInstructionFields = {
 
 type MarketClearingInstructionFields = {
   provider?: string;
+  custodian?: string;
 };
 
 type InstFieldsWithType = {
@@ -229,8 +230,11 @@ const makeCustodyInstruction = (provider: Party): OnboardingInstruction => {
   return { tag: OnboardingTemplate.CUSTODY, value: { provider } };
 };
 
-const makeMarketClearingInstruction = (provider: Party): OnboardingInstruction => {
-  return { tag: OnboardingTemplate.MARKETCLEARING, value: { provider } };
+const makeMarketClearingInstruction = (
+  provider: Party,
+  custodian: string
+): OnboardingInstruction => {
+  return { tag: OnboardingTemplate.MARKETCLEARING, value: { provider, custodian } };
 };
 
 const makeClearingHouseInstruction = (
@@ -329,7 +333,10 @@ const makeInstruction = (inst: InstFieldsWithType): OnboardingInstruction => {
       return makeCustodyInstruction(inst.fields?.provider || '');
     }
     case InstructionType.MARKETCLEARING: {
-      return makeMarketClearingInstruction(inst.fields?.provider || '');
+      return makeMarketClearingInstruction(
+        inst.fields?.provider || '',
+        inst.fields?.custodian || ''
+      );
     }
     case InstructionType.CLEARINGHOUSE: {
       return makeClearingHouseInstruction(
@@ -404,6 +411,7 @@ const getFields = (inst: InstFieldsWithType) => {
     case InstructionType.MARKETCLEARING: {
       return {
         provider,
+        custodian,
       };
     }
     case InstructionType.CLEARING: {
@@ -447,7 +455,7 @@ const newInstructionFields = (it: InstructionType, provider?: string, custodian?
       } as AuctionInstructionFields;
     }
     case InstructionType.MARKETCLEARING: {
-      return { provider } as MarketClearingInstructionFields;
+      return { provider, custodian } as MarketClearingInstructionFields;
     }
     case InstructionType.CLEARINGHOUSE: {
       return {
