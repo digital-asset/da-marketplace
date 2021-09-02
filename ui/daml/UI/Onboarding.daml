@@ -161,7 +161,7 @@ createAccount custodyServiceCid operator provider customer name observers = do
 
 
 data OnboardingAccount = OnboardingAccount with custodian: Party, name: Text deriving (Show, Eq, Ord)
---
+
 data OnboardingInstruction
   = OnboardExchange
   | OnboardDistributor
@@ -328,57 +328,3 @@ template OperatorOnboarding
           exercise onboardCid OnboardCustomer_Archive with ctrl = operator
 
           return ()
-
-      nonconsuming OperatorOnboard_OnboardInvestor : ()
-        with
-          party : Party
-          custodian : Party
-          auctionhouse : Party
-          exchanges : [Party]
-          optClearinghouse : Optional Party
-        do
-          exercise self OperatorOnboard_Onboard with party = custodian, instructions = [OnboardCustodian]
-          forA_ exchanges $ \e -> exercise self OperatorOnboard_Onboard with party = e,  instructions = [OnboardExchange]
-          exercise self OperatorOnboard_Onboard with party = auctionhouse,  instructions = [OnboardDistributor]
-
-          let exchangeInstructions = map (\e -> OnboardTrading with provider = e, optTradingAccount = Some "TradingAccount", ..) exchanges
-          exercise self OperatorOnboard_Onboard with
-              party
-              instructions = [ OnboardCustody with provider = custodian
-                             , OnboardBidding with provider = auctionhouse, custodian, optTradingAccount = Some "TradingAccount" ] ++ exchangeInstructions
-
-          whenSome optClearinghouse $ \clearinghouse -> do
-            exercise self OperatorOnboard_Onboard with party = clearinghouse,  instructions = [OnboardClearinghouse with custodian, optClearingAccount = None]
-            exercise self OperatorOnboard_Onboard with
-                party
-                instructions = [ OnboardClearing with provider = clearinghouse, optClearingAccount = None, ..]
-
-      nonconsuming OperatorOnboard_OnboardClearinghouse : ()
-        with
-          party : Party
-          custodian : Party
-        do
-          exercise self OperatorOnboard_Onboard with party, instructions = [OnboardClearinghouse with custodian, optClearingAccount = None]
-
-      nonconsuming OperatorOnboard_OnboardExchange : ()
-        with
-          party : Party
-        do
-          exercise self OperatorOnboard_Onboard with party, instructions = [OnboardExchange]
-
-      nonconsuming OperatorOnboard_OnboardCustodian : ()
-        with
-          party : Party
-        do
-          exercise self OperatorOnboard_Onboard with party, instructions = [OnboardDistributor, OnboardCustodian]
-
-      nonconsuming OperatorOnboard_OnboardIssuer : ()
-        with
-          party : Party
-          custodian : Party
-        do
-          exercise self OperatorOnboard_Onboard with party = custodian, instructions = [OnboardCustodian, OnboardDistributor]
-          let instructions = [ OnboardCustody  with provider = custodian
-                             , OnboardIssuance with provider = custodian, custodian, optSafekeepingAccount = None
-                             , OnboardAuction  with provider = custodian, custodian, optTradingAccount     = None, optReceivableAccount = None ]
-          exercise self OperatorOnboard_Onboard with ..

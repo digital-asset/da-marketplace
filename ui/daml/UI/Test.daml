@@ -105,21 +105,6 @@ testListOnboarding = do
   operator `submit` exerciseCmd ooCid OperatorOnboard_OnboardAll with instructions = partyInstructions
   return ()
 
-testSimpleOnboarding : Script ()
-testSimpleOnboarding = do
-  Parties{..} <- setupParties
-
-  ooCid <- operator `submit` createCmd OperatorOnboarding with ..
-  operator `submit` exerciseCmd ooCid OperatorOnboard_OnboardCustodian with party = bank
-  operator `submit` exerciseCmd ooCid OperatorOnboard_OnboardExchange with party = exchange
-  operator `submit` exerciseCmd ooCid OperatorOnboard_OnboardIssuer with party = issuer, custodian = bank
-
-  let mkInvestorOnboard party = OperatorOnboard_OnboardInvestor with party, exchanges = [exchange], custodian = bank, auctionhouse = bank, optClearinghouse = Some ccp
-
-  operator `submit` exerciseCmd ooCid $ mkInvestorOnboard alice
-  operator `submit` exerciseCmd ooCid $ mkInvestorOnboard bob
-  return ()
-
 testOnboarding : Script ()
 testOnboarding = do
   Parties{..} <- setupParties
