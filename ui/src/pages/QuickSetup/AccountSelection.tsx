@@ -15,7 +15,7 @@ import {
   OpenAccountRequest,
   OpenAllocationAccountRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
-import { IPartyAccounts, AccountsForServices } from './RequestServicesPage';
+import { IPartyAccounts, AccountsForServices } from './ProvideServicesPage';
 import { Party } from '@daml/types';
 import _ from 'lodash';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';

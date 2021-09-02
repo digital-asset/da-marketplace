@@ -18,26 +18,25 @@
 5. Upload `parties.json` and click Next
 6. Wait for all auto-approve triggers for all parties to deploy...
 7. Assign roles to specific parties:
-    - Assign `Bank` the `Custody`, `Distribution`, and `Settlement` role
-    - Assign `Exchange` the `Exchange` role
-    - Assign `Ccp` the `Clearing` role
-8. Request services from specific parties:
-    - As `Issuer` request `Custody`, `Issuance` services from `Bank`
-    - As `Issuer` request `Auction` services from `Bank`
-        - Auction Trading Account: Request from Bank (then select the resulting account)
-        - Locked Auction Account: Request from Bank (then select the resulting account)
-        - Receivable Account: Request from Bank (then select the resulting account)
-    - As `Alice` request `Custody` services from `Bank`
-    - As `Alice`, request `Trading` services from `Exchange`, `Clearing` services from `Ccp`, and `Bidding` service from `Bank`, use "Request Account" results for all accounts.
-    - As `Bob` request `Custody` services from `Bank`
-    - As `Bob`, request `Trading` services from `Exchange` and `Clearing` services from `Ccp`, use "Request Account" results for all accounts.
-    - As `Ccp` request `Custody` services from `Bank`
-    - As `Exchange` request `MarketClearing` services from `Ccp`
-9. Create Accounts:
-    - As `Ccp`, create a regular account
-        - **Provider**: `Bank`
-        - **Account Name** : `Clearing-Bank`
-        - **Account Type** : `Regular`
+    - Exchange: Pick party `Exchange`
+      - Market Clearing Service Contract (optional): `CCp` as provider
+    - Bank: Pick party `Bank`
+    - Clearing House: Pick party `Ccp`
+        - Clearing House Role Contract: `Bank` as the custodian and `Clearing-Bank` as the clearing account
+    - Investor: Pick party `Alice`
+        - Custody Service Contract: `Bank` as provider
+        - Trading Service Contract: `Exchange` as provider, `Bank` as custodian, and trading account `Exchange-TradingAccount`
+        - Bidding Service Contract: `Bank` as provider and custodian, and trading account as `Bidding-TradingAccount`
+         - Clearing Service Contract (optional): `Ccp` as provider, `Bank` as custodian and `Clearing-ClearingAccount` for clearing account
+    - Investor: Pick party `Bob`
+        - Custody Service Contract: `Bank` as provider
+        - Trading Service Contract: `Exchange` as provider, `Bank` as custodian, and trading account `Exchange-TradingAccount`
+        - Bidding Service Contract: `Bank` as provider and custodian, and trading account as `Bidding-TradingAccount`
+        - Clearing Service Contract (optional): `Ccp` as provider, `Bank` as custodian and `Clearing-ClearingAccount` for clearing account
+    - Issuer: Pick party `Issuer`
+        - Issuance Service Contract: `Bank` as provider and custodian, and safekeeping account as `Issuance-optSafekeepingAccount`
+        - Auction Service Contract: `Bank` as provider and custodian, trading account as `Auction-TradingAccount`, receivable account as `Auction-ReceivableAccount`
+        - Custody Service Contract: `Bank` as provider
 
 ## Issuing new assets
 

@@ -81,7 +81,9 @@ function useDamlStreamQuery<T extends object, K, I extends string>(
   const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState<StreamErrors>();
   const [timer, setTimer] = useState<ReturnType<typeof setInterval>>(
-    setInterval(() => clearInterval(timer), 1000)
+    setInterval(() => {
+      clearInterval(timer);
+    }, 1000)
   );
   const [retries, setRetries] = useState(0);
 

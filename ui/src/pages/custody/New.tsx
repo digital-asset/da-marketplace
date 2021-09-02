@@ -74,8 +74,8 @@ const NewComponent: React.FC<Props> = ({ party, custodyServices, modal, addButto
         ) === undefined && !!accountNominee);
 
   const custodyService = services.filter(s => s.payload.customer === party);
-  if (custodyService.length === 0) return <>Not a custody service customer</>; // add MissingServiceModal
-
+  if (custodyService.length === 0)
+    return <div className="empty">Not a custody service customer</div>; // add MissingServiceModal
   const requestAccount = async () => {
     const service = services.find(
       s =>
