@@ -37,10 +37,10 @@
         margin-left: $spacing-xl;
         justify-content: center;
         button {
-            margin-top: $spacing-l;
-            &.icon-right .icon {
-                margin: 0 0 0 $spacing-xs;
-              }
+          margin-top: $spacing-l;
+          &.icon-right .icon {
+            margin: 0 0 0 $spacing-xs;
+          }
         }
       }
     }

@@ -49,23 +49,23 @@
       }
 
       form {
-          display: grid;
-          grid-gap: $spacing-s;
-          grid-template-columns: repeat(3, 1fr);
-          background-color: var(--cool-grey-100);
-          border: 1px solid var(--cool-grey-80);
-          padding: $spacing-s;
-          border-radius: 4px;
-          margin-bottom: $spacing-s;
+        display: grid;
+        grid-gap: $spacing-s;
+        grid-template-columns: repeat(3, 1fr);
+        background-color: var(--cool-grey-100);
+        border: 1px solid var(--cool-grey-80);
+        padding: $spacing-s;
+        border-radius: 4px;
+        margin-bottom: $spacing-s;
 
         &.form-error-handled {
-            grid-template-columns: repeat(2, 1fr);
-             button {
-                height: 44px;
-                width: fit-content;
-                justify-self: flex-end;
-                align-self: flex-end;
-              }
+          grid-template-columns: repeat(2, 1fr);
+          button {
+            height: 44px;
+            width: fit-content;
+            justify-self: flex-end;
+            align-self: flex-end;
+          }
         }
       }
 

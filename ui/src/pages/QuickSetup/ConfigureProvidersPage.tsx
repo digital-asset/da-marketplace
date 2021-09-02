@@ -39,9 +39,8 @@ const ConfigureProvidersPage = () => {
   const [selectedParty, setSelectedParty] = useState<string>();
   const [selectedRoles, setSelectedRoles] = useState<RoleKind[]>([]);
 
-  const { contracts: operatorService, loading: operatorLoading } = useStreamQueries(
-    OperatorService
-  );
+  const { contracts: operatorService, loading: operatorLoading } =
+    useStreamQueries(OperatorService);
 
   const allTriggers =
     automations?.flatMap(auto => {
