@@ -1,0 +1,26 @@
+sdk-version: 1.12.0
+name: da-marketplace-ui
+source: daml
+parties:
+  - Alice
+  - Bob
+  - Operator
+  - Custodian
+  - BtcIssuer
+  - UsdtIssuer
+  - Public
+  - Exchange
+  - Broker
+  - Ccp
+version: 0.2.0
+# trigger-dependencies-begin
+dependencies:
+  - daml-prim
+  - daml-stdlib
+  - daml-trigger
+data-dependencies:
+  - ../.daml/dist/da-marketplace-0.2.0.dar
+sandbox-options:
+  - --wall-clock-time
+build-options:
+  - --ghc-option=-Wno-deprecations

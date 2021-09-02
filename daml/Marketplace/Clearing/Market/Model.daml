@@ -9,6 +9,7 @@ template FairValueCalculationRequest
     provider : Party
     customer : Party
     optListingIds : Optional [Text]
+    calculationId : Text
     currency : Id
     upTo : Time
   where
@@ -23,6 +24,7 @@ template ManualFairValueCalculation
     provider : Party
     customer : Party
     listingId : Text
+    calculationId : Text
     currency : Id
     upTo : Time
     observers : Set Party
@@ -44,6 +46,7 @@ template FairValue
     provider : Party
     customer : Party
     listingId : Text
+    calculationId : Text
     price : Decimal
     currency : Id
     timestamp : Time

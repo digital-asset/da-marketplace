@@ -23,10 +23,11 @@ template Service
     nonconsuming choice RequestAllFairValues : ContractId FairValueCalculationRequest
       with
         party : Party
+        calculationId : Text
+        upTo : Time
         currency : Id
       controller party
       do
-        upTo <- getTime
         assert $ Set.member party $ Set.fromList [provider, customer]
         create FairValueCalculationRequest with optListingIds = None; ..
 
@@ -34,10 +35,11 @@ template Service
       with
         party : Party
         listingIds : [Text]
+        calculationId : Text
+        upTo : Time
         currency : Id
       controller party
       do
-        upTo <- getTime
         assert $ Set.member party $ Set.fromList [provider, customer]
         create FairValueCalculationRequest with optListingIds = Some listingIds; ..
 
@@ -45,6 +47,7 @@ template Service
       nonconsuming CreateFairValue : ContractId FairValue
         with
           listingId : Text
+          calculationId : Text
           price : Decimal
           currency : Id
           timestamp : Time
@@ -56,6 +59,7 @@ template Service
       nonconsuming CreateManualFairValueRequest : ContractId ManualFairValueCalculation
         with
           listingId : Text
+          calculationId : Text
           currency : Id
           upTo : Time
           observers : Set Party
