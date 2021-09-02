@@ -25,6 +25,7 @@ import {
 } from 'semantic-ui-react';
 import { createDropdownProp } from '../common';
 import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
+import classNames from 'classnames';
 
 interface InstFieldsWithTitle {
   title: string;
@@ -143,7 +144,10 @@ const InstructionsPage = (props: { adminCredentials: Credentials }) => {
   }, [isClearedExchange]);
 
   return (
-    <QuickSetupPage className="instructions" adminCredentials={adminCredentials}>
+    <QuickSetupPage
+      className={classNames('instructions', { 'main-select': !instructionFields })}
+      adminCredentials={adminCredentials}
+    >
       <Button
         className="ghost dark control-button"
         onClick={() => (instructionFields ? setInstructionFields(undefined) : history.goBack())}
@@ -162,7 +166,7 @@ const InstructionsPage = (props: { adminCredentials: Credentials }) => {
                 active={isClearedExchange}
                 onClick={() => setIsClearedExchange(!isClearedExchange)}
               />
-              <p className="p2 cleared-exchange"> Cleared Exchange</p>
+              <p className="cleared-exchange"> Cleared Exchange</p>
             </div>
           )}
           <Instructions
@@ -173,9 +177,12 @@ const InstructionsPage = (props: { adminCredentials: Credentials }) => {
         </>
       ) : (
         <>
-          <h4 className="title">Select a role to set up:</h4>
+          <h4 className="title dark">Select a role to set up:</h4>
           {instructionTemplates.map(inst => (
-            <Button className="main-button ghost" onClick={_ => handleNewInstructionFields(inst)}>
+            <Button
+              className="main-button ghost dark"
+              onClick={_ => handleNewInstructionFields(inst)}
+            >
               {inst.replace('Role', '')}
             </Button>
           ))}
@@ -509,7 +516,7 @@ const Instructions = (props: {
   const ledger = useLedger();
   const { identities } = useVerifiedParties();
 
-  const [onboardParty, setOnboardParty] = useState<{ name: string; value: string }>();
+  const [onboardParties, setOnboardParties] = useState<string[]>([]);
   const [instructionIndex, setInstructionIndex] = useState(0);
 
   const { contracts: onboardingContracts } = useStreamQueries(OperatorOnboarding);
@@ -522,10 +529,7 @@ const Instructions = (props: {
     const currentParty = partyOptions.find(d => instructionFields.title.includes(d.text as string));
 
     if (currentParty) {
-      setOnboardParty({
-        name: currentParty.text as string,
-        value: currentParty.value as string,
-      });
+      setOnboardParties([currentParty.value as string]);
     }
   }, [identities]);
 
@@ -544,18 +548,24 @@ const Instructions = (props: {
 
   async function doRunOnboarding() {
     const instructions = instructionFields.instructions.map(inst => makeInstruction(inst));
-    if (!onboardParty) {
+    if (onboardParties.length === 0) {
       return;
     }
-    await ledger.exercise(
-      OperatorOnboarding.OperatorOnboard_Onboard,
-      onboardingContract.contractId,
-      {
-        instructions,
-        party: onboardParty.value,
-      }
+
+    await Promise.all(
+      onboardParties.map(async party => {
+        await ledger.exercise(
+          OperatorOnboarding.OperatorOnboard_Onboard,
+          onboardingContract.contractId,
+          {
+            instructions,
+            party: party,
+          }
+        );
+      })
     );
-    setOnboardParty(undefined);
+
+    setOnboardParties([]);
     setInstructionFields(undefined);
   }
 
@@ -563,17 +573,16 @@ const Instructions = (props: {
     <div className="instruction-list">
       <Segment basic>
         <div className="party-select">
-          <h4>1. Select a party:</h4>
+          <h4>1. Select a party or parties:</h4>
           <Form.Select
             disabled={false}
             className="request-select party"
             placeholder="Select..."
-            onChange={(_, data: any) => {
-              setOnboardParty({ name: data.text, value: data.value as string });
-            }}
+            onChange={(_, data: any) => setOnboardParties(data.value)}
             options={partyOptions}
             search
-            value={onboardParty?.name}
+            multiple
+            value={onboardParties}
           />
         </div>
         {instructionFields.instructions.length > 0 && <h4>2. Configure roles and services:</h4>}
@@ -605,7 +614,8 @@ const Instructions = (props: {
                   className="ghost submit icon-right browse"
                   onClick={() => setInstructionIndex(instructionIndex + 1)}
                 >
-                  Contract {instructionIndex+1}/{instructionFields.instructions.length} <ArrowRightIcon />
+                  {instructionIndex + 1} of {instructionFields.instructions.length}{' '}
+                  <ArrowRightIcon />
                 </Button>
               )}
             </>

@@ -40,15 +40,13 @@ const QuickSetupPage: React.FC<QuickSetupPageProps> = ({
           <ServicesProvider>
             <RolesProvider>
               <OffersProvider>
-                <div className="setup-page">
-                  <div className={classNames(className)}>
-                    {!!title && (
-                      <Header as="h2" className="title">
-                        {title}
-                      </Header>
-                    )}
-                    {children}
-                  </div>
+                <div className={classNames('setup-page', className)}>
+                  {!!title && (
+                    <Header as="h2" className="title">
+                      {title}
+                    </Header>
+                  )}
+                  {children}
                 </div>
               </OffersProvider>
             </RolesProvider>
