@@ -1,0 +1,98 @@
+module Tests.Clearing where
+
+import Daml.Script
+
+import Common
+import Tests.Utils
+
+import Marketplace.Clearing.Model
+import Marketplace.Clearing.Service qualified as Clearing
+import Utils (waitUntil)
+
+
+marginTest : Script ()
+marginTest = getExistingParties >>= runMarginTest
+
+runMarginTest : Parties -> Script ()
+runMarginTest parties@Parties{userAdmin = operator; ..} = do
+  debug "Running margin test..."
+  time <- getTime
+
+  -- parties@Parties{..} <- allocateParties
+
+  debug "Onboarding parties and providers..."
+  providers@Providers{clearinghouse; operator} <- onboardProviders parties
+
+  alice  <- onboardCustomer providers "Alice" alice
+  bob    <- onboardCustomer providers "Bob" bob
+  issuer <- onboardCustomer providers "Issuer" issuer
+
+  Assets{usd; tsla} <- onboardAssets providers issuer
+
+  -- Assets
+  let cashAsset = usd with quantity = 20000.0
+
+  debug "Performing first margin calculation..."
+  aliceDepositCid <- depositAsset providers alice cashAsset alice.clearingAccount.id
+  calculationCid <- submit clearinghouse $
+    exerciseCmd alice.clearingServiceCid Clearing.CreateMarginCalculation with
+      currency = usd.id; targetAmount = 4000.0; calculationId = "123456"; ..
+
+  waitUntil 5.0 $ depositsQuantityEquals alice.customer alice.marginAccount 4000.0
+
+  debug "Performing second margin calculation..."
+  calculationCid <- submit clearinghouse $
+    exerciseCmd alice.clearingServiceCid Clearing.CreateMarginCalculation with
+      currency = usd.id; targetAmount = 1000.0; calculationId = "456789"
+
+  waitUntil 5.0 $ depositsQuantityEquals alice.customer alice.marginAccount 1000.0
+
+  debug "Performing failed margin calculation..."
+  -- Fail margin calculation
+  calculationCid <- submit clearinghouse $
+    exerciseCmd alice.clearingServiceCid Clearing.CreateMarginCalculation with
+      currency = usd.id; targetAmount = 50_000.0; calculationId = "34556"
+
+  waitUntil 5.0 $ do
+    (Some (_,aliceStanding)) <- queryContractKey @MemberStanding clearinghouse (clearinghouse, alice.customer)
+    return $ not aliceStanding.marginSatisfied
+
+  debug "Test passed!"
+
+markToMarketTest : Script ()
+markToMarketTest = getExistingParties >>= runMarkToMarketTest
+
+runMarkToMarketTest : Parties -> Script ()
+runMarkToMarketTest parties@Parties{userAdmin = operator; ..} = do
+  debug "Running mark to market test..."
+  time <- getTime
+
+  debug "Allocating providers and parties..."
+  providers@Providers{clearinghouse} <- onboardProviders parties
+
+  alice  <- onboardCustomer providers "Alice" alice
+  bob    <- onboardCustomer providers "Bob" bob
+  issuer <- onboardCustomer providers "Issuer" issuer
+
+  Assets{usd; tsla} <- onboardAssets providers issuer
+
+  -- Assets
+  let cashAsset = usd with quantity = 20000.0
+
+  aliceDepositCid <- depositAsset providers alice cashAsset alice.clearingAccount.id
+  bobDepositCid   <- depositAsset providers bob cashAsset bob.clearingAccount.id
+
+  debug "Testing Mark to Markets..."
+  calculationCid <- submit clearinghouse $
+    exerciseCmd alice.clearingServiceCid Clearing.CreateMarkToMarket with
+      currency = usd.id; mtmAmount = -5000.0; calculationId = "34569"
+
+  calculationCid2 <- submit clearinghouse $
+    exerciseCmd bob.clearingServiceCid Clearing.CreateMarkToMarket with
+      currency = usd.id; mtmAmount = 5000.0; calculationId = "34670"
+
+  waitUntil 10.0 $ depositsQuantityEquals alice.customer alice.clearingAccount 15_000.0
+  waitUntil 10.0 $ depositsQuantityEquals bob.customer bob.clearingAccount 25_000.0
+
+  debug "Test passed!"
+
