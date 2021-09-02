@@ -2,7 +2,10 @@
 
 @mixin finish-page {
   .finish-page {
-    padding: 0px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
     align-items: center;
     justify-content: flex-start;
     background-color: var(--cool-grey-20);
@@ -13,8 +16,9 @@
 
     .log-in-tile-grid {
       display: grid;
-      grid-template-columns: 33% 33% 33%;
-      width: 100%;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-gap: $spacing-xl;
+      width: 80%;
 
       .log-in-tile {
         display: flex;
@@ -23,10 +27,11 @@
         background-color: var(--white);
         width: auto;
         min-height: 88px;
+
         padding: $spacing-s;
-        margin: 0 $spacing-s $spacing-s 0;
 
         .log-in-row {
+          display: flex;
           justify-content: space-between;
           align-items: baseline;
           overflow: hidden;

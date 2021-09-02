@@ -17,29 +17,18 @@ import {
   Form,
   Button,
   Header,
-  Divider,
   Segment,
   DropdownProps,
   InputOnChangeData,
   DropdownItemProps,
 } from 'semantic-ui-react';
 import { createDropdownProp } from '../common';
-import { ArrowRightIcon } from '../../icons/icons';
-import SelectRolesPage from './SelectRolesPage';
+import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
 
-const InstructionsPage = (props: { adminCredentials: Credentials }) => {
-  const { adminCredentials } = props;
-
-  return (
-    <QuickSetupPage
-      className="instructions"
-      title="Assign Roles"
-      adminCredentials={adminCredentials}
-    >
-      <TestInstructions />
-    </QuickSetupPage>
-  );
-};
+interface InstFieldsWithTitle {
+  title: string;
+  instructions: InstFieldsWithType[];
+}
 
 enum FieldType {
   PARTIES = 'PARTIES',
@@ -47,108 +36,37 @@ enum FieldType {
 }
 
 enum InstructionType {
-  TRADING = 'Trading',
-  CUSTODY = 'Custody',
-  CLEARING = 'Clearing',
-  BIDDING = 'Bidding',
-  ISSUANCE = 'Issuance',
-  AUCTION = 'Auction',
+  MARKETCLEARING = 'Market Clearing Service Request',
+  CLEARING = 'Clearing Service Request',
+  TRADING = 'Trading Service Request',
+  CUSTODY = 'Custody Service Request',
+  BIDDING = 'Bidding Service Request',
+  ISSUANCE = 'Issuance Service Request',
+  AUCTION = 'Auction Service Request',
+
+  CLEARINGHOUSE = 'Clearing House',
+  EXCHANGE = 'Exchange',
+  CUSTODIAN = 'Custodian',
+  DISTRIBUTOR = 'Distributor',
+
+  INVESTOR = 'Investor',
+  ISSUER = 'Issuer',
+  BANK = 'Bank',
 }
 
-const makeCustodyInstruction = (provider: Party): OnboardingInstruction => {
-  return { tag: 'OnboardCustody', value: { provider } };
-};
-
-const makeTradingInstruction = (
-  provider: Party,
-  custodian: Party,
-  optTradingAccount: Optional<string>
-): OnboardingInstruction => {
-  return { tag: 'OnboardTrading', value: { custodian, provider, optTradingAccount } };
-};
-
-const makeBiddingInstruction = (
-  provider: Party,
-  custodian: Party,
-  optTradingAccount: Optional<string>
-): OnboardingInstruction => {
-  return { tag: 'OnboardBidding', value: { custodian, provider, optTradingAccount } };
-};
-
-const makeIssuanceInstruction = (
-  provider: Party,
-  custodian: Party,
-  optSafekeepingAccount: Optional<string>
-): OnboardingInstruction => {
-  return { tag: 'OnboardIssuance', value: { custodian, provider, optSafekeepingAccount } };
-};
-
-const makeClearingInstruction = (
-  provider: Party,
-  custodian: Party,
-  optClearingAccount: Optional<string>
-): OnboardingInstruction => {
-  return { tag: 'OnboardClearing', value: { custodian, provider, optClearingAccount } };
-};
-
-const makeAuctionInstruction = (
-  provider: Party,
-  custodian: Party,
-  optTradingAccount: Optional<string>,
-  optReceivableAccount: Optional<string>
-): OnboardingInstruction => {
-  return {
-    tag: 'OnboardAuction',
-    value: { custodian, provider, optTradingAccount, optReceivableAccount },
-  };
-};
-
-const makeInstruction = (inst: InstFieldsWithType): OnboardingInstruction => {
-  switch (inst.instructionType) {
-    case InstructionType.TRADING: {
-      return makeTradingInstruction(
-        inst.fields.provider || '',
-        inst.fields.custodian || '',
-        inst.fields.tradingAccount || null
-      );
-    }
-    case InstructionType.BIDDING: {
-      return makeBiddingInstruction(
-        inst.fields.provider || '',
-        inst.fields.custodian || '',
-        inst.fields.tradingAccount || null
-      );
-    }
-    case InstructionType.CLEARING: {
-      return makeClearingInstruction(
-        inst.fields.provider || '',
-        inst.fields.custodian || '',
-        inst.fields.clearingAccount || null
-      );
-    }
-    case InstructionType.AUCTION: {
-      return makeAuctionInstruction(
-        inst.fields.provider || '',
-        inst.fields.custodian || '',
-        inst.fields.tradingAccount || null,
-        inst.fields.receivableAccount || null
-      );
-    }
-    case InstructionType.ISSUANCE: {
-      return makeIssuanceInstruction(
-        inst.fields.provider || '',
-        inst.fields.custodian || '',
-        inst.fields.safekeepingAccount || null
-      );
-    }
-    case InstructionType.CUSTODY: {
-      return makeCustodyInstruction(inst.fields.provider || '');
-    }
-    default: {
-      return makeCustodyInstruction('');
-    }
-  }
-};
+enum OnboardingTemplate {
+  CUSTODY = 'OnboardCustody',
+  MARKETCLEARING = 'OnboardMarketClearing',
+  CLEARINGHOUSE = 'OnboardClearinghouse',
+  CLEARING = 'OnboardClearing',
+  EXCHANGE = 'OnboardExchange',
+  DISTRIBUTOR = 'OnboardDistributor',
+  CUSTODIAN = 'OnboardCustodian',
+  TRADING = 'OnboardTrading',
+  BIDDING = 'OnboardBidding',
+  ISSUANCE = 'OnboardIssuance',
+  AUCTION = 'OnboardAuction',
+}
 
 type InstructionFields = { [k: string]: string | undefined };
 
@@ -164,6 +82,11 @@ type TradingInstructionFields = {
 
 type ClearingInstructionFields = {
   provider?: string;
+  custodian?: string;
+  clearingAccount?: string;
+};
+
+type ClearingHouseInstructionFields = {
   custodian?: string;
   clearingAccount?: string;
 };
@@ -187,52 +110,271 @@ type AuctionInstructionFields = {
   receivableAccount?: string;
 };
 
+type MarketClearingInstructionFields = {
+  provider?: string;
+};
+
 type InstFieldsWithType = {
   instructionType: InstructionType;
-  fields: InstructionFields;
+  fields?: InstructionFields;
+};
+
+const InstructionsPage = (props: { adminCredentials: Credentials; isClearedExchange: boolean }) => {
+  const { adminCredentials, isClearedExchange } = props;
+
+  const [instructionFields, setInstructionFields] = useState<InstFieldsWithTitle>();
+
+  const instructionTemplates = [
+    InstructionType.EXCHANGE,
+    InstructionType.BANK,
+    InstructionType.CLEARINGHOUSE,
+    InstructionType.INVESTOR,
+    InstructionType.ISSUER,
+  ];
+
+  return (
+    <QuickSetupPage className="instructions" adminCredentials={adminCredentials}>
+      {!!instructionFields ? (
+        <>
+          <Header as="h2">{instructionFields.title}</Header>
+          <Instructions
+            instructionFields={instructionFields?.instructions || []}
+            setInstructionFields={setInstructionFields}
+          />
+        </>
+      ) : (
+        <div className="setup-page main-select">
+          <h4 className="title">Select a role to set up:</h4>
+          {instructionTemplates.map(inst => (
+            <Button className="main-button dark" onClick={_ => handleNewInstructionFields(inst)}>
+              {inst}
+            </Button>
+          ))}
+        </div>
+      )}
+    </QuickSetupPage>
+  );
+
+  function handleNewInstructionFields(inst: InstructionType) {
+    switch (inst) {
+      case InstructionType.INVESTOR:
+        setInstructionFields({
+          title: InstructionType.INVESTOR,
+          instructions: investorInstructions(isClearedExchange),
+        });
+        break;
+      case InstructionType.ISSUER:
+        setInstructionFields({ title: InstructionType.ISSUER, instructions: issuerInstructions() });
+        break;
+      case InstructionType.EXCHANGE:
+        setInstructionFields({
+          title: InstructionType.EXCHANGE,
+          instructions: exchangeInstructions(isClearedExchange),
+        });
+        break;
+      case InstructionType.BANK:
+        setInstructionFields({ title: InstructionType.BANK, instructions: bankInstructions() });
+        break;
+      default:
+        setInstructionFields({
+          title: inst,
+          instructions: [
+            {
+              instructionType: inst,
+              fields: newInstructionFields(inst),
+            },
+          ],
+        });
+    }
+  }
+};
+
+const makeCustodyInstruction = (provider: Party): OnboardingInstruction => {
+  return { tag: OnboardingTemplate.CUSTODY, value: { provider } };
+};
+
+const makeMarketClearingInstruction = (provider: Party): OnboardingInstruction => {
+  return { tag: OnboardingTemplate.MARKETCLEARING, value: { provider } };
+};
+
+const makeClearingHouseInstruction = (
+  custodian: string,
+  optClearingAccount: Optional<string>
+): OnboardingInstruction => {
+  return { tag: OnboardingTemplate.CLEARINGHOUSE, value: { custodian, optClearingAccount } };
+};
+
+const makeClearingInstruction = (
+  provider: Party,
+  custodian: string,
+  optClearingAccount: Optional<string>
+): OnboardingInstruction => {
+  return { tag: OnboardingTemplate.CLEARING, value: { custodian, provider, optClearingAccount } };
+};
+
+const makeTradingInstruction = (
+  provider: Party,
+  custodian: Party,
+  optTradingAccount: Optional<string>
+): OnboardingInstruction => {
+  return { tag: OnboardingTemplate.TRADING, value: { custodian, provider, optTradingAccount } };
+};
+
+const makeBiddingInstruction = (
+  provider: Party,
+  custodian: Party,
+  optTradingAccount: Optional<string>
+): OnboardingInstruction => {
+  return { tag: OnboardingTemplate.BIDDING, value: { custodian, provider, optTradingAccount } };
+};
+
+const makeIssuanceInstruction = (
+  provider: Party,
+  custodian: Party,
+  optSafekeepingAccount: Optional<string>
+): OnboardingInstruction => {
+  return {
+    tag: OnboardingTemplate.ISSUANCE,
+    value: { custodian, provider, optSafekeepingAccount },
+  };
+};
+
+const makeAuctionInstruction = (
+  provider: Party,
+  custodian: Party,
+  optTradingAccount: Optional<string>,
+  optReceivableAccount: Optional<string>
+): OnboardingInstruction => {
+  return {
+    tag: OnboardingTemplate.AUCTION,
+    value: { custodian, provider, optTradingAccount, optReceivableAccount },
+  };
+};
+
+const makeInstruction = (inst: InstFieldsWithType): OnboardingInstruction => {
+  switch (inst.instructionType) {
+    case InstructionType.TRADING: {
+      return makeTradingInstruction(
+        inst.fields?.provider || '',
+        inst.fields?.custodian || '',
+        inst.fields?.tradingAccount || null
+      );
+    }
+    case InstructionType.BIDDING: {
+      return makeBiddingInstruction(
+        inst.fields?.provider || '',
+        inst.fields?.custodian || '',
+        inst.fields?.tradingAccount || null
+      );
+    }
+    case InstructionType.CLEARING: {
+      return makeClearingInstruction(
+        inst.fields?.provider || '',
+        inst.fields?.custodian || '',
+        inst.fields?.clearingAccount || null
+      );
+    }
+    case InstructionType.AUCTION: {
+      return makeAuctionInstruction(
+        inst.fields?.provider || '',
+        inst.fields?.custodian || '',
+        inst.fields?.tradingAccount || null,
+        inst.fields?.receivableAccount || null
+      );
+    }
+    case InstructionType.ISSUANCE: {
+      return makeIssuanceInstruction(
+        inst.fields?.provider || '',
+        inst.fields?.custodian || '',
+        inst.fields?.safekeepingAccount || null
+      );
+    }
+    case InstructionType.CUSTODY: {
+      return makeCustodyInstruction(inst.fields?.provider || '');
+    }
+    case InstructionType.MARKETCLEARING: {
+      return makeMarketClearingInstruction(inst.fields?.provider || '');
+    }
+    case InstructionType.CLEARINGHOUSE: {
+      return makeClearingHouseInstruction(
+        inst.fields?.custodian || '',
+        inst.fields?.optClearingAccount || null
+      );
+    }
+    case InstructionType.EXCHANGE: {
+      return { tag: OnboardingTemplate.EXCHANGE, value: {} };
+    }
+    case InstructionType.DISTRIBUTOR: {
+      return { tag: OnboardingTemplate.DISTRIBUTOR, value: {} };
+    }
+    case InstructionType.CUSTODIAN: {
+      return { tag: OnboardingTemplate.CUSTODIAN, value: {} };
+    }
+    default: {
+      return makeCustodyInstruction('');
+    }
+  }
 };
 
 const getFields = (inst: InstFieldsWithType) => {
+  const provider = FieldType.PARTIES;
+  const custodian = FieldType.PARTIES;
+  const tradingAccount = FieldType.TEXT;
+  const clearingAccount = FieldType.TEXT;
+  const receivableAccount = FieldType.TEXT;
+  const safekeepingAccount = FieldType.TEXT;
+
   switch (inst.instructionType) {
     case InstructionType.TRADING: {
       return {
-        provider: FieldType.PARTIES,
-        custodian: FieldType.PARTIES,
-        tradingAccount: FieldType.TEXT,
+        provider,
+        custodian,
+        tradingAccount,
       };
     }
-    case InstructionType.CLEARING: {
+    case InstructionType.CLEARINGHOUSE: {
       return {
-        provider: FieldType.PARTIES,
-        custodian: FieldType.PARTIES,
-        clearingAccount: FieldType.TEXT,
+        custodian,
+        clearingAccount,
       };
     }
     case InstructionType.BIDDING: {
       return {
-        provider: FieldType.PARTIES,
-        custodian: FieldType.PARTIES,
-        tradingAccount: FieldType.TEXT,
+        provider,
+        custodian,
+        tradingAccount,
       };
     }
     case InstructionType.AUCTION: {
       return {
-        provider: FieldType.PARTIES,
-        custodian: FieldType.PARTIES,
-        tradingAccount: FieldType.TEXT,
-        receivableAccount: FieldType.TEXT,
+        provider,
+        custodian,
+        tradingAccount,
+        receivableAccount,
       };
     }
     case InstructionType.ISSUANCE: {
       return {
-        provider: FieldType.PARTIES,
-        custodian: FieldType.PARTIES,
-        safekeepingAccount: FieldType.TEXT,
+        provider,
+        custodian,
+        safekeepingAccount,
       };
     }
     case InstructionType.CUSTODY: {
       return {
-        provider: FieldType.PARTIES,
+        provider,
+      };
+    }
+    case InstructionType.MARKETCLEARING: {
+      return {
+        provider,
+      };
+    }
+    case InstructionType.CLEARING: {
+      return {
+        provider,
+        custodian,
+        clearingAccount,
       };
     }
     default: {
@@ -255,43 +397,80 @@ const newInstructionFields = (it: InstructionType) => {
     case InstructionType.AUCTION: {
       return {} as AuctionInstructionFields;
     }
+    case InstructionType.MARKETCLEARING: {
+      return {} as MarketClearingInstructionFields;
+    }
+    case InstructionType.CLEARINGHOUSE: {
+      return {} as ClearingHouseInstructionFields;
+    }
     case InstructionType.BIDDING: {
       return {} as BiddingInstructionFields;
     }
     case InstructionType.ISSUANCE: {
       return {} as IssuanceInstructionFields;
     }
+    default:
+      return undefined;
   }
 };
 
-const investorInstructions = () => {
-  return [InstructionType.CUSTODY, InstructionType.TRADING, InstructionType.BIDDING].map(it => {
+const investorInstructions = (isClearedExchange: boolean) => {
+  let investorInsts = [InstructionType.CUSTODY, InstructionType.TRADING, InstructionType.BIDDING];
+  if (isClearedExchange) {
+    investorInsts = [...investorInsts, InstructionType.CLEARING];
+  }
+  return investorInsts.map(it => {
+    return { instructionType: it, fields: newInstructionFields(it) };
+  });
+};
+
+const bankInstructions = () => {
+  return [InstructionType.CUSTODIAN, InstructionType.DISTRIBUTOR].map(it => {
+    return { instructionType: it, fields: newInstructionFields(it) };
+  });
+};
+
+const exchangeInstructions = (isClearedExchange: boolean) => {
+  let exchangeInsts = [InstructionType.EXCHANGE];
+  if (isClearedExchange) {
+    exchangeInsts = [...exchangeInsts, InstructionType.MARKETCLEARING];
+  }
+  return exchangeInsts.map(it => {
     return { instructionType: it, fields: newInstructionFields(it) };
   });
 };
 
 const issuerInstructions = () => {
-  return [InstructionType.ISSUANCE, InstructionType.AUCTION].map(it => {
+  return [InstructionType.ISSUANCE, InstructionType.AUCTION, InstructionType.CUSTODY].map(it => {
     return { instructionType: it, fields: newInstructionFields(it) };
   });
 };
 
-const TestInstructions = () => {
-  const ledger = useLedger();
+const Instructions = (props: {
+  instructionFields: InstFieldsWithType[];
+  setInstructionFields: React.Dispatch<React.SetStateAction<InstFieldsWithTitle | undefined>>;
+}) => {
+  const { instructionFields, setInstructionFields } = props;
 
+  const ledger = useLedger();
   const { identities } = useVerifiedParties();
 
   const [onboardParty, setOnboardParty] = useState('');
-  const [instructionFields, setInstructionFields] = useState<InstFieldsWithType[]>([]);
-  const [manualAssignment, setManualAssignment] = useState<boolean>(false);
+  const [instructionIndex, setInstructionIndex] = useState(0);
 
   const { contracts: onboardingContracts } = useStreamQueries(OperatorOnboarding);
 
   const partyOptions = identities.map(p => {
-    return createDropdownProp(p.payload.legalName, p.payload.customer);
+    return createDropdownProp(p.payload.legalName.replaceAll("'", ''), p.payload.customer);
   });
 
-  if (!onboardingContracts.length) return <>Operator is missing onboarding contract!</>;
+  if (!onboardingContracts.length)
+    return (
+      <div className="missing-contract">
+        <p>Operator is missing onboarding contract!</p>
+      </div>
+    );
+
   const onboardingContract = onboardingContracts[0];
 
   async function doRunOnboarding() {
@@ -305,99 +484,72 @@ const TestInstructions = () => {
       }
     );
     setOnboardParty('');
-    setInstructionFields([]);
+    setInstructionFields(undefined);
   }
 
+  const instructionFieldsToDisplay = instructionFields.filter(i => !!i.fields);
+
   return (
-    <>
-      {manualAssignment ? (
-        <>
-          <SelectRolesPage />
-          <Button
-            onClick={() => {
-              setInstructionFields([]);
-              setManualAssignment(false);
+    <div className="instruction-list">
+      <Segment basic>
+        <Form>
+          <h4>1. Select a party:</h4>
+          <Form.Select
+            disabled={false}
+            className="request-select party"
+            placeholder="Select..."
+            onChange={(_, data: any) => {
+              setOnboardParty(data.value as string);
             }}
-          >
-            Back
-          </Button>
-        </>
-      ) : instructionFields.length === 0 ? (
-        <div className="role-list">
-          {[
-            createDropdownProp(InstructionType.TRADING, InstructionType.TRADING),
-            createDropdownProp(InstructionType.CUSTODY, InstructionType.CUSTODY),
-            createDropdownProp(InstructionType.BIDDING, InstructionType.BIDDING),
-            createDropdownProp(InstructionType.CLEARING, InstructionType.CLEARING),
-            createDropdownProp(InstructionType.ISSUANCE, InstructionType.ISSUANCE),
-            createDropdownProp(InstructionType.AUCTION, InstructionType.AUCTION),
-            createDropdownProp('Investor', 'INVESTOR_TEMPLATE'),
-            createDropdownProp('Issuer', 'ISSUER_TEMPLATE'),
-          ].map(data => (
-            <Button
-              className="ghost"
-              onClick={() => {
-                if ((data.value as string) === 'INVESTOR_TEMPLATE') {
-                  setInstructionFields(investorInstructions());
-                } else if ((data.value as string) === 'ISSUER_TEMPLATE') {
-                  setInstructionFields(issuerInstructions());
-                } else {
-                  setInstructionFields([
-                    {
-                      instructionType: data.value as InstructionType,
-                      fields: newInstructionFields(data.value as InstructionType),
-                    },
-                  ]);
-                }
-              }}
-            >
-              {data.text}
-            </Button>
-          ))}
-          <Button className="ghost" onClick={() => setManualAssignment(true)}>
-            Other
-          </Button>
-        </div>
-      ) : (
-        <div className="instruction-list">
-          <Segment basic>
-            <Form>
-              {instructionFields.map((fields, idx) => (
-                <InstructionFieldInputs
-                  currentFields={fields}
-                  idx={idx}
-                  instructionFields={instructionFields}
-                  setInstructionFields={setInstructionFields}
-                  partyOptions={partyOptions}
-                />
-              ))}
-              <Form.Select
-                disabled={false}
-                className="request-select"
-                label={<p className="input-label">Party</p>}
-                placeholder="Select..."
-                onChange={(_, data: any) => {
-                  setOnboardParty(data.value as string);
-                }}
-                options={partyOptions}
-                value={onboardParty}
+            options={partyOptions}
+            value={onboardParty}
+          />
+          {instructionFieldsToDisplay.length > 0 && (
+            <h4>2. Configure this role's relationships:</h4>
+          )}
+          {instructionFieldsToDisplay.map((fields, idx) =>
+            idx === instructionIndex ? (
+              <InstructionFieldInputs
+                currentFields={fields}
+                idx={idx}
+                instructionFields={instructionFields}
+                setInstructionFields={setInstructionFields}
+                partyOptions={partyOptions}
               />
+            ) : null
+          )}
+          <div className="contract-browse-buttons">
+            {instructionFieldsToDisplay.length > 1 && (
+              <>
+                {instructionIndex > 0 && (
+                  <Button
+                    className="ghost browse"
+                    onClick={() => setInstructionIndex(instructionIndex - 1)}
+                  >
+                    <ArrowLeftIcon /> Previous
+                  </Button>
+                )}
+
+                {instructionIndex < instructionFieldsToDisplay.length - 1 && (
+                  <Button
+                    className="ghost submit icon-right browse"
+                    onClick={() => setInstructionIndex(instructionIndex + 1)}
+                  >
+                    Next <ArrowRightIcon />
+                  </Button>
+                )}
+              </>
+            )}
+
+            {instructionIndex >= instructionFieldsToDisplay.length - 1 && (
               <Button className="ghost submit" onClick={doRunOnboarding}>
                 Submit
               </Button>
-            </Form>
-          </Segment>
-          <Button
-            onClick={() => {
-              setInstructionFields([]);
-              setManualAssignment(false);
-            }}
-          >
-            Back
-          </Button>
-        </div>
-      )}
-    </>
+            )}
+          </div>
+        </Form>
+      </Segment>
+    </div>
   );
 };
 
@@ -405,7 +557,7 @@ type InstructionFieldsProps = {
   currentFields: InstFieldsWithType;
   idx: number;
   instructionFields: InstFieldsWithType[];
-  setInstructionFields: React.Dispatch<React.SetStateAction<InstFieldsWithType[]>>;
+  setInstructionFields: React.Dispatch<React.SetStateAction<InstFieldsWithTitle | undefined>>;
   partyOptions: DropdownItemProps[];
 };
 
@@ -418,18 +570,16 @@ const InstructionFieldInputs: React.FC<InstructionFieldsProps> = ({
 }) => {
   return (
     <div className="instruction-fields">
-      <div className="instruction-header">
-        <Header as="h2">{currentFields.instructionType}</Header>
-      </div>
+      <Header as="h3">{currentFields.instructionType}</Header>
       <Form.Group>
         {_.toPairs(getFields(currentFields)).map(([k, field]) => {
           const updateInstructionTypes = (_: any, data: DropdownProps | InputOnChangeData) => {
             setInstructionFields(old => {
-              let listCopy = [...old];
+              let listCopy = [...(old?.instructions || [])];
               let instCopy = { ...currentFields };
-              instCopy.fields[k] = data.value as string;
+              (instCopy.fields || {})[k] = data.value as string;
               listCopy[idx] = instCopy;
-              return listCopy;
+              return { title: old?.title || '', instructions: listCopy };
             });
           };
           if (field === FieldType.PARTIES) {
@@ -437,11 +587,11 @@ const InstructionFieldInputs: React.FC<InstructionFieldsProps> = ({
               <Form.Select
                 disabled={false}
                 className="request-select"
-                label={<p className="input-label">{k}</p>}
+                label={<p className="input-label">{formatCamelcaseToString(k)}</p>}
                 placeholder="Select..."
                 onChange={updateInstructionTypes}
                 options={partyOptions}
-                value={instructionFields[idx].fields[k] || ''}
+                value={(instructionFields[idx].fields || {})[k] || ''}
               />
             );
           } else {
@@ -449,18 +599,22 @@ const InstructionFieldInputs: React.FC<InstructionFieldsProps> = ({
               <Form.Input
                 disabled={false}
                 className="request-select"
-                label={<p className="input-label">{k}</p>}
+                label={<p className="input-label">{formatCamelcaseToString(k)}</p>}
                 placeholder="Select..."
                 onChange={updateInstructionTypes}
-                value={instructionFields[idx].fields[k]}
+                value={(instructionFields[idx].fields || {})[k]}
               />
             );
           }
         })}
       </Form.Group>
-      <Divider horizontal> </Divider>
     </div>
   );
 };
+
+function formatCamelcaseToString(text: string) {
+  var result = text.replace(/([A-Z])/g, ' $1');
+  return result.charAt(0).toUpperCase() + result.slice(1);
+}
 
 export default InstructionsPage;

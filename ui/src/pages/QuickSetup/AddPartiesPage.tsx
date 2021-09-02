@@ -140,11 +140,11 @@ const AddPartiesPage = () => {
               <div className="upload-parties uploaded">{uploadButton}</div>
             </div>
             <Button
-              className="ghost"
+              className="button ghost submit"
               disabled={parties.length === 0}
               onClick={() => setLoadingStatus(LoadingStatus.CREATING_ADMIN_CONTRACTS)}
             >
-              Submit
+              Continue
             </Button>
           </>
         ) : (

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-import { Button, Loader } from 'semantic-ui-react';
+import { Button, Loader, Checkbox } from 'semantic-ui-react';
 
 import {
   useHistory,
@@ -17,7 +17,7 @@ import { WellKnownPartiesProvider } from '@daml/hub-react/lib';
 import { ledgerId, isHubDeployment } from '../../config';
 
 import Credentials, { computeCredentials } from '../../Credentials';
-import { retrieveParties } from '../../Parties';
+import { retrieveParties, retrieveUserParties } from '../../Parties';
 
 import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
 
@@ -35,7 +35,7 @@ export enum MenuItems {
   ASSIGN_ROLES = 'assign-roles',
   REVIEW = 'review',
   LOG_IN = 'log-in-parties',
-  REQUEST_SERVICES = 'request-services',
+  ADD_RELATIONSHIPS = 'add-relationships',
   NEW_ACCOUNT = 'new-account',
 }
 
@@ -43,15 +43,18 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   const localCreds = computeCredentials('Operator');
 
   const history = useHistory();
-  const parties = retrieveParties() || [];
+  const storedParties = retrieveUserParties();
 
   const matchPath = props.match.path;
   const matchUrl = props.match.url;
 
   const [adminCredentials, setAdminCredentials] = useState<Credentials>(localCreds);
   const [activeMenuItem, setActiveMenuItem] = useState<MenuItems>();
+  const [isClearedExchange, setIsClearedExchange] = useState<boolean>(false);
 
   useEffect(() => {
+    const parties = retrieveParties() || [];
+
     const newSegment = history.location?.pathname.split('/quick-setup')[1].replace('/', '');
     const activeMenuItem = Object.values(MenuItems).find(s => s === newSegment);
     setActiveMenuItem(activeMenuItem);
@@ -67,28 +70,35 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   return (
     <WellKnownPartiesProvider>
       <Widget
-        subtitle={
-          activeMenuItem
-            ? activeMenuItem.replace('-', ' ').replace(/(?:^|\s)\S/g, res => {
-                return res.toUpperCase();
-              })
-            : 'Quick Setup'
-        }
+        subtitle={'Quick Setup'}
         pageControls={{
           left: (
             <Button
               className="ghost dark control-button"
-              onClick={() => history.push(activeMenuItem ? '/quick-setup' : paths.login)}
+              onClick={() =>
+                activeMenuItem &&
+                activeMenuItem !== MenuItems.ADD_PARTIES &&
+                storedParties.length > 0 &&
+                history.push(paths.login)
+              }
             >
               <ArrowLeftIcon color={'white'} />
-              Back {activeMenuItem ? 'To Quick Setup' : 'To Login'}
+              Back
             </Button>
           ),
           right:
-            activeMenuItem !== MenuItems.LOG_IN ? (
+            activeMenuItem === MenuItems.ADD_PARTIES &&
+            storedParties.length == 0 ? undefined : activeMenuItem === MenuItems.REVIEW ? (
               <NavLink to={`${matchUrl}/${MenuItems.LOG_IN}`}>
                 <Button className="button ghost dark control-button">
                   Skip to Log In
+                  <ArrowRightIcon color={'white'} />
+                </Button>
+              </NavLink>
+            ) : activeMenuItem !== MenuItems.LOG_IN ? (
+              <NavLink to={`${matchUrl}/${MenuItems.REVIEW}`}>
+                <Button className="button ghost dark control-button">
+                  Review Setup
                   <ArrowRightIcon color={'white'} />
                 </Button>
               </NavLink>
@@ -96,40 +106,6 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
         }}
       >
         <div className="quick-setup">
-          {!activeMenuItem && (
-            <div className="setup-page main-select">
-              <h4 className="dark title">What would you like to do?</h4>
-              <NavLink to={`${matchUrl}${MenuItems.ADD_PARTIES}`}>
-                <Button className="main-button">
-                  Add Parties <ArrowRightIcon />
-                </Button>
-              </NavLink>
-              <NavLink to={`${matchUrl}${MenuItems.ASSIGN_ROLES}`}>
-                <Button className="main-button">
-                  Assign Roles
-                  <ArrowRightIcon />
-                </Button>
-              </NavLink>
-              <NavLink to={`${matchUrl}${MenuItems.REQUEST_SERVICES}`}>
-                <Button className="main-button">
-                  Request Services
-                  <ArrowRightIcon />
-                </Button>
-              </NavLink>
-              <NavLink to={`${matchUrl}${MenuItems.NEW_ACCOUNT}`}>
-                <Button className="main-button">
-                  Create Accounts
-                  <ArrowRightIcon />
-                </Button>
-              </NavLink>
-              <NavLink to={`${matchUrl}${MenuItems.REVIEW}`}>
-                <Button className="main-button">
-                  Review
-                  <ArrowRightIcon />
-                </Button>
-              </NavLink>
-            </div>
-          )}
           <Switch>
             <Route
               path={`${matchPath}/${MenuItems.ADD_PARTIES}`}
@@ -137,10 +113,15 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
             />
             <Route
               path={`${matchPath}/${MenuItems.ASSIGN_ROLES}`}
-              component={() => <InstructionsPage adminCredentials={adminCredentials} />}
+              component={() => (
+                <InstructionsPage
+                  adminCredentials={adminCredentials}
+                  isClearedExchange={isClearedExchange}
+                />
+              )}
             />
             <Route
-              path={`${matchPath}/${MenuItems.REQUEST_SERVICES}`}
+              path={`${matchPath}/${MenuItems.ADD_RELATIONSHIPS}`}
               component={() => <RequestServicesPage adminCredentials={adminCredentials} />}
             />
             <Route
@@ -155,8 +136,19 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
               path={`${matchPath}/${MenuItems.LOG_IN}`}
               component={() => <FinishPage adminCredentials={adminCredentials} />}
             />
-            <Redirect to={`${matchPath}/${isHubDeployment ? MenuItems.ADD_PARTIES : ''}`} />
+            <Redirect
+              to={`${matchPath}/${
+                isHubDeployment ? MenuItems.ADD_PARTIES : MenuItems.ASSIGN_ROLES
+              }`}
+            />
           </Switch>
+          <div className="checkbox-cleared">
+            <Checkbox
+              active={isClearedExchange}
+              onClick={() => setIsClearedExchange(!isClearedExchange)}
+            />
+            <p className="p2 dark cleared-exchange"> Cleared Exchange</p>
+          </div>
         </div>
       </Widget>
     </WellKnownPartiesProvider>

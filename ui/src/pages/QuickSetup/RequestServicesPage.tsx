@@ -95,8 +95,8 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
   return (
     <>
       <QuickSetupPage
-        className="request-service"
-        title="Request Services"
+        className="request-services-page"
+        title="Add Relationships"
         adminCredentials={adminCredentials}
       >
         <RequestForm

@@ -43,12 +43,6 @@ import { Loader } from 'semantic-ui-react';
 const NODE_WIDTH = 200;
 const NODE_HEIGHT = 130;
 
-enum ReviewForms {
-  ASSIGN_ROLES = 'Assign Roles',
-  REQUEST_SERVICES = 'Request Services',
-  NEW_ACCOUNT = 'New Account',
-}
-
 const ReviewPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
 

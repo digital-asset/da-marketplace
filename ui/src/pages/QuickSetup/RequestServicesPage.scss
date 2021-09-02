@@ -1,0 +1,12 @@
+@use 'themes/variables' as *;
+
+@mixin request-services-page {
+  .request-services-page {
+    form {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-gap: $spacing-xl;
+      width: 80%;
+    }
+  }
+}

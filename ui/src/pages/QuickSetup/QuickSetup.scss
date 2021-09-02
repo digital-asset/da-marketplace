@@ -3,6 +3,7 @@
 @use './ReviewPage';
 @use './FinishPage';
 @use './AddPartiesPage';
+@use './RequestServicesPage';
 @use './Instructions';
 
 @mixin quick-setup {
@@ -18,6 +19,18 @@
       padding-bottom: $spacing-s;
     }
 
+    @include FinishPage.finish-page;
+    @include ReviewPage.review-page;
+
+    .checkbox-cleared {
+      display: flex;
+      flex-direction: row;
+      padding-left: $spacing-xs;
+
+      p.p2.dark.cleared-exchange {
+        padding-left: $spacing-xs;
+      }
+    }
     .setup-page {
       display: flex;
       flex-direction: column;
@@ -27,32 +40,46 @@
       border-radius: 4px 4px;
       width: 800px;
       height: 550px;
+
       @include AddPartiesPage.add-parties-page;
-      @include ReviewPage.review-page;
-      @include FinishPage.finish-page;
+      @include RequestServicesPage.request-services-page;
       @include Instructions.instructions;
 
       h4.title {
         text-align: center;
       }
 
+      button.ui.button.ghost.submit,
+      button.ghost.submit {
+        width: fit-content;
+        margin-left: auto;
+      }
+
       &.main-select {
-        justify-content: space-between;
-        background-color: var(--cool-grey-10);
+        // background-color: var(--cool-grey-10);
         width: 500px;
+        height: fit-content;
+        justify-self: flex-start;
 
         button.main-button {
           display: flex;
           flex-direction: row;
-          justify-content: space-between;
+          justify-content: center;
           width: 100%;
           padding: var(--spacing-m);
+          //   background-color: var(--cool-grey-10);
+          margin-bottom: $spacing-m;
+          //   color: var(--white);
         }
       }
 
       .page-row {
         display: flex;
         flex-direction: row;
+
+        p.p2.dark.cleared-exchange {
+          padding-left: $spacing-xs;
+        }
       }
 
       .arrow {

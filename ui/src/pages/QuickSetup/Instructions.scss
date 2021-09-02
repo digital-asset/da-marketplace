@@ -18,17 +18,53 @@
       }
     }
 
+    .missing-contract {
+      height: 100%;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     .instruction-list {
       width: 100%;
       display: flex;
       flex-direction: column;
-      .instruction-fields {
-        width: 100%;
-        .fields {
-          display: grid;
-          grid-gap: $spacing-s;
 
-          grid-template-columns: repeat(3, 1fr);
+      .request-select {
+        width: 1fr;
+      }
+      .instruction-fields {
+        background-color: var(--cool-grey-100);
+        border: 1px solid var(--cool-grey-80);
+        padding: $spacing-s;
+        border-radius: 4px;
+        margin-bottom: $spacing-s;
+
+        h3 {
+          margin-bottom: $spacing-s;
+        }
+      }
+
+      .fields,
+      .request-select.party {
+        display: grid;
+        grid-gap: $spacing-s;
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .contract-browse-buttons {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        width: 100%;
+
+        button.ghost {
+          &.icon-right .icon {
+            margin: 0 0 0 $spacing-xs;
+          }
+          &.browse {
+            border: none;
+          }
         }
       }
     }
