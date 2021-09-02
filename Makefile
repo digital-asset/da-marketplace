@@ -14,6 +14,10 @@ dar_name := da-marketplace-$(SHORT_VERSION).dar
 dar_src := .daml/dist/$(dar_name)
 dar := $(PKG_DIR)/$(dar_name)
 
+ui_dar_name := da-marketplace-ui-$(SHORT_VERSION).dar
+ui_dar_src := ui/.daml/dist/$(ui_dar_name)
+ui_dar := $(PKG_DIR)/$(ui_dar_name)
+
 trigger_dar_name := da-marketplace-triggers-$(SHORT_VERSION).dar
 trigger_dar_src := triggers/.daml/dist/$(trigger_dar_name)
 trigger_dar := $(PKG_DIR)/$(trigger_dar_name)
@@ -22,6 +26,7 @@ exberry_adapter_name := da-marketplace-exberry-adapter-$(SHORT_VERSION).tar.gz
 exberry_adapter := $(PKG_DIR)/$(exberry_adapter_name)
 
 damljs := daml.js
+daml-ui-js := daml-ui.js
 
 ui_name := da-marketplace-ui-$(VERSION).zip
 ui := $(PKG_DIR)/$(ui_name)
@@ -40,6 +45,13 @@ $(dar_src):
 $(dar): $(dar_src) $(PKG_DIR)
 	cp $(dar_src) $@
 
+# UI models target
+$(ui_dar_src): $(dar_src)
+	cd ui && daml build
+
+$(ui_dar): $(ui_dar_src) $(PKG_DIR)
+	cp $(ui_dar_src) $@
+
 # Triggers target
 $(trigger_dar_src):
 	cd triggers && daml build
@@ -57,8 +69,11 @@ $(exberry_adapter): $(PKG_DIR)
 $(damljs): $(dar_src)
 	daml codegen js $(dar_src) -o $@
 
+$(daml-ui-js): $(ui_dar_src)
+	daml codegen js $(ui_dar_src) -o $@
+
 # UI target
-$(ui): $(damljs) $(trigger_dar) $(exberry_adapter) $(PKG_DIR)
+$(ui): $(damljs) $(daml-ui-js) $(trigger_dar) $(exberry_adapter) $(PKG_DIR)
 	cd $(UI_DIR) && yarn install
 	cd $(UI_DIR) && REACT_APP_TRIGGER_HASH=$(shell sha256sum $(trigger_dar) | awk '{print $$1}') REACT_APP_EXBERRY_HASH=$(shell sha256sum $(exberry_adapter) | awk '{print $$1}') yarn build
 	cd $(UI_DIR) && zip -r $(ui_name) build
@@ -69,8 +84,8 @@ $(app_icon):
 	cp $(UI_DIR)/public/marketplace.svg $@
 
 # DIT target
-$(dit): $(dar) $(trigger_dar) $(exberry_adapter) $(ui) $(app_icon)
-	ddit build --force --skip-dar-build --subdeployment $(dar) $(trigger_dar) $(exberry_adapter) $(ui)
+$(dit): $(dar) $(ui_dar) $(trigger_dar) $(exberry_adapter) $(ui) $(app_icon)
+	ddit build --force --skip-dar-build --subdeployment $(dar) $(ui_dar) $(trigger_dar) $(exberry_adapter) $(ui)
 
 .PHONY: package
 package: $(dit)
@@ -103,6 +118,7 @@ tag:
 		daml.yaml \
 		triggers/daml.yaml \
 		triggers/test/daml.yaml \
+		ui/daml.yaml \
 		exberry_adapter/setup.py \
 		$(UI_DIR)/package.json \
 		docs/local_development.md \
@@ -134,8 +150,8 @@ $(STATE_DIR):
 sandbox_pid := $(STATE_DIR)/sandbox.pid
 sandbox_log := $(STATE_DIR)/sandbox.log
 
-$(sandbox_pid): |$(STATE_DIR) $(dar_src)
-	daml start > $(sandbox_log) & echo "$$!" > $(sandbox_pid)
+$(sandbox_pid): |$(STATE_DIR) $(dar_src) $(ui_dar_src)
+	daml start --sandbox-option $(ui_dar_src) > $(sandbox_log) & echo "$$!" > $(sandbox_pid)
 
 .PHONY: start-daml-server
 start-daml-server: $(sandbox_pid)
@@ -262,11 +278,12 @@ stop-settlement-trigger: |$(STATE_DIR)
 .PHONY: clean-ui
 clean-ui:
 	rm -rf daml.js
+	rm -rf daml-ui.js
 	cd $(UI_DIR) && rm -rf build node_modules
 
 .PHONY: clean-daml
 clean-daml:
-	rm -rf .daml triggers/.daml
+	rm -rf .daml ui/.daml triggers/.daml
 
 .PHONY: clean
 clean: clean-daml clean-ui
