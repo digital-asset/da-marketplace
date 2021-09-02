@@ -19,7 +19,7 @@ import Credentials, { computeCredentials } from '../../Credentials';
 
 import { halfSecondPromise } from '../page/utils';
 
-import { LoadingWheel, MenuItems } from './QuickSetup';
+import { LoadingWheel } from './QuickSetup';
 
 import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
 import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
@@ -27,12 +27,12 @@ import {
   IdentityVerificationRequest,
   Service as RegulatorService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
+import { OperatorOnboarding } from '@daml-ui.js/da-marketplace-ui/lib/UI/Onboarding';
 import { Offer as RegulatorOffer } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import { makeDamlSet } from '../common';
 import { retrieveParties } from '../../Parties';
 
-import QuickSetupPage from './QuickSetupPage';
 import { deployAutomation, MarketplaceTrigger, TRIGGER_HASH } from '../../automation';
 
 enum LoadingStatus {
@@ -254,6 +254,12 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
       });
     };
 
+    const createOperatorOnboarding = async () => {
+      return await ledger.create(OperatorOnboarding, {
+        operator: adminCredentials.party,
+      });
+    };
+
     const createRegulatorRole = async () => {
       return await ledger.create(RegulatorRole, {
         operator: adminCredentials.party,
@@ -317,6 +323,7 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
     } else if (regulatorRoles.length === 0) {
       createRegulatorRole();
     } else {
+      createOperatorOnboarding();
       offerRegulatorServices();
       deployAllTriggers();
       return onComplete();

@@ -27,6 +27,8 @@ import { createDropdownProp } from '../common';
 import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
 import classNames from 'classnames';
 
+import { LoadingWheel } from './QuickSetup';
+
 interface InstFieldsWithTitle {
   title: string;
   instructions: InstFieldsWithType[];
@@ -526,6 +528,7 @@ const Instructions = (props: {
 
   const [onboardParties, setOnboardParties] = useState<string[]>([]);
   const [instructionIndex, setInstructionIndex] = useState(0);
+  const [loadingInstructions, setLoadingInstructions] = useState(false);
 
   const { contracts: onboardingContracts } = useStreamQueries(OperatorOnboarding);
 
@@ -559,7 +562,7 @@ const Instructions = (props: {
     if (onboardParties.length === 0) {
       return;
     }
-
+    setLoadingInstructions(true);
     await Promise.all(
       onboardParties.map(async party => {
         await ledger.exercise(
@@ -571,10 +574,15 @@ const Instructions = (props: {
           }
         );
       })
-    );
+    ).then(_ => {
+      setOnboardParties([]);
+      setInstructionFields(undefined);
+      setLoadingInstructions(false);
+    });
+  }
 
-    setOnboardParties([]);
-    setInstructionFields(undefined);
+  if (loadingInstructions) {
+    return <LoadingWheel label={''} />;
   }
 
   return (
