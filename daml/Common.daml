@@ -3,6 +3,7 @@ module Common where
 import Daml.Script
 import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Id(..), Asset(..), Account(..))
+import DA.Optional (fromSome)
 import DA.Set
 import ContingentClaims.Claim (Claim(Zero), serialize)
 import ContingentClaims.Observation (Observation)
@@ -86,8 +87,6 @@ data Customer = Customer
     custodyServiceCid : ContractId Custody.Service
     biddingServiceCid : ContractId Bidding.Service
     mainAccount : Account
-    clearingAccount : Account
-    marginAccount : Account
 
 onboardProviders : Parties -> Script Providers
 onboardProviders Parties{userAdmin = operator; ..} = do
@@ -143,26 +142,9 @@ onboardProviders Parties{userAdmin = operator; ..} = do
 
 onboardCustomer : Providers -> Text -> Party -> Script Customer
 onboardCustomer Providers{..} party customer = do
-  let
-    mainAccountId           = Id with signatories = fromList [ bank, customer ]; label = "MainAccount-" <> party; version = 0
-    clearingAccountId       = Id with signatories = fromList [ bank, customer ]; label = "ClearingAccount-" <> party; version = 0
-    marginAccountId         = Id with signatories = fromList [ bank, customer ]; label = "MarginAccount-" <> party; version = 0
-    mainAccount             = Account with provider = bank; owner = customer; id = mainAccountId
-    clearingAccount         = Account with provider = bank; owner = customer; id = clearingAccountId
-    marginAccount           = Account with provider = bank; owner = customer; id = marginAccountId
-
   -- Custody service
   custodyServiceOfferCid <- submit bank do exerciseCmd custodianRoleCid Custodian.OfferCustodyService with ..
   custodyServiceCid <- submit customer do exerciseCmd custodyServiceOfferCid Custody.Accept
-
-  -- Accounts
-  openAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = mainAccountId; observers = [exchange, bank]; ctrls = [bank, customer]
-  submit bank do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = openAccountRequestCid
-
-  openAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = clearingAccountId; observers = [bank, clearinghouse]; ctrls = [bank, customer]
-  submit bank do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = openAccountRequestCid
-  openAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAllocationAccount with accountId = marginAccountId; observers = fromList [clearinghouse, bank]; nominee = clearinghouse
-  submit bank do exerciseCmd custodyServiceCid Custody.OpenAllocationAccount with openAllocationAccountRequestCid = openAccountRequestCid
 
   -- Trading and Listing services
   tradingServiceOfferCid <- submit exchange do exerciseCmd exchangeRoleCid Exchange.OfferTradingService with ..
@@ -173,8 +155,9 @@ onboardCustomer Providers{..} party customer = do
   issuanceServiceCid <- submit customer do exerciseCmd issuanceServiceOfferCid Issuance.Accept
 
   -- Clearing Service
+  mainAccount <- (.account) . fromSome <$> queryContractId customer custodyServiceCid
   clearingServiceOfferCid  <- submit clearinghouse do exerciseCmd clearingRoleCid Clearinghouse.OfferClearingService with ..
-  clearingServiceCid       <- submit customer do exerciseCmd clearingServiceOfferCid Clearing.Accept with ..
+  clearingServiceCid       <- submit customer do exerciseCmd clearingServiceOfferCid Clearing.Accept with clearingAccount = mainAccount
 
   -- Identity
   (Some (regulatorRoleCid,_))          <- queryContractKey @Regulator.Role operator (operator, operator)
@@ -211,10 +194,10 @@ onboardAssets providers issuer = do
 
   pure Assets with ..
 
-depositAsset : Providers -> Customer -> Asset -> Id -> Script (ContractId AssetDeposit)
-depositAsset Providers{..} Customer{..} asset accountId = do
+depositAsset : Providers -> Customer -> Asset -> Id -> Set Party -> Script (ContractId AssetDeposit)
+depositAsset Providers{..} Customer{..} asset accountId observers = do
   -- Assets
-  creditAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestCreditAccount with accountId = accountId; asset
-  depositCid <- submit bank do exerciseCmd custodyServiceCid Custody.CreditAccount with ..
+  depositRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestDeposit with asset; observers
+  depositCid <- submit bank do exerciseCmd custodyServiceCid Custody.Deposit with ..
   (Some deposit) <- queryContractId bank depositCid
   submit customer do exerciseCmd depositCid AssetDeposit.AssetDeposit_SetObservers with newObservers = deposit.asset.id.signatories `union` deposit.observers

@@ -7,6 +7,7 @@ import Daml.Script
 import DA.Date (date, Month(..))
 import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..))
 import DA.Finance.Asset.Settlement
+import DA.Set
 import Marketplace.Custody.Service qualified as Custody
 import Marketplace.Distribution.Role qualified as Distributor
 import Marketplace.Distribution.Auction.Service qualified as Auction
@@ -28,12 +29,12 @@ runDemo parties@Parties{..} = do
 
   assets@Assets{..} <- onboardAssets providers issuer
 
-  aliceUsd    <- depositAsset providers alice     (usd with quantity = 1_000_000.0) alice.mainAccount.id
-  bobUsd      <- depositAsset providers bob       (usd with quantity = 1_000_000.0) bob.mainAccount.id
-  charlieUsd  <- depositAsset providers charlie   (usd with quantity = 1_000_000.0) charlie.mainAccount.id
+  aliceUsd    <- depositAsset providers alice     (usd with quantity = 1_000_000.0) alice.mainAccount.id empty
+  bobUsd      <- depositAsset providers bob       (usd with quantity = 1_000_000.0) bob.mainAccount.id empty
+  charlieUsd  <- depositAsset providers charlie   (usd with quantity = 1_000_000.0) charlie.mainAccount.id empty
 
-  aliceUsdClearing <- depositAsset providers alice     (usd with quantity = 1_000_000.0) alice.clearingAccount.id
-  bobUsdClearing   <- depositAsset providers bob       (usd with quantity = 1_000_000.0) bob.clearingAccount.id
+  -- aliceUsdClearing <- depositAsset providers alice     (usd with quantity = 1_000_000.0) alice.clearingAccount.id empty
+  -- bobUsdClearing   <- depositAsset providers bob       (usd with quantity = 1_000_000.0) bob.clearingAccount.id empty
 
   auctionOfferCid <- submit bank do exerciseCmd distributorRoleCid Distributor.OfferAuctionService with customer = issuer.customer; ..
   auctionServiceCid <- submit issuer.customer do exerciseCmd auctionOfferCid Auction.Accept
@@ -47,7 +48,7 @@ examples Providers{..} Assets{..} issuer = do
 
   let
     safekeepingAccount = issuer.mainAccount
-    accountId = issuer.mainAccount.id
+    account = issuer.mainAccount
     observers = [public]
 
     originate assetLabel description cfi claims = do

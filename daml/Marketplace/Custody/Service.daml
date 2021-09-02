@@ -90,12 +90,6 @@ template Service
         do
           create Custody.WithdrawlRequest with ..
 
-      -- nonconsuming SignInstructions : ContractId Trading.OrderSettlementInstructions
-      --   with
-      --     instructionsCid : ContractId Trading.OrderSettlementInstructions
-      --   do
-      --     exercise instructionsCid Trading.Sign with signer = provider
-
     controller provider can
       nonconsuming OpenAccount : ContractId AssetSettlementRule
         with
@@ -183,9 +177,6 @@ template Service
       controller ctrl
       do pure ()
 
-createAccount : Party -> Party -> Account
-createAccount provider customer = Account with provider; owner = customer; id = Id with signatories = fromList [customer, provider]; label = partyToText customer <> "@" <> partyToText provider; version = 0
-
 template Offer
   with
     operator : Party
@@ -230,3 +221,9 @@ template Request
       do
         let account = createAccount provider customer
         createOrLookup Service with ..
+
+createAccount : Party -> Party -> Account
+createAccount provider customer = do
+  let id = Id with signatories = fromList [customer, provider]; label = partyToText customer <> "@" <> partyToText provider; version = 0
+      owner = customer
+  Account with id; owner; provider

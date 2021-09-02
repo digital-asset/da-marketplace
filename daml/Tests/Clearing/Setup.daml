@@ -6,6 +6,7 @@ import ContingentClaims.Claim (Claim(Zero))
 import DA.Assert ((===))
 import DA.Finance.Types
 import DA.Date (date, Month(..))
+import DA.Set (fromList)
 import Marketplace.Trading.Service qualified as Trading
 import Marketplace.Trading.Model qualified as Order
 import Marketplace.Clearing.Role qualified as Clearing
@@ -30,8 +31,9 @@ setupClearingCustomer providers@Providers{clearinghouse} Assets{..} name party =
   customer <- onboardCustomer providers name party
   let
     cashAsset = usd with quantity = 2000000.0
+    observers = fromList [ clearinghouse ]
 
-  depositCid <- depositAsset providers customer cashAsset customer.clearingAccount.id
+  depositCid <- depositAsset providers customer cashAsset customer.mainAccount.id observers
 
   calculationCid <- submit clearinghouse $
     exerciseCmd customer.clearingServiceCid Clearing.CreateMarginCalculation with

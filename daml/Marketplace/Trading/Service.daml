@@ -32,8 +32,8 @@ template Service
     let
       unlockCollateral : Order.TradeCollateral -> Update Order.TradeCollateral
       unlockCollateral = \case
-        (Order.Cleared party)         -> return $ Order.Cleared party
-        (Order.Collateral depositCid) -> Order.Collateral <$> exercise depositCid AssetDeposit_Unlock
+        Order.Cleared party         -> return $ Order.Cleared party
+        Order.Collateral depositCid -> Order.Collateral <$> exercise depositCid AssetDeposit_Unlock
 
     controller customer can
       nonconsuming RequestCreateOrder : Either (ContractId Order.T)

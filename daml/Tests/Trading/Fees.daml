@@ -49,11 +49,12 @@ setup = do
     cashAsset = usd with quantity = 20000.0
     priceAsset = usd with quantity = 100.0
     feeAsset = usd with quantity = 2.0
+    observers = Set.fromList [ ]
 
-  aliceDepositCid <- depositAsset providers alice shareAsset alice.mainAccount.id
-  aliceFeeDepositCid <- depositAsset providers alice feeAsset alice.mainAccount.id
-  bobDepositCid <- depositAsset providers bob cashAsset bob.mainAccount.id
-  bobFeeDepositCid <- depositAsset providers bob feeAsset bob.mainAccount.id
+  aliceDepositCid <- depositAsset providers alice shareAsset alice.mainAccount.id observers
+  aliceFeeDepositCid <- depositAsset providers alice feeAsset alice.mainAccount.id observers
+  bobDepositCid <- depositAsset providers bob cashAsset bob.mainAccount.id observers
+  bobFeeDepositCid <- depositAsset providers bob feeAsset bob.mainAccount.id observers
 
   -- List a Security to trade
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer

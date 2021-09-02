@@ -2,6 +2,8 @@ module Tests.ExchangeTrade where
 
 import Common
 import Daml.Script
+import DA.List
+import DA.Set
 import DA.Finance.Asset (AssetDeposit_Split(..))
 import DA.Foldable (forA_)
 import qualified Marketplace.Settlement.Model as Settlement
@@ -10,8 +12,6 @@ import qualified Marketplace.Trading.Model as Order
 import qualified Marketplace.Trading.Service as TradingService
 import qualified Marketplace.Listing.Service as Listing
 import qualified Marketplace.Listing.Model as Listing
-
-import DA.List
 
 setup : Script ()
 setup = do
@@ -30,8 +30,8 @@ setup = do
     cashAsset = usd with quantity = 20000.0
     priceAsset = usd with quantity = 100.0
 
-  aliceDepositCid <- depositAsset providers alice shareAsset alice.mainAccount.id
-  bobDepositCid <- depositAsset providers bob cashAsset bob.mainAccount.id
+  aliceDepositCid <- depositAsset providers alice shareAsset alice.mainAccount.id empty
+  bobDepositCid <- depositAsset providers bob cashAsset bob.mainAccount.id empty
 
   -- List a Security to trade
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
@@ -118,8 +118,8 @@ partialExecutionsTest = do
     cashAsset = usd with quantity = 20000.0
     priceAsset = usd with quantity = 100.0
 
-  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id
-  bobDepositCid <- depositAsset providers bob shareAsset bob.mainAccount.id
+  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id empty
+  bobDepositCid <- depositAsset providers bob shareAsset bob.mainAccount.id empty
 
   -- List a Security to trade
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer

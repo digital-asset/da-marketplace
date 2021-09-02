@@ -79,14 +79,13 @@ handleCCPRule party = do
 
 
 -- |Find all 'AssetDeposit' that a CCP Customer has with the CCP in a specific account
-getCustomerDeposits : Party -> Party -> (Clearing.Service -> Account) -> TriggerA ClearingState [ContractId AssetDeposit]
-getCustomerDeposits ccp customer account = do
+getCustomerDeposits : Party -> Party -> ((ContractId AssetDeposit, AssetDeposit) -> Bool) -> TriggerA ClearingState [ContractId AssetDeposit]
+getCustomerDeposits ccp customer depositFilter = do
     state@ClearingState { operatorParty } <- get
     (_,ccpCustomer) <- fromSomeNote "getCustomerDeposits" <$> queryContractKey @Clearing.Service (operatorParty, ccp, customer)
-    map fst . filter (checkDeposit ccpCustomer) <$> query @AssetDeposit
+    map fst . filter depositFilter . filter (accountFilter ccpCustomer.clearingAccount) <$> query @AssetDeposit
   where
-    checkDeposit ccpCustomer (dCid,d) = d.account == account ccpCustomer
-
+    accountFilter account = (\(_, deposit) -> deposit.account == account)
 
 -- |Transfer to and from the CCPCustomer's margin deposits from their clearing account.
 handleMarginCalculation : Party -> ContractPair Clearing.MarginCalculation -> TriggerA ClearingState ()
@@ -94,8 +93,8 @@ handleMarginCalculation ccp (mcCid, mc@Clearing.MarginCalculation{customer, targ
   debug ("resolving margin calculation: " <> show mc)
   ClearingState { operatorParty } <- get
 
-  clearingDepositCids <- getCustomerDeposits ccp customer (.clearingAccount)
-  marginDepositCids   <- getCustomerDeposits ccp customer (.marginAccount)
+  clearingDepositCids <- getCustomerDeposits ccp customer (\(_, deposit) -> Set.null deposit.lockers)
+  marginDepositCids   <- getCustomerDeposits ccp customer (\(_, deposit) -> not $ Set.null deposit.lockers)
   emitCommands [exerciseByKeyCmd @Clearing.Service (operatorParty, ccp, customer) Clearing.PerformMarginFill with
                    calculationCid = mcCid, depositCids = clearingDepositCids, marginDepositCids]
                ([toAnyContractId mcCid] <> map toAnyContractId clearingDepositCids <> map toAnyContractId marginDepositCids)
@@ -115,7 +114,7 @@ handleIncomingMarkToMarketCalculation
 handleIncomingMarkToMarketCalculation ccp (mtmCid, mtm@Clearing.MarkToMarketCalculation { accountId, customer, mtmAmount }) = do
   debug ("handling incoming mtm calculation: " <> show mtm)
   ClearingState { operatorParty } <- get
-  clearingDepositCids <- getCustomerDeposits ccp customer (.clearingAccount)
+  clearingDepositCids <- getCustomerDeposits ccp customer (\(_, deposit) -> Set.null deposit.lockers)
   emitCommands [exerciseByKeyCmd @Clearing.Service (operatorParty, ccp, customer) Clearing.PerformMarkToMarket with
                   customerDepositCids = clearingDepositCids; providerDepositCids = []; calculationCid = mtmCid]
                ([toAnyContractId mtmCid] <> map toAnyContractId clearingDepositCids)

@@ -6,6 +6,7 @@ import DA.Assert ((===))
 import DA.List
 import DA.Foldable
 import DA.Finance.Asset (AssetDeposit)
+import DA.Set (fromList)
 import Marketplace.Settlement.Model qualified as Settlement
 import Marketplace.Trading.Service qualified as Trading
 import Marketplace.Trading.Model qualified as Order
@@ -32,8 +33,9 @@ tradingEndToEndTest = do
   let
     shareAsset = tsla with quantity = 200.0
     cashAsset = usd with quantity = 20000.0
-  aliceDepositCid <- depositAsset providers alice shareAsset alice.mainAccount.id
-  bobDepositCid <- depositAsset providers bob cashAsset bob.mainAccount.id
+    observers = fromList []
+  aliceDepositCid <- depositAsset providers alice shareAsset alice.mainAccount.id observers
+  bobDepositCid <- depositAsset providers bob cashAsset bob.mainAccount.id observers
 
   -- List a Security to trade
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
