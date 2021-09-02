@@ -57,7 +57,7 @@ runMatchingTest parties@Parties{userAdmin = operator; ..} = do
   createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
 
   debug "Waiting for listing to be accepted..."
-  (listingCid, Listing.Listing{listingId}) <- waitQuery 10.0 (queryContractKey @Listing.Listing exchange (operator, exchange, listingId))
+  (listingCid, Listing.Listing{listingId}) <- waitQuery 10.0 $ queryContractKey @Listing.Listing exchange (operator, exchange, listingId)
   debug $ listingId
 
   -- -- Create orders
@@ -77,7 +77,7 @@ runMatchingTest parties@Parties{userAdmin = operator; ..} = do
             orderType = Order.Limit with price = 100.0
 
   debug "Waiting for Alice's order to be accepted..."
-  waitUntil 5.0 $ checkOrderStatusMatches aliceOrderId exchange Order.PendingExecution
+  waitUntil 10.0 $ checkOrderStatusMatches aliceOrderId exchange Order.PendingExecution
 
   let bobOrderId = show $ orderNumber + 1
   Right (bobOrderCid, bobCreateOrderRequestCid, bobAssetDepositCid) <- bob.customer `submit` do
