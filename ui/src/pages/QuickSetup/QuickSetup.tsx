@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { Button, Loader } from 'semantic-ui-react';
-
+import classNames from 'classnames'
 import {
   useHistory,
   Switch,
@@ -184,7 +184,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
 export const LoadingWheel = (props: { label?: string; dark?: boolean }) => {
   return (
     <Loader active indeterminate size="small">
-      <p className={classNames({ dark })}>{props.label || 'Loading...'}</p>
+      <p className={classNames({ dark: props.dark })}>{props.label || 'Loading...'}</p>
     </Loader>
   );
 };
