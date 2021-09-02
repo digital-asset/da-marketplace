@@ -84,7 +84,7 @@ template Service
           Custody.OpenAccountRequest{accountId; observers; ctrls} <- fetchAndArchive openAccountRequestCid
 
           let account = Account with provider; owner = customer; id = accountId
-          create AssetSettlementRule with ..
+          createOrLookup AssetSettlementRule with ..
 
       nonconsuming OpenAllocationAccount : ContractId AllocationAccountRule
         with
@@ -93,7 +93,7 @@ template Service
           Custody.OpenAllocationAccountRequest{nominee; accountId; observers} <- fetchAndArchive openAllocationAccountRequestCid
 
           let account = Account with provider; owner = customer; id = accountId
-          create AllocationAccountRule with ..
+          createOrLookup AllocationAccountRule with ..
 
       nonconsuming CloseAccount : ()
         with
