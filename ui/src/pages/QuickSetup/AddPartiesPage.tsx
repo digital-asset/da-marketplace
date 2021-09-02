@@ -114,6 +114,7 @@ const AddPartiesPage = () => {
                   <CreateVerifiedIdentity
                     party={p}
                     onComplete={() => history.push('/quick-setup')}
+                    operator={adminCredentials.party}
                   />
                 </QueryStreamProvider>
               </PublicDamlProvider>
@@ -164,8 +165,12 @@ const AddPartiesPage = () => {
   );
 };
 
-const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDetails }) => {
-  const { onComplete, party } = props;
+const CreateVerifiedIdentity = (props: {
+  onComplete: () => void;
+  party: PartyDetails;
+  operator: string;
+}) => {
+  const { onComplete, party, operator } = props;
   const ledger = useLedger();
   const userParties = retrieveUserParties() || [];
 
@@ -175,13 +180,30 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
   const { contracts: verifiedIdentities, loading: verifiedIdentitiesLoading } = useStreamQueries(
     VerifiedIdentity
   );
+  const { contracts: partyOnboarding, loading: partyOnboardingLoading } = useStreamQueries(
+    PartyOnboarding
+  );
   const {
     contracts: verifiedIdentityRequests,
     loading: verifiedIdentityRequestsLoading,
   } = useStreamQueries(IdentityVerificationRequest);
 
   useEffect(() => {
-    if (regulatorServicesLoading || verifiedIdentitiesLoading || verifiedIdentityRequestsLoading) {
+    const hasPartyOnboarding = !!partyOnboarding.find(c => c.payload.party === party.party);
+
+    const createPartyOnboarding = async () => {
+      return await ledger.create(PartyOnboarding, {
+        operator,
+        party: party.party,
+      });
+    };
+
+    if (
+      regulatorServicesLoading ||
+      verifiedIdentitiesLoading ||
+      verifiedIdentityRequestsLoading ||
+      partyOnboardingLoading
+    ) {
       return;
     }
 
@@ -219,8 +241,14 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
     ) {
       handleVerifiedIdentity();
     }
+    if (!hasPartyOnboarding) {
+      createPartyOnboarding();
+    }
 
-    if (userParties.every(p => !!verifiedIdentities.find(v => v.payload.customer === p.party))) {
+    if (
+      userParties.every(p => !!verifiedIdentities.find(v => v.payload.customer === p.party)) &&
+      hasPartyOnboarding
+    ) {
       return onComplete();
     }
   }, [
@@ -233,6 +261,8 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
     regulatorServicesLoading,
     verifiedIdentityRequestsLoading,
     verifiedIdentityRequests,
+    partyOnboardingLoading,
+    partyOnboarding,
     party,
   ]);
 
@@ -252,9 +282,7 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
   const { contracts: operatorOnboarding, loading: operatorOnboardingLoading } = useStreamQueries(
     OperatorOnboarding
   );
-  const { contracts: partyOnboarding, loading: partyOnboardingLoading } = useStreamQueries(
-    PartyOnboarding
-  );
+
   const { contracts: regulatorRoles, loading: regulatorRolesLoading } = useStreamQueries(
     RegulatorRole
   );
@@ -265,6 +293,9 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
 
   useEffect(() => {
     const createOperatorService = async () => {
+      if (operatorService.length !== 0) {
+        return;
+      }
       return await ledger.create(OperatorService, {
         operator: adminCredentials.party,
         observers: makeDamlSet([publicParty]),
@@ -272,12 +303,18 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
     };
 
     const createOperatorOnboarding = async () => {
+      if (operatorOnboarding.length !== 0) {
+        return;
+      }
       return await ledger.create(OperatorOnboarding, {
         operator: adminCredentials.party,
       });
     };
 
     const createRegulatorRole = async () => {
+      if (regulatorRoles.length !== 0) {
+        return;
+      }
       return await ledger.create(RegulatorRole, {
         operator: adminCredentials.party,
         provider: adminCredentials.party,
@@ -305,29 +342,11 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
       );
     };
 
-    const createPartyOnboarding = async (party: string) => {
-      return await ledger.create(PartyOnboarding, {
-        operator: adminCredentials.party,
-        party,
-      });
-    };
-
-    const createPartiesOnboarding = async () => {
-      await Promise.all(
-        userParties.map(async party => {
-          if (!partyOnboarding.find(c => c.payload.party === party.party)) {
-            await createPartyOnboarding(party.party);
-          }
-        })
-      );
-    };
-
     if (
       operatorServiceLoading ||
       regulatorRolesLoading ||
       regulatorServiceOffersLoading ||
-      operatorOnboardingLoading ||
-      partyOnboardingLoading
+      operatorOnboardingLoading
     ) {
       return;
     }
@@ -366,7 +385,6 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
       createOperatorOnboarding();
     } else {
       offerRegulatorServices();
-      createPartiesOnboarding();
       deployAllTriggers();
       return onComplete();
     }
@@ -380,8 +398,6 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
     regulatorServiceOffersLoading,
     operatorOnboardingLoading,
     operatorOnboarding,
-    partyOnboardingLoading,
-    partyOnboarding,
     regulatorRoles,
     operatorService,
     regulatorServiceOffers,

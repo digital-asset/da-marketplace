@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { Button, Loader } from 'semantic-ui-react';
-import classNames from 'classnames'
+import classNames from 'classnames';
 import {
   useHistory,
   Switch,
@@ -38,6 +38,7 @@ export enum MenuItems {
   LOG_IN = 'log-in-parties',
   PROVIDE_SERVICES = 'provide-services',
   CREATE_ACCOUNTS = 'create-accounts',
+  MAIN_SELECT = 'main-select',
 }
 
 const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
@@ -79,12 +80,10 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
           left:
             (activeMenuItem === MenuItems.ADD_PARTIES && storedParties.length == 0) ||
             activeMenuItem === MenuItems.ASSIGN_ROLES ? undefined : (
-              <NavLink to={!!activeMenuItem ? `${matchUrl}` : '/'}>
-                <Button className="button ghost dark control-button">
-                  <ArrowLeftIcon color={'white'} />
-                  Back
-                </Button>
-              </NavLink>
+              <Button className="button ghost dark control-button" onClick={() => history.goBack()}>
+                <ArrowLeftIcon color={'white'} />
+                Back
+              </Button>
             ),
           right:
             activeMenuItem === MenuItems.ADD_PARTIES &&
@@ -135,44 +134,16 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
               path={`${matchPath}/${MenuItems.LOG_IN}`}
               component={() => <LoginPage adminCredentials={adminCredentials} />}
             />
-            <Redirect to={`${matchPath}/${isHubDeployment ? MenuItems.ADD_PARTIES : ''}`} />
             <Route
-              path={`${matchPath}`}
-              component={() => (
-                <div className="setup-page main-select">
-                  <h4 className="dark">What would you like to do?</h4>
-                  <NavLink to={`${matchUrl}/${MenuItems.ASSIGN_ROLES}`}>
-                    <Button className="main-button ghost dark">
-                      Assign Roles
-                      <ArrowRightIcon />
-                    </Button>
-                  </NavLink>
-                  <NavLink to={`${matchUrl}/${MenuItems.CONFIGURE_PROVIDERS}`}>
-                    <Button className="main-button ghost dark">
-                      Configure Providers
-                      <ArrowRightIcon />
-                    </Button>
-                  </NavLink>
-                  <NavLink to={`${matchUrl}/${MenuItems.PROVIDE_SERVICES}`}>
-                    <Button className="main-button ghost dark">
-                      Provide Services
-                      <ArrowRightIcon />
-                    </Button>
-                  </NavLink>
-                  <NavLink to={`${matchUrl}/${MenuItems.CREATE_ACCOUNTS}`}>
-                    <Button className="main-button ghost dark">
-                      Create accounts
-                      <ArrowRightIcon />
-                    </Button>
-                  </NavLink>
-                  <NavLink to={`${matchUrl}/${MenuItems.ADD_PARTIES}`}>
-                    <Button className="main-button ghost dark">
-                      Add Parties
-                      <ArrowRightIcon />
-                    </Button>
-                  </NavLink>
-                </div>
-              )}
+              path={`${matchPath}/${MenuItems.MAIN_SELECT}`}
+              component={() => <MainSelect matchUrl={matchUrl} />}
+            />
+            <Redirect
+              to={`${matchPath}/${
+                isHubDeployment && storedParties.length == 0
+                  ? MenuItems.ADD_PARTIES
+                  : MenuItems.MAIN_SELECT
+              }`}
             />
           </Switch>
         </div>
@@ -180,6 +151,46 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
     </WellKnownPartiesProvider>
   );
 });
+
+const MainSelect = (props: { matchUrl: string }) => {
+  const { matchUrl } = props;
+
+  return (
+    <div className="setup-page main-select">
+      <h4 className="dark">What would you like to do?</h4>
+      <NavLink to={`${matchUrl}/${MenuItems.ASSIGN_ROLES}`}>
+        <Button className="main-button ghost dark">
+          Assign Roles
+          <ArrowRightIcon />
+        </Button>
+      </NavLink>
+      <NavLink to={`${matchUrl}/${MenuItems.CONFIGURE_PROVIDERS}`}>
+        <Button className="main-button ghost dark">
+          Configure Providers
+          <ArrowRightIcon />
+        </Button>
+      </NavLink>
+      <NavLink to={`${matchUrl}/${MenuItems.PROVIDE_SERVICES}`}>
+        <Button className="main-button ghost dark">
+          Provide Services
+          <ArrowRightIcon />
+        </Button>
+      </NavLink>
+      <NavLink to={`${matchUrl}/${MenuItems.CREATE_ACCOUNTS}`}>
+        <Button className="main-button ghost dark">
+          Create accounts
+          <ArrowRightIcon />
+        </Button>
+      </NavLink>
+      <NavLink to={`${matchUrl}/${MenuItems.ADD_PARTIES}`}>
+        <Button className="main-button ghost dark">
+          Add Parties
+          <ArrowRightIcon />
+        </Button>
+      </NavLink>
+    </div>
+  );
+};
 
 export const LoadingWheel = (props: { label?: string; dark?: boolean }) => {
   return (
