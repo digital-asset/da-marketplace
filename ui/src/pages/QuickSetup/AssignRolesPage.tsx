@@ -592,10 +592,6 @@ const Instructions = (props: {
       .catch(_ => setLoadingInstructions(false));
   }
 
-  const custodian = instructionFields.instructions.find(
-    i => i.instructionType === InstructionType.CUSTODY
-  )?.fields?.provider;
-
   return (
     <div className="instruction-list">
       <Segment basic>
@@ -618,7 +614,7 @@ const Instructions = (props: {
             <InstructionFieldInputs
               currentFields={fields}
               idx={idx}
-              instructionFields={getListCopy(idx, fields) || []}
+              instructionFields={instructionFields.instructions || []}
               setInstructionFields={setInstructionFields}
               partyOptions={partyOptions}
             />
@@ -661,14 +657,6 @@ const Instructions = (props: {
       </Segment>
     </div>
   );
-
-  function getListCopy(idx: number, fields: InstFieldsWithType) {
-    let listCopy = [...(instructionFields?.instructions || [])];
-    let instCopy = { ...fields };
-    (instCopy.fields || {})['custodian'] = custodian || '';
-    listCopy[idx] = instCopy;
-    return listCopy;
-  }
 };
 
 type InstructionFieldsProps = {
@@ -686,29 +674,12 @@ const InstructionFieldInputs: React.FC<InstructionFieldsProps> = ({
   setInstructionFields,
   partyOptions,
 }) => {
-  const fields = getFields(currentFields);
-
-  const custodian = instructionFields.find(i => i.instructionType === InstructionType.CUSTODY)
-    ?.fields?.provider;
-
-  useEffect(() => {
-    console.log('heress');
-
-    setInstructionFields(old => {
-      let listCopy = [...(old?.instructions || [])];
-      let instCopy = { ...currentFields };
-      (instCopy.fields || {})['custodian'] = custodian || '';
-      listCopy[idx] = instCopy;
-      return { title: old?.title || '', instructions: listCopy };
-    });
-  }, [custodian, idx, setInstructionFields]);
-
   return (
     <div className="instruction-fields">
       <Header as="h3">{currentFields.instructionType}</Header>
-      {!!fields ? (
+      {!!getFields(currentFields) ? (
         <Form.Group>
-          {_.toPairs(fields).map(([k, field]) => {
+          {_.toPairs(getFields(currentFields)).map(([k, field]) => {
             const updateInstructionTypes = (_: any, data: DropdownProps | InputOnChangeData) => {
               setInstructionFields(old => {
                 let listCopy = [...(old?.instructions || [])];
