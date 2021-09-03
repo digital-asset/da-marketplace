@@ -540,9 +540,7 @@ const Instructions = (props: {
     return createDropdownProp(p.payload.legalName.replaceAll("'", ''), p.payload.customer);
   });
 
-  const currentParty = partyOptions.find(d => instructionFields.title.includes(d.text as string));
-
-  const [onboardParties, setOnboardParties] = useState<string[]>([currentParty?.value as string]);
+  const [onboardParties, setOnboardParties] = useState<string[]>([]);
   const [instructionIndex, setInstructionIndex] = useState(0);
   const [loadingInstructions, setLoadingInstructions] = useState(false);
 
@@ -574,14 +572,19 @@ const Instructions = (props: {
     await Promise.all(
       onboardParties.map(async party => {
         console.log(instructions);
-        await ledger.exercise(
-          OperatorOnboarding.OperatorOnboard_Onboard,
-          onboardingContract.contractId,
-          {
+        console.log(party);
+
+        await ledger
+          .exercise(OperatorOnboarding.OperatorOnboard_Onboard, onboardingContract.contractId, {
             instructions,
             party: party,
-          }
-        );
+          })
+          .catch(_ => {
+            displayErrorMessage({
+              header: 'Failed to onboard party',
+              message: 'Could not find Distribution service contract',
+            });
+          });
       })
     )
       .then(_ => {
