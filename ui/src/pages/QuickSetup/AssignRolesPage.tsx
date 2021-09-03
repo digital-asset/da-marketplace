@@ -579,12 +579,6 @@ const Instructions = (props: {
             instructions,
             party: party,
           })
-          .catch(_ => {
-            displayErrorMessage({
-              header: 'Failed to onboard party',
-              message: 'Could not find Distribution service contract',
-            });
-          });
       })
     )
       .then(_ => {
