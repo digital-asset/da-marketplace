@@ -9,7 +9,13 @@ import { DablPartiesInput, PartyDetails } from '@daml/hub-react';
 
 import Credentials, { computeCredentials } from '../../Credentials';
 import { retrieveParties, storeParties } from '../../Parties';
-import { dablHostname, deploymentMode, DeploymentMode, ledgerId } from '../../config';
+import {
+  dablHostname,
+  deploymentMode,
+  DeploymentMode,
+  ledgerId,
+  isHubDeployment,
+} from '../../config';
 
 import Tile from '../../components/Tile/Tile';
 import TilePage from '../../components/Tile/TilePage';
@@ -106,7 +112,9 @@ const QuickSetupButton = () => {
   return (
     <Button
       className="ghost dark"
-      onClick={() => history.push(paths.quickSetup.root + '/add-parties')}
+      onClick={() =>
+        history.push(`${paths.quickSetup.root}${isHubDeployment ? '/add-parties' : ''}`)
+      }
     >
       Quick Setup
     </Button>

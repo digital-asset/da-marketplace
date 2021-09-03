@@ -132,8 +132,6 @@ const AssignRolesPage = (props: { adminCredentials: Credentials }) => {
   const [instructionFields, setInstructionFields] = useState<InstFieldsWithTitle>();
   const [isClearedExchange, setIsClearedExchange] = useState(false);
 
-  const title = instructionFields?.title as InstructionType;
-
   const instructionTemplates = [
     InstructionType.EXCHANGE,
     InstructionType.BANK,
@@ -141,23 +139,6 @@ const AssignRolesPage = (props: { adminCredentials: Credentials }) => {
     InstructionType.INVESTOR,
     InstructionType.ISSUER,
   ];
-
-  useEffect(() => {
-    switch (title) {
-      case InstructionType.INVESTOR:
-        setInstructionFields({
-          title: InstructionType.INVESTOR,
-          instructions: investorInstructions(isClearedExchange),
-        });
-        break;
-      case InstructionType.EXCHANGE:
-        setInstructionFields({
-          title: InstructionType.EXCHANGE,
-          instructions: exchangeInstructions(isClearedExchange),
-        });
-        break;
-    }
-  }, [isClearedExchange, title, setInstructionFields]);
 
   return (
     <QuickSetupPage
@@ -177,10 +158,7 @@ const AssignRolesPage = (props: { adminCredentials: Credentials }) => {
           {(instructionFields.title === InstructionType.INVESTOR ||
             instructionFields.title === InstructionType.EXCHANGE) && (
             <div className="checkbox-cleared">
-              <Checkbox
-                checked={isClearedExchange}
-                onClick={() => setIsClearedExchange(!isClearedExchange)}
-              />
+              <Checkbox checked={isClearedExchange} onClick={() => handleToggleClearedExchange()} />
               <p className="cleared-exchange"> Cleared Exchange</p>
             </div>
           )}
@@ -205,6 +183,26 @@ const AssignRolesPage = (props: { adminCredentials: Credentials }) => {
       )}
     </QuickSetupPage>
   );
+
+  function handleToggleClearedExchange() {
+    const title = instructionFields?.title as InstructionType;
+
+    switch (title) {
+      case InstructionType.INVESTOR:
+        setInstructionFields({
+          title: InstructionType.INVESTOR,
+          instructions: investorInstructions(!isClearedExchange),
+        });
+        break;
+      case InstructionType.EXCHANGE:
+        setInstructionFields({
+          title: InstructionType.EXCHANGE,
+          instructions: exchangeInstructions(!isClearedExchange),
+        });
+        break;
+    }
+    setIsClearedExchange(!isClearedExchange);
+  }
 
   function handleNewInstructionFields(inst: InstructionType) {
     switch (inst) {
@@ -538,21 +536,17 @@ const Instructions = (props: {
   const ledger = useLedger();
   const { identities } = useVerifiedParties();
 
-  const [onboardParties, setOnboardParties] = useState<string[]>([]);
-  const [instructionIndex, setInstructionIndex] = useState(0);
-  const [loadingInstructions, setLoadingInstructions] = useState(false);
-
-  const { contracts: onboardingContracts, loading } = useStreamQueries(OperatorOnboarding);
-
   const partyOptions = identities.map(p => {
     return createDropdownProp(p.payload.legalName.replaceAll("'", ''), p.payload.customer);
   });
 
   const currentParty = partyOptions.find(d => instructionFields.title.includes(d.text as string));
 
-  useEffect(() => {
-    setOnboardParties([currentParty?.value as string]);
-  }, [currentParty]);
+  const [onboardParties, setOnboardParties] = useState<string[]>([currentParty?.value as string]);
+  const [instructionIndex, setInstructionIndex] = useState(0);
+  const [loadingInstructions, setLoadingInstructions] = useState(false);
+
+  const { contracts: onboardingContracts, loading } = useStreamQueries(OperatorOnboarding);
 
   useEffect(() => {
     setInstructionIndex(0);
@@ -579,9 +573,7 @@ const Instructions = (props: {
     setLoadingInstructions(true);
     await Promise.all(
       onboardParties.map(async party => {
-        console.log(party);
         console.log(instructions);
-
         await ledger.exercise(
           OperatorOnboarding.OperatorOnboard_Onboard,
           onboardingContract.contractId,
@@ -599,6 +591,10 @@ const Instructions = (props: {
       })
       .catch(_ => setLoadingInstructions(false));
   }
+
+  const custodian = instructionFields.instructions.find(
+    i => i.instructionType === InstructionType.CUSTODY
+  )?.fields?.provider;
 
   return (
     <div className="instruction-list">
@@ -622,7 +618,7 @@ const Instructions = (props: {
             <InstructionFieldInputs
               currentFields={fields}
               idx={idx}
-              instructionFields={instructionFields.instructions || []}
+              instructionFields={getListCopy(idx, fields) || []}
               setInstructionFields={setInstructionFields}
               partyOptions={partyOptions}
             />
@@ -665,6 +661,14 @@ const Instructions = (props: {
       </Segment>
     </div>
   );
+
+  function getListCopy(idx: number, fields: InstFieldsWithType) {
+    let listCopy = [...(instructionFields?.instructions || [])];
+    let instCopy = { ...fields };
+    (instCopy.fields || {})['custodian'] = custodian || '';
+    listCopy[idx] = instCopy;
+    return listCopy;
+  }
 };
 
 type InstructionFieldsProps = {
@@ -688,6 +692,8 @@ const InstructionFieldInputs: React.FC<InstructionFieldsProps> = ({
     ?.fields?.provider;
 
   useEffect(() => {
+    console.log('heress');
+
     setInstructionFields(old => {
       let listCopy = [...(old?.instructions || [])];
       let instCopy = { ...currentFields };
@@ -695,7 +701,7 @@ const InstructionFieldInputs: React.FC<InstructionFieldsProps> = ({
       listCopy[idx] = instCopy;
       return { title: old?.title || '', instructions: listCopy };
     });
-  }, [currentFields, custodian, idx, setInstructionFields]);
+  }, [custodian, idx, setInstructionFields]);
 
   return (
     <div className="instruction-fields">
