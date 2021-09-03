@@ -4,7 +4,6 @@ import DamlLedger from '@daml/react';
 import { useWellKnownParties } from '@daml/hub-react/lib';
 
 import _ from 'lodash';
-import classNames from 'classnames';
 
 import { PublishedInstance, getAutomationInstances } from '../../automation';
 import {
@@ -23,10 +22,7 @@ import { retrieveParties } from '../../Parties';
 import { RolesProvider, useRolesContext } from '../../context/RolesContext';
 import { AutomationProvider } from '../../context/AutomationContext';
 
-import { formatTriggerName } from './SelectRolesPage';
-import RequestServicesPage from './RequestServicesPage';
-import SelectRolesPage from './SelectRolesPage';
-import AddAccountPage from './AddAccountPage';
+import { formatTriggerName } from './ConfigureProvidersPage';
 
 import ReactFlow, {
   FlowElement,
@@ -42,21 +38,13 @@ import ReactFlow, {
   MiniMap,
 } from 'react-flow-renderer';
 import dagre from 'dagre';
-import { IconChevronDown, IconChevronUp } from '../../icons/icons';
 import { Loader } from 'semantic-ui-react';
 
 const NODE_WIDTH = 200;
 const NODE_HEIGHT = 130;
 
-enum ReviewForms {
-  ASSIGN_ROLES = 'Assign Roles',
-  REQUEST_SERVICES = 'Request Services',
-  NEW_ACCOUNT = 'New Account',
-}
-
 const ReviewPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
-  const [openForm, setOpenForm] = useState<ReviewForms>();
 
   return (
     <DamlLedger
@@ -71,33 +59,10 @@ const ReviewPage = (props: { adminCredentials: Credentials }) => {
             <RolesProvider>
               <OffersProvider>
                 <p className="dark info">
-                  Use the form on the left to assign roles and request services. Move nodes to
-                  organize your network and select nodes to highlight customer relationships.
+                  Move nodes to organize your network and select nodes to highlight customer
+                  relationships.
                 </p>
                 <div className="review">
-                  <div className="side-bar">
-                    <SideBarItem
-                      reviewFormType={ReviewForms.ASSIGN_ROLES}
-                      isOpen={openForm === ReviewForms.ASSIGN_ROLES}
-                      setIsOpen={setOpenForm}
-                    >
-                      <SelectRolesPage />
-                    </SideBarItem>
-                    <SideBarItem
-                      reviewFormType={ReviewForms.REQUEST_SERVICES}
-                      isOpen={openForm === ReviewForms.REQUEST_SERVICES}
-                      setIsOpen={setOpenForm}
-                    >
-                      <RequestServicesPage />
-                    </SideBarItem>
-                    <SideBarItem
-                      reviewFormType={ReviewForms.NEW_ACCOUNT}
-                      isOpen={openForm === ReviewForms.NEW_ACCOUNT}
-                      setIsOpen={setOpenForm}
-                    >
-                      <AddAccountPage />
-                    </SideBarItem>
-                  </div>
                   <ReviewItems />
                 </div>
               </OffersProvider>
@@ -106,30 +71,6 @@ const ReviewPage = (props: { adminCredentials: Credentials }) => {
         </AutomationProvider>
       </QueryStreamProvider>
     </DamlLedger>
-  );
-};
-
-type TilePageProps = {
-  reviewFormType: ReviewForms;
-  isOpen: boolean;
-  setIsOpen: (form?: ReviewForms) => void;
-};
-
-const SideBarItem: React.FC<TilePageProps> = ({ reviewFormType, isOpen, children, setIsOpen }) => {
-  return (
-    <>
-      <div
-        className={classNames('side-bar-item', {
-          'is-open': isOpen,
-        })}
-        onClick={() => setIsOpen(isOpen ? undefined : reviewFormType)}
-      >
-        <h4>
-          {reviewFormType} {isOpen ? <IconChevronUp /> : <IconChevronDown />}
-        </h4>
-      </div>
-      {isOpen && children}
-    </>
   );
 };
 
