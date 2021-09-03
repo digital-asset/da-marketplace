@@ -37,9 +37,6 @@ setup = do
   custodyServiceOfferCid <- submit bank do exerciseCmd custodianRoleCid Custodian.OfferCustodyService with customer = exchange, ..
   custodyServiceCid <- submit exchange do exerciseCmd custodyServiceOfferCid Custody.Accept
 
-  openAccountRequestCid <- submit exchange do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = feeAccountId; observers = [bank]; ctrls = [bank, exchange]
-  submit bank do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = openAccountRequestCid
-
   exchange `submit` createCmd Trading.FeeSchedule with currentFee = Trading.Fee 0.0 currency time; provider = exchange; pastFees = []; observers = Set.fromList [public]; ..
   exchange `submit` exerciseByKeyCmd @Trading.FeeSchedule (operator,exchange) Trading.UpdateFeeSchedule with amount = 2.0; currency = usd.id
 

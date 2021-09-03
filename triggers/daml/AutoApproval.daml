@@ -81,7 +81,7 @@ handleApprovalRule : Party -> TriggerA () ()
 handleApprovalRule party = do
   debug "Running Auto Approval rule..."
 
-      -- | Facilitates querying a template by a specific field which matches a the party which this trigger is running as
+      -- | Facilitates querying a template by a specific field which matches the party which this trigger is running as
   let queryByParty : forall t m. (Template t, ActionTriggerAny m, Functor m) => (t -> Party) -> m [(ContractId t, t)]
       queryByParty getField = filter ((== party) . getField . snd) <$> query
       -- | Generates commands for role contracts with a filter on the provider

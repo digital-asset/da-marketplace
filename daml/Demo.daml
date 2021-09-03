@@ -5,7 +5,7 @@ import ContingentClaims.Claim (Claim(Zero), serialize)
 import ContingentClaims.FinancialClaim (unrollDates)
 import Daml.Script
 import DA.Date (date, Month(..))
-import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..))
+import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..), AssetDeposit_Transfer(..))
 import DA.Finance.Asset.Settlement
 import DA.Set
 import Marketplace.Custody.Service qualified as Custody
@@ -64,16 +64,10 @@ examples Providers{..} Assets{..} issuer = do
       Some deposit <- queryContractId bank depositCid
       if deposit.asset.quantity > quantity then do
         [ exactDepositCid, remainderDepositCid ] <- submit from.customer do exerciseCmd depositCid AssetDeposit_Split with quantities = [ quantity ]
-        submit (to.customer) do exerciseByKeyCmd @AssetSettlementRule to.mainAccount.id AssetSettlement_AddController with ctrl = from.customer
-        transferRequestCid <- submit from.customer do exerciseCmd from.custodyServiceCid Custody.RequestTransferDeposit with accountId = from.mainAccount.id, transfer = AssetSettlement_Transfer with receiverAccountId = to.mainAccount.id, depositCid = exactDepositCid
-        transferredDepositCid <- submit bank do exerciseCmd from.custodyServiceCid $ Custody.TransferDeposit transferRequestCid
-        submit to.customer do exerciseByKeyCmd @AssetSettlementRule to.mainAccount.id AssetSettlement_RemoveController with ctrl = from.customer
+        transferredDepositCid <- submit from.customer do exerciseCmd exactDepositCid AssetDeposit_Transfer with receiverAccount = to.mainAccount
         pure (transferredDepositCid, Some remainderDepositCid)
       else do
-        submit (to.customer) do exerciseByKeyCmd @AssetSettlementRule to.mainAccount.id AssetSettlement_AddController with ctrl = from.customer
-        transferRequestCid <- submit from.customer do exerciseCmd from.custodyServiceCid Custody.RequestTransferDeposit with accountId = from.mainAccount.id, transfer = AssetSettlement_Transfer with receiverAccountId = to.mainAccount.id, depositCid
-        transferredDepositCid <- submit bank do exerciseCmd from.custodyServiceCid $ Custody.TransferDeposit transferRequestCid
-        submit to.customer do exerciseByKeyCmd @AssetSettlementRule to.mainAccount.id AssetSettlement_RemoveController with ctrl = from.customer
+        transferredDepositCid <- submit from.customer do exerciseCmd depositCid AssetDeposit_Transfer with receiverAccount = to.mainAccount
         pure (transferredDepositCid, None)
 
   -- Origination

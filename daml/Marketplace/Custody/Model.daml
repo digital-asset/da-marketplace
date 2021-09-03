@@ -1,22 +1,14 @@
 module Marketplace.Custody.Model (
-    OpenAccountRequest(..)
-  , OpenAllocationAccountRequest(..)
-  , CloseAccountRequest(..)
-  , CloseAllocationAccountRequest(..)
-  , CreditAccountRequest(..)
-  , DebitAccountRequest(..)
-  , TransferDepositRequest(..)
+    DepositRequest (..)
+  , WithdrawlRequest (..)
   , LifecycleRequest(..)
   , Process(..)
-  , DepositRequest (..)
-  , WithdrawlRequest (..)
 ) where
 
 import ContingentClaims.Claim (Claim(Zero), deserialize, serialize)
 import ContingentClaims.Lifecycle qualified as Lifecycle
 import DA.Date (toDateUTC)
 import DA.Finance.Asset
-import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 import DA.Map (Map)
 import DA.Map qualified as Map
@@ -24,79 +16,9 @@ import DA.Set
 import DA.Optional (fromSomeNote)
 import Marketplace.Issuance.AssetDescription (AssetDescription, Claims)
 import Marketplace.Issuance.AssetDescription qualified as AssetDescription
-import DA.Finance.Trade.SettlementInstruction
+import Marketplace.Settlement.Model (SettlementInstruction(..), SettlementDetails(..))
 import DA.List (init)
 import DA.Action (void, when, foldlA)
-
-template OpenAccountRequest
-  with
-    operator : Party
-    provider : Party
-    customer : Party
-    accountId : Id
-    observers : Set Party
-    ctrls : Set Party
-  where
-    signatory operator, provider, customer
-
-template OpenAllocationAccountRequest
-  with
-    operator : Party
-    provider : Party
-    customer : Party
-    nominee : Party
-    accountId : Id
-    observers : Set Party
-  where
-    signatory operator, provider, customer
-
-template CloseAccountRequest
-  with
-    operator : Party
-    provider : Party
-    customer : Party
-    accountId : Id
-  where
-    signatory operator, provider, customer
-
-template CloseAllocationAccountRequest
-  with
-    operator : Party
-    provider : Party
-    customer : Party
-    accountId : Id
-  where
-    signatory operator, provider, customer
-
-template CreditAccountRequest
-  with
-    operator : Party
-    provider : Party
-    customer : Party
-    accountId : Id
-    asset : Asset
-  where
-    signatory operator, provider, customer
-
-template DebitAccountRequest
-  with
-    operator : Party
-    provider : Party
-    customer : Party
-    accountId : Id
-    debit : AssetSettlement_Debit
-  where
-    signatory operator, provider, customer
-
-template TransferDepositRequest
-  with
-    operator : Party
-    provider : Party
-    customer : Party
-    accountId : Id
-    transfer : AssetSettlement_Transfer
-  where
-    signatory operator, provider, customer
 
 template DepositRequest
   with
@@ -157,37 +79,23 @@ template LifecycleRequest
           splitResultDeposits <- exercise safekeepingDepositCid AssetDeposit_Split with quantities = payoutSplitQuantities
           let payoutCids = init splitResultDeposits
               masterAgreementSignatories = [provider, customer, investor]
-          payoutInstructions <- createPayoutInstructions payoutCids uniquePayoutId description assetDeposit operator masterAgreementSignatories
+          payoutInstructions <- createPayoutInstructions payoutCids uniquePayoutId description assetDeposit operator provider
           assetDepositCid' <- create assetDeposit with asset = (assetDeposit.asset with id = (assetDeposit.asset.id with version = postAssetVersion))
           archive assetDepositCid
           return (assetDepositCid', payoutInstructions)
 
-createPayoutInstructions : [ContractId AssetDeposit] -> Text -> AssetDescription -> AssetDeposit -> Party -> [Party] -> Update [ContractId SettlementInstruction]
-createPayoutInstructions payoutCids uniqueId assetDescription assetDeposit operator masterAgreementSignatories =
+createPayoutInstructions : [ContractId AssetDeposit] -> Text -> AssetDescription -> AssetDeposit -> Party -> Party -> Update [ContractId SettlementInstruction]
+createPayoutInstructions payoutCids uniqueId assetDescription assetDeposit operator provider =
     snd <$> foldlA createSI (1, []) payoutCids
   where
-    masterAgreement = createMasterAgreement assetDescription assetDeposit masterAgreementSignatories
     createSettlementDetails payoutDepositCid =
       SettlementDetails with
         senderAccount = assetDescription.safekeepingAccount
         receiverAccount = assetDeposit.account
-        depositCid = Some payoutDepositCid
+        depositCid = payoutDepositCid
     createSI (index, accumulator) payoutDepositCid = do
-      siCid <- create SettlementInstruction with
-        asset = assetDeposit.asset
-        steps = [createSettlementDetails payoutDepositCid]
-        masterAgreement = masterAgreement
-        tradeId = createTradeId assetDeposit.asset.id index uniqueId
-        observers = fromList $ operator :: masterAgreementSignatories
+      siCid <- create SettlementInstruction with operator; provider; details = [ createSettlementDetails payoutDepositCid ]
       pure (index + 1, siCid :: accumulator)
-
-createMasterAgreement : AssetDescription -> AssetDeposit -> [Party] -> MasterAgreement
-createMasterAgreement assetDescription assetDeposit masterAgreementSignatories =
-  MasterAgreement with
-    id = assetDeposit.asset.id with
-      signatories = fromList masterAgreementSignatories
-    party1 = assetDescription.safekeepingAccount.owner
-    party2 = assetDeposit.account.owner
 
 createNewVersionOfDescription : AssetDescription -> AssetDescription.Version -> Claims -> Update ()
 createNewVersionOfDescription description postAssetVersion serializedRemainingClaims =

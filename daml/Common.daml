@@ -133,9 +133,6 @@ onboardProviders Parties{userAdmin = operator; ..} = do
     clearinghouseAccountId = Id with signatories = fromList [ bank, clearinghouse ]; label = "CCPAccount-" <> partyToText clearinghouse; version = 0
     clearinghouseAccount   = Account with provider = bank; owner = clearinghouse; id = clearinghouseAccountId
 
-  openAccountRequestCid <- submit clearinghouse do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = clearinghouseAccountId; observers = [bank]; ctrls = [bank, clearinghouse]
-  submit bank do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = openAccountRequestCid
-
   clearingRoleOfferCid  <- submit operator do exerciseCmd operatorRoleCid Operator.OfferClearingRole with provider = clearinghouse
   (clearingRoleCid, marketServiceCid)       <- submit clearinghouse do exerciseCmd clearingRoleOfferCid Clearinghouse.Accept with ccpAccount = clearinghouseAccount; ..
   pure Providers with ..

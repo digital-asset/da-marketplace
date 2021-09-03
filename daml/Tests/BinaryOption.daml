@@ -6,14 +6,13 @@ import ContingentClaims.Claim (serialize)
 import DA.Date (date, Month(Mar, Oct))
 import DA.Finance.Types (Id(..), Asset(..))
 import DA.Finance.Asset (AssetDeposit, AssetDeposit_Transfer(..))
-import DA.Finance.Asset.Settlement (AssetSettlementRule(..), AssetSettlement_AddController(..), AssetSettlement_RemoveController(..), AssetSettlement_Transfer(..))
 import Daml.Script
 import DA.Set qualified as Set
 import DA.Map qualified as Map
 import Marketplace.Issuance.Service (RequestOrigination(..), Originate(..), RequestCreateIssuance(..), CreateIssuance(..))
-import Marketplace.Custody.Service (RequestTransferDeposit(..), TransferDeposit(..), RequestLifecycle(..), Lifecycle(..), RequestCreditAccount(..), CreditAccount(..), RequestDeposit(..), Deposit(..))
+import Marketplace.Custody.Service (RequestLifecycle(..), Lifecycle(..), RequestDeposit(..), Deposit(..))
 import Marketplace.Issuance.CFI qualified as CFI
-import DA.Finance.Trade.SettlementInstruction
+import Marketplace.Settlement.Model (Settle(..))
 import Tests.Utils (binaryCallOption)
 import DA.Time (time)
 import DA.Assert
@@ -54,16 +53,15 @@ testNotExercisedWhenPriceIsBelowStrikeAtExpiry = script do
   [(_, alicesMoney)] <- getMoneyAssetsFor alice
   alicesMoney.asset.quantity === 3000.0
 
--- TODO : Fails due to settlement call to the finlib as the rule contracts dont exist @ line 138
--- testExercisedOnExpiry = script do
---   (alice, bob) <- requestExercise aboveStrike expiry
+testExercisedOnExpiry = script do
+  (alice, bob) <- requestExercise aboveStrike expiry
 
---   [(_, bobsOption)] <- queryFilter @AssetDeposit bob (\c -> c.asset.id.label == optionAssetLabel)
---   bobsOption.asset.id.version === 1
---   [(_, bobsMoney)] <- getMoneyAssetsFor bob
---   bobsMoney.asset.quantity === 1000.0
---   [(_, alicesMoney)] <- getMoneyAssetsFor alice
---   alicesMoney.asset.quantity === 2000.0
+  [(_, bobsOption)] <- queryFilter @AssetDeposit bob (\c -> c.asset.id.label == optionAssetLabel)
+  bobsOption.asset.id.version === 1
+  [(_, bobsMoney)] <- getMoneyAssetsFor bob
+  bobsMoney.asset.quantity === 1000.0
+  [(_, alicesMoney)] <- getMoneyAssetsFor alice
+  alicesMoney.asset.quantity === 2000.0
 
 
 getMoneyAssetsFor party = do
@@ -135,6 +133,6 @@ requestExercise underlyingPrice observationDate = script do
   forA_ settlementInstructionCids $
     \settlementInstructionCid ->
       submitMulti [alice.customer, bob.customer, providers.bank] [] $
-        exerciseCmd settlementInstructionCid SettlementInstruction_Process
+        exerciseCmd settlementInstructionCid Settle
 
   return (alice.customer, bob.customer)
