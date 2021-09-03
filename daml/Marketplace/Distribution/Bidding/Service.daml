@@ -2,7 +2,6 @@ module Marketplace.Distribution.Bidding.Service where
 
 import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..), AssetDeposit_Lock(..), AssetDeposit_Unlock(..))
 import DA.Finance.Types (Asset, Account, Id)
-import DA.List (head, last)
 import DA.Set (fromList)
 import Marketplace.Distribution.Bidding.Model qualified as Bidding
 import Marketplace.Settlement.Model as Settlement (SettlementDetails, SettlementInstruction(..))

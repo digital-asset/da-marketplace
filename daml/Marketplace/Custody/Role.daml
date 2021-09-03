@@ -4,7 +4,6 @@ import Marketplace.Custody.Service qualified as Custody
 import Marketplace.Issuance.Service qualified as Issuance
 import Marketplace.Utils
 import DA.Set (Set)
-import DA.Finance.Types (Account)
 
 template Role
   with
