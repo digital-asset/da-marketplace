@@ -17,7 +17,7 @@ import { WellKnownPartiesProvider } from '@daml/hub-react/lib';
 import { ledgerId, isHubDeployment } from '../../config';
 
 import Credentials, { computeCredentials } from '../../Credentials';
-import { retrieveParties, retrieveUserParties } from '../../Parties';
+import { retrieveParties } from '../../Parties';
 
 import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
 
@@ -44,7 +44,6 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   const localCreds = computeCredentials('Operator');
 
   const history = useHistory();
-  const storedParties = retrieveUserParties();
 
   const matchPath = props.match.path;
   const matchUrl = props.match.url;

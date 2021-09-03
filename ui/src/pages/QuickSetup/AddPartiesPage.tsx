@@ -251,6 +251,7 @@ const CreateVerifiedIdentity = (props: {
     }
   }, [
     ledger,
+    operator,
     onComplete,
     userParties,
     verifiedIdentities,

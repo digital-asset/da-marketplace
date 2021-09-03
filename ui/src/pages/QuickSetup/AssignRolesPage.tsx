@@ -132,6 +132,8 @@ const AssignRolesPage = (props: { adminCredentials: Credentials }) => {
   const [instructionFields, setInstructionFields] = useState<InstFieldsWithTitle>();
   const [isClearedExchange, setIsClearedExchange] = useState(false);
 
+  const title = instructionFields?.title as InstructionType;
+
   const instructionTemplates = [
     InstructionType.EXCHANGE,
     InstructionType.BANK,
@@ -141,10 +143,21 @@ const AssignRolesPage = (props: { adminCredentials: Credentials }) => {
   ];
 
   useEffect(() => {
-    if (instructionFields) {
-      handleNewInstructionFields(instructionFields?.title as InstructionType);
+    switch (title) {
+      case InstructionType.INVESTOR:
+        setInstructionFields({
+          title: InstructionType.INVESTOR,
+          instructions: investorInstructions(isClearedExchange),
+        });
+        break;
+      case InstructionType.EXCHANGE:
+        setInstructionFields({
+          title: InstructionType.EXCHANGE,
+          instructions: exchangeInstructions(isClearedExchange),
+        });
+        break;
     }
-  }, [isClearedExchange]);
+  }, [isClearedExchange, title, setInstructionFields]);
 
   return (
     <QuickSetupPage
@@ -535,13 +548,11 @@ const Instructions = (props: {
     return createDropdownProp(p.payload.legalName.replaceAll("'", ''), p.payload.customer);
   });
 
-  useEffect(() => {
-    const currentParty = partyOptions.find(d => instructionFields.title.includes(d.text as string));
+  const currentParty = partyOptions.find(d => instructionFields.title.includes(d.text as string));
 
-    if (currentParty) {
-      setOnboardParties([currentParty.value as string]);
-    }
-  }, [identities]);
+  useEffect(() => {
+    setOnboardParties([currentParty?.value as string]);
+  }, [currentParty]);
 
   useEffect(() => {
     setInstructionIndex(0);
@@ -645,7 +656,7 @@ const Instructions = (props: {
             <Button
               className="ghost submit"
               onClick={doRunOnboarding}
-              disabled={onboardParties.length == 0}
+              disabled={onboardParties.length === 0}
             >
               Submit
             </Button>
@@ -671,24 +682,20 @@ const InstructionFieldInputs: React.FC<InstructionFieldsProps> = ({
   setInstructionFields,
   partyOptions,
 }) => {
-  const { identities } = useVerifiedParties();
-
   const fields = getFields(currentFields);
+
   const custodian = instructionFields.find(i => i.instructionType === InstructionType.CUSTODY)
     ?.fields?.provider;
-  const custodianName = identities.find(id => id.payload.customer === custodian)?.payload.legalName;
 
   useEffect(() => {
-    if (custodian && custodianName) {
-      setInstructionFields(old => {
-        let listCopy = [...(old?.instructions || [])];
-        let instCopy = { ...currentFields };
-        (instCopy.fields || {})['custodian'] = custodian;
-        listCopy[idx] = instCopy;
-        return { title: old?.title || '', instructions: listCopy };
-      });
-    }
-  }, []);
+    setInstructionFields(old => {
+      let listCopy = [...(old?.instructions || [])];
+      let instCopy = { ...currentFields };
+      (instCopy.fields || {})['custodian'] = custodian || '';
+      listCopy[idx] = instCopy;
+      return { title: old?.title || '', instructions: listCopy };
+    });
+  }, [currentFields, custodian, idx, setInstructionFields]);
 
   return (
     <div className="instruction-fields">
