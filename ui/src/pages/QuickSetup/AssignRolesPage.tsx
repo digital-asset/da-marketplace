@@ -155,17 +155,11 @@ const AssignRolesPage = (props: { adminCredentials: Credentials }) => {
       {!!instructionFields ? (
         <>
           <Header as="h2">{instructionFields.title}</Header>
-          {(instructionFields.title === InstructionType.INVESTOR ||
-            instructionFields.title === InstructionType.EXCHANGE) && (
-            <div className="checkbox-cleared">
-              <Checkbox checked={isClearedExchange} onClick={() => handleToggleClearedExchange()} />
-              <p className="cleared-exchange"> Cleared Exchange</p>
-            </div>
-          )}
           <Instructions
             instructionFields={instructionFields}
             setInstructionFields={setInstructionFields}
             isClearedExchange={isClearedExchange}
+            toggleIsClearedExchange={handleToggleIsClearedExchange}
           />
         </>
       ) : (
@@ -184,7 +178,7 @@ const AssignRolesPage = (props: { adminCredentials: Credentials }) => {
     </QuickSetupPage>
   );
 
-  function handleToggleClearedExchange() {
+  function handleToggleIsClearedExchange() {
     const title = instructionFields?.title as InstructionType;
 
     switch (title) {
@@ -530,17 +524,26 @@ const Instructions = (props: {
   instructionFields: InstFieldsWithTitle;
   setInstructionFields: React.Dispatch<React.SetStateAction<InstFieldsWithTitle | undefined>>;
   isClearedExchange: boolean;
+  toggleIsClearedExchange: () => void;
 }) => {
-  const { instructionFields, setInstructionFields, isClearedExchange } = props;
+  const { instructionFields, setInstructionFields, isClearedExchange, toggleIsClearedExchange } =
+    props;
 
   const ledger = useLedger();
-  const { identities } = useVerifiedParties();
+
+  const { instructions, title } = instructionFields;
+
+  const { identities, loading: loadingIdentities } = useVerifiedParties();
 
   const partyOptions = identities.map(p => {
     return createDropdownProp(p.payload.legalName.replaceAll("'", ''), p.payload.customer);
   });
 
-  const [onboardParties, setOnboardParties] = useState<string[]>([]);
+  const currentParty = identities
+    .filter(p => title.includes(p.payload.legalName.replaceAll("'", '') as string))
+    .map(pa => pa.payload.customer);
+
+  const [onboardParties, setOnboardParties] = useState<string[]>(currentParty);
   const [instructionIndex, setInstructionIndex] = useState(0);
   const [loadingInstructions, setLoadingInstructions] = useState(false);
 
@@ -550,8 +553,8 @@ const Instructions = (props: {
     setInstructionIndex(0);
   }, [isClearedExchange]);
 
-  if (loadingInstructions || loading) {
-    return <LoadingWheel label={''} />;
+  if (loadingInstructions || loading || loadingIdentities) {
+    return <LoadingWheel label={'Loading'} />;
   }
 
   if (!onboardingContracts.length)
@@ -564,21 +567,20 @@ const Instructions = (props: {
   const onboardingContract = onboardingContracts[0];
 
   async function doRunOnboarding() {
-    const instructions = instructionFields.instructions.map(inst => makeInstruction(inst));
     if (onboardParties.length === 0) {
       return;
     }
     setLoadingInstructions(true);
+
+    const commandInstructions = instructions.map(inst => makeInstruction(inst));
+
     await Promise.all(
       onboardParties.map(async party => {
-        console.log(instructions);
-        console.log(party);
-
         await ledger.exercise(
           OperatorOnboarding.OperatorOnboard_Onboard,
           onboardingContract.contractId,
           {
-            instructions,
+            instructions: commandInstructions,
             party: party,
           }
         );
@@ -593,69 +595,77 @@ const Instructions = (props: {
   }
 
   return (
-    <div className="instruction-list">
-      <Segment basic>
-        <div className="party-select">
-          <h4>1. Select a party or parties:</h4>
-          <Form.Select
-            disabled={false}
-            className="request-select party"
-            placeholder="Select..."
-            onChange={(_, data: any) => setOnboardParties(data.value)}
-            options={partyOptions}
-            search
-            multiple
-            value={onboardParties}
-          />
+    <>
+      {(title === InstructionType.INVESTOR || title === InstructionType.EXCHANGE) && (
+        <div className="checkbox-cleared">
+          <Checkbox checked={isClearedExchange} onClick={toggleIsClearedExchange} />
+          <p className="cleared-exchange"> Cleared Exchange</p>
         </div>
-        {instructionFields.instructions.length > 0 && <h4>2. Configure roles and services:</h4>}
-        {instructionFields.instructions.map((fields, idx) =>
-          idx === instructionIndex ? (
-            <InstructionFieldInputs
-              currentFields={fields}
-              idx={idx}
-              instructionFields={instructionFields.instructions || []}
-              setInstructionFields={setInstructionFields}
-              partyOptions={partyOptions}
+      )}
+      <div className="instruction-list">
+        <Segment basic>
+          <div className="party-select">
+            <h4>1. Select a party or parties:</h4>
+            <Form.Select
+              disabled={false}
+              className="request-select party"
+              placeholder="Select..."
+              onChange={(_, data: any) => setOnboardParties(data.value)}
+              options={partyOptions}
+              search
+              multiple
+              value={onboardParties}
             />
-          ) : null
-        )}
-        <div className="contract-browse-buttons">
-          {instructionFields.instructions.length > 1 && (
-            <>
-              {instructionIndex > 0 && (
-                <Button
-                  className="ghost browse"
-                  onClick={() => setInstructionIndex(instructionIndex - 1)}
-                >
-                  <ArrowLeftIcon /> Previous
-                </Button>
-              )}
-
-              {instructionIndex < instructionFields.instructions.length - 1 && (
-                <Button
-                  className="ghost submit icon-right browse"
-                  onClick={() => setInstructionIndex(instructionIndex + 1)}
-                >
-                  {instructionIndex + 1} of {instructionFields.instructions.length}{' '}
-                  <ArrowRightIcon />
-                </Button>
-              )}
-            </>
+          </div>
+          {instructions.length > 0 && <h4>2. Configure roles and services:</h4>}
+          {instructions.map((fields, idx) =>
+            idx === instructionIndex ? (
+              <InstructionFieldInputs
+                currentFields={fields}
+                idx={idx}
+                instructionFields={instructions || []}
+                setInstructionFields={setInstructionFields}
+                partyOptions={partyOptions}
+              />
+            ) : null
           )}
+          <div className="contract-browse-buttons">
+            {instructions.length > 1 && (
+              <>
+                {instructionIndex > 0 && (
+                  <Button
+                    className="ghost browse"
+                    onClick={() => setInstructionIndex(instructionIndex - 1)}
+                  >
+                    <ArrowLeftIcon /> Previous
+                  </Button>
+                )}
 
-          {instructionIndex === instructionFields.instructions.length - 1 && (
-            <Button
-              className="ghost submit"
-              onClick={doRunOnboarding}
-              disabled={onboardParties.length === 0}
-            >
-              Submit
-            </Button>
-          )}
-        </div>
-      </Segment>
-    </div>
+                {instructionIndex < instructions.length - 1 && (
+                  <Button
+                    className="ghost submit icon-right browse"
+                    onClick={() => setInstructionIndex(instructionIndex + 1)}
+                  >
+                    {instructionIndex + 1} of {instructions.length}
+                    <ArrowRightIcon />
+                  </Button>
+                )}
+              </>
+            )}
+
+            {instructionIndex === instructions.length - 1 && (
+              <Button
+                className="ghost submit"
+                onClick={doRunOnboarding}
+                disabled={onboardParties.length === 0}
+              >
+                Submit
+              </Button>
+            )}
+          </div>
+        </Segment>
+      </div>
+    </>
   );
 };
 
