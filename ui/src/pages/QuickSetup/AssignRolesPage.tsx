@@ -574,11 +574,14 @@ const Instructions = (props: {
         console.log(instructions);
         console.log(party);
 
-        await ledger
-          .exercise(OperatorOnboarding.OperatorOnboard_Onboard, onboardingContract.contractId, {
+        await ledger.exercise(
+          OperatorOnboarding.OperatorOnboard_Onboard,
+          onboardingContract.contractId,
+          {
             instructions,
             party: party,
-          })
+          }
+        );
       })
     )
       .then(_ => {
