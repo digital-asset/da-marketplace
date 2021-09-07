@@ -1,7 +1,7 @@
 module Tests.BinaryOption where
 -- ^ This module tests the full lifecycle of a binary option
 
-import Common (onboardProviders, onboardCustomer)
+import Common (allocateParties, Parties(..), onboardProviders, onboardCustomer)
 import ContingentClaims.Claim (serialize)
 import DA.Date (date, Month(Mar, Oct))
 import DA.Finance.Types (Id(..), Asset(..))
@@ -72,7 +72,8 @@ getMoneyAssetsFor party = do
 
 requestExercise: Decimal -> Date -> Script (Party, Party)
 requestExercise underlyingPrice observationDate = script do
-  providers <- onboardProviders
+  parties@Parties{..} <- allocateParties
+  providers <- onboardProviders parties
 
   let usdId = Id with
                 signatories = Set.singleton providers.bank
@@ -84,8 +85,8 @@ requestExercise underlyingPrice observationDate = script do
                        label = "TSLA"
                        version = 0
 
-  alice <- onboardCustomer providers "Alice"
-  bob <- onboardCustomer providers "Bob"
+  alice <- onboardCustomer providers "Alice" alice
+  bob <- onboardCustomer providers "Bob" bob
 
   -- Alice originates the option
   let boClaims = binaryCallOption underlyingId usdId strike expiry

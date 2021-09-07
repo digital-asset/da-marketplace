@@ -14,9 +14,8 @@ import { retrieveParties } from '../../Parties';
 import paths from '../../paths';
 
 import { LoadingWheel } from './QuickSetup';
-import QuickSetupPage from './QuickSetupPage';
 
-const FinishPage = (props: { adminCredentials: PartyToken }) => {
+const LoginPage = (props: { adminCredentials: PartyToken }) => {
   const { adminCredentials } = props;
   return (
     <DamlLedger
@@ -45,9 +44,9 @@ const LoginTileGrid = () => {
 
   if (rolesLoading || identitiesLoading) {
     return (
-      <QuickSetupPage className="loading">
-        <LoadingWheel label="Loading Log In Data..." />
-      </QuickSetupPage>
+      <div>
+        <LoadingWheel label="Loading Log In Data..." dark />
+      </div>
     );
   }
 
@@ -62,7 +61,7 @@ const LoginTileGrid = () => {
   }
 
   return (
-    <QuickSetupPage className="finish">
+    <div className="login-page">
       <p className="dark details">cmd + click on a tile to launch a new tab </p>
       <div className="log-in-tile-grid">
         {identities.map(p => (
@@ -72,9 +71,9 @@ const LoginTileGrid = () => {
             onClick={() => handleLogin(p.payload.customer)}
             to={paths.quickSetup.logInParties}
           >
-            <div className="log-in-row page-row">
+            <div className="log-in-row">
               <h4>{p.payload.legalName}</h4>
-              <p className="log-in page-row">
+              <p className="log-in">
                 Log in <ArrowRightIcon />
               </p>
             </div>
@@ -87,7 +86,7 @@ const LoginTileGrid = () => {
           </Link>
         ))}
       </div>
-    </QuickSetupPage>
+    </div>
   );
 
   async function handleLogin(party: string) {
@@ -103,4 +102,4 @@ const LoginTileGrid = () => {
   }
 };
 
-export default FinishPage;
+export default LoginPage;

@@ -9,7 +9,11 @@ import { PartyToken, DamlHubLogin } from '@daml/hub-react';
 
 import { computeCredentials } from '../../Credentials';
 import { retrieveParties, storeParties } from '../../Parties';
-import { deploymentMode, DeploymentMode } from '../../config';
+import {
+  deploymentMode,
+  DeploymentMode,
+  isHubDeployment,
+} from '../../config';
 
 import Tile from '../../components/Tile/Tile';
 import TilePage from '../../components/Tile/TilePage';
@@ -88,7 +92,12 @@ const QuickSetupButton = () => {
   const history = useHistory();
 
   return (
-    <Button className="ghost dark" onClick={() => history.push(paths.quickSetup.root)}>
+    <Button
+      className="ghost dark"
+      onClick={() =>
+        history.push(`${paths.quickSetup.root}${isHubDeployment ? '/add-parties' : ''}`)
+      }
+    >
       Quick Setup
     </Button>
   );

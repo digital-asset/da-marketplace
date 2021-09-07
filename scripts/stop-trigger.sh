@@ -4,5 +4,14 @@ set -euo pipefail
 file=$1
 state_dir=$2
 
-pkill -F $state_dir/$file.pid;
-rm -f $state_dir/$file.pid $state_dir/$file.log
+LOG_FILE=$state_dir/$file.log
+PID_FILE=$state_dir/$file.pid
+PID=$(< $PID_FILE)
+
+# Verify the process ID exists before attempting to kill
+if ps -p $PID > /dev/null
+then
+    pkill -F $PID_FILE
+fi
+
+rm -f $PID_FILE $LOG_FILE

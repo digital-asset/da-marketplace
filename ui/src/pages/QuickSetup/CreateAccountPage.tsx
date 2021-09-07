@@ -1,14 +1,31 @@
 import React, { useState, useEffect } from 'react';
-
-import DamlLedger from '@daml/react';
-
-import { retrieveUserParties } from '../../Parties';
-import { NewAccount } from '../custody/New';
-import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
-import { computeToken } from '../../Credentials';
 import { Form } from 'semantic-ui-react';
 
-const AddAccountPage = () => {
+import DamlLedger from '@daml/react';
+import { PartyToken } from '@daml/hub-react';
+
+import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
+import { retrieveUserParties } from '../../Parties';
+import { NewAccount } from '../custody/New';
+import { computeToken } from '../../Credentials';
+
+import QuickSetupPage from './QuickSetupPage';
+
+const CreateAccount = (props: { adminCredentials: PartyToken }) => {
+  const { adminCredentials } = props;
+
+  return (
+    <QuickSetupPage
+      className="add-account"
+      title="Create Account"
+      adminCredentials={adminCredentials}
+    >
+      <CreateAccountPage />
+    </QuickSetupPage>
+  );
+};
+
+const CreateAccountPage = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<string>();
   const userParties = retrieveUserParties() || [];
   const { identities, loading: identitiesLoading } = useVerifiedParties();
@@ -34,18 +51,20 @@ const AddAccountPage = () => {
   }
 
   return (
-    <Form className="add-account">
-      <Form.Select
-        label={<p className="input-label">As:</p>}
-        value={selectedCustomer || ''}
-        placeholder="Select..."
-        onChange={(_, data: any) =>
-          setSelectedCustomer(
-            identities.find(p => p.payload.customer === data.value)?.payload.customer
-          )
-        }
-        options={partyOptions}
-      />
+    <div className="add-account">
+      <Form>
+        <Form.Select
+          label={<p className="input-label">Account Owner</p>}
+          value={selectedCustomer || ''}
+          placeholder="Select..."
+          onChange={(_, data: any) =>
+            setSelectedCustomer(
+              identities.find(p => p.payload.customer === data.value)?.payload.customer
+            )
+          }
+          options={partyOptions}
+        />
+      </Form>
       <div className="add-account-form">
         {selectedCustomer && token && (
           <DamlLedger
@@ -58,8 +77,8 @@ const AddAccountPage = () => {
           </DamlLedger>
         )}
       </div>
-    </Form>
+    </div>
   );
 };
 
-export default AddAccountPage;
+export default CreateAccount;

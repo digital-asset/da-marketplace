@@ -13,7 +13,6 @@ import ReactFlow, {
   MiniMap,
 } from 'react-flow-renderer';
 import { Loader } from 'semantic-ui-react';
-import classNames from 'classnames';
 import dagre from 'dagre';
 import _ from 'lodash';
 
@@ -21,31 +20,19 @@ import DamlLedger from '@daml/react';
 import { PartyToken, useAdminParty, useAutomationInstances } from '@daml/hub-react';
 
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
-import QueryStreamProvider from '../../websocket/queryStream';
-
 import { ServicesProvider, useServiceContext } from '../../context/ServicesContext';
-import { OffersProvider } from '../../context/OffersContext';
-import { retrieveParties } from '../../Parties';
-import { IconChevronDown, IconChevronUp } from '../../icons/icons';
 import { RolesProvider, useRolesContext } from '../../context/RolesContext';
+import { OffersProvider } from '../../context/OffersContext';
+import QueryStreamProvider from '../../websocket/queryStream';
+import { retrieveParties } from '../../Parties';
 
-import { formatTriggerName } from './SelectRolesPage';
-import RequestServicesPage from './RequestServicesPage';
-import SelectRolesPage from './SelectRolesPage';
-import AddAccountPage from './AddAccountPage';
+import { formatTriggerName } from './ConfigureProvidersPage';
 
 const NODE_WIDTH = 200;
 const NODE_HEIGHT = 130;
 
-enum ReviewForms {
-  ASSIGN_ROLES = 'Assign Roles',
-  REQUEST_SERVICES = 'Request Services',
-  NEW_ACCOUNT = 'New Account',
-}
-
 const ReviewPage = (props: { adminCredentials: PartyToken }) => {
   const { adminCredentials } = props;
-  const [openForm, setOpenForm] = useState<ReviewForms>();
 
   return (
     <DamlLedger
@@ -55,37 +42,17 @@ const ReviewPage = (props: { adminCredentials: PartyToken }) => {
       wsBaseUrl={wsBaseUrl}
     >
       <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
-        <ServicesProvider>
-          <RolesProvider>
-            <OffersProvider>
-              <p className="dark info">
-                Use the form on the left to assign roles and request services. Move nodes to
-                organize your network and select nodes to highlight customer relationships.
-              </p>
-              <div className="review">
-                <div className="side-bar">
-                  <SideBarItem
-                    reviewFormType={ReviewForms.ASSIGN_ROLES}
-                    isOpen={openForm === ReviewForms.ASSIGN_ROLES}
-                    setIsOpen={setOpenForm}
-                  >
-                    <SelectRolesPage />
-                  </SideBarItem>
-                  <SideBarItem
-                    reviewFormType={ReviewForms.REQUEST_SERVICES}
-                    isOpen={openForm === ReviewForms.REQUEST_SERVICES}
-                    setIsOpen={setOpenForm}
-                  >
-                    <RequestServicesPage />
-                  </SideBarItem>
-                  <SideBarItem
-                    reviewFormType={ReviewForms.NEW_ACCOUNT}
-                    isOpen={openForm === ReviewForms.NEW_ACCOUNT}
-                    setIsOpen={setOpenForm}
-                  >
-                    <AddAccountPage />
-                  </SideBarItem>
-                </div>
+          <ServicesProvider>
+            <RolesProvider>
+              <OffersProvider>
+                <p className="dark info">
+                  Move nodes to organize your network and select nodes to highlight customer
+                  relationships.
+                </p>
+                <div className="review">
+                  <ReviewItems />
+              </div>
+              <div>
                 <ReviewItems />
               </div>
             </OffersProvider>
@@ -93,30 +60,6 @@ const ReviewPage = (props: { adminCredentials: PartyToken }) => {
         </ServicesProvider>
       </QueryStreamProvider>
     </DamlLedger>
-  );
-};
-
-type TilePageProps = {
-  reviewFormType: ReviewForms;
-  isOpen: boolean;
-  setIsOpen: (form?: ReviewForms) => void;
-};
-
-const SideBarItem: React.FC<TilePageProps> = ({ reviewFormType, isOpen, children, setIsOpen }) => {
-  return (
-    <>
-      <div
-        className={classNames('side-bar-item', {
-          'is-open': isOpen,
-        })}
-        onClick={() => setIsOpen(isOpen ? undefined : reviewFormType)}
-      >
-        <h4>
-          {reviewFormType} {isOpen ? <IconChevronUp /> : <IconChevronDown />}
-        </h4>
-      </div>
-      {isOpen && children}
-    </>
   );
 };
 
