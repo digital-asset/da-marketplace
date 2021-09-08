@@ -669,6 +669,14 @@ const Instructions = (props: {
   );
 };
 
+const autoFillInfo = [
+  {
+    instruction: InstructionType.CUSTODY,
+    instructionFieldName: 'provider',
+    autoFillFieldName: 'custodian',
+  },
+];
+
 type InstructionFieldsProps = {
   currentFields: InstFieldsWithType;
   idx: number;
@@ -684,6 +692,33 @@ const InstructionFieldInputs: React.FC<InstructionFieldsProps> = ({
   setInstructionFields,
   partyOptions,
 }) => {
+  useEffect(() => {
+    _.toPairs(getFields(currentFields)).map(([k, _]) => {
+      const autofill = autoFillInfo.find(i => i.autoFillFieldName === k);
+      const prevContract = instructionFields.find(
+        f => f.instructionType === autofill?.instruction
+      )?.fields;
+      if (autofill && prevContract) {
+        const option = partyOptions.find(
+          c => c.value === prevContract[autofill.instructionFieldName]
+        );
+        if (!!option) {
+          updateInstruction(option.value as string, autofill.autoFillFieldName);
+        }
+      }
+    });
+  }, []);
+
+  const updateInstruction = (newVal: string, key: string) => {
+    setInstructionFields(old => {
+      let listCopy = [...(old?.instructions || [])];
+      let instCopy = { ...currentFields };
+      (instCopy.fields || {})[key] = newVal as string;
+      listCopy[idx] = instCopy;
+      return { title: old?.title || '', instructions: listCopy };
+    });
+  };
+
   return (
     <div className="instruction-fields">
       <Header as="h3">{currentFields.instructionType}</Header>
@@ -691,13 +726,7 @@ const InstructionFieldInputs: React.FC<InstructionFieldsProps> = ({
         <Form.Group>
           {_.toPairs(getFields(currentFields)).map(([k, field]) => {
             const updateInstructionTypes = (_: any, data: DropdownProps | InputOnChangeData) => {
-              setInstructionFields(old => {
-                let listCopy = [...(old?.instructions || [])];
-                let instCopy = { ...currentFields };
-                (instCopy.fields || {})[k] = data.value as string;
-                listCopy[idx] = instCopy;
-                return { title: old?.title || '', instructions: listCopy };
-              });
+              updateInstruction(data.value as string, k);
             };
             if (field === FieldType.PARTIES) {
               return (
