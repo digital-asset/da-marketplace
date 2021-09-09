@@ -58,7 +58,7 @@ template Service
 
           case collateral of
             (Order.Collateral depositCid) -> do
-                lookupByKey @Custody.Service (operator, details.receivableAccount.provider, customer) >>= \case
+                lookupByKey @Custody.Service (operator, details.receivableAccount.provider, customer) >>= \case -- TODO: BDW - review this test
                   None -> do
                     let reason = Error with code = "3003"; message = "Customer does not have a custodial relationship with the custodian of the quoted asset"
                     Left <$> create Order.Order with status = Order.Rejected{reason}; ..

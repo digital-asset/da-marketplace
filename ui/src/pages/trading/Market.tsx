@@ -9,11 +9,11 @@ import {
   Side,
   FeeSchedule,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
-import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
+import { Service as TradingService } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
 import { CreateEvent } from '@daml/ledger';
 import { ContractId } from '@daml/types';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import { ServicePageProps } from '../common';
+import {makeDamlSet, ServicePageProps} from '../common';
 import { Button, Form, Header, Label, Popup, Table } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
@@ -38,19 +38,23 @@ import { useHistory } from 'react-router-dom';
 import { usePartyName } from '../../config';
 import paths from '../../paths';
 import { formatCurrency } from '../../util';
+import {Service as CustodyService} from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
 
 type Props = {
   cid: string;
   listings: Readonly<CreateEvent<Listing, any, any>[]>;
   feeSchedules: Readonly<CreateEvent<FeeSchedule, any, any>[]>;
+  tradingServices: Readonly<CreateEvent<TradingService, any, any>[]>;
+  custodyServices: Readonly<CreateEvent<CustodyService, any, any>[]>;
 };
 
-export const Market: React.FC<ServicePageProps<Service> & Props> = ({
-  services,
+export const Market: React.FC<Props> = ({
+  tradingServices,
+  custodyServices,
   cid,
   listings,
   feeSchedules,
-}: ServicePageProps<Service> & Props) => {
+}) => {
   const history = useHistory();
 
   const [isBuy, setIsBuy] = useState(true);
@@ -62,6 +66,10 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
 
   const [timeInForce, setTimeInForce] = useState<TimeInForces>('GTC');
   const [expiryDate, setExpiryDate] = useState(0);
+
+  const [accountLabel, setAccountLabel] = useState(custodyServices.length === 1
+    ? custodyServices[0].payload.account.id.label
+    : '');
 
   const handlePriceChange = (p: number) => {
     const perc = isBuy
@@ -120,7 +128,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
 
   const party = useParty();
   const ledger = useLedger();
-  const clientServices = services.filter(s => s.payload.customer === party);
+  const clientServices = tradingServices.filter(s => s.payload.customer === party);
   const listing = listings.find(c => c.contractId === cid);
   const feeSchedule = feeSchedules.find(fs => fs.payload.provider === listing?.payload.provider);
   const feeAmount = Number(feeSchedule?.payload.currentFee.amount) || 0.0;
@@ -130,7 +138,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
   const allOrders = useStreamQueries(Order);
 
   if (!listing || clientServices.length === 0) return <></>; // TODO: Return 404 not found
-  const service = clientServices[0];
+  const tradingService = clientServices[0];
   const clearinghouse =
     listing.payload.listingType.tag === 'Collateralized'
       ? 'Collateralized'
@@ -158,15 +166,19 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
         parseFloat((a.payload.details.orderType.value as OrderType.Limit).price)
     );
 
-  const available = assets.filter(
-    c => c.payload.account.id.label === service.payload.tradingAccount.id.label
-  );
+  // const available = assets.filter(
+  //   c => c.payload.account.id.label === service.payload.tradingAccount.id.label
+  // );
+  const available = assets;
   const tradedAssets = available.filter(
     c => c.payload.asset.id.label === listing.payload.tradedAssetId.label
   );
   const quotedAssets = available.filter(
     c => c.payload.asset.id.label === listing.payload.quotedAssetId.label
   );
+
+  const accounts = custodyServices.map(c => c.payload.account);
+  const account = accounts.find(a => a.id.label === accountLabel);
 
   const feeCurrency = feeSchedule?.payload.currentFee.currency.label || 'USD';
   const feeAssets = available.filter(c => c.payload.asset.id.label === feeCurrency);
@@ -186,6 +198,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
     setPercentage(0.0);
     setTotal(0.0);
     setExpiryDate(0);
+    setAccountLabel(custodyServices.length === 1 ? custodyServices[0].payload.account.id.label : '');
   };
 
   const getAsset = async (
@@ -241,6 +254,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
   };
 
   const requestCreateOrder = async () => {
+    if (!account) return;
     const orderId: string =
       Date.now().toString() + crypto.getRandomValues(new Uint16Array(1))[0].toString();
     const details: Details = {
@@ -256,6 +270,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
           ? { tag: 'GTD', value: { expiryDate: expiryDate.toString() } }
           : { tag: timeInForce, value: {} },
       optExchangeFee: null,
+      receivableAccount: account
     };
     clearOrderForm();
     if (listing.payload.listingType.tag === 'Collateralized') {
@@ -271,13 +286,13 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
             ds.filter(
               ad =>
                 ad.contractId !== depositCid &&
-                ad.payload.asset.id.label === feeCurrency &&
-                ad.payload.account.id.label === service.payload.tradingAccount.id.label
+                ad.payload.asset.id.label === feeCurrency //&&
+                // ad.payload.account.id.label === service.payload.tradingAccount.id.label
             )
           );
         optExchangeFee = await getAsset(feeAssets, feeAmount);
       }
-      await ledger.exercise(Service.RequestCreateOrder, service.contractId, {
+      await ledger.exercise(TradingService.RequestCreateOrder, tradingService.contractId, {
         details: { ...details, optExchangeFee },
         collateral: { tag: 'Collateral', value: depositCid },
       });
@@ -285,7 +300,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
       const clearinghouse = listing.payload.listingType.value.clearinghouse;
       const optExchangeFee = feeAmount > 0 ? await getAsset(feeAssets, feeAmount) : null;
 
-      await ledger.exercise(Service.RequestCreateOrder, service.contractId, {
+      await ledger.exercise(TradingService.RequestCreateOrder, tradingService.contractId, {
         details: { ...details, optExchangeFee },
         collateral: { tag: 'Cleared', value: { clearinghouse } },
       });
@@ -499,8 +514,23 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
                 <input />
                 <Label>{listing.payload.quotedAssetId.label}</Label>
               </Form.Input>
-              <Form.Input label="Fee" disabled={true} value={formatCurrency(feeAmount)} />
-              <Button className="ghost" type="submit" disabled={(isLimit && !price) || !quantity}>
+              <Form.Input
+                label="Fee"
+                disabled={true}
+                value={formatCurrency(feeAmount)}
+              />
+              <Form.Select
+                selection
+                label="Receivable Account"
+                placeholder="Account"
+                options={accounts.map(c => ({
+                  text: c.id.label,
+                  value: c.id.label,
+                }))}
+                value={accountLabel}
+                onChange={(_, d) => setAccountLabel((d.value && (d.value as string)) || '')}
+              />
+              <Button className="ghost" type="submit" disabled={(isLimit && !price) || !quantity || !account}>
                 {isBuy ? 'Buy' : 'Sell'} {listing.payload.tradedAssetId.label}
               </Button>
             </FormErrorHandled>

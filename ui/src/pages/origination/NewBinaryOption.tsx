@@ -8,19 +8,20 @@ import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { Observation } from '@daml.js/da-marketplace/lib/ContingentClaims/Observation';
 import { Claim, Inequality } from '@daml.js/da-marketplace/lib/ContingentClaims/Claim/Serializable';
 import { Date as DamlDate, Decimal } from '@daml/types';
-import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
+import { Service as IssuanceService } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import Tile from '../../components/Tile/Tile';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { Button, Form, Header } from 'semantic-ui-react';
 import CalendarInput from '../../components/Form/CalendarInput';
-import { makeDamlSet } from '../common';
+import {makeDamlSet, ServicePageProps} from '../common';
 import BackButton from '../../components/Common/BackButton';
 import { IconCircledCheck, IconClose } from '../../icons/icons';
 import classNames from 'classnames';
+import {Service as CustodyService} from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
 
-const NewBinaryOptionComponent = ({ history }: RouteComponentProps) => {
+const NewBinaryOptionComponent : React.FC<RouteComponentProps & ServicePageProps<CustodyService>> = ({ services, history }) => {
   const el = useRef<HTMLDivElement>(null);
 
   const [isCall, setIsCall] = useState(true);
@@ -34,14 +35,13 @@ const NewBinaryOptionComponent = ({ history }: RouteComponentProps) => {
 
   const ledger = useLedger();
   const party = useParty();
-  const services = useStreamQueries(Service).contracts;
-  const customerServices = services.filter(s => s.payload.customer === party);
+  const issuanceServices = useStreamQueries(IssuanceService).contracts;
+  const customerServices = issuanceServices.filter(s => s.payload.customer === party);
   const allAssets = useStreamQueries(AssetDescription).contracts;
   const assets = allAssets.filter(
     c => c.payload.claims.tag === 'Zero' && c.payload.assetId.version === '0'
   );
-  const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
-  const accounts = assetSettlementRules.map(c => c.payload.account);
+  const accounts = services.map(c => c.payload.account);
   const ccy = assets.find(c => c.payload.assetId.label === currency);
   const ccyId: Id = ccy?.payload.assetId || {
     signatories: makeDamlSet<string>([]),
@@ -98,7 +98,7 @@ const NewBinaryOptionComponent = ({ history }: RouteComponentProps) => {
       );
       return;
     }
-    await ledger.exercise(Service.RequestOrigination, service.contractId, {
+    await ledger.exercise(IssuanceService.RequestOrigination, service.contractId, {
       assetLabel: label,
       description,
       cfi: { code: 'MMMXXX' },

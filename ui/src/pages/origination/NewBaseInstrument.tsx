@@ -6,8 +6,8 @@ import { transformClaim } from '../../components/Claims/util';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { Claim } from '@daml.js/da-marketplace/lib/ContingentClaims/Claim/Serializable';
 import { Date as DamlDate, Decimal } from '@daml/types';
-import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
-import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
+import { Service as IssuanceService } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { Button, Form, Header } from 'semantic-ui-react';
@@ -16,7 +16,7 @@ import { IconCircledCheck, LockIcon, PublicIcon, IconClose } from '../../icons/i
 import { publicParty } from '../../config';
 import BackButton from '../../components/Common/BackButton';
 import paths from '../../paths';
-import { createDropdownProp } from '../common';
+import {createDropdownProp, ServicePageProps} from '../common';
 
 enum AssetType {
   CURRENCY = 'TCXXXX',
@@ -24,7 +24,7 @@ enum AssetType {
   OTHER = 'XXXXXX',
 }
 
-const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
+const NewBaseInstrumentComponent : React.FC<RouteComponentProps & ServicePageProps<CustodyService>> = ({ services, history }) => {
   const el = useRef<HTMLDivElement>(null);
 
   const [observers, setObservers] = useState<string[]>([]);
@@ -38,10 +38,9 @@ const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
 
   const ledger = useLedger();
   const party = useParty();
-  const services = useStreamQueries(Service).contracts;
-  const customerServices = services.filter(s => s.payload.customer === party);
-  const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
-  const accounts = assetSettlementRules.map(c => c.payload.account);
+  const issuanceServices = useStreamQueries(IssuanceService).contracts;
+  const customerServices = issuanceServices.filter(s => s.payload.customer === party);
+  const accounts = services.map(s => s.payload.account);
 
   const zero: Claim<DamlDate, Decimal, Id> = { tag: 'Zero', value: {} };
 
@@ -73,7 +72,7 @@ const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
       );
       return;
     }
-    await ledger.exercise(Service.RequestOrigination, service.contractId, {
+    await ledger.exercise(IssuanceService.RequestOrigination, service.contractId, {
       assetLabel: label,
       description,
       cfi: { code: cfi },

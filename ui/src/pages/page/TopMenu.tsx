@@ -12,7 +12,6 @@ import { usePartyName } from '../../config';
 
 import { useParty } from '@daml/react';
 
-import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import { Auction } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Model';
@@ -42,20 +41,15 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle }) => {
   const [contractTitle, setContractTitle] = useState<string>();
 
   const { contracts: accounts } = useStreamQueries(AssetSettlementRule);
-  const { contracts: allocatedAccounts } = useStreamQueries(AllocationAccountRule);
 
+  // TODO BDW - Check if we need all accounts as its allocated accounts dont exist anymore
   const allAccounts = useMemo(
     () =>
       accounts
         .map(a => {
           return { account: a.payload.account, contractId: a.contractId.replace('#', '_') };
-        })
-        .concat(
-          allocatedAccounts.map(a => {
-            return { account: a.payload.account, contractId: a.contractId.replace('#', '_') };
-          })
-        ),
-    [accounts, allocatedAccounts]
+        }),
+    [accounts]
   );
 
   const accountLabel = allAccounts.find(c => c.contractId === contractId)?.account.id.label;

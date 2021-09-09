@@ -10,7 +10,7 @@ import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { CreateEvent } from '@daml/ledger';
 import { ContractId } from '@daml/types';
 import {
-  Service,
+  Service as BiddingService,
   SubmitBid,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
 import { transformClaim } from '../../../components/Claims/util';
@@ -18,16 +18,22 @@ import { render } from '../../../components/Claims/render';
 import { getBidAllocation, getBidStatus } from '../Utils';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { Button, Form, Header, Icon, Table } from 'semantic-ui-react';
-import { ServicePageProps } from '../../common';
 import StripedTable from '../../../components/Table/StripedTable';
 import { usePartyName } from '../../../config';
 import Tile from '../../../components/Tile/Tile';
 import FormErrorHandled from '../../../components/Form/FormErrorHandled';
 import BackButton from '../../../components/Common/BackButton';
+import {Service as CustodyService} from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
 
-export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
-  services,
-}: ServicePageProps<Service>) => {
+type Props = {
+  biddingServices: Readonly<CreateEvent<BiddingService, any, any>[]>;
+  custodyServices: Readonly<CreateEvent<CustodyService, any, any>[]>;
+};
+
+export const BiddingAuction: React.FC<Props> = ({
+  biddingServices,
+  custodyServices
+}) => {
   const party = useParty();
   const { getName } = usePartyName(party);
   const ledger = useLedger();
@@ -36,10 +42,14 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
   const [quantity, setQuantity] = useState<number>(0);
   const [price, setPrice] = useState<number>(0);
   const [allowPublishing, setAllowPublishing] = useState<boolean>(false);
+  const [accountLabel, setAccountLabel] = useState(custodyServices.length === 1
+    ? custodyServices[0].payload.account.id.label
+    : '');
 
   const { contracts: allBiddingAuctions, loading: allBiddingAuctionsLoading } =
     useStreamQueries(BiddingAuctionContract);
   const deposits = useStreamQueries(AssetDeposit).contracts;
+  const heldAssets = deposits.filter(c => c.payload.account.owner === party);
   const bids = useStreamQueries(Bid);
 
   const biddingAuction = allBiddingAuctions.find(b => b.contractId === contractId);
@@ -51,6 +61,8 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
   const [showQuotedAsset, setShowQuotedAsset] = useState<boolean>(false);
   const allAssets = useStreamQueries(AssetDescription).contracts;
   const assets = allAssets.filter(c => c.payload.assetId.version === '0');
+  const accounts = custodyServices.map(c => c.payload.account);
+  const account = accounts.find(a => a.id.label === accountLabel);
 
   useEffect(() => {
     if (!el1.current || !biddingAuction) return;
@@ -74,8 +86,8 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
     render(el2.current, data);
   }, [el2, assets, biddingAuction, showQuotedAsset]);
 
-  if (!biddingAuction || services.length === 0) return <></>;
-  const service = services.filter(s => s.payload.customer === party)[0];
+  if (!biddingAuction || biddingServices.length === 0) return <></>;
+  const service = biddingServices.filter(s => s.payload.customer === party)[0];
 
   const bid = bids.contracts.find(b => b.payload.auctionId === biddingAuction.payload.auctionId);
 
@@ -96,12 +108,12 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
 
   const submitBid = async () => {
     const volume = price * quantity;
-    const deposit = deposits.find(
+    const deposit = heldAssets.find(
       c =>
         c.payload.asset.id.label === biddingAuction.payload.quotedAssetId.label &&
         parseFloat(c.payload.asset.quantity) >= volume
     );
-    if (!deposit) return;
+    if (!deposit || !account) return;
     const depositCid = await rightsizeAsset(deposit, volume.toString());
     const arg: SubmitBid = {
       auctionCid: biddingAuction.contractId,
@@ -109,8 +121,9 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
       quantity: quantity.toString(),
       depositCid,
       allowPublishing,
+      receivableAccount: account
     };
-    await ledger.exercise(Service.SubmitBid, service.contractId, arg);
+    await ledger.exercise(BiddingService.SubmitBid, service.contractId, arg);
   };
 
   return (
@@ -260,6 +273,18 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
                   required
                   onChange={(_, change) => setPrice(parseFloat(change.value as string))}
                 />
+                <Form.Select
+                  selection
+                  required
+                  label="Receivable Account"
+                  placeholder="Account"
+                  options={accounts.map(c => ({
+                    text: c.id.label,
+                    value: c.id.label,
+                  }))}
+                  value={accountLabel}
+                  onChange={(_, d) => setAccountLabel((d.value && (d.value as string)) || '')}
+                />
                 <Form.Checkbox
                   label="Allow Publishing of Bid ?"
                   onChange={(_, value) => setAllowPublishing(value.checked as boolean)}
@@ -267,7 +292,7 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
                 <Button
                   type="Bid"
                   className="ghost"
-                  disabled={price === 0 || quantity === 0}
+                  disabled={price === 0 || quantity === 0 || !account}
                   content="Submit"
                 />
               </FormErrorHandled>

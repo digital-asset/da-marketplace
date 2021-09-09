@@ -134,6 +134,14 @@ export const TradingOrder: React.FC<Props> = ({ listings, services }: Props) => 
                 )}
                 <Table.Row key={9}>
                   <Table.Cell key={0}>
+                    <b>Receivable Account</b>
+                  </Table.Cell>
+                  <Table.Cell key={1}>
+                    {order.payload.details.receivableAccount.id.label}
+                  </Table.Cell>
+                </Table.Row>
+                <Table.Row key={10}>
+                  <Table.Cell key={0}>
                     <b>Time In Force</b>
                   </Table.Cell>
                   <Table.Cell key={1}>
@@ -145,7 +153,7 @@ export const TradingOrder: React.FC<Props> = ({ listings, services }: Props) => 
                 </Table.Row>
                 {order.payload.details.timeInForce.tag === 'GTD' && (
                   <>
-                    <Table.Row key={10}>
+                    <Table.Row key={11}>
                       <Table.Cell key={0}>
                         <b>Expiry Date</b>
                       </Table.Cell>
@@ -157,13 +165,13 @@ export const TradingOrder: React.FC<Props> = ({ listings, services }: Props) => 
                     </Table.Row>
                   </>
                 )}
-                <Table.Row key={11}>
+                <Table.Row key={12}>
                   <Table.Cell key={0}>
                     <b>Filled</b>
                   </Table.Cell>
                   <Table.Cell key={1}>{getFillPercentage(order)} %</Table.Cell>
                 </Table.Row>
-                <Table.Row key={12}>
+                <Table.Row key={13}>
                   <Table.Cell key={0}>
                     <b>Status</b>
                   </Table.Cell>
@@ -172,7 +180,7 @@ export const TradingOrder: React.FC<Props> = ({ listings, services }: Props) => 
                 {(order.payload.status.tag === 'Rejected' ||
                   order.payload.status.tag === 'CancellationRejected') && (
                   <>
-                    <Table.Row key={13}>
+                    <Table.Row key={14}>
                       <Table.Cell key={0}>
                         <b>Status Code</b>
                       </Table.Cell>

@@ -31,9 +31,6 @@ runDemo parties@Parties{..} = do
   bobUsd      <- depositAsset providers bob       (usd with quantity = 1_000_000.0) bob.mainAccount.id empty
   charlieUsd  <- depositAsset providers charlie   (usd with quantity = 1_000_000.0) charlie.mainAccount.id empty
 
-  -- aliceUsdClearing <- depositAsset providers alice     (usd with quantity = 1_000_000.0) alice.clearingAccount.id empty
-  -- bobUsdClearing   <- depositAsset providers bob       (usd with quantity = 1_000_000.0) bob.clearingAccount.id empty
-
   auctionOfferCid <- submit bank do exerciseCmd distributorRoleCid Distributor.OfferAuctionService with customer = issuer.customer; ..
   auctionServiceCid <- submit issuer.customer do exerciseCmd auctionOfferCid Auction.Accept
 

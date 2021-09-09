@@ -13,7 +13,6 @@ import { getAbbreviation } from '../page/utils';
 import { usePartyName } from '../../config';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { Link, NavLink } from 'react-router-dom';
-
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import {
   Request as RegulatorRequest,
@@ -27,6 +26,7 @@ import paths from '../../paths';
 import ServiceRequestMenu from './ServiceRequestMenu';
 import RoleSetUp, { AutomationSetup } from '../../pages/setup/SetUp';
 import OverflowMenu, { OverflowMenuEntry } from '../../pages/page/OverflowMenu';
+import {ServicePageProps} from "../common";
 
 type DamlHubParty = string;
 function isDamlHubParty(party: string): party is DamlHubParty {
@@ -145,7 +145,7 @@ const ProfileSection: React.FC<{ name: string }> = ({ name }) => {
   return <></>;
 };
 
-const Landing = () => {
+const Landing : React.FC<ServicePageProps<CustodyService>> = ({services}) => {
   const party = useParty();
   const history = useHistory();
 
@@ -153,10 +153,10 @@ const Landing = () => {
   const providers = useProviderServices(party);
 
   const deposits = useStreamQueries(AssetDeposit).contracts;
-  const custodyService = useStreamQueries(CustodyService).contracts;
 
   const portfolio = formatCurrency(
     deposits
+      .filter(d => d.payload.account.owner === party)
       .filter(d => d.payload.asset.id.label === 'USD')
       .reduce((sum, deposit) => sum + +deposit.payload.asset.quantity, 0)
   );
@@ -187,7 +187,7 @@ const Landing = () => {
                 <h3>{portfolio}</h3>&nbsp;<span>USD</span>
               </span>
             </div>
-            {custodyService.length > 0 && (
+            {services.length > 0 && (
               <div className="link">
                 <NavLink to={paths.app.wallet.root}>View Wallet</NavLink>
               </div>
@@ -236,7 +236,7 @@ const Landing = () => {
           <Header as="h2" className="header">
             Network
           </Header>
-          <ServiceRequestMenu />
+          <ServiceRequestMenu services={services} />
         </div>
         <div className="relationships">
           {providers.map(p => (

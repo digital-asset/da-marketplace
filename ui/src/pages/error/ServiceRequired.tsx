@@ -10,7 +10,6 @@ import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { useParty, useStreamQueries } from '@daml/react';
 import { ServiceRequestDialog } from '../../components/InputDialog/ServiceDialog';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
-import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import {
   ServiceKind,
@@ -44,18 +43,18 @@ export const ServiceRequired: React.FC<ServiceRequiredProps> = ({ service, actio
   const identities = useStreamQueries(VerifiedIdentity).contracts;
   const legalNames = useMemo(() => identities.map(c => c.payload.legalName), [identities]);
 
-  const allocationAccountRules = useStreamQueries(AllocationAccountRule).contracts;
-  const allocationAccounts = useMemo(
-    () =>
-      allocationAccountRules
-        .filter(c => c.payload.account.owner === party)
-        .map(c => c.payload.account),
-    [party, allocationAccountRules]
-  );
-  const allocationAccountNames = useMemo(
-    () => allocationAccounts.map(a => a.id.label),
-    [allocationAccounts]
-  );
+  // const allocationAccountRules = useStreamQueries(AllocationAccountRule).contracts;
+  // const allocationAccounts = useMemo(
+  //   () =>
+  //     allocationAccountRules
+  //       .filter(c => c.payload.account.owner === party)
+  //       .map(c => c.payload.account),
+  //   [party, allocationAccountRules]
+  // );
+  // const allocationAccountNames = useMemo(
+  //   () => allocationAccounts.map(a => a.id.label),
+  //   [allocationAccounts]
+  // );
 
   const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
   const accounts = useMemo(
@@ -94,15 +93,15 @@ export const ServiceRequired: React.FC<ServiceRequiredProps> = ({ service, actio
       };
     }
 
-    if (dialogState?.allocationAccount) {
-      const allocationAccount = allocationAccounts.find(
-        a => a.id.label === dialogState.allocationAccount
-      );
-      params = {
-        ...params,
-        allocationAccount,
-      };
-    }
+    // if (dialogState?.allocationAccount) {
+    //   const allocationAccount = allocationAccounts.find(
+    //     a => a.id.label === dialogState.allocationAccount
+    //   );
+    //   params = {
+    //     ...params,
+    //     allocationAccount,
+    //   };
+    // }
 
     if (dialogState?.clearingAccount) {
       const clearingAccount = accounts.find(a => a.id.label === dialogState.clearingAccount);
@@ -113,7 +112,7 @@ export const ServiceRequired: React.FC<ServiceRequiredProps> = ({ service, actio
     }
 
     if (dialogState?.marginAccount) {
-      const marginAccount = allocationAccounts.find(a => a.id.label === dialogState.marginAccount);
+      const marginAccount = accounts.find(a => a.id.label === dialogState.marginAccount); //TODO: BDW check the side effect of making this change
       params = {
         ...params,
         marginAccount,
@@ -129,7 +128,7 @@ export const ServiceRequired: React.FC<ServiceRequiredProps> = ({ service, actio
     }
 
     setRequestParams(params);
-  }, [dialogState, accounts, allocationAccounts, identities, party]);
+  }, [dialogState, accounts, identities, party]);
 
   useEffect(() => {
     const requestService = <T extends ServiceRequestTemplates>(
@@ -156,45 +155,13 @@ export const ServiceRequired: React.FC<ServiceRequiredProps> = ({ service, actio
             type: 'selection',
             items: accountNames,
           },
-          marginAccount: {
-            label: 'Margin Account',
-            type: 'selection',
-            items: allocationAccountNames,
-          },
         });
         break;
       case ServiceKind.TRADING:
-        requestService(TradingRequest, {
-          tradingAccount: {
-            label: 'Trading Account',
-            type: 'selection',
-            items: accountNames,
-          },
-          allocationAccount: {
-            label: 'Allocation Account',
-            type: 'selection',
-            items: allocationAccountNames,
-          },
-        });
+        requestService(TradingRequest);
         break;
       case ServiceKind.AUCTION:
-        requestService(AuctionRequest, {
-          tradingAccount: {
-            label: 'Trading Account',
-            type: 'selection',
-            items: accountNames,
-          },
-          allocationAccount: {
-            label: 'Allocation Account',
-            type: 'selection',
-            items: allocationAccountNames,
-          },
-          receivableAccount: {
-            label: 'Receivable Account',
-            type: 'selection',
-            items: accountNames,
-          },
-        });
+        requestService(AuctionRequest);
         break;
       case ServiceKind.CUSTODY:
         requestService(CustodyRequest);
@@ -206,7 +173,7 @@ export const ServiceRequired: React.FC<ServiceRequiredProps> = ({ service, actio
         requestService(ListingRequest);
         break;
     }
-  }, [service, legalNames, accountNames, allocationAccountNames]);
+  }, [service, legalNames, accountNames]);
 
   const history = useHistory();
   const onClose = (open: boolean) => {

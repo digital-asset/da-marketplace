@@ -2,18 +2,14 @@ import React, { useState } from 'react';
 
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
-import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { Account as AccountContract } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { CreateEvent } from '@daml/ledger';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import { CloseAccountRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
-
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
 import { usePartyName } from '../../config';
 import Tile from '../../components/Tile/Tile';
 import { ServicePageProps, damlSetValues } from '../common';
-import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 import OverflowMenu, { OverflowMenuEntry } from '../../pages/page/OverflowMenu';
 
@@ -35,13 +31,10 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
 
   const cid = targetAccount.contractId.replace('_', '#');
 
-  const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
-  const { contracts: allocatedAccounts, loading: allocatedAccountsLoading } =
-    useStreamQueries(AllocationAccountRule);
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
-  const existingCloseRequest = !!useStreamQueries(CloseAccountRequest).contracts.find(
-    c => c.payload.accountId.label === targetAccount.account.id.label
-  );
+  // const existingCloseRequest = !!useStreamQueries(CloseAccountRequest).contracts.find(
+  //   c => c.payload.accountId.label === targetAccount.account.id.label
+  // );
 
   const defaultTransferRequestDialogProps: InputDialogProps<any> = {
     open: false,
@@ -59,7 +52,7 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
 
   const clientServices = services.filter(s => s.payload.customer === party);
 
-  if (accountsLoading || depositsLoading || allocatedAccountsLoading) {
+  if (depositsLoading) {
     return <h4>Loading account...</h4>;
   }
 
@@ -67,8 +60,6 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
     return <h4>Could not find account.</h4>;
   }
 
-  const normalAccount = accounts.find(a => a.contractId === targetAccount.contractId);
-  const allocationAccount = allocatedAccounts.find(a => a.contractId === targetAccount.contractId);
   const service = clientServices.find(s => s.payload.provider === targetAccount.account.provider);
 
   const accountDeposits = deposits.filter(
@@ -83,31 +74,26 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
       return displayErrorMessage({
         message: 'The account provider does not offer issuance services.',
       });
-    await ledger.exercise(Service.RequestDebitAccount, service.contractId, {
-      accountId: c.payload.account.id,
-      debit: { depositCid: c.contractId },
+    await ledger.exercise(Service.RequestWithdrawl, service.contractId, {
+      depositCid: c.contractId
     });
   };
 
-  const relatedAccounts = accounts
-    .filter(a => a.contractId !== cid)
-    .filter(a => a.payload.account.owner === targetAccount.account.owner)
-    .map(r => r.payload.account.id.label);
+  const relatedAccounts = services
+    .filter(s => s.contractId !== cid)
+    .filter(s => s.payload.account.owner === targetAccount.account.owner)
+    .map(s => s.payload.account.id.label);
 
   const requestTransfer = (deposit: CreateEvent<AssetDeposit>) => {
     const onClose = async (state: any | null) => {
       setTransferDialogProps({ ...defaultTransferRequestDialogProps, open: false });
       if (!state) return;
-      const transferToAccount = accounts.find(a => a.payload.account.id.label === state.account);
+      const transferToAccount = services.find(a => a.payload.account.id.label === state.account);
 
       if (!service || !transferToAccount) return;
 
-      await ledger.exercise(Service.RequestTransferDeposit, service.contractId, {
-        accountId: targetAccount.account.id,
-        transfer: {
-          receiverAccountId: transferToAccount.payload.account.id,
-          depositCid: deposit.contractId,
-        },
+      await ledger.exercise(AssetDeposit.AssetDeposit_Transfer, deposit.contractId, {
+        receiverAccount: transferToAccount.payload.account
       });
     };
     setTransferDialogProps({
@@ -125,15 +111,15 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
     });
   };
 
-  const requestCloseAccount = async (c: CreateEvent<AssetSettlementRule>) => {
-    if (!service)
-      return displayErrorMessage({
-        message: 'The account provider does not offer issuance services.',
-      });
-    await ledger.exercise(Service.RequestCloseAccount, service.contractId, {
-      accountId: c.payload.account.id,
-    });
-  };
+  // const requestCloseAccount = async (c: CreateEvent<AssetSettlementRule>) => {
+  //   if (!service)
+  //     return displayErrorMessage({
+  //       message: 'The account provider does not offer issuance services.',
+  //     });
+  //   await ledger.exercise(Service.RequestCloseAccount, service.contractId, {
+  //     accountId: c.payload.account.id,
+  //   });
+  // };
 
   return (
     <>
@@ -142,40 +128,33 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
         <div className="account-details">
           <div className="account-data">
             <h4> {targetAccount.account.id.label} </h4>
-            {normalAccount &&
-              targetAccount.account.owner === party &&
-              (existingCloseRequest ? (
-                <p className="close-request">
-                  <i> close request pending</i>
-                </p>
-              ) : (
-                <OverflowMenu>
-                  <OverflowMenuEntry
-                    label={'Close Account'}
-                    onClick={() => requestCloseAccount(normalAccount)}
-                  />
-                </OverflowMenu>
-              ))}
+            {/*{ targetAccount.account.owner === party &&*/}
+            {/*  (existingCloseRequest ? (*/}
+            {/*    <p className="close-request">*/}
+            {/*      <i> close request pending</i>*/}
+            {/*    </p>*/}
+            {/*  ) : (*/}
+            {/*    <OverflowMenu>*/}
+            {/*      <OverflowMenuEntry*/}
+            {/*        label={'Close Account'}*/}
+            {/*        onClick={() => requestCloseAccount(normalAccount)}*/}
+            {/*      />*/}
+            {/*    </OverflowMenu>*/}
+            {/*  ))}*/}
           </div>
           <div className="account-data body">
-            <p className="p2">Type: {normalAccount ? 'Normal' : 'Allocation'} </p>
             <p className="p2">Provider: {getName(targetAccount.account.provider)}</p>
             <p className="p2">Owner: {getName(targetAccount.account.owner)}</p>
             <p className="p2">
               Role: {party === targetAccount.account.provider ? 'Provider' : 'Client'}
             </p>
-            {allocationAccount && (
-              <p className="p2">Nominee: {allocationAccount.payload.nominee}</p>
-            )}
-            {normalAccount && (
-              <p className="p2">
-                Controllers:{' '}
-                {damlSetValues(normalAccount.payload.ctrls)
-                  .map(ctrl => getName(ctrl))
+            <p className="p2">
+                Signatories:{' '}
+                {damlSetValues(targetAccount.account.id.signatories)
+                  .map(a => getName(a))
                   .sort()
                   .join(', ')}
               </p>
-            )}
           </div>
         </div>
         {accountDeposits.length > 0 ? (
@@ -184,10 +163,10 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
               <p>
                 <b>{c.payload.asset.id.label}</b> {c.payload.asset.quantity}{' '}
               </p>
-              {party === targetAccount.account.owner && normalAccount && (
+              {party === targetAccount.account.owner && (
                 <OverflowMenu>
                   <OverflowMenuEntry label={'Withdraw'} onClick={() => requestWithdrawDeposit(c)} />
-                  <OverflowMenuEntry label={'Transfer'} onClick={() => requestTransfer(c)} />
+                  {/*<OverflowMenuEntry label={'Transfer'} onClick={() => requestTransfer(c)} />*/}
                 </OverflowMenu>
               )}
             </Tile>

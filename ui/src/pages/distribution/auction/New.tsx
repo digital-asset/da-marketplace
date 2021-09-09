@@ -7,7 +7,7 @@ import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import {
   CreateAuctionRequest,
   RequestCreateAuction,
-  Service,
+  Service as AuctionService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
 import { CreateEvent } from '@daml/ledger';
 import { ContractId, Party } from '@daml/types';
@@ -17,14 +17,21 @@ import { Button, Form, Header, Icon } from 'semantic-ui-react';
 import FormErrorHandled from '../../../components/Form/FormErrorHandled';
 import { IconClose } from '../../../icons/icons';
 import Tile from '../../../components/Tile/Tile';
-import { ServicePageProps } from '../../common';
+import {isEmptySet, ServicePageProps} from '../../common';
 import BackButton from '../../../components/Common/BackButton';
 import paths from '../../../paths';
+import {Service as CustodyService} from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
 
-const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
+type Props = {
+  auctionServices: Readonly<CreateEvent<AuctionService, any, any>[]>;
+  custodyServices: Readonly<CreateEvent<CustodyService, any, any>[]>;
+};
+
+const NewComponent: React.FC<RouteComponentProps & Props> = ({
   history,
-  services,
-}: RouteComponentProps & ServicePageProps<Service>) => {
+  auctionServices,
+  custodyServices
+}) => {
   const el1 = useRef<HTMLDivElement>(null);
   const el2 = useRef<HTMLDivElement>(null);
 
@@ -36,10 +43,13 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
   const [quantity, setQuantity] = useState('');
   const [floorPrice, setFloorPrice] = useState('');
   const [auctionId, setAuctionId] = useState('');
+  const [accountLabel, setAccountLabel] = useState(custodyServices.length === 1
+    ? custodyServices[0].payload.account.id.label
+    : '');
 
   const ledger = useLedger();
   const party = useParty();
-  const customerServices = services.filter(s => s.payload.customer === party);
+  const customerServices = auctionServices.filter(s => s.payload.customer === party);
   const allAssets = useStreamQueries(AssetDescription).contracts;
   const assets = allAssets.filter(c => c.payload.assetId.version === '0');
   const auctionedAsset = assets.find(c => c.payload.assetId.label === auctionedAssetLabel);
@@ -50,6 +60,8 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
     .map(c => c.payload.asset.id.label)
     .filter((v, i, a) => a.indexOf(v) === i);
   const auctionRequests = useStreamQueries(CreateAuctionRequest).contracts;
+  const accounts = custodyServices.map(c => c.payload.account);
+  const account = accounts.find(a => a.id.label === accountLabel);
 
   const canRequest =
     !!auctionedAssetLabel &&
@@ -58,7 +70,8 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
     !!quotedAsset &&
     !!auctionId &&
     !!quantity &&
-    !!floorPrice;
+    !!floorPrice &&
+    !!account;
 
   useEffect(() => {
     if (!el1.current || !auctionedAsset) return;
@@ -93,12 +106,12 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
   };
 
   const requestCreateAuction = async () => {
-    const deposit = deposits
+    const deposit = heldAssets
       .filter(c => auctionRequests.findIndex(a => a.payload.depositCid === c.contractId) === -1)
-      .filter(c => c.payload.account !== service.payload.allocationAccount)
+      .filter(c => isEmptySet(c.payload.lockers))
       .filter(c => c.payload.asset.id.label === auctionedAssetLabel)
       .find(c => parseFloat(c.payload.asset.quantity) >= parseFloat(quantity));
-    if (!auctionedAsset || !quotedAsset || !deposit) return;
+    if (!auctionedAsset || !quotedAsset || !deposit || !account) return;
     const depositCid = await rightsizeAsset(deposit, quantity);
     const request: RequestCreateAuction = {
       auctionId,
@@ -106,8 +119,9 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
       quotedAssetId: quotedAsset.payload.assetId,
       floorPrice,
       depositCid,
+      receivableAccount : account //TODO BDW - Get selected account from user
     };
-    await ledger.exercise(Service.RequestCreateAuction, service.contractId, request);
+    await ledger.exercise(AuctionService.RequestCreateAuction, service.contractId, request);
     history.push(paths.app.distributions);
   };
 
@@ -172,6 +186,17 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
           label="Auction ID"
           required
           onChange={(_, change) => setAuctionId(change.value as string)}
+        />
+        <Form.Select
+          selection
+          label="Receivable Account"
+          placeholder="Account"
+          options={accounts.map(c => ({
+            text: c.id.label,
+            value: c.id.label,
+          }))}
+          value={accountLabel}
+          onChange={(_, d) => setAccountLabel((d.value && (d.value as string)) || '')}
         />
         <div className="submit-form">
           <Button type="submit" className="ghost" disabled={!canRequest} content="Submit" />

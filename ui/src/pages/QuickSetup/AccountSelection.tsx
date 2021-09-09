@@ -4,17 +4,11 @@ import { damlSetValues, makeDamlSet, createDropdownProp } from '../common';
 import { useStreamQueries } from '../../Main';
 import {
   Service,
-  RequestOpenAccount,
-  RequestOpenAllocationAccount,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { DropdownItemProps, Form, DropdownProps } from 'semantic-ui-react';
 import { useLedger } from '@daml/react';
 import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/';
 import { usePartyName } from '../../config';
-import {
-  OpenAccountRequest,
-  OpenAllocationAccountRequest,
-} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
 import { IPartyAccounts, AccountsForServices } from './RequestServicesPage';
 import { Party } from '@daml/types';
 import _ from 'lodash';
@@ -58,37 +52,31 @@ const AccountSelection: React.FC<Props> = ({
     false
   );
 
-  const allocationAccountRules = accountsForParty?.allocAccounts || [];
-  const allocationAccounts = allocationAccountRules
-    .filter(c => c.payload.nominee === serviceProvider)
-    .filter(c => c.payload.account.owner === party)
-    .map(c => c.payload.account);
-
   const assetSettlementRules = accountsForParty?.accounts || [];
   const accounts = assetSettlementRules
     .filter(c => c.payload.account.owner === party)
-    .filter(c => damlSetValues(c.payload.observers).find(obs => obs === serviceProvider))
+    // .filter(c => damlSetValues(c.payload.observers).find(obs => obs === serviceProvider))
     .map(c => c.payload.account);
   const accountNames: DropdownItemProps[] = accounts.map(a => createDropdownProp(a.id.label));
 
-  const openAccountRequests = useStreamQueries(OpenAccountRequest).contracts.filter(rq =>
-    damlSetValues(rq.payload.observers).find(obs => obs === serviceProvider)
-  );
-  const openAllocationAccountRequests = useStreamQueries(
-    OpenAllocationAccountRequest
-  ).contracts.filter(rq => rq.payload.nominee === serviceProvider);
+  // const openAccountRequests = useStreamQueries(OpenAccountRequest).contracts.filter(rq =>
+  //   damlSetValues(rq.payload.observers).find(obs => obs === serviceProvider)
+  // );
+  // const openAllocationAccountRequests = useStreamQueries(
+  //   OpenAllocationAccountRequest
+  // ).contracts.filter(rq => rq.payload.nominee === serviceProvider);
 
   const custodyServices = useStreamQueries(CustodyService).contracts.filter(
     c => c.payload.customer === party
   );
 
-  const allocationAccountNeeded =
-    hasAllocationAccount && !allocationAccounts.length && !openAllocationAccountRequests.length;
-  const accountNeeded = hasRegularAccount && !accountNames.length && !openAccountRequests.length;
+  // const allocationAccountNeeded =
+  //   hasAllocationAccount && !allocationAccounts.length && !openAllocationAccountRequests.length;
+  const accountNeeded = hasRegularAccount && !accountNames.length //&& !openAccountRequests.length;
 
   return (
     <>
-      {!custodyServices.length && (allocationAccountNeeded || accountNeeded) ? (
+      {!custodyServices.length && accountNeeded ? (
         <>This party must have at least one Custody service</>
       ) : (
         !!serviceProvider && (
@@ -98,9 +86,7 @@ const AccountSelection: React.FC<Props> = ({
                 accountInfo={accountInfo}
                 accountKey={k}
                 accounts={accounts}
-                allocationAccounts={allocationAccounts}
-                openAllocationAccountRequests={openAllocationAccountRequests}
-                openAccountRequests={openAccountRequests}
+                // openAccountRequests={openAccountRequests}
                 custodyServices={custodyServices}
                 accountsForServices={accountsForServices}
                 party={party}
@@ -119,9 +105,9 @@ const ProviderOption = (props: {
   accountInfo: AccountInfo;
   accountKey: string;
   accounts: Account[];
-  allocationAccounts: Account[];
-  openAccountRequests: CreateEvent<OpenAccountRequest>[];
-  openAllocationAccountRequests: CreateEvent<OpenAllocationAccountRequest>[];
+  // allocationAccounts: Account[];
+  // openAccountRequests: CreateEvent<OpenAccountRequest>[];
+  // openAllocationAccountRequests: CreateEvent<OpenAllocationAccountRequest>[];
   custodyServices: CreateEvent<CustodyService>[];
   accountsForServices: { [k: string]: Account | undefined };
   party: string;
@@ -131,11 +117,11 @@ const ProviderOption = (props: {
   const {
     accountInfo,
     accounts,
-    allocationAccounts,
+    // allocationAccounts,
     party,
     serviceProvider,
-    openAccountRequests,
-    openAllocationAccountRequests,
+    // openAccountRequests,
+    // openAllocationAccountRequests,
     custodyServices,
     accountsForServices,
     onChangeAccount,
@@ -148,12 +134,9 @@ const ProviderOption = (props: {
     `${getName(party)}-${getName(serviceProvider)}-${accountInfo.accountLabel.replace(/\s+/g, '')}`;
 
   const accountNames: DropdownItemProps[] = accounts.map(a => createDropdownProp(a.id.label));
-  const allocationAccountNames: DropdownItemProps[] = allocationAccounts
-    .filter(acc => acc.id.label === makeAccountName(accountInfo))
-    .map(a => createDropdownProp(a.id.label));
 
   const accountOptions =
-    accountInfo.accountType === AccountType.REGULAR ? accountNames : allocationAccountNames;
+    accountInfo.accountType === AccountType.REGULAR;
 
   const requestAccount = async (provider: string, accountInfo: AccountInfo) => {
     if (!serviceProvider) return;
@@ -165,79 +148,83 @@ const ProviderOption = (props: {
       version: '0',
     };
 
-    if (accountInfo.accountType === AccountType.REGULAR) {
-      const accountRequest: RequestOpenAccount = {
-        accountId,
-        observers: [serviceProvider],
-        ctrls: [service.payload.provider, service.payload.customer],
-      };
-      await ledger.exercise(Service.RequestOpenAccount, service.contractId, accountRequest);
-    } else {
-      const request: RequestOpenAllocationAccount = {
-        accountId,
-        observers: makeDamlSet<string>([]),
-        nominee: serviceProvider,
-      };
-      await ledger.exercise(Service.RequestOpenAllocationAccount, service.contractId, request);
-    }
+    // TODO BDW - What do we do here ? Make a custody service request ?
+    // if (accountInfo.accountType === AccountType.REGULAR) {
+    //   const accountRequest: RequestOpenAccount = {
+    //     accountId,
+    //     observers: [serviceProvider],
+    //     ctrls: [service.payload.provider, service.payload.customer],
+    //   };
+    //   await ledger.exercise(Service.RequestOpenAccount, service.contractId, accountRequest);
+    // } else {
+    //   const request: RequestOpenAllocationAccount = {
+    //     accountId,
+    //     observers: makeDamlSet<string>([]),
+    //     nominee: serviceProvider,
+    //   };
+    //   await ledger.exercise(Service.RequestOpenAllocationAccount, service.contractId, request);
+    // }
   };
 
   const accountExists = (accountInfo: AccountInfo) => {
     const accountName = makeAccountName(accountInfo);
     if (accountInfo.accountType === AccountType.REGULAR) {
       return !!accounts.find(a => a.id.label === accountName);
-    } else {
-      return allocationAccounts.find(a => a.id.label === accountName);
     }
+    // else {
+    //   return allocationAccounts.find(a => a.id.label === accountName);
+    // }
   };
 
-  const accountRequestExists = (accountInfo: AccountInfo) => {
-    const accountName = makeAccountName(accountInfo);
-    if (accountInfo.accountType === AccountType.REGULAR) {
-      return !!openAccountRequests.find(rq => rq.payload.accountId.label === accountName);
-    } else {
-      return !!openAllocationAccountRequests.find(rq => rq.payload.accountId.label === accountName);
-    }
-  };
+  // const accountRequestExists = (accountInfo: AccountInfo) => {
+  //   const accountName = makeAccountName(accountInfo);
+  //   if (accountInfo.accountType === AccountType.REGULAR) {
+  //     return !!openAccountRequests.find(rq => rq.payload.accountId.label === accountName);
+  //   }
+    // else {
+    //   return !!openAllocationAccountRequests.find(rq => rq.payload.accountId.label === accountName);
+    // }
+  // };
 
   const uuid = uuidv4();
   const accountRequestPrepend = `${uuid}REQUEST`;
 
-  const providerOptions =
-    accountExists(accountInfo) || accountRequestExists(accountInfo)
-      ? []
-      : custodyServices.map(svc => {
-          return {
-            key: `REQUEST_${svc.payload.provider}_${accountInfo.accountLabel}`,
-            label: `Request account from: ${getName(svc.payload.provider)}`,
-            value: `${accountRequestPrepend}_${svc.payload.provider}`,
-          };
-        });
+  // const providerOptions =
+  //   accountExists(accountInfo) || accountRequestExists(accountInfo)
+  //     ? []
+  //     : custodyServices.map(svc => {
+  //         return {
+  //           key: `REQUEST_${svc.payload.provider}_${accountInfo.accountLabel}`,
+  //           label: `Request account from: ${getName(svc.payload.provider)}`,
+  //           value: `${accountRequestPrepend}_${svc.payload.provider}`,
+  //         };
+  //       });
 
   const selectOrCreate = (change: DropdownProps) => {
     const [prepend, ...rest] = (change.value as string).split('_');
     if (prepend === accountRequestPrepend) {
       requestAccount(rest[0], accountInfo);
     } else {
-      const account =
-        accountInfo.accountType === AccountType.REGULAR
-          ? accounts.find(a => a.id.label === (change.value as string))
-          : allocationAccounts.find(a => a.id.label === (change.value as string));
+      const account = accounts.find(a => a.id.label === (change.value as string));
+        // accountInfo.accountType === AccountType.REGULAR
+        //   ? accounts.find(a => a.id.label === (change.value as string))
+          // : allocationAccounts.find(a => a.id.label === (change.value as string));
       onChangeAccount(accountKey, account);
     }
   };
+
   return (
     <>
-      <Form.Select
-        className="request-select"
-        label={<p className="input-label">{accountInfo.accountLabel}</p>}
-        placeholder="Select..."
-        required
-        options={[...accountOptions, ...providerOptions]}
-        value={accountsForServices[accountKey]?.id.label}
-        onChange={(_, change) => selectOrCreate(change)}
-      />
-      {accountRequestExists(accountInfo) && <p>Account request pending...</p>}
+      {/*<Form.Select*/}
+      {/*  className="request-select"*/}
+      {/*  label={<p className="input-label">{accountInfo.accountLabel}</p>}*/}
+      {/*  placeholder="Select..."*/}
+      {/*  required*/}
+      {/*  options={[...accountOptions, ...providerOptions]}*/}
+      {/*  value={accountsForServices[accountKey]?.id.label}*/}
+      {/*  onChange={(_, change) => selectOrCreate(change)}*/}
+      {/*/>*/}
+      {/*{accountRequestExists(accountInfo) && <p>Account request pending...</p>}*/}
     </>
   );
 };

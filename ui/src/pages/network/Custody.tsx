@@ -6,10 +6,6 @@ import { useStreamQueries } from '../../Main';
 import { getTemplateId, usePartyName } from '../../config';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import StripedTable from '../../components/Table/StripedTable';
-import {
-  OpenAccountRequest,
-  OpenAllocationAccountRequest,
-} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
 import TitleWithActions from '../../components/Common/TitleWithActions';
 import { damlSetValues } from '../common';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
@@ -56,101 +52,55 @@ export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
         })}
       />
       <AccountRequestsTable services={services} />
-      <AllocationAccountRequestsTable services={services} />
     </>
   );
 };
 
+// TODO : Refactor this to be custody requests
 const AccountRequestsTable: React.FC<Props> = ({ services }) => {
   const party = useParty();
   const { getName } = usePartyName(party);
   const ledger = useLedger();
   const displayErrorMessage = useDisplayErrorMessage();
 
-  const { contracts: openRequests, loading } = useStreamQueries(OpenAccountRequest);
+  // const { contracts: openRequests, loading } = useStreamQueries(OpenAccountRequest);
 
-  const openAccount = async (c: CreateEvent<OpenAccountRequest>) => {
-    const service = services.find(s => s.payload.customer === c.payload.customer);
-    if (!service)
-      return displayErrorMessage({
-        header: 'Failed to Open Account',
-        message: 'Could not find Custody service contract',
-      });
-    await ledger.exercise(Service.OpenAccount, service.contractId, {
-      openAccountRequestCid: c.contractId,
-    });
-  };
+  // const openAccount = async (c: CreateEvent<OpenAccountRequest>) => {
+  //   const service = services.find(s => s.payload.customer === c.payload.customer);
+  //   if (!service)
+  //     return displayErrorMessage({
+  //       header: 'Failed to Open Account',
+  //       message: 'Could not find Custody service contract',
+  //     });
+  //   await ledger.exercise(Service.OpenAccount, service.contractId, {
+  //     openAccountRequestCid: c.contractId,
+  //   });
+  // };
 
-  return !!openRequests.length ? (
-    <StripedTable
-      title="Account Requests"
-      headings={['Account', 'Provider', 'Client', 'Role', 'Controllers', 'Action']}
-      loading={loading}
-      rows={openRequests.map((c, i) => {
-        return {
-          elements: [
-            c.payload.accountId.label,
-            getName(c.payload.provider),
-            getName(c.payload.customer),
-            party === c.payload.provider ? 'Provider' : 'Client',
-            damlSetValues(c.payload.ctrls).join(', '),
-            party === c.payload.provider && (
-              <Button className="ghost" size="small" onClick={() => openAccount(c)}>
-                Process
-              </Button>
-            ),
-          ],
-        };
-      })}
-    />
-  ) : (
-    <></>
-  );
-};
-
-const AllocationAccountRequestsTable: React.FC<Props> = ({ services }) => {
-  const party = useParty();
-  const { getName } = usePartyName(party);
-  const ledger = useLedger();
-  const displayErrorMessage = useDisplayErrorMessage();
-
-  const { contracts: openRequests, loading } = useStreamQueries(OpenAllocationAccountRequest);
-
-  const openAccount = async (c: CreateEvent<OpenAllocationAccountRequest>) => {
-    const service = services.find(s => s.payload.customer === c.payload.customer);
-    if (!service)
-      return displayErrorMessage({
-        header: 'Failed to Open Account',
-        message: 'Could not find Custody service contract',
-      });
-    await ledger.exercise(Service.OpenAllocationAccount, service.contractId, {
-      openAllocationAccountRequestCid: c.contractId,
-    });
-  };
-
-  return !!openRequests.length ? (
-    <StripedTable
-      title="Allocation Account Requests"
-      headings={['Account', 'Provider', 'Client', 'Role', 'Nominee', 'Action']}
-      loading={loading}
-      rows={openRequests.map((c, i) => {
-        return {
-          elements: [
-            c.payload.accountId.label,
-            getName(c.payload.provider),
-            getName(c.payload.customer),
-            party === c.payload.provider ? 'Provider' : 'Client',
-            c.payload.nominee,
-            party === c.payload.provider && (
-              <Button className="ghost" size="small" onClick={() => openAccount(c)}>
-                Process
-              </Button>
-            ),
-          ],
-        };
-      })}
-    />
-  ) : (
-    <></>
-  );
+  // return !!openRequests.length ? (
+  //   <StripedTable
+  //     title="Account Requests"
+  //     headings={['Account', 'Provider', 'Client', 'Role', 'Controllers', 'Action']}
+  //     loading={loading}
+  //     rows={openRequests.map((c, i) => {
+  //       return {
+  //         elements: [
+  //           c.payload.accountId.label,
+  //           getName(c.payload.provider),
+  //           getName(c.payload.customer),
+  //           party === c.payload.provider ? 'Provider' : 'Client',
+  //           damlSetValues(c.payload.ctrls).join(', '),
+  //           party === c.payload.provider && (
+  //             <Button className="ghost" size="small" onClick={() => openAccount(c)}>
+  //               Process
+  //             </Button>
+  //           ),
+  //         ],
+  //       };
+  //     })}
+  //   />
+  // ) : (
+  //   <></>
+  // );
+  return <></>
 };

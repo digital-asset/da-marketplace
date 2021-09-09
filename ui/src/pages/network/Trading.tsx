@@ -36,8 +36,6 @@ export const TradingServiceTable: React.FC<Props> = ({ services }) => {
           'Consumer',
           'Role',
           'Trading Account',
-          'Allocation Account',
-          'Action',
         ]}
         rows={services.map((c, i) => {
           return {
@@ -47,8 +45,6 @@ export const TradingServiceTable: React.FC<Props> = ({ services }) => {
               getName(c.payload.provider),
               getName(c.payload.customer),
               party === c.payload.provider ? 'Provider' : 'Consumer',
-              c.payload.tradingAccount.id.label,
-              c.payload.allocationAccount.id.label,
               <Button className="ghost warning" onClick={() => terminateService(c)}>
                 Terminate
               </Button>,

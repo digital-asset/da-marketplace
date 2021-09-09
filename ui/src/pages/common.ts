@@ -54,3 +54,5 @@ export function damlSetValues<T>(damlSet: DamlSet<T>): T[] {
   }
   return r;
 }
+
+export const isEmptySet = <T>(set : DamlSet<T>) : boolean => set.map.keys === emptyMap<T, {}>().keys

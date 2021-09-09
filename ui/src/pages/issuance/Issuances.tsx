@@ -32,7 +32,7 @@ export const IssuancesTable: React.FC = () => {
               getName(c.payload.provider),
               getName(c.payload.customer),
               c.payload.issuanceId,
-              c.payload.accountId.label,
+              c.payload.account.id.label,
               c.payload.assetId.label,
               c.payload.quantity,
             ],

@@ -6,7 +6,8 @@ import { transformClaim } from '../../components/Claims/util';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
-import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
+import { Service as IssuanceService } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { CreateEvent } from '@daml/ledger';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { Button, Form, Header } from 'semantic-ui-react';
@@ -14,15 +15,18 @@ import Tile from '../../components/Tile/Tile';
 import BackButton from '../../components/Common/BackButton';
 import paths from '../../paths';
 import { EyeClosed, EyeOpen } from '../../icons/icons';
+import {ServicePageProps} from "../common";
 
 type Props = {
-  services: Readonly<CreateEvent<Service, any, any>[]>;
+  issuanceServices: Readonly<CreateEvent<IssuanceService, any, any>[]>;
+  custodyServices: Readonly<CreateEvent<CustodyService, any, any>[]>;
 };
 
 const NewComponent: React.FC<RouteComponentProps & Props> = ({
   history,
-  services,
-}: RouteComponentProps & Props) => {
+  issuanceServices,
+  custodyServices,
+}) => {
   const el = useRef<HTMLDivElement>(null);
 
   const [showAsset, setShowAsset] = useState(false);
@@ -33,14 +37,13 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
 
   const ledger = useLedger();
   const party = useParty();
-  const customerServices = services.filter(s => s.payload.customer === party);
+  const customerServices = issuanceServices.filter(s => s.payload.customer === party);
   const allAssets = useStreamQueries(AssetDescription).contracts;
   const assets = allAssets.filter(
     c => c.payload.issuer === party && c.payload.assetId.version === '0'
   );
   const asset = assets.find(c => c.payload.assetId.label === assetLabel);
-  const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
-  const accounts = assetSettlementRules.map(c => c.payload.account);
+  const accounts = custodyServices.map(c => c.payload.account);
   const account = accounts.find(a => a.id.label === accountLabel);
 
   const canRequest =
@@ -63,9 +66,9 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
 
   const requestIssuance = async () => {
     if (!asset || !account) return;
-    await ledger.exercise(Service.RequestCreateIssuance, service.contractId, {
+    await ledger.exercise(IssuanceService.RequestCreateIssuance, service.contractId, {
       issuanceId,
-      accountId: account.id,
+      account: account,
       assetId: asset.payload.assetId,
       quantity,
     });

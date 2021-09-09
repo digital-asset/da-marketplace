@@ -61,12 +61,18 @@ template Service
           (_,memberStanding) <- fetchByKey @MemberStanding (provider,customer)
           return $ memberStanding.marginSatisfied && memberStanding.mtmSatisfied
 
-      nonconsuming AllowDepositForClearing : ContractId AssetDeposit
+      nonconsuming AllocateDeposit : ContractId AssetDeposit
         with
           depositCid : ContractId AssetDeposit
         do
           observers <- (.observers) <$> fetch depositCid
           exercise depositCid AssetDeposit_SetObservers with newObservers = provider `Set.insert` observers
+
+      nonconsuming LockDeposit : ContractId AssetDeposit
+        with
+          depositCid : ContractId AssetDeposit
+        do
+          lockDeposit depositCid
 
     controller provider can
       nonconsuming CreateMarginCalculation : ContractId MarginCalculation
@@ -149,7 +155,7 @@ template Service
         do
           assertMsg "deposits are not enough to transfer from provider" =<< (amount <=) <$> getDepositQuantities depositCids
           (depositCid::remainingCids) <- mergeAndSplit depositCids amount
-          DepositWithRemaining <$> (transferDeposit depositCid clearingAccount >>= (\depositCid -> exercise self $ AllowDepositForClearing depositCid)) <*> pure remainingCids
+          DepositWithRemaining <$> (transferDeposit depositCid clearingAccount >>= (\depositCid -> exercise self $ AllocateDeposit depositCid)) <*> pure remainingCids
 
       -- TODO: check that the deposit cid matches the clearing account?
       nonconsuming TransferToProvider : DepositWithRemaining

@@ -10,7 +10,7 @@ import {
   ClearedTradeSide,
   MemberStanding,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
-import { ServicePageProps, damlSetValues } from '../common';
+import {ServicePageProps, damlSetValues, makeDamlSet, isEmptySet} from '../common';
 import { Button } from 'semantic-ui-react';
 import StripedTable from '../../components/Table/StripedTable';
 import TitleWithActions from '../../components/Common/TitleWithActions';
@@ -60,9 +60,11 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
           );
           const clearingDeposits = deposits.filter(
             d => d.payload.account.id.label === s.payload.clearingAccount.id.label
+              && isEmptySet(d.payload.lockers)
           );
           const marginDeposits = deposits.filter(
-            d => d.payload.account.id.label === s.payload.marginAccount.id.label
+            d => d.payload.account.id.label === s.payload.clearingAccount.id.label
+              && d.payload.lockers === makeDamlSet([s.payload.provider]) //TODO BDW - Should it be a `contains`?
           );
           const clearingAmount = clearingDeposits.reduce(
             (acc, val) => acc + Number(val.payload.asset.quantity),
