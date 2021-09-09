@@ -607,7 +607,6 @@ const Instructions = (props: {
           <div className="party-select">
             <h4>1. Select a party or parties:</h4>
             <Form.Select
-              disabled={false}
               className="request-select party"
               placeholder="Select..."
               onChange={(_, data: any) => setOnboardParties(data.value)}
@@ -739,7 +738,6 @@ const InstructionFieldInputs: React.FC<InstructionFieldsProps> = ({
             if (field === FieldType.PARTIES) {
               return (
                 <Form.Select
-                  disabled={false}
                   className="request-select"
                   label={<p className="input-label">{formatCamelcaseToString(k)}</p>}
                   placeholder="Select..."
@@ -751,7 +749,6 @@ const InstructionFieldInputs: React.FC<InstructionFieldsProps> = ({
             } else {
               return (
                 <Form.Input
-                  disabled={false}
                   className="request-select"
                   label={<p className="input-label">{formatCamelcaseToString(k)}</p>}
                   placeholder="Select..."
