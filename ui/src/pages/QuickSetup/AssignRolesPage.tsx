@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { useLedger } from '@daml/react';
 import { Party, Optional } from '@daml/types';
@@ -692,32 +692,40 @@ const InstructionFieldInputs: React.FC<InstructionFieldsProps> = ({
   setInstructionFields,
   partyOptions,
 }) => {
-  useEffect(() => {
-    _.toPairs(getFields(currentFields)).map(([k, _]) => {
-      const autofill = autoFillInfo.find(i => i.autoFillFieldName === k);
-      const prevContract = instructionFields.find(
-        f => f.instructionType === autofill?.instruction
-      )?.fields;
-      if (autofill && prevContract) {
-        const option = partyOptions.find(
-          c => c.value === prevContract[autofill.instructionFieldName]
-        );
-        if (!!option) {
-          updateInstruction(option.value as string, autofill.autoFillFieldName);
-        }
-      }
-    });
-  }, []);
+  const [doAutoFill, setDoAutofill] = useState(true);
 
-  const updateInstruction = (newVal: string, key: string) => {
-    setInstructionFields(old => {
-      let listCopy = [...(old?.instructions || [])];
-      let instCopy = { ...currentFields };
-      (instCopy.fields || {})[key] = newVal as string;
-      listCopy[idx] = instCopy;
-      return { title: old?.title || '', instructions: listCopy };
-    });
-  };
+  const updateInstruction = useCallback(
+    (newVal: string, key: string) => {
+      setInstructionFields(old => {
+        let listCopy = [...(old?.instructions || [])];
+        let instCopy = { ...currentFields };
+        (instCopy.fields || {})[key] = newVal as string;
+        listCopy[idx] = instCopy;
+        return { title: old?.title || '', instructions: listCopy };
+      });
+    },
+    [currentFields, idx, setInstructionFields]
+  );
+
+  useEffect(() => {
+    if (doAutoFill) {
+      _.toPairs(getFields(currentFields)).forEach(([k, _]) => {
+        const autofill = autoFillInfo.find(i => i.autoFillFieldName === k);
+        const prevContract = instructionFields.find(
+          f => f.instructionType === autofill?.instruction
+        )?.fields;
+        if (autofill && prevContract) {
+          const option = partyOptions.find(
+            c => c.value === prevContract[autofill.instructionFieldName]
+          );
+          if (!!option) {
+            updateInstruction(option.value as string, autofill.autoFillFieldName);
+          }
+        }
+      });
+      setDoAutofill(false);
+    }
+  }, [partyOptions, updateInstruction, instructionFields, currentFields, doAutoFill]);
 
   return (
     <div className="instruction-fields">
