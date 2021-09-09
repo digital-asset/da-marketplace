@@ -4,7 +4,6 @@ import { Button, Form } from 'semantic-ui-react';
 
 import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
 import { Template, Party } from '@daml/types';
-import { PartyToken } from '@daml/hub-react';
 
 import {
   httpBaseUrl,
@@ -14,7 +13,7 @@ import {
   usePartyName,
 } from '../../config';
 import { itemListAsText } from '../page/utils';
-import { computeToken } from '../../Credentials';
+import Credentials, { computeToken } from '../../Credentials';
 import QueryStreamProvider from '../../websocket/queryStream';
 
 import { Request as AuctionRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
@@ -73,7 +72,7 @@ const SUPPORTED_REQUESTS = [
   ServiceKind.BIDDING,
 ];
 
-const RequestServicesPage = (props: { adminCredentials: PartyToken }) => {
+const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
   const userParties = retrieveUserParties() || [];
 

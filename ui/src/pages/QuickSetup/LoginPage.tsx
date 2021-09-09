@@ -2,12 +2,11 @@ import React from 'react';
 import { useHistory, Link } from 'react-router-dom';
 
 import DamlLedger from '@daml/react';
-import { PartyToken } from '@daml/hub-react';
 
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
 import { RolesProvider, useRolesContext } from '../../context/RolesContext';
 import { loginUser, useUserDispatch } from '../../context/UserContext';
-import { computeCredentials } from '../../Credentials';
+import Credentials, { computeCredentials } from '../../Credentials';
 import QueryStreamProvider from '../../websocket/queryStream';
 import { ArrowRightIcon } from '../../icons/icons';
 import { retrieveParties } from '../../Parties';
@@ -15,7 +14,7 @@ import paths from '../../paths';
 
 import { LoadingWheel } from './QuickSetup';
 
-const LoginPage = (props: { adminCredentials: PartyToken }) => {
+const LoginPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
   return (
     <DamlLedger

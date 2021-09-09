@@ -1,9 +1,14 @@
 import React from 'react';
 import { History } from 'history';
 
-import { PartyToken, damlHubLogout } from '@daml/hub-react';
+import { damlHubLogout } from '@daml/hub-react';
 
-import { clearCredentials, retrieveCredentials, storeCredentials } from '../Credentials';
+import Credentials, {
+  clearCredentials,
+  retrieveCredentials,
+  storeCredentials,
+} from '../Credentials';
+
 import paths from '../paths';
 
 const UserStateContext = React.createContext<UserState>({
@@ -82,7 +87,11 @@ function useUserDispatch() {
 
 // ###########################################################
 
-async function loginUser(dispatch: React.Dispatch<any>, history: History, credentials: PartyToken) {
+async function loginUser(
+  dispatch: React.Dispatch<any>,
+  history: History,
+  credentials: Credentials
+) {
   const { party, token } = credentials;
 
   try {

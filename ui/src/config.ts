@@ -6,10 +6,11 @@ import _ from 'lodash';
 
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import {
-  DefaultParties,
-  damlHubEnvironment,
   isRunningOnHub,
+  damlHubEnvironment,
   useDefaultParties,
+  DefaultParties,
+  PartyToken,
 } from '@daml/hub-react';
 
 import { retrieveCredentials } from './Credentials';
@@ -22,12 +23,7 @@ export enum DeploymentMode {
   PROD_OTHER,
 }
 
-export const {
-  hostname: hubHostname,
-  baseURL: httpBaseUrl,
-  wsURL: hubWsURL,
-  ledgerId: hubLedgerId,
-} = damlHubEnvironment();
+const hubEnv = damlHubEnvironment();
 
 export const deploymentMode: DeploymentMode =
   process.env.NODE_ENV === 'development'
@@ -42,11 +38,13 @@ export const isHubDeployment = deploymentMode === DeploymentMode.PROD_DAML_HUB;
 // then an environment variable, falling back on the sandbox ledger ID.
 export const ledgerId: string =
   deploymentMode === DeploymentMode.PROD_DAML_HUB
-    ? hubLedgerId || ''
+    ? hubEnv?.ledgerId || ''
     : process.env.REACT_APP_LEDGER_ID ?? 'da-marketplace-sandbox';
 
-export const wsBaseUrl = deploymentMode === DeploymentMode.DEV ? 'ws://localhost:7575/' : hubWsURL;
+export const wsBaseUrl =
+  deploymentMode === DeploymentMode.DEV ? 'ws://localhost:7575/' : hubEnv?.wsURL;
 
+export const httpBaseUrl = hubEnv?.baseURL || undefined;
 export const publicParty = deploymentMode === DeploymentMode.DEV ? 'Public' : `public-${ledgerId}`;
 
 const inferPartyName = (party: string, defaultParties: DefaultParties): string | undefined => {
@@ -55,19 +53,21 @@ const inferPartyName = (party: string, defaultParties: DefaultParties): string |
 
   const creds = retrieveCredentials();
 
-  if (party === creds?.party) {
-    return creds.partyName || undefined;
-  }
+  if (isHubDeployment) {
+    if (party === creds?.party) {
+      return new PartyToken(creds.token).partyName || undefined;
+    }
 
-  if (party === defaultParties[0]) {
-    return 'Public';
-  }
+    if (party === defaultParties[0]) {
+      return 'Public';
+    }
 
-  if (party === defaultParties[1]) {
-    return 'Operator';
+    if (party === defaultParties[1]) {
+      return 'Operator';
+    }
+  } else {
+    return retrieveParties()?.find(p => p.party === party)?.partyName;
   }
-
-  return retrieveParties()?.find(p => p.party === party)?.partyName;
 };
 
 export const usePartyName = (party: string) => {
@@ -76,15 +76,14 @@ export const usePartyName = (party: string) => {
 
   const getName = useCallback(
     (party: string): string => {
-      const legalName: string | undefined = verifiedIdentities.find(
-        id => id.payload.customer === party
-      )?.payload.legalName;
+      const legalName = verifiedIdentities.find(id => id.payload.customer === party)?.payload
+        .legalName;
 
       if (legalName) {
         return legalName;
       }
 
-      const inferredName: string | undefined = inferPartyName(party, defaultParties);
+      const inferredName = inferPartyName(party, defaultParties);
 
       if (inferredName) {
         return inferredName;

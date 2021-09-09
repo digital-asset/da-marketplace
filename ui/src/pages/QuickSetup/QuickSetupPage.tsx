@@ -1,11 +1,8 @@
 import React from 'react';
-
 import classNames from 'classnames';
-
 import { Header } from 'semantic-ui-react';
 
 import DamlLedger from '@daml/react';
-import { PartyToken } from '@daml/hub-react';
 
 import { httpBaseUrl, wsBaseUrl } from '../../config';
 import QueryStreamProvider from '../../websocket/queryStream';
@@ -13,9 +10,10 @@ import QueryStreamProvider from '../../websocket/queryStream';
 import { ServicesProvider } from '../../context/ServicesContext';
 import { OffersProvider } from '../../context/OffersContext';
 import { RolesProvider } from '../../context/RolesContext';
+import Credentials from '../../Credentials';
 
 interface QuickSetupPageProps {
-  adminCredentials: PartyToken;
+  adminCredentials: Credentials;
   className?: string;
   title?: string;
 }

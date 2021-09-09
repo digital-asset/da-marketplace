@@ -17,7 +17,7 @@ import dagre from 'dagre';
 import _ from 'lodash';
 
 import DamlLedger from '@daml/react';
-import { PartyToken, useAdminParty, useAutomationInstances } from '@daml/hub-react';
+import { useAdminParty, useAutomationInstances } from '@daml/hub-react';
 
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
 import { ServicesProvider, useServiceContext } from '../../context/ServicesContext';
@@ -25,13 +25,14 @@ import { RolesProvider, useRolesContext } from '../../context/RolesContext';
 import { OffersProvider } from '../../context/OffersContext';
 import QueryStreamProvider from '../../websocket/queryStream';
 import { retrieveParties } from '../../Parties';
+import Credentials from '../../Credentials';
 
 import { formatTriggerName } from './ConfigureProvidersPage';
 
 const NODE_WIDTH = 200;
 const NODE_HEIGHT = 130;
 
-const ReviewPage = (props: { adminCredentials: PartyToken }) => {
+const ReviewPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
 
   return (
@@ -42,15 +43,15 @@ const ReviewPage = (props: { adminCredentials: PartyToken }) => {
       wsBaseUrl={wsBaseUrl}
     >
       <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
-          <ServicesProvider>
-            <RolesProvider>
-              <OffersProvider>
-                <p className="dark info">
-                  Move nodes to organize your network and select nodes to highlight customer
-                  relationships.
-                </p>
-                <div className="review">
-                  <ReviewItems />
+        <ServicesProvider>
+          <RolesProvider>
+            <OffersProvider>
+              <p className="dark info">
+                Move nodes to organize your network and select nodes to highlight customer
+                relationships.
+              </p>
+              <div className="review">
+                <ReviewItems />
               </div>
               <div>
                 <ReviewItems />

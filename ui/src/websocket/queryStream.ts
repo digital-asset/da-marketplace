@@ -3,7 +3,7 @@ import _ from 'lodash';
 
 import { Template } from '@daml/types';
 import { CreateEvent } from '@daml/ledger';
-import { fetchPublicToken, usePublicToken } from '@daml/hub-react';
+import { fetchPublicToken } from '@daml/hub-react';
 
 import { computeCredentials, retrieveCredentials } from '../Credentials';
 import { DeploymentMode, deploymentMode } from '../config';
@@ -45,7 +45,11 @@ const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken
   const [partyTemplateIds, setPartyTemplateIds] = useState<string[]>([]);
 
   const [partyToken, setPartyToken] = useState<string>();
-  const publicToken = usePublicToken();
+  const [publicToken, setPublicToken] = useState<string>();
+
+  useEffect(() => {
+    getPublicToken().then(t => setPublicToken(t));
+  }, []);
 
   const [streamErrors, setStreamErrors] = useState<StreamErrors[]>();
 
@@ -64,7 +68,7 @@ const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken
     if (publicToken) {
       setQueryStream(queryStream => ({
         ...queryStream,
-        publicToken: publicToken.token,
+        publicToken,
       }));
     }
   }, [publicToken]);
@@ -80,7 +84,7 @@ const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken
     contracts: publicContracts,
     errors: publicStreamErrors,
     loading: publicLoading,
-  } = useDamlStreamQuery(publicTemplateIds, templateMap, publicToken?.token);
+  } = useDamlStreamQuery(publicTemplateIds, templateMap, publicToken);
 
   useEffect(() => {
     if (partyStreamErrors) {

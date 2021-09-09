@@ -2,16 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Form } from 'semantic-ui-react';
 
 import DamlLedger from '@daml/react';
-import { PartyToken } from '@daml/hub-react';
 
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
 import { retrieveUserParties } from '../../Parties';
 import { NewAccount } from '../custody/New';
-import { computeToken } from '../../Credentials';
+import Credentials, { computeToken } from '../../Credentials';
 
 import QuickSetupPage from './QuickSetupPage';
 
-const CreateAccount = (props: { adminCredentials: PartyToken }) => {
+const CreateAccount = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
 
   return (

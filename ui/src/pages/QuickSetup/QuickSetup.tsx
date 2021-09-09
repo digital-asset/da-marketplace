@@ -11,11 +11,11 @@ import {
   Redirect,
 } from 'react-router-dom';
 
-import DamlHub, { PartyToken } from '@daml/hub-react';
+import DamlHub from '@daml/hub-react';
 
 import Widget from '../../components/Widget/Widget';
 import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
-import { computeCredentials } from '../../Credentials';
+import Credentials, { computeCredentials } from '../../Credentials';
 import { isHubDeployment } from '../../config';
 import { retrieveParties } from '../../Parties';
 
@@ -45,7 +45,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   const matchPath = props.match.path;
   const matchUrl = props.match.url;
 
-  const [adminCredentials, setAdminCredentials] = useState<PartyToken>(localCreds);
+  const [adminCredentials, setAdminCredentials] = useState<Credentials>(localCreds);
   const [activeMenuItem, setActiveMenuItem] = useState<MenuItems>();
 
   useEffect(() => {

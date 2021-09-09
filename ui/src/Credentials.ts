@@ -4,7 +4,7 @@
 import { encode } from 'jwt-simple';
 import { PartyToken } from '@daml/hub-react';
 
-import { ledgerId, publicParty } from './config';
+import { isHubDeployment, ledgerId, publicParty } from './config';
 
 const APPLICATION_ID: string = 'da-marketplace';
 
@@ -13,13 +13,13 @@ const APPLICATION_ID: string = 'da-marketplace';
 // see https://docs.daml.com/app-dev/authentication.html.
 const SECRET_KEY: string = 'secret';
 
-// type Credentials = {
-//   party: string;
-//   token: string;
-//   ledgerId: string;
-// };
+export type Credentials = {
+  party: string;
+  token: string;
+  ledgerId: string;
+};
 
-function isCredentials(credentials: any): credentials is PartyToken {
+function isCredentials(credentials: any): credentials is Credentials {
   return (
     typeof credentials.party === 'string' &&
     typeof credentials.token === 'string' &&
@@ -29,7 +29,11 @@ function isCredentials(credentials: any): credentials is PartyToken {
 
 const CREDENTIALS_STORAGE_KEY = 'credentials';
 
-export function storeCredentials(credentials?: PartyToken): void {
+function checkExpired(credentials: Credentials): boolean {
+  return isHubDeployment && new PartyToken(credentials.token).isExpired;
+}
+
+export function storeCredentials(credentials?: PartyToken | Credentials): void {
   sessionStorage.setItem(CREDENTIALS_STORAGE_KEY, JSON.stringify(credentials));
 }
 
@@ -37,7 +41,7 @@ export function clearCredentials(): void {
   sessionStorage.removeItem(CREDENTIALS_STORAGE_KEY);
 }
 
-export function retrieveCredentials(): PartyToken | undefined {
+export function retrieveCredentials(): Credentials | undefined {
   const credentialsJson = sessionStorage.getItem(CREDENTIALS_STORAGE_KEY);
 
   if (!credentialsJson) {
@@ -46,7 +50,7 @@ export function retrieveCredentials(): PartyToken | undefined {
 
   try {
     const credentials = JSON.parse(credentialsJson);
-    if (isCredentials(credentials) && !credentials.isExpired) {
+    if (isCredentials(credentials) && !checkExpired(credentials)) {
       return credentials;
     }
   } catch {
@@ -72,9 +76,9 @@ export function computeToken(party: string): string {
   return encode(payload, SECRET_KEY, 'HS256');
 }
 
-export const computeCredentials = (party: string): PartyToken => {
+export const computeCredentials = (party: string): Credentials => {
   const token = computeToken(party);
-  return new PartyToken(token);
+  return { token, party, ledgerId };
 };
 
-// export default Credentials;
+export default Credentials;

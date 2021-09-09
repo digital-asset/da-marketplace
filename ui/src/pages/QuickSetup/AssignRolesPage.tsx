@@ -15,7 +15,6 @@ import _ from 'lodash';
 
 import { useLedger } from '@daml/react';
 import { Party, Optional } from '@daml/types';
-import { PartyToken } from '@daml/hub-react';
 
 import {
   OperatorOnboarding,
@@ -26,6 +25,7 @@ import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
 import { useVerifiedParties } from '../../config';
 import { useStreamQueries } from '../../Main';
 import { createDropdownProp } from '../common';
+import Credentials from '../../Credentials';
 
 import { LoadingWheel } from './QuickSetup';
 import QuickSetupPage from './QuickSetupPage';
@@ -125,7 +125,7 @@ type InstFieldsWithType = {
   fields?: InstructionFields;
 };
 
-const AssignRolesPage = (props: { adminCredentials: PartyToken }) => {
+const AssignRolesPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
 
   const history = useHistory();

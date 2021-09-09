@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 
 import DamlLedger, { useLedger } from '@daml/react';
-import { PartyToken, useAdminParty } from '@daml/hub-react';
+import { useAdminParty } from '@daml/hub-react';
 
 import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
 import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties, usePartyName } from '../../config';
-import { computeToken } from '../../Credentials';
+import Credentials, { computeToken } from '../../Credentials';
 import QueryStreamProvider from '../../websocket/queryStream';
 import { useStreamQueries } from '../../Main';
 import { itemListAsText } from '../../pages/page/utils';
@@ -38,7 +38,7 @@ interface IOfferServiceInfo {
   services?: OfferServiceKind[];
 }
 
-const OfferServicesPage = (props: { adminCredentials: PartyToken }) => {
+const OfferServicesPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
   const userParties = retrieveUserParties() || [];
 

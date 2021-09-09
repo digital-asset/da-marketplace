@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import { Button } from 'semantic-ui-react';
 
-import { PartyToken, DamlHubLogin, useAdminParty, useAutomationInstances } from '@daml/hub-react';
+import { DamlHubLogin, PartyToken, useAdminParty, useAutomationInstances } from '@daml/hub-react';
 import DamlLedger, { useLedger } from '@daml/react';
 
 import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
@@ -28,15 +28,14 @@ import {
 } from '../../config';
 import { storeParties, retrieveParties, retrieveUserParties } from '../../Parties';
 import { UnifiedDamlProvider, useStreamQueries } from '../../Main';
-import { computeCredentials } from '../../Credentials';
+import Credentials, { computeCredentials } from '../../Credentials';
 import { ArrowRightIcon } from '../../icons/icons';
 import QueryStreamProvider from '../../websocket/queryStream';
 
 import { halfSecondPromise } from '../page/utils';
 import { makeDamlSet } from '../common';
 
-import { LoadingWheel, MenuItems } from './QuickSetup';
-import QuickSetupPage from './QuickSetupPage';
+import { LoadingWheel } from './QuickSetup';
 
 enum LoadingStatus {
   CREATING_ADMIN_CONTRACTS = 'Confirming Admin role....',
@@ -50,7 +49,7 @@ const AddPartiesPage = () => {
   const [error, setError] = useState<string>();
   const [parties, setParties] = useState<PartyToken[]>([]);
   const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>();
-  const [adminCredentials, setAdminCredentials] = useState<PartyToken>(localCreds);
+  const [adminCredentials, setAdminCredentials] = useState<Credentials>(localCreds);
   const userAdminId = useAdminParty();
 
   useEffect(() => {
@@ -180,8 +179,11 @@ const AddPartiesPage = () => {
   );
 };
 
-const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyToken;   operator: string;
- }) => {
+const CreateVerifiedIdentity = (props: {
+  onComplete: () => void;
+  party: PartyToken;
+  operator: string;
+}) => {
   const { onComplete, party, operator } = props;
   const ledger = useLedger();
   const userParties = retrieveUserParties() || [];
@@ -277,7 +279,7 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyTok
   return null;
 };
 
-const AdminLedger = (props: { adminCredentials: PartyToken; onComplete: () => void }) => {
+const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => void }) => {
   const { adminCredentials, onComplete } = props;
 
   const userParties = retrieveUserParties() || [];
@@ -389,6 +391,7 @@ const AdminLedger = (props: { adminCredentials: PartyToken; onComplete: () => vo
   }, [
     ledger,
     adminCredentials.party,
+    deployAutomation,
     userParties,
     onComplete,
     regulatorRolesLoading,

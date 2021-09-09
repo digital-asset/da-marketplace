@@ -3,7 +3,7 @@ import { Form, Button } from 'semantic-ui-react';
 
 import { useLedger } from '@daml/react';
 import { Choice, ContractId } from '@daml/types';
-import { PartyToken, useAutomationInstances, useAutomations } from '@daml/hub-react';
+import { useAutomationInstances, useAutomations } from '@daml/hub-react';
 
 import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
 
@@ -13,11 +13,11 @@ import { useOffers } from '../../context/OffersContext';
 import { MarketplaceTrigger, isHubDeployment, useVerifiedParties } from '../../config';
 import { useStreamQueries } from '../../Main';
 import { retrieveParties } from '../../Parties';
-import { computeToken } from '../../Credentials';
+import Credentials, { computeToken } from '../../Credentials';
 
 import QuickSetupPage from './QuickSetupPage';
 
-const ConfigureProviders = (props: { adminCredentials: PartyToken }) => {
+const ConfigureProviders = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
 
   return (
