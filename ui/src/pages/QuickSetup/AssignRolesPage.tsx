@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { useLedger } from '@daml/react';
 import { Party, Optional } from '@daml/types';
@@ -607,7 +607,6 @@ const Instructions = (props: {
           <div className="party-select">
             <h4>1. Select a party or parties:</h4>
             <Form.Select
-              disabled={false}
               className="request-select party"
               placeholder="Select..."
               onChange={(_, data: any) => setOnboardParties(data.value)}
@@ -669,6 +668,14 @@ const Instructions = (props: {
   );
 };
 
+const autoFillInfo = [
+  {
+    instruction: InstructionType.CUSTODY,
+    instructionFieldName: 'provider',
+    autoFillFieldName: 'custodian',
+  },
+];
+
 type InstructionFieldsProps = {
   currentFields: InstFieldsWithType;
   idx: number;
@@ -684,6 +691,41 @@ const InstructionFieldInputs: React.FC<InstructionFieldsProps> = ({
   setInstructionFields,
   partyOptions,
 }) => {
+  const [doAutoFill, setDoAutofill] = useState(true);
+
+  const updateInstruction = useCallback(
+    (newVal: string, key: string) => {
+      setInstructionFields(old => {
+        let listCopy = [...(old?.instructions || [])];
+        let instCopy = { ...currentFields };
+        (instCopy.fields || {})[key] = newVal as string;
+        listCopy[idx] = instCopy;
+        return { title: old?.title || '', instructions: listCopy };
+      });
+    },
+    [currentFields, idx, setInstructionFields]
+  );
+
+  useEffect(() => {
+    if (doAutoFill) {
+      _.toPairs(getFields(currentFields)).forEach(([k, _]) => {
+        const autofill = autoFillInfo.find(i => i.autoFillFieldName === k);
+        const prevContract = instructionFields.find(
+          f => f.instructionType === autofill?.instruction
+        )?.fields;
+        if (autofill && prevContract) {
+          const option = partyOptions.find(
+            c => c.value === prevContract[autofill.instructionFieldName]
+          );
+          if (!!option) {
+            updateInstruction(option.value as string, autofill.autoFillFieldName);
+          }
+        }
+      });
+      setDoAutofill(false);
+    }
+  }, [partyOptions, updateInstruction, instructionFields, currentFields, doAutoFill]);
+
   return (
     <div className="instruction-fields">
       <Header as="h3">{currentFields.instructionType}</Header>
@@ -691,18 +733,11 @@ const InstructionFieldInputs: React.FC<InstructionFieldsProps> = ({
         <Form.Group>
           {_.toPairs(getFields(currentFields)).map(([k, field]) => {
             const updateInstructionTypes = (_: any, data: DropdownProps | InputOnChangeData) => {
-              setInstructionFields(old => {
-                let listCopy = [...(old?.instructions || [])];
-                let instCopy = { ...currentFields };
-                (instCopy.fields || {})[k] = data.value as string;
-                listCopy[idx] = instCopy;
-                return { title: old?.title || '', instructions: listCopy };
-              });
+              updateInstruction(data.value as string, k);
             };
             if (field === FieldType.PARTIES) {
               return (
                 <Form.Select
-                  disabled={false}
                   className="request-select"
                   label={<p className="input-label">{formatCamelcaseToString(k)}</p>}
                   placeholder="Select..."
@@ -714,7 +749,6 @@ const InstructionFieldInputs: React.FC<InstructionFieldsProps> = ({
             } else {
               return (
                 <Form.Input
-                  disabled={false}
                   className="request-select"
                   label={<p className="input-label">{formatCamelcaseToString(k)}</p>}
                   placeholder="Select..."
