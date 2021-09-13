@@ -19,6 +19,7 @@ import Marketplace.Utils
 import DA.Finance.Asset
 import DA.Finance.Types
 
+import DA.Optional
 import DA.Next.Set
 
 data LedgerParties = LedgerParties with
@@ -46,6 +47,15 @@ allocateParties = do
   alice <- allocatePartyWithHint "Alice" (PartyIdHint "Alice")
   bob <- allocatePartyWithHint "Bob" (PartyIdHint "Bob")
   return $ LedgerParties operator public custodian exchange btcIssuer usdtIssuer alice bob broker
+
+getExistingParties : Script LedgerParties
+getExistingParties = do
+  [operator, custodian, exchange, btcIssuer, usdtIssuer, alice, bob, broker, public]
+    <- retrieve ["Operator", "Custodian", "Exchange", "BtcIssuer", "UsdtIsser", "Alice", "Bob", "Broker", "Public"]
+  return $ LedgerParties with userAdmin = operator, ..
+  where
+    retrieve : [Text] -> Script [Party]
+    retrieve parties = return . fromSome $ mapA partyFromText parties
 
 setup : Script ()
 setup = allocateParties >>= doSetup

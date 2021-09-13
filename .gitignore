@@ -4,6 +4,7 @@
 .DS_Store
 
 triggers/.daml
+exberry_integration/test/.daml
 
 _exberry_integration
 _matching_engine_bot
