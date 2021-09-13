@@ -9,11 +9,7 @@ import { PartyToken, DamlHubLogin } from '@daml/hub-react';
 
 import { computeCredentials } from '../../Credentials';
 import { retrieveParties, storeParties } from '../../Parties';
-import {
-  deploymentMode,
-  DeploymentMode,
-  isHubDeployment,
-} from '../../config';
+import { deploymentMode, DeploymentMode, isHubDeployment } from '../../config';
 
 import Tile from '../../components/Tile/Tile';
 import TilePage from '../../components/Tile/TilePage';
@@ -200,9 +196,9 @@ const PartiesLoginForm: React.FC = () => {
 
   useEffect(() => {
     const parties = retrieveParties();
-    if (parties) {
+    if (parties.length > 0) {
       setParties(parties);
-      setSelectedPartyId(parties[0]?.party || '');
+      setSelectedPartyId(parties[0].party);
     }
   }, []);
 

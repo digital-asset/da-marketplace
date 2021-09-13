@@ -74,7 +74,7 @@ const SUPPORTED_REQUESTS = [
 
 const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
-  const userParties = retrieveUserParties() || [];
+  const userParties = retrieveUserParties();
 
   const [requestInfo, setRequestInfo] = useState<IRequestServiceInfo>();
   const [token, setToken] = useState<string>();

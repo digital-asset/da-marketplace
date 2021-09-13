@@ -28,7 +28,7 @@ import {
 } from '../../config';
 import { storeParties, retrieveParties, retrieveUserParties } from '../../Parties';
 import { UnifiedDamlProvider, useStreamQueries } from '../../Main';
-import Credentials, { computeCredentials } from '../../Credentials';
+import Credentials from '../../Credentials';
 import { ArrowRightIcon } from '../../icons/icons';
 import QueryStreamProvider from '../../websocket/queryStream';
 
@@ -44,34 +44,34 @@ enum LoadingStatus {
 
 const AddPartiesPage = () => {
   const history = useHistory();
-  const localCreds = computeCredentials('Operator');
 
   const [error, setError] = useState<string>();
   const [parties, setParties] = useState<PartyToken[]>([]);
   const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>();
-  const [adminCredentials, setAdminCredentials] = useState<Credentials>(localCreds);
+  const [adminCredentials, setAdminCredentials] = useState<Credentials>();
   const userAdminId = useAdminParty();
 
   useEffect(() => {
-    const parties = retrieveParties() || [];
-    const storedParties = retrieveUserParties();
-
-    if (storedParties) {
-      setParties(storedParties);
-    }
-
+    const parties = retrieveParties();
     if (isHubDeployment) {
       const adminParty = parties.find(p => p.party === userAdminId);
       if (adminParty) {
         setAdminCredentials(adminParty);
       }
     }
-  }, [loadingStatus, userAdminId]);
+  }, [userAdminId]);
+
+  useEffect(() => {
+    const storedParties = retrieveUserParties();
+
+    if (storedParties) {
+      setParties(storedParties);
+    }
+  }, []);
 
   const uploadButton = (
     <DamlHubLogin
       withFile
-      onLogin={() => {}}
       options={{
         method: {
           file: {
@@ -84,9 +84,14 @@ const AddPartiesPage = () => {
         },
       }}
       onPartiesLoad={(parties, err) => {
-        if (parties) {
+        if (parties && parties.length > 0) {
           storeParties(parties);
           setParties(parties);
+
+          const adminParty = parties.find(p => p.party === userAdminId);
+          if (adminParty) {
+            setAdminCredentials(adminParty);
+          }
         } else {
           setError(err);
         }
@@ -94,7 +99,7 @@ const AddPartiesPage = () => {
     />
   );
 
-  if (loadingStatus) {
+  if (adminCredentials && loadingStatus) {
     return (
       <div className="setup-page">
         <div className="add-parties-page">
@@ -186,7 +191,7 @@ const CreateVerifiedIdentity = (props: {
 }) => {
   const { onComplete, party, operator } = props;
   const ledger = useLedger();
-  const userParties = retrieveUserParties() || [];
+  const userParties = retrieveUserParties();
 
   const { contracts: regulatorServices, loading: regulatorServicesLoading } =
     useStreamQueries(RegulatorService);
@@ -282,16 +287,83 @@ const CreateVerifiedIdentity = (props: {
 const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => void }) => {
   const { adminCredentials, onComplete } = props;
 
-  const userParties = retrieveUserParties() || [];
-  const parties = retrieveParties() || [];
-  const ledger = useLedger();
+  const operatorCompleted = useOperatorOnboarding(adminCredentials);
+  const regulatorCompleted = useRegulatorOnboarding(adminCredentials);
+  const deploysCompleted = useDeployAll();
 
-  const { deployAutomation } = useAutomationInstances();
+  useEffect(() => {
+    if (operatorCompleted && regulatorCompleted && deploysCompleted) {
+      return onComplete();
+    }
+  }, [operatorCompleted, regulatorCompleted, deploysCompleted, onComplete]);
+
+  return null;
+};
+
+const useOperatorOnboarding = (adminCredentials: Credentials): boolean => {
+  const [serviceCreated, setServiceCreated] = useState(false);
+  const [operatorOnboarded, setOperatorOnboarded] = useState(false);
+
+  const ledger = useLedger();
 
   const { contracts: operatorService, loading: operatorServiceLoading } =
     useStreamQueries(OperatorService);
+
   const { contracts: operatorOnboarding, loading: operatorOnboardingLoading } =
     useStreamQueries(OperatorOnboarding);
+
+  useEffect(() => {
+    // If pre-existing:
+    if (!operatorServiceLoading && operatorService.length > 0) {
+      setServiceCreated(true);
+    }
+    if (!operatorOnboardingLoading && operatorOnboarding.length > 0) {
+      setOperatorOnboarded(true);
+    }
+
+    // Create service if not exists
+    const createOperatorService = async () => {
+      await ledger.create(OperatorService, {
+        operator: adminCredentials.party,
+        observers: makeDamlSet([publicParty]),
+      });
+
+      setServiceCreated(true);
+    };
+
+    if (!operatorServiceLoading && operatorService.length === 0) {
+      createOperatorService();
+    }
+
+    // Create onboarding if not exists
+    const onboardOperator = async () => {
+      await ledger.create(OperatorOnboarding, {
+        operator: adminCredentials.party,
+      });
+      setOperatorOnboarded(true);
+    };
+    if (!operatorOnboardingLoading && operatorOnboarding.length === 0) {
+      onboardOperator();
+    }
+  }, [
+    adminCredentials,
+    ledger,
+    operatorService,
+    operatorServiceLoading,
+    operatorOnboarding,
+    operatorOnboardingLoading,
+    setServiceCreated,
+    setOperatorOnboarded,
+  ]);
+
+  return serviceCreated && operatorOnboarded;
+};
+
+const useRegulatorOnboarding = (adminCredentials: Credentials) => {
+  const [regulatorRoleCreated, setRegulatorRoleCreated] = useState(false);
+  const [regulatorServicesCreated, setRegulatorServicesCreated] = useState(false);
+
+  const ledger = useLedger();
 
   const { contracts: regulatorRoles, loading: regulatorRolesLoading } =
     useStreamQueries(RegulatorRole);
@@ -299,36 +371,29 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
     useStreamQueries(RegulatorOffer);
 
   useEffect(() => {
-    const createOperatorService = async () => {
-      if (operatorService.length !== 0) {
-        return;
-      }
-      return await ledger.create(OperatorService, {
-        operator: adminCredentials.party,
-        observers: makeDamlSet([publicParty]),
-      });
-    };
+    const userParties = retrieveUserParties();
 
-    const createOperatorOnboarding = async () => {
-      if (operatorOnboarding.length !== 0) {
-        return;
-      }
-      return await ledger.create(OperatorOnboarding, {
-        operator: adminCredentials.party,
-      });
-    };
+    // If pre-existing:
+    if (!regulatorRolesLoading && regulatorRoles.length > 0) {
+      setRegulatorRoleCreated(true);
+    }
 
+    // Create the role contract
     const createRegulatorRole = async () => {
-      if (regulatorRoles.length !== 0) {
-        return;
-      }
-      return await ledger.create(RegulatorRole, {
+      await ledger.create(RegulatorRole, {
         operator: adminCredentials.party,
         provider: adminCredentials.party,
         observers: makeDamlSet([publicParty]),
       });
+
+      setRegulatorRoleCreated(true);
     };
 
+    if (!regulatorRolesLoading && regulatorRoles.length === 0) {
+      createRegulatorRole();
+    }
+
+    // Create regulator service offers
     const offerRegulatorService = async (party: string) => {
       const regulatorRoleId = regulatorRoles[0]?.contractId;
 
@@ -347,66 +412,53 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
           }
         })
       );
+      setRegulatorServicesCreated(true);
     };
 
-    if (
-      operatorServiceLoading ||
-      regulatorRolesLoading ||
-      regulatorServiceOffersLoading ||
-      operatorOnboardingLoading
-    ) {
-      return;
-    }
-
-    async function deployAllTriggers() {
-      if (isHubDeployment && parties.length > 0) {
-        const artifactHash = TRIGGER_HASH;
-
-        if (!artifactHash || !adminCredentials || !deployAutomation) {
-          return;
-        }
-
-        Promise.all(
-          [
-            ...parties.filter(p => p.party !== publicParty),
-            {
-              ...adminCredentials,
-            },
-          ].map(p => deployAutomation(artifactHash, MarketplaceTrigger.AutoApproveTrigger, p.token))
-        );
-      }
-    }
-
-    if (operatorService.length === 0) {
-      createOperatorService();
-    } else if (regulatorRoles.length === 0) {
-      createRegulatorRole();
-    } else if (operatorOnboarding.length === 0) {
-      createOperatorOnboarding();
-    } else {
+    if (!regulatorServiceOffersLoading) {
       offerRegulatorServices();
-      deployAllTriggers();
-      return onComplete();
     }
   }, [
     ledger,
     adminCredentials.party,
-    deployAutomation,
-    userParties,
-    onComplete,
     regulatorRolesLoading,
-    operatorServiceLoading,
     regulatorServiceOffersLoading,
-    operatorOnboardingLoading,
-    operatorOnboarding,
     regulatorRoles,
-    operatorService,
     regulatorServiceOffers,
     adminCredentials,
-    parties,
   ]);
 
-  return null;
+  return regulatorRoleCreated && regulatorServicesCreated;
+};
+
+const useDeployAll = () => {
+  const [deployedAll, setDeployedAll] = useState(false);
+  const { deployAutomation } = useAutomationInstances();
+
+  useEffect(() => {
+    const artifactHash = TRIGGER_HASH;
+    const parties = retrieveParties();
+
+    async function deployAllTriggers() {
+      if (!artifactHash || !deployAutomation) {
+        return;
+      }
+
+      await Promise.all(
+        parties
+          .filter(p => p.party !== publicParty)
+          .map(p => deployAutomation(artifactHash, MarketplaceTrigger.AutoApproveTrigger, p.token))
+      );
+
+      setDeployedAll(true);
+    }
+
+    if (parties.length > 0 && isHubDeployment) {
+      deployAllTriggers();
+    }
+  }, [deployAutomation]);
+
+  return deployedAll;
 };
 
 export default AddPartiesPage;

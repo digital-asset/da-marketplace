@@ -261,7 +261,7 @@ const Network = (props: { passedElements: any[] }) => {
 
 const RoleNode = (props: { data: { label: string; partyId: string } }) => {
   const { roles, loading: rolesLoading } = useRolesContext();
-  const parties = retrieveParties() || [];
+  const parties = retrieveParties();
 
   const { instances } = useAutomationInstances();
 

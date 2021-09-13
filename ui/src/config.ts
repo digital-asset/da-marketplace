@@ -66,7 +66,7 @@ const inferPartyName = (party: string, defaultParties: DefaultParties): string |
       return 'Operator';
     }
   } else {
-    return retrieveParties()?.find(p => p.party === party)?.partyName;
+    return retrieveParties().find(p => p.party === party)?.partyName;
   }
 };
 

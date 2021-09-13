@@ -26,7 +26,7 @@ const CreateAccount = (props: { adminCredentials: Credentials }) => {
 
 const CreateAccountPage = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<string>();
-  const userParties = retrieveUserParties() || [];
+  const userParties = retrieveUserParties();
   const { identities, loading: identitiesLoading } = useVerifiedParties();
 
   const [token, setToken] = useState<string>();

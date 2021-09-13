@@ -69,7 +69,7 @@ const ConfigureProvidersPage = () => {
     return { text: p.payload.legalName, value: p.payload.customer };
   });
 
-  const parties = retrieveParties() || [];
+  const parties = retrieveParties();
 
   const hasRole = !!allRoles.find(
     role =>

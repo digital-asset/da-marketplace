@@ -40,7 +40,7 @@ interface IOfferServiceInfo {
 
 const OfferServicesPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
-  const userParties = retrieveUserParties() || [];
+  const userParties = retrieveUserParties();
 
   const [offerInfo, setOfferInfo] = useState<IOfferServiceInfo>();
   const [token, setToken] = useState<string>();

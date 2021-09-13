@@ -35,7 +35,7 @@ const LoginPage = (props: { adminCredentials: Credentials }) => {
 const LoginTileGrid = () => {
   const history = useHistory();
   const dispatch = useUserDispatch();
-  const parties = retrieveParties() || [];
+  const parties = retrieveParties();
 
   const { identities, loading: identitiesLoading } = useVerifiedParties();
 

@@ -1,34 +1,36 @@
 import { convertPartiesJson, PartyToken } from '@daml/hub-react';
 
-import { ledgerId, publicParty } from './config';
+import { publicParty } from './config';
 
 const PARTIES_STORAGE_KEY = 'imported_parties';
 
 export function storeParties(parties: PartyToken[]): void {
-  localStorage.setItem(PARTIES_STORAGE_KEY, JSON.stringify(parties));
+  sessionStorage.setItem(PARTIES_STORAGE_KEY, JSON.stringify(parties));
 }
 
-export function retrieveParties(validateParties: boolean = true): PartyToken[] | undefined {
-  const partiesJson = localStorage.getItem(PARTIES_STORAGE_KEY);
+export function retrieveParties(validateParties: boolean = true): PartyToken[] {
+  const partiesJson = sessionStorage.getItem(PARTIES_STORAGE_KEY);
 
   if (!partiesJson) {
-    return undefined;
+    return [];
   }
 
   try {
-    return convertPartiesJson(partiesJson, ledgerId, validateParties);
+    return convertPartiesJson(partiesJson, publicParty, validateParties);
   } catch (error) {
     console.warn('Tried to load an invalid parties file from cache.', error);
 
     if (validateParties) {
-      localStorage.removeItem(PARTIES_STORAGE_KEY);
-      return undefined;
+      sessionStorage.removeItem(PARTIES_STORAGE_KEY);
+      return [];
     }
+  } finally {
+    return [];
   }
 }
 
-export function retrieveUserParties() {
-  const parties = retrieveParties() || [];
+export function retrieveUserParties(): PartyToken[] {
+  const parties = retrieveParties();
   const adminParty = parties.find(p => p.partyName === 'UserAdmin');
   return parties.filter(p => p.party !== adminParty?.party && p.party !== publicParty);
 }

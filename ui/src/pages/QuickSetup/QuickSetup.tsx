@@ -38,18 +38,16 @@ export enum MenuItems {
 }
 
 const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
-  const localCreds = computeCredentials('Operator');
-
   const history = useHistory();
 
   const matchPath = props.match.path;
   const matchUrl = props.match.url;
 
-  const [adminCredentials, setAdminCredentials] = useState<Credentials>(localCreds);
+  const [adminCredentials, setAdminCredentials] = useState<Credentials>();
   const [activeMenuItem, setActiveMenuItem] = useState<MenuItems>();
 
   useEffect(() => {
-    const parties = retrieveParties() || [];
+    const parties = retrieveParties();
 
     const newSegment = history.location?.pathname.split('/quick-setup')[1].replace('/', '');
     const activeMenuItem = Object.values(MenuItems).find(s => s === newSegment);
@@ -60,6 +58,8 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
       if (adminParty) {
         setAdminCredentials(adminParty);
       }
+    } else {
+      setAdminCredentials(computeCredentials('Operator'));
     }
   }, [history.location]);
 
@@ -142,30 +142,34 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
               path={`${matchPath}/${MenuItems.ADD_PARTIES}`}
               component={() => <AddPartiesPage />}
             />
-            <Route
-              path={`${matchPath}/${MenuItems.ASSIGN_ROLES}`}
-              component={() => <AssignRolesPage adminCredentials={adminCredentials} />}
-            />
-            <Route
-              path={`${matchPath}/${MenuItems.CONFIGURE_PROVIDERS}`}
-              component={() => <ConfigureProvidersPage adminCredentials={adminCredentials} />}
-            />
-            <Route
-              path={`${matchPath}/${MenuItems.PROVIDE_SERVICES}`}
-              component={() => <ProvideServicesPage adminCredentials={adminCredentials} />}
-            />
-            <Route
-              path={`${matchPath}/${MenuItems.CREATE_ACCOUNTS}`}
-              component={() => <CreateAccountPage adminCredentials={adminCredentials} />}
-            />
-            <Route
-              path={`${matchPath}/${MenuItems.REVIEW}`}
-              component={() => <ReviewPage adminCredentials={adminCredentials} />}
-            />
-            <Route
-              path={`${matchPath}/${MenuItems.LOG_IN}`}
-              component={() => <LoginPage adminCredentials={adminCredentials} />}
-            />
+            {adminCredentials && (
+              <>
+                <Route
+                  path={`${matchPath}/${MenuItems.ASSIGN_ROLES}`}
+                  component={() => <AssignRolesPage adminCredentials={adminCredentials} />}
+                />
+                <Route
+                  path={`${matchPath}/${MenuItems.CONFIGURE_PROVIDERS}`}
+                  component={() => <ConfigureProvidersPage adminCredentials={adminCredentials} />}
+                />
+                <Route
+                  path={`${matchPath}/${MenuItems.PROVIDE_SERVICES}`}
+                  component={() => <ProvideServicesPage adminCredentials={adminCredentials} />}
+                />
+                <Route
+                  path={`${matchPath}/${MenuItems.CREATE_ACCOUNTS}`}
+                  component={() => <CreateAccountPage adminCredentials={adminCredentials} />}
+                />
+                <Route
+                  path={`${matchPath}/${MenuItems.REVIEW}`}
+                  component={() => <ReviewPage adminCredentials={adminCredentials} />}
+                />
+                <Route
+                  path={`${matchPath}/${MenuItems.LOG_IN}`}
+                  component={() => <LoginPage adminCredentials={adminCredentials} />}
+                />
+              </>
+            )}
             <Redirect to={matchPath} />
           </Switch>
         </div>
