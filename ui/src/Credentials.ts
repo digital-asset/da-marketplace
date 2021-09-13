@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { encode } from 'jwt-simple'
-import { PartyInfo, PartyToken } from '@daml/hub-react'
+import { PartyToken } from '@daml/hub-react'
 
 import { ledgerId } from './config'
 
@@ -13,7 +13,9 @@ export const APPLICATION_ID: string = 'da-marketplace';
 // see https://docs.daml.com/app-dev/authentication.html.
 export const SECRET_KEY: string = 'secret';
 
-export type Credentials = PartyInfo & {
+export type Credentials = {
+  party: string;
+  ledgerId: string;
   token: string;
 };
 

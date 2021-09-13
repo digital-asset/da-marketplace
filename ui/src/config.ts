@@ -1,7 +1,7 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { detectAppDomainType, isRunningOnHub, DomainType } from "@daml/hub-react";
+import { damlHubEnvironment, isRunningOnHub } from "@daml/hub-react";
 
 export enum DeploymentMode {
   DEV,
@@ -9,7 +9,9 @@ export enum DeploymentMode {
   PROD_OTHER,
 }
 
-export const dablHostname = window.location.hostname.split('.').slice(1).join('.');
+const hubEnv = damlHubEnvironment();
+
+export const dablHostname = hubEnv?.hostname;
 
 export const deploymentMode: DeploymentMode =
   process.env.NODE_ENV === 'development'
@@ -26,9 +28,5 @@ export const ledgerId: string =
   : process.env.REACT_APP_LEDGER_ID
   ?? 'da-marketplace-sandbox';
 
-export const httpBaseUrl =
-  detectAppDomainType() === DomainType.NON_HUB_DOMAIN
-    ? undefined
-    : detectAppDomainType() === DomainType.LEGACY_DOMAIN
-      ? `https://api.${dablHostname}/data/${ledgerId}/`
-      : `https://${window.location.hostname}/`;
+export const httpBaseUrl = hubEnv?.baseURL;
+export const wsURL = hubEnv?.wsURL;
