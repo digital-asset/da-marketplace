@@ -27,7 +27,7 @@ const newDamlWebsocket = (token: string): WebSocket => {
 
   const apiUrl = deploymentMode === DeploymentMode.DEV
     ? `ws://${url.host}/v1/stream/query`
-    : wsURL || `wss://${url.host}/v1/stream/query`
+    : `${wsURL}v1/stream/query` || `wss://${url.host}/v1/stream/query`
 
   return new WebSocket(apiUrl, subprotocols);
 }

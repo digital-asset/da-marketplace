@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react"
 import { useHistory } from "react-router-dom"
 import { Button, Form, Icon } from "semantic-ui-react"
 
-import { PartyToken, DamlHubLogin } from "@daml/hub-react"
+import { PartyToken, DamlHubLogin, usePublicParty } from "@daml/hub-react"
 
 import { PublicAppInfo } from "@daml.js/da-marketplace/lib/Marketplace/Operator"
 
@@ -170,6 +170,7 @@ const JWTLoginForm: React.FC<Props> = ({ onLogin }) => {
 const PartiesLoginForm: React.FC<PartiesLoginFormProps> = ({ onLogin, setUploadedParties }) => {
     const [selectedPartyId, setSelectedPartyId] = useState("")
     const [parties, setParties] = useState<PartyToken[]>()
+    const publicPartyId = usePublicParty();
 
     const history = useHistory()
 
@@ -181,12 +182,14 @@ const PartiesLoginForm: React.FC<PartiesLoginFormProps> = ({ onLogin, setUploade
         })) || []
 
     useEffect(() => {
-        const parties = retrieveParties()
-        if (parties) {
-            setParties(parties)
-            setSelectedPartyId(parties[0]?.party || "")
+        if (publicPartyId) {
+            const parties = retrieveParties(publicPartyId)
+            if (parties) {
+                setParties(parties)
+                setSelectedPartyId(parties[0]?.party || "")
+            }
         }
-    }, [])
+    }, [publicPartyId])
 
     useEffect(() => {
         setUploadedParties(parties || [])

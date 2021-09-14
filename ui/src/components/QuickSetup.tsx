@@ -6,7 +6,7 @@ import DamlLedger, { useLedger, useParty } from "@daml/react"
 
 import Ledger from "@daml/ledger"
 
-import DamlHub, { PartyToken } from "@daml/hub-react"
+import DamlHub, { PartyToken, usePublicParty } from "@daml/hub-react"
 import { retrieveParties } from "../Parties"
 
 import { BrokerInvitation } from "@daml.js/da-marketplace/lib/Marketplace/Broker"
@@ -57,6 +57,7 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
     const { onLogin } = props
 
     const history = useHistory()
+    const publicPartyId = usePublicParty()
 
     const [credentials, setCredentials] = useState<Credentials | undefined>()
     const [parties, setParties] = useState<PartyToken[]>([])
@@ -66,12 +67,14 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
     const [successMessage, setSuccessMessage] = useState<string>()
 
     useEffect(() => {
-        const parties = retrieveParties()
-        if (parties) {
-            setParties(parties)
-            setPublicParty(parties.find(p => p.partyName === PUBLIC_PARTY_NAME))
+        if (publicPartyId) {
+            const parties = retrieveParties(publicPartyId)
+            if (parties) {
+                setParties(parties)
+                setPublicParty(parties.find(p => p.partyName === PUBLIC_PARTY_NAME))
+            }
         }
-    }, [])
+    }, [publicPartyId])
 
     const partyOptions =
         parties.map(party => {

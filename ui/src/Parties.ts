@@ -1,14 +1,12 @@
 import { convertPartiesJson, PartyToken } from '@daml/hub-react'
 
-import { ledgerId } from './config'
-
 const PARTIES_STORAGE_KEY = 'imported_parties';
 
 export function storeParties(parties: PartyToken[]): void {
     localStorage.setItem(PARTIES_STORAGE_KEY, JSON.stringify(parties));
 }
 
-export function retrieveParties(validateParties: boolean = true): PartyToken[] | undefined {
+export function retrieveParties(publicParty: string, validateParties: boolean = true): PartyToken[] | undefined {
     const partiesJson = localStorage.getItem(PARTIES_STORAGE_KEY);
 
     if (!partiesJson) {
@@ -16,7 +14,7 @@ export function retrieveParties(validateParties: boolean = true): PartyToken[] |
     }
 
     try {
-        const parties = convertPartiesJson(partiesJson, ledgerId, validateParties);
+        const parties = convertPartiesJson(partiesJson, publicParty, validateParties);
 
         return parties;
     } catch (error) {
