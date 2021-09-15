@@ -1,16 +1,7 @@
 module Marketplace.Trading.Matching.Service where
 
-import DA.Set (fromList)
-import Marketplace.Clearing.Model qualified as Clearing
-import Marketplace.Settlement.Model qualified as Settlement
 import Marketplace.Trading.Model qualified as Order
-import Marketplace.Trading.Service qualified as TradingService
-import Marketplace.Trading.Confirmation.Model qualified as Confirmation
 import Marketplace.Utils
-
-data MatchResult
-  = Cleared (ContractId Clearing.ClearedTrade)
-  | Collateralized (ContractId Settlement.SettlementInstruction)
 
 template Service
   with
@@ -21,30 +12,26 @@ template Service
 
     key provider : Party
     maintainer key
-
+{-
     controller provider can
-      nonconsuming MatchOrders : MatchResult
-        with
-          execution : Order.Execution
+      -- | Return matched orders with updated execution state
+      nonconsuming MatchOrders : (ContractId Order.Execution, ContractId Order.State, ContractId Order.State)
+        with execution: Order.Execution
         do
-          [(makerOrderCid, makerOrder), (takerOrderCid, takerOrder)] <- forA [execution.makerOrderId, execution.takerOrderId] (\orderId -> fetchByKey @Order.T (provider, orderId))
+          e <- create execution
+          [o1, o2] <- forA [execution.makerOrderId, execution.takerOrderId] 
+            \orderId -> do
+              (orderStateCid, orderState) <- fetchByKey @Order.State (provider, orderId)
+              (_, order) <- fetchByKey @Order.T (provider, orderId)
+              
+              let
+                quantityRemaining = orderState.quantityRemaining - execution.quantity --FIXME handle overfills
+                status = if quantityRemaining > 0.0 then Order.PartiallyExecuted else Order.FullyExecuted 
 
-          let
-            (buy, buyCid, sell, sellCid) = case makerOrder.details.side of
-              Order.Buy  -> (makerOrder, makerOrderCid, takerOrder, takerOrderCid)
-              Order.Sell -> (takerOrder, takerOrderCid, makerOrder, makerOrderCid)
-            signConfirmation customer confirmationCid = exerciseByKey @TradingService.T (operator, provider, customer) TradingService.SignConfirmation with confirmationCid
-
-          confirmationCid <- create Confirmation.Confirmation with signed = fromList [operator, provider]; buyer = buy.customer; seller = sell.customer; accounts = [], ..
-            >>= signConfirmation buy.customer
-            >>= signConfirmation sell.customer
-
-          if not $ Order.isClearedOrder makerOrder
-          then Collateralized <$> exercise confirmationCid Confirmation.Process with buyCid; sellCid
-          else do
-            exercise confirmationCid Confirmation.ProcessCleared with buyCid; sellCid
-            let clearinghouse = makerOrder.collateral.clearinghouse
-            Cleared <$> create Clearing.ClearedTrade with ..
+              archive orderStateCid
+              create orderState with quantityRemaining, status 
+          pure (e, o1, o2)
+-}
 
     controller operator can
       Terminate : ()

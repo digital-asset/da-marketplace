@@ -4,25 +4,21 @@ import Daml.Script
 import Common
 import DA.Assert ((===))
 import DA.List
-import DA.Foldable
-import DA.Finance.Asset (AssetDeposit)
-import Marketplace.Settlement.Model qualified as Settlement
-import Marketplace.Trading.Service qualified as Trading
 import Marketplace.Trading.Model qualified as Order
-import Marketplace.Trading.Matching.Service qualified as Matching
+import Marketplace.Trading.Service qualified as Trading
+import Marketplace.Trading.Role qualified as Exchange
 import Marketplace.Listing.Service qualified as Listing
 import Marketplace.Listing.Model qualified as Listing
+import Marketplace.Operator.Role qualified as Operator
 
-checkOrderStatusMatches : ContractId Order.T -> Party -> Order.Status -> Script ()
-checkOrderStatusMatches orderCid party status = do
-  Some order <- queryContractId @Order.T party orderCid
+checkOrderStatusMatches : Order.OrderId -> Party -> Order.Status -> Script ()
+checkOrderStatusMatches orderId party status = do
+  Some (_, order) <- queryContractKey @Order.State party (party, orderId)
   order.status === status
-  pure ()
 
-tradingEndToEndTest : Script ()
-tradingEndToEndTest = do
+tradingEndToEndTest = script do
   parties@Parties{..} <- allocateParties
-  providers@Providers{exchange; matchingServiceCid; bank} <- onboardProviders parties
+  providers@Providers{exchange; matchingServiceCid; bank; settlementServiceCid} <- onboardProviders parties
 
   alice <- onboardCustomer providers "Alice" alice
   bob <- onboardCustomer providers "Bob" bob
@@ -35,6 +31,8 @@ tradingEndToEndTest = do
   aliceDepositCid <- depositAsset providers alice shareAsset alice.mainAccount.id
   bobDepositCid <- depositAsset providers bob cashAsset bob.mainAccount.id
 
+  -- This is a problem: I shouldn't need to list a security to trade it OTC, so should it be
+  -- part of the `Order` type?
   -- List a Security to trade
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
   let
@@ -53,27 +51,49 @@ tradingEndToEndTest = do
   createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
   listingCid <- exchange `submit` do exerciseCmd listingServiceCid Listing.CreateListing with ..
 
-  (Some Listing.Listing{listingId}) <- queryContractId @Listing.Listing exchange listingCid
+  -- Scenario 1 : Bilateral (recpirocal service) agreement between alice/bob
+  -- ###########################################################################
 
+  -- FIXME: Why this alternate naming of Trading/Exchange Service when they are the same? It's just confusing.
+  bobExchangeRoleOfferCid <- submit providers.operator do exerciseCmd providers.operatorRoleCid Operator.OfferExchangeRole with provider = bob.customer
+  (bobExecutionServiceRoleCid, _, _, _) <- submit bob.customer do exerciseCmd bobExchangeRoleOfferCid $ Exchange.Accept
+  bobExecutionServiceOfferToAliceCid <- submit bob.customer do exerciseCmd bobExecutionServiceRoleCid Exchange.OfferTradingService with customer = alice.customer
+  bobExecutionServiceCid <- submit alice.customer do exerciseCmd bobExecutionServiceOfferToAliceCid $ Trading.Accept
+
+  aliceExchangeRoleOfferCid <- submit providers.operator do exerciseCmd providers.operatorRoleCid Operator.OfferExchangeRole with provider = alice.customer
+  (aliceExecutionServiceRoleCid, _, _, _) <- submit alice.customer do exerciseCmd aliceExchangeRoleOfferCid $ Exchange.Accept
+  aliceExecutionServiceOfferToAliceCid <- submit alice.customer do exerciseCmd aliceExecutionServiceRoleCid Exchange.OfferTradingService with customer = bob.customer
+  aliceExecutionServiceCid <- submit bob.customer do exerciseCmd aliceExecutionServiceOfferToAliceCid $ Trading.Accept
+
+  (Some Listing.Listing{listingId}) <- queryContractId @Listing.Listing exchange listingCid
   -- Create orders
   let aliceOrderId = "1"
-  Right (aliceOrderCid, aliceCreateOrderRequestCid, aliceAssetDepositCid) <- alice.customer `submit` do
-    exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with
-        collateral = Order.Collateral aliceDepositCid
+  aliceOrderReqCid <- submit alice.customer do
+    exerciseCmd bobExecutionServiceCid $ Trading.RequestCreateOrder
+      Order.Order with
+        -- collateral = Order.Collateral aliceDepositCid
+        originator = alice.customer
+        executor = bob.customer
         details = Order.Details with
             id = aliceOrderId
             listingId
-            asset = tsla with quantity = 200.0
+            asset = shareAsset
             side = Order.Sell
             timeInForce = Order.GTC
             optExchangeFee = None
-            orderType = Order.Limit with price = 100.0
-  checkOrderStatusMatches aliceOrderCid alice.customer Order.New
+            price = Some 100.0
+  (aliceOrderCid, _) <- submit bob.customer do
+    exerciseCmd aliceOrderReqCid Trading.AcknowledgeRequest with
+      providerOrderId = "alice reference 1"
+
+  Some (_, Order.State{status=Order.New}) <- 
+    queryContractKey bob.customer (bob.customer, aliceOrderId)
 
   let bobOrderId = "2"
-  Right (bobOrderCid, bobCreateOrderRequestCid, bobAssetDepositCid) <- bob.customer `submit` do
-    exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with
-        collateral = Order.Collateral bobDepositCid
+  submit bob.customer do 
+    exerciseCmd aliceOrderCid $ Order.Fill Order.Order with
+        originator = bob.customer
+        executor = alice.customer
         details = Order.Details with
             id = bobOrderId
             listingId
@@ -81,43 +101,17 @@ tradingEndToEndTest = do
             side = Order.Buy
             optExchangeFee = None
             timeInForce = Order.GTC
-            orderType = Order.Limit with price = 100.0
-  checkOrderStatusMatches bobOrderCid bob.customer Order.New
+            price = Some 100.0
 
-  -- Acknowledge Orders
-  aliceOrderCid <- exchange `submit` do
-    exerciseCmd alice.tradingServiceCid Trading.AcknowledgeOrderRequest with
-        createOrderRequestCid = aliceCreateOrderRequestCid
-        providerOrderId = "alice's exchange order id"
-  checkOrderStatusMatches aliceOrderCid alice.customer Order.PendingExecution
-
-  bobOrderCid <- exchange `submit` do
-    exerciseCmd bob.tradingServiceCid Trading.AcknowledgeOrderRequest with
-        createOrderRequestCid = bobCreateOrderRequestCid
-        providerOrderId = "bob's exchange order id"
-  checkOrderStatusMatches bobOrderCid bob.customer Order.PendingExecution
-
-  -- Confirm order matches
-  let execution = Order.Execution with
-        matchId = "1"
-        makerOrderId = aliceOrderId
-        takerOrderId = bobOrderId
-        quantity = 200.0
-        price = 100.0
-        timestamp = "123456"
-
-  Matching.Collateralized settlementInstructionCid <- exchange `submit` exerciseCmd matchingServiceCid Matching.MatchOrders with execution
-
-  aliceOrderCid <- fst . head <$> query @Order.T alice.customer
-  checkOrderStatusMatches aliceOrderCid alice.customer Order.FullyExecuted
-  bobOrderCid <- fst . head <$> query @Order.T bob.customer
-  checkOrderStatusMatches bobOrderCid bob.customer Order.FullyExecuted
+  Some (_, Order.State{status=Order.FullyExecuted}) <- queryContractKey alice.customer (bob.customer, aliceOrderId)
+  return ()
 
   -- Settle orders
-  assetDepositCids <- exchange `submit` exerciseCmd settlementInstructionCid Settlement.Settle
+  {-assetDepositCids <- exchange `submit` exerciseCmd settlementInstructionCid Settlement.Settle
 
   forA_ assetDepositCids \depositCid -> do
     Some deposit <- queryContractId @AssetDeposit bank depositCid
     deposit.asset === if deposit.account.owner == alice.customer
       then cashAsset
       else shareAsset
+-}

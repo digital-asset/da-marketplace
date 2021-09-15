@@ -19,6 +19,7 @@ data ListingType
     | Collateralized
   deriving (Eq, Show)
 
+-- TODO: should listing support clearing different ways? i.e. a list instead of sum type?
 template Listing
   with
     operator : Party
@@ -26,7 +27,7 @@ template Listing
     customer : Party
     listingType : ListingType
     listingId : Text
-    calendarId : Text
+    calendarId : Text -- This should have a better type
     description : Text
     tradedAssetId : Id
     quotedAssetId : Id

@@ -85,6 +85,7 @@ data Providers = Providers
     exchangeRoleCid : ContractId Exchange.Role
     matchingServiceCid : ContractId Matching.Service
     distributorRoleCid : ContractId Distributor.Role
+    settlementServiceCid : ContractId Settlement.Service
 
 -- TODO: consider whether these services need to be more granular. i.e. does a custody relationship allow execution, tarde-away, safekeeping etc. in one go
 data Customer = Customer
@@ -187,7 +188,7 @@ onboardCustomer Providers{..} party customer = do
 
   -- Trading and Listing services
   tradingServiceOfferCid <- submit exchange do exerciseCmd exchangeRoleCid Exchange.OfferTradingService with ..
-  tradingServiceCid <- submit customer do exerciseCmd tradingServiceOfferCid Trading.Accept with tradingAccount = mainAccount; allocationAccount = exchangeLockedAccount
+  tradingServiceCid <- submit customer do exerciseCmd tradingServiceOfferCid Trading.Accept
   listingServiceOfferCid <- submit exchange do exerciseCmd exchangeRoleCid Exchange.OfferListingService with ..
   listingServiceCid <- submit customer do exerciseCmd listingServiceOfferCid Listing.Accept
   issuanceServiceOfferCid <- submit bank do exerciseCmd custodianRoleCid Custodian.OfferIssuanceService with ..

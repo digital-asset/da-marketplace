@@ -1,19 +1,15 @@
 module Marketplace.Trading.Model where
 
-import DA.Set (Set)
+import DA.Set (Set, toList)
 import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Account, Id(..), Asset(..))
+import DA.Optional (fromSomeNote)
+import DA.Foldable (forA_)
 import Marketplace.Trading.Error qualified as Error
 
 data Side
     = Buy
     | Sell
-  deriving (Eq, Show)
-
-data OrderType
-    = Market
-    | Limit with
-        price : Decimal
   deriving (Eq, Show)
 
 data TimeInForce
@@ -36,7 +32,7 @@ data Details = Details with
     listingId : Text
     asset : Asset
     side : Side
-    orderType : OrderType
+    price : Optional Decimal
     timeInForce : TimeInForce
     optExchangeFee : Optional (ContractId AssetDeposit)
   deriving (Eq, Show)
@@ -54,16 +50,17 @@ data Status
     | Cancelled
   deriving (Eq, Show)
 
-data Execution = Execution with
-    matchId : Text
-    makerOrderId : Text
-    takerOrderId : Text
+template Execution 
+  with
+    maker: Party
+    taker: Party
+    makerOrderCid : ContractId Order
+    takerOrderCid : ContractId Order
     quantity : Decimal
     price : Decimal
-    timestamp : Text -- Should this be an Int so we can order if necessary?
-  deriving (Eq, Show)
-
-type T = Order
+    timestamp : Time
+  where
+    signatory maker, taker
 
 data TradeCollateral
     = Cleared with
@@ -71,30 +68,125 @@ data TradeCollateral
     | Collateral (ContractId AssetDeposit)
   deriving (Show, Eq)
 
+{-
+-- | Lens for deposit collateral
+pledgedDeposit : TradeCollateral -> Optional (ContractId AssetDeposit)
+pledgedDeposit (Collateral depositCid) = Some depositCid
+pledgedDeposit (Cleared _) = None
+
 isClearedOrder : Order -> Bool
 isClearedOrder Order{collateral = Cleared _} = True
 isClearedOrder _                             = False
+-}
 
+type T = Order
+
+type OrderId = Text
+
+-- | Initializes a new `State` record from an `Order`
+newState : Order -> State
+newState order = State with
+  originator = order.originator
+  executor = order.executor
+  orderId = order.details.id
+  status = New
+  quantityRemaining = order.details.asset.quantity
+
+
+-- | These are fields that are static throughout the lifetime of the order
+-- An order represents a firm intent to exchange an asset vs the `executor`, which must
+-- approve the order through the `Trading.Service`. Once approved, an order can be executed
+-- with the `Match` choice. There is no 'last-look'.
 template Order
   with
-    operator : Party
-    provider : Party
-    customer : Party
-    status : Status
+    originator : Party
+    executor : Party
     details : Details
-    providerOrderId : Optional Text
-    executions : [Execution]
-    remainingQuantity : Decimal
-    collateral : TradeCollateral
-    createdAt : Time
+    -- createdAt : Time -- can't guarantee this in on a bare create
   where
-    signatory operator, provider, customer
-    observer case collateral of
-      (Cleared ch) -> [ch]
-      _            -> []
+    signatory originator, executor 
 
-    key (provider, details.id) : (Party, Text)
+    key (originator, details.id) : (Party, OrderId)
     maintainer key._1
+
+    controller executor can 
+      -- | (partially) match against an existing order
+      nonconsuming Cross : (ContractId Execution, ContractId State, ContractId State)
+        with contraCid : ContractId Order
+        do timestamp <- getTime
+           contraOrder <- fetch contraCid
+           (contraStateCid, contraState) <- fetchByKey (originator, contraOrder.details.id)
+           (stateCid, state) <- fetchByKey (executor, this.details.id)
+           let order = this
+               quantity = min state.quantityRemaining contraState.quantityRemaining
+               (<|>) None x = x --TODO: add `Alternative` to Daml.Control
+               (<|>) x _ = x
+               price = fromSomeNote "Matched two market orders" $
+                 order.details.price <|> contraOrder.details.price
+               execution = Execution with
+                 maker = originator
+                 taker = executor
+                 makerOrderCid = self -- TODO: What if we amend the order? e.g. change price?
+                 takerOrderCid = contraCid
+                 quantity
+                 price
+                 timestamp
+           assertMsg "order direction is the same" $ order.details.side /= contraOrder.details.side
+           forA_ [order, contraOrder] \o ->
+             forA_ o.details.price \limitPx ->
+               assertMsg "Prices don't cross" case o.details.side of
+                 Buy -> price <= limitPx
+                 Sell -> price >= limitPx
+           archive stateCid
+           archive contraStateCid
+           [stateCid', contraStateCid'] <- forA [state, contraState] \s ->
+             let quantityRemaining = s.quantityRemaining - execution.quantity
+             in create s with  --TODO: validate FOK orders, handle IOC
+                  status = if quantityRemaining > 0.0 then PartiallyExecuted else FullyExecuted
+                  quantityRemaining
+           executionCid <- create execution
+           return (executionCid, stateCid', contraStateCid')
+
+      -- | create a brand new order and (partially) match against this one atomically
+      nonconsuming Fill : (ContractId Execution, ContractId Order, ContractId State, ContractId State)
+        with contraOrder : Order
+          do contraCid <- create contraOrder
+             create $ newState contraOrder
+             (e, s, s') <- exercise self Cross with contraCid
+             return (e, contraCid, s, s')
+
+-- | These are (exogenous) fields that change through the lifetime of the order
+template State
+  with 
+    originator : Party
+    executor : Party
+    orderId : OrderId
+    status : Status
+    quantityRemaining : Decimal
+  where
+    signatory executor
+    observer originator
+    key (executor, orderId) : (Party, OrderId)
+    maintainer key._1
+    ensure case status of
+      New -> quantityRemaining > 0.0
+      PendingExecution -> quantityRemaining > 0.0
+      PartiallyExecuted -> quantityRemaining > 0.0
+      FullyExecuted -> quantityRemaining <= 0.0
+      _ -> True
+   
+template Booking
+  with
+    deposit: AssetDeposit
+    allocations : [Allocation]
+  where
+    signatory signatory deposit ++ (allocations >>= toList . (.account.id.signatories))
+
+data Allocation = Allocation
+  with
+    ratio : Decimal
+    account : Account
+  deriving (Eq, Show)
 
 data Fee = Fee with
     amount : Decimal
