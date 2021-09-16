@@ -6,11 +6,7 @@ import {
   AssetDeposit_SetObservers,
   AssetDeposit_Split
 } from "@daml.js/da-marketplace/lib/DA/Finance/Asset";
-import {InputDialog} from "../../components/InputDialog/InputDialog";
-
-interface AllocationInterface {
-  amount : number
-};
+import {Button, Form, Header, Modal} from "semantic-ui-react";
 
 type MarginCallProps = {
   deposit : CreateEvent<AssetDeposit> | undefined;
@@ -28,35 +24,26 @@ const AllocationModal: React.FC<MarginCallProps> = ({
   observers,
 }) => {
   const ledger = useLedger();
-  const [allocation, setAllocation] = useState<AllocationInterface>({
-    amount : !!deposit ? parseFloat(deposit.payload.asset.quantity) : 0.0
-  });
+  const [allocation, setAllocation] = useState<number>(0.0);
 
   useEffect(() => {
-    if (!!deposit) {
-      console.log("im here" + deposit.payload.asset.quantity);
-      setAllocation({
-        amount: parseFloat(deposit.payload.asset.quantity)
-      })
-    }
-  }, [deposit]);
+    if (!!deposit)
+      setAllocation(parseFloat(deposit.payload.asset.quantity));
+  }, [open, deposit]);
 
   if (!deposit) return <></>;
 
   const requestAllocation = async () => {
-    const targetAmount = allocation.amount;
     const depositQuantity = parseFloat(deposit.payload.asset.quantity);
 
-    if (targetAmount <= 0 || targetAmount > depositQuantity) {
-      console.log("targetAmount=" + targetAmount.toString());
-      console.log("depositQuantity=" + depositQuantity.toString());
+    if (allocation <= 0 || allocation > depositQuantity) {
       onClose(false);
       return;
     }
 
-    if (targetAmount < depositQuantity) {
+    if (allocation < depositQuantity) {
       const splitRequest : AssetDeposit_Split = {
-        quantities: [targetAmount.toString()]
+        quantities: [allocation.toString()]
       };
       await ledger
         .exercise(AssetDeposit.AssetDeposit_Split, deposit.contractId, splitRequest)
@@ -68,36 +55,38 @@ const AllocationModal: React.FC<MarginCallProps> = ({
         await ledger.exercise(AssetDeposit.AssetDeposit_SetObservers, deposit.contractId, observers);
     }
 
-    cleanup();
+    onClose(false);
   };
 
-  const cleanup = () => {
-    setAllocation({
-      amount : 0.0
-    });
-    onClose(false);
-  }
-
-  const cancel = () => {
-    cleanup();
-    return Promise.resolve();
-  }
-
   return (
-    <InputDialog
-      isModal={true}
+    <Modal
+      className="input-dialog"
       open={open}
-      title={title}
-      defaultValue={allocation}
-      fields={{
-        amount: {
-          label: "Amount",
-          type: 'number'
-        },
-      }}
-      onChange={state => !!state && setAllocation(state)}
-      onClose={state => state ? requestAllocation() : cancel()}
-    />
+      size="small"
+      onClose={() => onClose(false)}
+    >
+      <Modal.Header as="h2">{title}</Modal.Header>
+      <Modal.Content>
+        <Form>
+          <Form.Input
+            key={deposit.contractId}
+            required
+            label={<Header as="h4">Amount</Header>}
+            type={'number'}
+            onChange={(_, change) => setAllocation(parseFloat(change.value))}
+            placeholder={allocation}
+          />
+        </Form>
+      </Modal.Content>
+      <Modal.Actions>
+        <Button className="ghost" onClick={() => requestAllocation()} >
+          Confirm
+        </Button>
+        <Button className="ghost warning" onClick={() => onClose(false)}>
+          Cancel
+        </Button>
+      </Modal.Actions>
+    </Modal>
   );
 };
 

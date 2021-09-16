@@ -54,9 +54,6 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
     )?.payload;
     const customer = service?.customer;
 
-    // const deposits = useStreamQueries(AssetDeposit).contracts.filter(a =>
-    //   a.payload.account.id.label === service?.clearingAccount.id.label
-    // );
     const standings = useStreamQueries(MemberStanding).contracts;
     const standing = standings.find(standing => standing.payload.customer === customer);
 
@@ -65,7 +62,6 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
     const availableDeposits = deposits.filter(d => isEmptySet(d.payload.lockers) && !d.payload.observers.map.has(service?.provider || ''));
     const clearingDeposits = deposits.filter(d => isEmptySet(d.payload.lockers) && d.payload.observers.map.has(service?.provider || ''));
     const marginDeposits = deposits.filter(d => d.payload.lockers.map.has(service?.provider || 'unknown'));
-      // && d.payload.lockers === makeDamlSet([service.provider])
     const clearingAmount = clearingDeposits.reduce(
       (acc, val) => acc + Number(val.payload.asset.quantity),
       0
@@ -95,8 +91,6 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
       FulfilledMarkToMarketCalculation
     );
 
-    if (!service) return <></>;
-
     const handleMTMRetry = async (cid: ContractId<RejectedMarkToMarketCalculation>) => {
       const choice = RejectedMarkToMarketCalculation.RejectedMarkToMarketCalculation_Retry;
       await ledger.exercise(choice, cid, { ctrl: party });
@@ -115,8 +109,10 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
       await ledger.exercise(choice, cid, {});
     };
 
+    if (!service) return <></>
+
     const onAllocateToClearing = (targetDeposit : CreateEvent<AssetDeposit>) => {
-      if (!!targetDeposit) {
+      if (targetDeposit && service) {
         setModalTitle("Allocate to Clearing")
         setDeposit(targetDeposit);
         setObservers({
@@ -128,7 +124,7 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
     }
 
   const onDeallocateFromClearing = (targetDeposit : CreateEvent<AssetDeposit>) => {
-    if (!!targetDeposit) {
+    if (targetDeposit && service) {
       setModalTitle("Deallocate from Clearing")
       setDeposit(targetDeposit);
       setObservers({
@@ -327,48 +323,51 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
             observers={observers}
           />
         </>
+        {party === service.clearingAccount.owner &&
         <div>
-          <Header as="h2">Available Deposits</Header>
-          <div className="account">
-            <div className="account-details">
-              <div className="account-data">
-                <h4> {service.clearingAccount.id.label} </h4>
-              </div>
-              <div className="account-data body">
-                <p className="p2">Provider: {getName(service.clearingAccount.provider)}</p>
-                <p className="p2">Owner: {getName(service.clearingAccount.owner)}</p>
-                <p className="p2">
-                  Role: {party === service.clearingAccount.provider ? 'Provider' : 'Client'}
-                </p>
-                <p className="p2">
-                  Signatories:{' '}
-                  {damlSetValues(service.clearingAccount.id.signatories)
-                    .map(a => getName(a))
-                    .sort()
-                    .join(', ')}
-                </p>
-              </div>
-            </div>
-            {availableDeposits.length > 0 ? (
-              availableDeposits.map(c => (
-                <Tile className="account-holding" key={c.contractId}>
-                  <p>
-                    <b>{c.payload.asset.id.label}</b> {c.payload.asset.quantity}{' '}
-                  </p>
-                  {party === service.clearingAccount.owner && (
-                    <OverflowMenu>
-                      <OverflowMenuEntry label={'Allocate to Clearing Account'} onClick={() => onAllocateToClearing(c)} />
-                    </OverflowMenu>
-                  )}
+            <Header as="h2">Available Deposits</Header>
+            <div className="account">
+                <div className="account-details">
+                    <div className="account-data">
+                        <h4> {service.clearingAccount.id.label} </h4>
+                    </div>
+                    <div className="account-data body">
+                        <p className="p2">Provider: {getName(service.clearingAccount.provider)}</p>
+                        <p className="p2">Owner: {getName(service.clearingAccount.owner)}</p>
+                        <p className="p2">
+                            Role: {party === service.clearingAccount.provider ? 'Provider' : 'Client'}
+                        </p>
+                        <p className="p2">
+                            Signatories:{' '}
+                          {damlSetValues(service.clearingAccount.id.signatories)
+                            .map(a => getName(a))
+                            .sort()
+                            .join(', ')}
+                        </p>
+                    </div>
+                </div>
+              {availableDeposits.length > 0 ? (
+                availableDeposits.map(c => (
+                  <Tile className="account-holding" key={c.contractId}>
+                    <p>
+                      <b>{c.payload.asset.id.label}</b> {c.payload.asset.quantity}{' '}
+                    </p>
+                    {party === service.clearingAccount.owner && (
+                      <OverflowMenu align={'right'}>
+                        <OverflowMenuEntry label={'Allocate to Clearing Account'}
+                                           onClick={() => onAllocateToClearing(c)}/>
+                      </OverflowMenu>
+                    )}
+                  </Tile>
+                ))
+              ) : (
+                <Tile className="account-holding">
+                  <i>There are no holdings in this account.</i>
                 </Tile>
-              ))
-            ) : (
-              <Tile className="account-holding">
-                <i>There are no holdings in this account.</i>
-              </Tile>
-            )}
-          </div>
+              )}
+            </div>
         </div>
+        }
         <div>
           <Header as="h2">Clearing Deposits</Header>
             <div className="account">
@@ -398,7 +397,7 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
                       <b>{c.payload.asset.id.label}</b> {c.payload.asset.quantity}{' '}
                     </p>
                     {party === service.clearingAccount.owner && (
-                       <OverflowMenu>
+                       <OverflowMenu align={'right'}>
                          <OverflowMenuEntry label={'Deallocate from Clearing'} onClick={() => onDeallocateFromClearing(c)} />
                        </OverflowMenu>
                      )}
@@ -439,12 +438,6 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
                   <p>
                     <b>{c.payload.asset.id.label}</b> {c.payload.asset.quantity}{' '}
                   </p>
-                  {party === service.clearingAccount.owner && (
-                    <OverflowMenu>
-                      {/*     <OverflowMenuEntry label={'Withdraw'} onClick={() => requestWithdrawDeposit(c)} />*/}
-                      {/*    <OverflowMenuEntry label={'Transfer'} onClick={() => requestTransfer(c)} />*/}
-                    </OverflowMenu>
-                  )}
                 </Tile>
               ))
             ) : (

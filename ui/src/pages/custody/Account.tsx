@@ -9,9 +9,10 @@ import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
 import { usePartyName } from '../../config';
 import Tile from '../../components/Tile/Tile';
-import { ServicePageProps, damlSetValues } from '../common';
+import {ServicePageProps, damlSetValues, isEmptySet} from '../common';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 import OverflowMenu, { OverflowMenuEntry } from '../../pages/page/OverflowMenu';
+import {Icon, Popup} from "semantic-ui-react";
 
 interface AccountProps {
   targetAccount: {
@@ -162,6 +163,15 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
             <Tile className="account-holding" key={c.contractId}>
               <p>
                 <b>{c.payload.asset.id.label}</b> {c.payload.asset.quantity}{' '}
+                { !isEmptySet(c.payload.lockers) &&
+                    <Popup
+                        trigger={<Icon name="lock" />}
+                        content={"Locked by " + damlSetValues(c.payload.lockers)
+                                    .map(a => getName(a))
+                                    .sort()
+                                    .join(', ')}
+                      />
+                }
               </p>
               {party === targetAccount.account.owner && (
                 <OverflowMenu>

@@ -86,7 +86,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
               standingText,
             ],
             onClick: () =>
-              history.push(`${paths.app.clearing.member}/${s.contractId.replace('#', '_')}`),
+              history.push(`${paths.app.clearingMembers.member}/${s.contractId.replace('#', '_')}`),
           };
         })}
       />

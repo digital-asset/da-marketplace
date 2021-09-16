@@ -1,6 +1,7 @@
 import { CreateEvent } from '@daml/ledger';
 import { DropdownItemProps, DropdownProps } from 'semantic-ui-react';
 import { Map, emptyMap } from '@daml/types';
+import _ from "lodash";
 
 export type ServicePageProps<T extends object> = {
   services: Readonly<CreateEvent<T, any, any>[]>;
@@ -55,4 +56,6 @@ export function damlSetValues<T>(damlSet: DamlSet<T>): T[] {
   return r;
 }
 
-export const isEmptySet = <T>(set : DamlSet<T>) : boolean => set.map.keys === emptyMap<T, {}>().keys
+// export const isEmptySet = <T>(set : DamlSet<T>) : boolean => set.map.keys === emptyMap<T, {}>().keys;
+
+export const isEmptySet = <T>(set : DamlSet<T>) : boolean => _.isEmpty(set.map.entriesArray());
