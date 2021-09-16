@@ -2,7 +2,6 @@ module Tests.Trading.E2E where
 
 import Daml.Script
 import Common
-import DA.Assert ((===))
 import DA.List
 import Marketplace.Trading.Model qualified as Order
 import Marketplace.Trading.Service qualified as Trading
@@ -10,11 +9,7 @@ import Marketplace.Trading.Role qualified as Exchange
 import Marketplace.Listing.Service qualified as Listing
 import Marketplace.Listing.Model qualified as Listing
 import Marketplace.Operator.Role qualified as Operator
-
-checkOrderStatusMatches : Order.OrderId -> Party -> Order.Status -> Script ()
-checkOrderStatusMatches orderId party status = do
-  Some (_, order) <- queryContractKey @Order.State party (party, orderId)
-  order.status === status
+import Prelude hiding (forA)
 
 tradingEndToEndTest = script do
   parties@Parties{..} <- allocateParties
@@ -51,7 +46,7 @@ tradingEndToEndTest = script do
   createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
   listingCid <- exchange `submit` do exerciseCmd listingServiceCid Listing.CreateListing with ..
 
-  -- Scenario 1 : Bilateral (recpirocal service) agreement between alice/bob
+  -- Scenario 1 : Unilateral agreement between alice/bob i.e. bob is a broker
   -- ###########################################################################
 
   -- FIXME: Why this alternate naming of Trading/Exchange Service when they are the same? It's just confusing.
@@ -67,11 +62,10 @@ tradingEndToEndTest = script do
 
   (Some Listing.Listing{listingId}) <- queryContractId @Listing.Listing exchange listingCid
   -- Create orders
-  let aliceOrderId = "1"
+  let aliceOrderId = "aliceClientBrokerOrder"
   aliceOrderReqCid <- submit alice.customer do
     exerciseCmd bobExecutionServiceCid $ Trading.RequestCreateOrder
       Order.Order with
-        -- collateral = Order.Collateral aliceDepositCid
         originator = alice.customer
         executor = bob.customer
         details = Order.Details with
@@ -82,36 +76,73 @@ tradingEndToEndTest = script do
             timeInForce = Order.GTC
             optExchangeFee = None
             price = Some 100.0
-  (aliceOrderCid, _) <- submit bob.customer do
-    exerciseCmd aliceOrderReqCid Trading.AcknowledgeRequest with
-      providerOrderId = "alice reference 1"
+  (aliceOrderCid, aliceOrderStateCid) <- submit bob.customer do
+    exerciseCmd aliceOrderReqCid Trading.AcknowledgeRequest
 
-  Some (_, Order.State{status=Order.New}) <- 
-    queryContractKey bob.customer (bob.customer, aliceOrderId)
+  Some Order.State{status=Order.PendingExecution} <- 
+    queryContractId alice.customer aliceOrderStateCid
 
-  let bobOrderId = "2"
+  let bobOrderId = "bobClientBrokerFill"
   submit bob.customer do 
-    exerciseCmd aliceOrderCid $ Order.Fill Order.Order with
+    exerciseCmd aliceOrderCid $ Order.Fill with
+        counterparty = bob.customer
+        contraOrder = Order.Order with
+            originator = bob.customer
+            executor = alice.customer
+            details = Order.Details with
+                        id = bobOrderId
+                        listingId
+                        asset = shareAsset
+                        side = Order.Buy
+                        optExchangeFee = None
+                        timeInForce = Order.GTC
+                        price = Some 100.0
+
+  Some (_, Order.State{status=Order.FullyExecuted}) <- queryContractKey alice.customer (bob.customer, aliceOrderId)
+
+  -- Scenario 2 : Decentralised trading via public party
+  -- ###########################################################################
+
+  public <- allocateParty "public"
+  
+  publicExchangeRoleOfferCid <- submit providers.operator do exerciseCmd providers.operatorRoleCid Operator.OfferExchangeRole with provider = public
+  (publicExecutionServiceRoleCid, _, _, _) <- submit public do exerciseCmd publicExchangeRoleOfferCid $ Exchange.Accept
+
+  publicExecutionServiceOfferToAliceCid <- submit public do 
+    exerciseCmd publicExecutionServiceRoleCid Exchange.OfferTradingService with customer = alice.customer
+  publicExecutionServiceCid <- submit alice.customer do exerciseCmd publicExecutionServiceOfferToAliceCid $ Trading.Accept
+
+  let aliceOrderId = "alicePublicOrder"
+  (aliceOrderCid, _) <- submitMulti [alice.customer, public] [public] do
+    exerciseCmd publicExecutionServiceCid $ Trading.CreateOrder
+      Order.Order with
+        originator = alice.customer
+        executor = public
+        details = Order.Details with
+                    id = aliceOrderId
+                    listingId
+                    asset = shareAsset
+                    side = Order.Sell
+                    timeInForce = Order.GTC
+                    optExchangeFee = None
+                    price = Some 100.0
+
+  let bobOrderId = "bobPublicFill"
+  submitMulti [bob.customer, public] [public] do
+    exerciseCmd aliceOrderCid $ Order.Fill with
+      counterparty = bob.customer
+      contraOrder = Order.Order with
         originator = bob.customer
         executor = alice.customer
         details = Order.Details with
-            id = bobOrderId
-            listingId
-            asset = shareAsset
-            side = Order.Buy
-            optExchangeFee = None
-            timeInForce = Order.GTC
-            price = Some 100.0
+                    id = bobOrderId
+                    listingId
+                    asset = shareAsset
+                    side = Order.Buy
+                    optExchangeFee = None
+                    timeInForce = Order.GTC
+                    price = Some 100.0
 
-  Some (_, Order.State{status=Order.FullyExecuted}) <- queryContractKey alice.customer (bob.customer, aliceOrderId)
+  Some (_, Order.State{status=Order.FullyExecuted}) <- queryContractKey alice.customer (public, aliceOrderId)
+
   return ()
-
-  -- Settle orders
-  {-assetDepositCids <- exchange `submit` exerciseCmd settlementInstructionCid Settlement.Settle
-
-  forA_ assetDepositCids \depositCid -> do
-    Some deposit <- queryContractId @AssetDeposit bank depositCid
-    deposit.asset === if deposit.account.owner == alice.customer
-      then cashAsset
-      else shareAsset
--}

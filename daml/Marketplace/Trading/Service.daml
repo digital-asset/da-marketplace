@@ -1,13 +1,10 @@
 
 module Marketplace.Trading.Service where
 
-import DA.Set qualified as Set
 import DA.Finance.Asset (AssetDeposit)
-import DA.Finance.Asset.Settlement (AssetSettlementRule)
 import DA.Finance.Types (Account)
 import Marketplace.Trading.Model qualified as Order
 import Marketplace.Trading.Error (Error (..))
-import qualified Marketplace.Rule.AllocationAccount as AllocationAccountRule (T, Deposit(..), Withdraw(..))
 import Marketplace.Utils
 
 type T = Service
@@ -43,7 +40,7 @@ template Service
         with order : Order.T
          do 
           request <- exercise self RequestCreateOrder with order
-          exercise request AcknowledgeRequest with providerOrderId = "foo"
+          exercise request AcknowledgeRequest
           
                         
     choice Terminate : ()
@@ -115,11 +112,9 @@ template CreateOrderRequest
 
     controller provider can
       AcknowledgeRequest : (ContractId Order.T, ContractId Order.State)
-        with
-          providerOrderId : Text
         do
           o <- create order 
-          s <- create $ Order.newState order
+          s <- create (Order.newState order) with status = Order.PendingExecution
           pure (o, s)
 
       RejectRequest : (ContractId Order.T, ContractId Order.State)

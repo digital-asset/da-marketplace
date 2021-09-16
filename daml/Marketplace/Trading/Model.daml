@@ -148,14 +148,18 @@ template Order
            return (executionCid, stateCid', contraStateCid')
 
       -- | create a brand new order and (partially) match against this one atomically
-      nonconsuming Fill : (ContractId Execution, ContractId Order, ContractId State, ContractId State)
-        with contraOrder : Order
-          do contraCid <- create contraOrder
-             create $ newState contraOrder
-             (e, s, s') <- exercise self Cross with contraCid
-             return (e, contraCid, s, s')
+    nonconsuming choice Fill : (ContractId Execution, ContractId Order, ContractId State, ContractId State)
+      with counterparty : Party -- | ^ May be different from executor, e.g. in case of a give-up
+           contraOrder : Order
+      controller counterparty
+         do 
+           contraCid <- create contraOrder
+           create $ newState contraOrder
+           (e, s, s') <- exercise self Cross with contraCid
+           return (e, contraCid, s, s')
 
--- | These are (exogenous) fields that change through the lifetime of the order
+-- | These are (exogenous) fields that change through the lifetime of the order, and are updated
+-- by the executor
 template State
   with 
     originator : Party
