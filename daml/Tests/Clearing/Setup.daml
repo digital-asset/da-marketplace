@@ -140,14 +140,14 @@ makeTrade Providers{..} listingId buyer seller price qty currentId = do
             orderType = Order.Limit with price
 
   let buyerOrderId = show (currentId + 1)
-  Right (buyerOrderCid, buyerCreateOrderRequestCid, _) <- submitMulti [buyer.customer] [public] $ do
+  Right (buyerOrderCid, buyerCreateOrderRequestCid, _) <- submit buyer.customer $ do
     exerciseCmd buyer.tradingServiceCid Trading.RequestCreateOrder with
         collateral = Order.Cleared clearinghouse
         details = Order.Details with
             id = buyerOrderId
             receivableAccount = buyer.mainAccount
             listingId
-            asset = Asset with id = listing.quotedAssetId; quantity = price * qty
+            asset = Asset with id = listing.tradedAssetId; quantity = price * qty
             optExchangeFee = None
             side = Order.Buy
             timeInForce = Order.GTC

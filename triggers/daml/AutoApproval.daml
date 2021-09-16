@@ -32,6 +32,7 @@ autoApprovalTrigger = Trigger
   , registeredTemplates = RegisteredTemplates [ registeredTemplate @Operator.Role
     , registeredTemplate @CustodyRole.Role
     , registeredTemplate @CustodyRole.Offer
+    , registeredTemplate @CustodyRole.Request
     , registeredTemplate @CustodyService.Offer
     , registeredTemplate @CustodyService.Request
     , registeredTemplate @CustodyService.Service

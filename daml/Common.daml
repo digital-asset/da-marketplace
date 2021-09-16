@@ -5,6 +5,7 @@ import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Id(..), Asset(..), Account(..))
 import DA.Optional (fromSome)
 import DA.Set
+import DA.Optional
 import ContingentClaims.Claim (Claim(Zero), serialize)
 import ContingentClaims.Observation (Observation)
 import qualified DA.Finance.Asset as AssetDeposit
@@ -53,6 +54,16 @@ allocateParties = do
   dana          <- allocatePartyWithHint "Dana" $ PartyIdHint "Dana"
   public        <- allocatePartyWithHint "Public" $ PartyIdHint "Public"
   pure $ Parties with userAdmin = operator; ..
+
+
+getExistingParties : Script Parties
+getExistingParties = do
+  [operator, bank, exchange, clearinghouse, issuer, alice, bob, charlie, dana, public]
+    <- retrieve ["Operator", "Bank", "Exchange", "Ccp", "Issuer", "Alice", "Bob", "Charlie", "Dana", "Public"]
+  pure $ Parties with userAdmin = operator; ..
+  where
+    retrieve : [Text] -> Script [Party]
+    retrieve parties = pure . fromSome $ mapA partyFromText parties
 
 data Assets = Assets
   with

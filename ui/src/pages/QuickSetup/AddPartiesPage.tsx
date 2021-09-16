@@ -19,7 +19,7 @@ import Credentials, { computeCredentials } from '../../Credentials';
 
 import { halfSecondPromise } from '../page/utils';
 
-import { LoadingWheel, MenuItems } from './QuickSetup';
+import { LoadingWheel } from './QuickSetup';
 
 import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
 import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
@@ -27,13 +27,17 @@ import {
   IdentityVerificationRequest,
   Service as RegulatorService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
+import {
+  OperatorOnboarding,
+  PartyOnboarding,
+} from '@daml-ui.js/da-marketplace-ui/lib/UI/Onboarding';
 import { Offer as RegulatorOffer } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import { makeDamlSet } from '../common';
 import { retrieveParties } from '../../Parties';
 
-import QuickSetupPage from './QuickSetupPage';
 import { deployAutomation, MarketplaceTrigger, TRIGGER_HASH } from '../../automation';
+import { ArrowRightIcon } from '../../icons/icons';
 
 enum LoadingStatus {
   CREATING_ADMIN_CONTRACTS = 'Confirming Admin role....',
@@ -81,84 +85,95 @@ const AddPartiesPage = () => {
 
   if (loadingStatus) {
     return (
-      <QuickSetupPage>
-        <LoadingWheel label={loadingStatus} />
-        {loadingStatus === LoadingStatus.CREATING_ADMIN_CONTRACTS ? (
-          <DamlLedger
-            token={adminCredentials.token}
-            party={adminCredentials.party}
-            httpBaseUrl={httpBaseUrl}
-            wsBaseUrl={wsBaseUrl}
-          >
-            <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
-              <AdminLedger
-                adminCredentials={adminCredentials}
-                onComplete={() => setLoadingStatus(LoadingStatus.WAITING_FOR_TRIGGERS)}
-              />
-            </QueryStreamProvider>
-          </DamlLedger>
-        ) : (
-          loadingStatus === LoadingStatus.WAITING_FOR_TRIGGERS &&
-          parties.map(p => (
-            <PublicDamlProvider
-              party={p.party}
-              token={p.token}
+      <div className="setup-page">
+        <div className="add-parties-page">
+          <LoadingWheel label={loadingStatus} />
+          {loadingStatus === LoadingStatus.CREATING_ADMIN_CONTRACTS ? (
+            <DamlLedger
+              token={adminCredentials.token}
+              party={adminCredentials.party}
               httpBaseUrl={httpBaseUrl}
               wsBaseUrl={wsBaseUrl}
             >
-              <QueryStreamProvider defaultPartyToken={p.token}>
-                <CreateVerifiedIdentity
-                  party={p}
-                  onComplete={() => history.push(MenuItems.REVIEW)}
+              <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
+                <AdminLedger
+                  adminCredentials={adminCredentials}
+                  onComplete={() => setLoadingStatus(LoadingStatus.WAITING_FOR_TRIGGERS)}
                 />
               </QueryStreamProvider>
-            </PublicDamlProvider>
-          ))
-        )}
-      </QuickSetupPage>
+            </DamlLedger>
+          ) : (
+            loadingStatus === LoadingStatus.WAITING_FOR_TRIGGERS &&
+            parties.map(p => (
+              <PublicDamlProvider
+                party={p.party}
+                token={p.token}
+                httpBaseUrl={httpBaseUrl}
+                wsBaseUrl={wsBaseUrl}
+              >
+                <QueryStreamProvider defaultPartyToken={p.token}>
+                  <CreateVerifiedIdentity
+                    party={p}
+                    onComplete={() => history.push('/quick-setup')}
+                    operator={adminCredentials.party}
+                  />
+                </QueryStreamProvider>
+              </PublicDamlProvider>
+            ))
+          )}
+        </div>
+      </div>
     );
   }
 
   return (
-    <QuickSetupPage className="add-parties">
-      {parties.length > 0 ? (
-        <>
-          <div className="page-row">
-            <div>
-              <p className="bold">Parties</p>
-              <div className="party-names uploaded">
-                {parties.map(p => (
-                  <p className="party-name" key={p.party}>
-                    {p.partyName}
-                  </p>
-                ))}
+    <div className="setup-page">
+      <div className="add-parties-page">
+        {parties.length > 0 ? (
+          <>
+            <div className="page-row">
+              <div>
+                <p className="bold">Parties</p>
+                <div className="party-names uploaded">
+                  {parties.map(p => (
+                    <p className="party-name" key={p.party}>
+                      {p.partyName}
+                    </p>
+                  ))}
+                </div>
+              </div>
+              <div className="upload-parties uploaded">
+                {uploadButton}
+                <Button
+                  className="button ghost icon-right"
+                  disabled={parties.length === 0}
+                  onClick={() => setLoadingStatus(LoadingStatus.CREATING_ADMIN_CONTRACTS)}
+                >
+                  Onboard Parties <ArrowRightIcon />
+                </Button>
               </div>
             </div>
-            <div className="upload-parties uploaded">{uploadButton}</div>
+          </>
+        ) : (
+          <div className="upload-parties">
+            <p className="details">
+              Download the .json file from the Users tab on Daml Hub, and upload it here.
+            </p>
+            {uploadButton}
+            <span className="login-details dark">{error}</span>
           </div>
-          <Button
-            className="ghost next"
-            disabled={parties.length === 0}
-            onClick={() => setLoadingStatus(LoadingStatus.CREATING_ADMIN_CONTRACTS)}
-          >
-            Next
-          </Button>
-        </>
-      ) : (
-        <div className="upload-parties">
-          <p className="details">
-            Download the .json file from the Users tab on Daml Hub, and upload it here.
-          </p>
-          {uploadButton}
-          <span className="login-details dark">{error}</span>
-        </div>
-      )}
-    </QuickSetupPage>
+        )}
+      </div>
+    </div>
   );
 };
 
-const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDetails }) => {
-  const { onComplete, party } = props;
+const CreateVerifiedIdentity = (props: {
+  onComplete: () => void;
+  party: PartyDetails;
+  operator: string;
+}) => {
+  const { onComplete, party, operator } = props;
   const ledger = useLedger();
   const userParties = retrieveUserParties() || [];
 
@@ -166,11 +181,27 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
     useStreamQueries(RegulatorService);
   const { contracts: verifiedIdentities, loading: verifiedIdentitiesLoading } =
     useStreamQueries(VerifiedIdentity);
+  const { contracts: partyOnboarding, loading: partyOnboardingLoading } =
+    useStreamQueries(PartyOnboarding);
   const { contracts: verifiedIdentityRequests, loading: verifiedIdentityRequestsLoading } =
     useStreamQueries(IdentityVerificationRequest);
 
   useEffect(() => {
-    if (regulatorServicesLoading || verifiedIdentitiesLoading || verifiedIdentityRequestsLoading) {
+    const hasPartyOnboarding = !!partyOnboarding.find(c => c.payload.party === party.party);
+
+    const createPartyOnboarding = async () => {
+      return await ledger.create(PartyOnboarding, {
+        operator,
+        party: party.party,
+      });
+    };
+
+    if (
+      regulatorServicesLoading ||
+      verifiedIdentitiesLoading ||
+      verifiedIdentityRequestsLoading ||
+      partyOnboardingLoading
+    ) {
       return;
     }
 
@@ -208,12 +239,19 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
     ) {
       handleVerifiedIdentity();
     }
+    if (!hasPartyOnboarding) {
+      createPartyOnboarding();
+    }
 
-    if (userParties.every(p => !!verifiedIdentities.find(v => v.payload.customer === p.party))) {
+    if (
+      userParties.every(p => !!verifiedIdentities.find(v => v.payload.customer === p.party)) &&
+      hasPartyOnboarding
+    ) {
       return onComplete();
     }
   }, [
     ledger,
+    operator,
     onComplete,
     userParties,
     verifiedIdentities,
@@ -222,6 +260,8 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
     regulatorServicesLoading,
     verifiedIdentityRequestsLoading,
     verifiedIdentityRequests,
+    partyOnboardingLoading,
+    partyOnboarding,
     party,
   ]);
 
@@ -237,6 +277,9 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
 
   const { contracts: operatorService, loading: operatorServiceLoading } =
     useStreamQueries(OperatorService);
+  const { contracts: operatorOnboarding, loading: operatorOnboardingLoading } =
+    useStreamQueries(OperatorOnboarding);
+
   const { contracts: regulatorRoles, loading: regulatorRolesLoading } =
     useStreamQueries(RegulatorRole);
   const { contracts: regulatorServiceOffers, loading: regulatorServiceOffersLoading } =
@@ -244,13 +287,28 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
 
   useEffect(() => {
     const createOperatorService = async () => {
+      if (operatorService.length !== 0) {
+        return;
+      }
       return await ledger.create(OperatorService, {
         operator: adminCredentials.party,
         observers: makeDamlSet([publicParty]),
       });
     };
 
+    const createOperatorOnboarding = async () => {
+      if (operatorOnboarding.length !== 0) {
+        return;
+      }
+      return await ledger.create(OperatorOnboarding, {
+        operator: adminCredentials.party,
+      });
+    };
+
     const createRegulatorRole = async () => {
+      if (regulatorRoles.length !== 0) {
+        return;
+      }
       return await ledger.create(RegulatorRole, {
         operator: adminCredentials.party,
         provider: adminCredentials.party,
@@ -278,7 +336,12 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
       );
     };
 
-    if (operatorServiceLoading || regulatorRolesLoading || regulatorServiceOffersLoading) {
+    if (
+      operatorServiceLoading ||
+      regulatorRolesLoading ||
+      regulatorServiceOffersLoading ||
+      operatorOnboardingLoading
+    ) {
       return;
     }
 
@@ -312,6 +375,8 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
       createOperatorService();
     } else if (regulatorRoles.length === 0) {
       createRegulatorRole();
+    } else if (operatorOnboarding.length === 0) {
+      createOperatorOnboarding();
     } else {
       offerRegulatorServices();
       deployAllTriggers();
@@ -325,6 +390,8 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
     regulatorRolesLoading,
     operatorServiceLoading,
     regulatorServiceOffersLoading,
+    operatorOnboardingLoading,
+    operatorOnboarding,
     regulatorRoles,
     operatorService,
     regulatorServiceOffers,

@@ -8,6 +8,7 @@ import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace
 import { useRolesContext, RoleKind, terminateRole } from '../../context/RolesContext';
 import { useOffers } from '../../context/OffersContext';
 import { useAutomations } from '../../context/AutomationContext';
+import Credentials from '../../Credentials';
 
 import { useStreamQueries } from '../../Main';
 import { MarketplaceTrigger, deployAutomation } from '../../automation';
@@ -15,8 +16,19 @@ import { retrieveParties } from '../../Parties';
 import { computeToken } from '../../Credentials';
 import { publicParty, isHubDeployment, useVerifiedParties } from '../../config';
 import { Form, Button } from 'semantic-ui-react';
+import QuickSetupPage from './QuickSetupPage';
 
-const SelectRolesPage = () => {
+const ConfigureProviders = (props: { adminCredentials: Credentials }) => {
+  const { adminCredentials } = props;
+
+  return (
+    <QuickSetupPage title="Configure Providers" adminCredentials={adminCredentials}>
+      <ConfigureProvidersPage />
+    </QuickSetupPage>
+  );
+};
+
+const ConfigureProvidersPage = () => {
   const ledger = useLedger();
   const automations = useAutomations();
 
@@ -46,7 +58,7 @@ const SelectRolesPage = () => {
       s => s !== RoleKind.REGULATOR && s !== RoleKind.MATCHING && s !== RoleKind.CLEARING_PENDING
     )
     .map(i => {
-      return { text: i, value: i };
+      return { text: `${i} Service`, value: i };
     });
 
   if (rolesLoading || offersLoading || operatorLoading || identitiesLoading) {
@@ -65,7 +77,7 @@ const SelectRolesPage = () => {
   );
 
   return (
-    <div className="assign-roles">
+    <>
       <Form>
         <Form.Select
           className="request-select"
@@ -77,39 +89,39 @@ const SelectRolesPage = () => {
         />
         <Form.Select
           className="request-select"
-          label={<p className="input-label">Role:</p>}
+          label={<p className="input-label">Provides:</p>}
           placeholder="Select..."
           multiple
           value={selectedRoles || []}
           onChange={(_, data: any) => setSelectedRoles(data.value)}
           options={roleOptions}
         />
-        <div className="submit-actions">
-          <Button
-            disabled={selectedRoles.length === 0 || !selectedParty || hasRole}
-            className="ghost"
-            onClick={() => {
-              if (!!selectedParty && selectedRoles.length > 0) {
-                createRoleContract(selectedParty, selectedRoles);
-              }
-            }}
-          >
-            Assign
-          </Button>
-          <Button
-            disabled={selectedRoles.length === 0 || !selectedParty || !hasRole}
-            className="ghost"
-            onClick={() => {
-              if (!!selectedParty && selectedRoles.length > 0) {
-                handleTerminateRole();
-              }
-            }}
-          >
-            Remove
-          </Button>
-        </div>
       </Form>
-    </div>
+      <div className="page-row submit-actions ">
+        <Button
+          disabled={selectedRoles.length === 0 || !selectedParty || hasRole}
+          className="ghost"
+          onClick={() => {
+            if (!!selectedParty && selectedRoles.length > 0) {
+              createRoleContract(selectedParty, selectedRoles);
+            }
+          }}
+        >
+          Assign
+        </Button>
+        <Button
+          disabled={selectedRoles.length === 0 || !selectedParty || !hasRole}
+          className="ghost"
+          onClick={() => {
+            if (!!selectedParty && selectedRoles.length > 0) {
+              handleTerminateRole();
+            }
+          }}
+        >
+          Remove
+        </Button>
+      </div>
+    </>
   );
 
   async function handleTerminateRole() {
@@ -210,4 +222,4 @@ export function formatTriggerName(name: string) {
     .trim();
 }
 
-export default SelectRolesPage;
+export default ConfigureProviders;

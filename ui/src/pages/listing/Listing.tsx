@@ -10,7 +10,7 @@ import {
   FairValue,
   ManualFairValueCalculation,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Model/module';
-import { Button, Form, Header } from 'semantic-ui-react';
+import { Button, Form } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import { FairValueCalculationRequests } from './ManualCalculationRequests';
@@ -20,6 +20,7 @@ import { CreateEvent } from '@daml/ledger';
 import BackButton from '../../components/Common/BackButton';
 import { getMarketType } from './Listings';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
+import TitleWithActions from '../../components/Common/TitleWithActions';
 
 type FairValueRequestProps = {
   service?: Readonly<CreateEvent<ClearedMarketService, any, any>>;
@@ -47,10 +48,15 @@ export const FairValueRequest: React.FC<FairValueRequestProps> = ({
         message: 'Could not find Listing service contract',
       });
     const currencyAsset = assets.find(c => c.payload.assetId.label === currencyLabel);
+    const calculationId =
+      Date.now().toString() + crypto.getRandomValues(new Uint16Array(1))[0].toString();
+    const upTo = new Date().toISOString();
     if (!currencyAsset) return;
     if (selectedListingIds == null) {
       await ledger.exercise(ClearedMarketService.RequestAllFairValues, service.contractId, {
         party,
+        calculationId,
+        upTo,
         currency: currencyAsset.payload.assetId,
       });
     } else {
@@ -58,6 +64,8 @@ export const FairValueRequest: React.FC<FairValueRequestProps> = ({
         party,
         currency: currencyAsset.payload.assetId,
         listingIds: selectedListingIds,
+        calculationId,
+        upTo,
       });
     }
   };
@@ -117,15 +125,11 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       listingCid: listing.contractId,
     });
   };
-
   return (
     <div className="listing">
-      <BackButton />
-      <Header as="h2">{listing?.payload.listingId}</Header>
-      <br />
-      <br />
-      <Tile header="Actions">
-        <div className="action-row">
+      <div>
+        <BackButton />
+        <TitleWithActions title={listing?.payload.listingId || ''}>
           <Button.Group>
             {!!clearedMarketService && (
               <FairValueRequest
@@ -133,15 +137,20 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
                 service={clearedMarketService}
               />
             )}
-            <Button floated="left" className="ghost" onClick={() => requestDisableDelisting()}>
-              Disable
-            </Button>
+            {!!service && service.payload.customer === listing?.payload.customer && (
+              <Button
+                floated="left"
+                className="ghost warning"
+                onClick={() => requestDisableDelisting()}
+              >
+                Disable
+              </Button>
+            )}
           </Button.Group>
-        </div>
-      </Tile>
+        </TitleWithActions>
+      </div>
       {!!listing && (
         <StripedTable
-          title="Details"
           loading={loading}
           headings={[
             'Provider',

@@ -291,7 +291,7 @@ const AppComponent = () => {
   });
 
   entries.push({
-    displayEntry: () => listingService.length > 0,
+    displayEntry: () => true,
     sidebar: [
       {
         label: 'Listings',

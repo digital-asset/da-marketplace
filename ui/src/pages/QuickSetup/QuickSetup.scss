@@ -1,5 +1,10 @@
 @use 'themes/variables' as *;
 
+@use './ReviewPage';
+@use './LoginPage';
+@use './AddPartiesPage';
+@use './AssignRolesPage';
+
 @mixin quick-setup {
   .quick-setup {
     display: flex;
@@ -8,303 +13,117 @@
     flex-direction: column;
     height: 100%;
     width: 100%;
-
+    animation: fadeIn 0.5s;
     .info {
       padding-bottom: $spacing-s;
     }
 
-    .review {
-      width: 100%;
-      height: fit-content(20em);
-      background-color: var(--cool-grey-100);
-      border-radius: 4px;
-      z-index: 2;
+    @include LoginPage.login-page;
+    @include ReviewPage.review-page;
+
+    .checkbox-cleared {
       display: flex;
-      flex: 1;
+      flex-direction: row;
+      padding-left: $spacing-xs;
 
-      .side-bar {
-        height: 100%;
-        border-right: 1px solid var(--cool-grey-80);
-        width: 320px;
-        align-self: flex-start;
-
-        .side-bar-item {
-          padding: $spacing-s;
-          border-bottom: 1px solid var(--cool-grey-80);
-
-          &.is-open {
-            border-bottom: none;
-          }
-          &:hover {
-            background-color: var(--blue-100);
-            cursor: pointer;
-          }
-        }
-      }
-
-      .request-services,
-      .assign-roles,
-      .add-account {
-        padding: $spacing-s;
-        border-bottom: 1px solid var(--cool-grey-80);
-
-        .submit-actions {
-          display: flex;
-          flex-direction: row;
-          align-items: center;
-        }
-      }
-
-      .add-account {
-        height: 450px;
-        overflow: auto;
-
-        .add-account-form {
-          margin-top: $spacing-s;
-        }
-      }
-
-      .request-services {
-        .message {
-          margin: $spacing-s 0;
-          max-width: 300px;
-          display: flex;
-          .icon {
-            margin-right: $spacing-xs;
-            width: 16px;
-          }
-        }
-        .request-select,
-        .required.request-select {
-          margin-bottom: $spacing-s;
-          a.ui.label {
-            background-color: var(--cool-grey-100);
-            color: var(--cool-grey-10);
-            .delete.icon {
-              height: unset;
-              color: var(--blue-50);
-              font-weight: 100;
-              stroke-width: 40%;
-            }
-          }
-        }
-        button.ghost.request {
-          align-self: flex-start;
-        }
-      }
-
-      .react-flow {
-        .tool-tip {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          text-align: center;
-          position: absolute;
-          bottom: 16px;
-          left: 43px;
-          background-color: var(--blue-100);
-          height: fit-content;
-          width: 100px;
-          padding: $spacing-xs;
-          border-radius: 4px;
-          border: 1px solid var(--cool-grey-80);
-        }
-        .tool-tip:after {
-          border: 15px solid transparent;
-          border-right-color: var(--blue-90);
-          content: '';
-          margin-left: -1em;
-          position: absolute;
-          top: 11px;
-          left: -16px;
-          z-index: 5;
-
-          width: 0;
-          height: 0;
-        }
-
-        .role-node {
-          display: flex;
-          padding: $spacing-xs;
-          flex-direction: column;
-          width: 172px;
-          background-color: var(--blue-100);
-          justify-content: center;
-          align-items: center;
-          text-align: center;
-          border-radius: 4px;
-          border: 1px solid var(--cool-grey-80);
-
-          h4 {
-            margin: $spacing-xs 0;
-          }
-        }
+      p.p2.dark.cleared-exchange {
+        padding-left: $spacing-xs;
       }
     }
 
     .setup-page {
       display: flex;
       flex-direction: column;
-      animation: fadeIn 0.2s;
+      animation: fadeIn 0.5s;
       padding: $spacing-m;
-      justify-content: space-between;
       background-color: var(--white);
       border-radius: 4px 4px;
       width: 800px;
       height: 550px;
 
-      button.ghost.next,
-      a.ghost.next {
-        align-self: flex-end;
+      @include AddPartiesPage.add-parties-page;
+      @include AssignRolesPage.assign-roles;
+
+      h2.title {
+        text-align: center;
+      }
+
+      form {
+        display: grid;
+        grid-gap: $spacing-s;
+        grid-template-columns: repeat(3, 1fr);
+        background-color: var(--cool-grey-100);
+        border: 1px solid var(--cool-grey-80);
+        padding: $spacing-s;
+        border-radius: 4px;
+        margin-bottom: $spacing-s;
+
+        &.form-error-handled {
+          grid-template-columns: repeat(2, 1fr);
+          button {
+            height: 44px;
+            width: fit-content;
+            justify-self: flex-end;
+            align-self: flex-end;
+          }
+        }
+      }
+
+      button.ui.button.ghost.submit,
+      button.ghost.submit {
+        width: fit-content;
+        margin-left: auto;
+      }
+
+      .empty {
+        height: 100%;
+        width: 100%;
+        text-align: center;
+        margin-top: $spacing-l;
+      }
+
+      &.main-select {
+        background-color: var(--cool-grey-10);
+        width: 500px;
+        height: fit-content;
+        justify-self: flex-start;
+        animation: fadeIn 0.5s;
+
+        h4 {
+          text-align: center;
+        }
+
+        button.main-button {
+          display: flex;
+          flex-direction: row;
+          justify-content: space-between;
+          width: 100%;
+          padding: var(--spacing-m);
+          margin-bottom: $spacing-m;
+        }
       }
 
       .page-row {
         display: flex;
         flex-direction: row;
+
+        p.p2.dark.cleared-exchange {
+          padding-left: $spacing-xs;
+        }
+
+        &.submit-actions {
+          padding-top: $spacing-xs;
+          justify-content: flex-end;
+
+          button {
+            margin-right: $spacing-m;
+          }
+        }
       }
 
       .arrow {
         padding: $spacing-l;
         align-self: center;
-      }
-
-      .party-names {
-        max-height: 330px;
-        overflow-y: auto;
-        border: 1px solid var(--cool-grey-80);
-        margin-top: $spacing-xs;
-        width: 400px;
-
-        .party-name {
-          align-items: center;
-          justify-content: space-between;
-          background-color: var(--cool-grey-100);
-          border-bottom: 1px solid var(--cool-grey-80);
-          min-height: 50px;
-          padding: $spacing-xs $spacing-s;
-
-          &:last-of-type {
-            border-bottom: none;
-          }
-
-          .party-details {
-            display: flex;
-            flex-direction: column;
-          }
-        }
-      }
-
-      &.finish {
-        padding: 0px;
-        align-items: center;
-        justify-content: flex-start;
-        background-color: var(--cool-grey-20);
-
-        .page-content {
-          width: 100%;
-        }
-        p {
-          margin-bottom: $spacing-s;
-        }
-
-        .log-in-tile-grid {
-          display: grid;
-          grid-template-columns: 33% 33% 33%;
-          width: 100%;
-
-          .log-in-tile {
-            display: flex;
-            flex-direction: column;
-            border-radius: 4px;
-            background-color: var(--white);
-            width: auto;
-            min-height: 88px;
-            padding: $spacing-s;
-            margin: 0 $spacing-s $spacing-s 0;
-
-            .log-in-row {
-              justify-content: space-between;
-              align-items: baseline;
-              overflow: hidden;
-
-              h4 {
-                display: unset;
-                white-space: nowrap;
-                width: unset;
-                align-items: unset;
-                overflow: hidden;
-                text-overflow: ellipsis;
-              }
-
-              p.log-in {
-                align-items: baseline;
-                border: none;
-                color: var(--blue-60);
-                padding: 0px;
-                white-space: nowrap;
-
-                .icon {
-                  margin-left: $spacing-xs;
-                  height: 10px;
-                }
-              }
-            }
-
-            &:hover {
-              background-color: var(--blue-100);
-              cursor: pointer;
-            }
-
-            .finished-roles {
-              font-size: 12px;
-              color: var(--cool-grey-30);
-            }
-          }
-        }
-      }
-    }
-
-    .add-parties {
-      .page-content {
-        height: 100%;
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-        .party-names {
-          max-height: 90%;
-        }
-      }
-      .upload-parties {
-        display: flex;
-        align-items: center;
-        flex-direction: column;
-        width: 100%;
-
-        .details {
-          margin-bottom: $spacing-xl;
-        }
-
-        &.uploaded {
-          margin-left: $spacing-xl;
-          justify-content: center;
-        }
-      }
-
-      .custom-file-upload {
-        width: fit-content;
-        height: 44px;
-        border-radius: 4px;
-        background-color: var(--white);
-        border: 1px solid var(--green-50);
-        cursor: pointer;
-
-        > input[type='file'] {
-          display: none;
-        }
-        &:hover {
-          background-color: var(--blue-100);
-          cursor: pointer;
-        }
       }
     }
   }
