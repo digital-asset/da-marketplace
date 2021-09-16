@@ -117,6 +117,14 @@ template CreateOrderRequest
           s <- create (Order.newState order) with status = Order.PendingExecution
           pure (o, s)
 
+      AcknowledgeAndFill : (ContractId Order.Execution, ContractId Order.T, ContractId Order.State, ContractId Order.State ) 
+        with contraCid : ContractId Order.T
+        do
+          o <- create order
+          s <- create (Order.newState order)
+          (e, s, s') <- exercise o Order.Cross with contraCid
+          pure (e, o, s, s')
+
       RejectRequest : (ContractId Order.T, ContractId Order.State)
         with
           errorCode : Int

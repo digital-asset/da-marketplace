@@ -1,3 +1,5 @@
+{-# LANGUAGE ApplicativeDo #-}
+
 module Tests.Trading.E2E where
 
 import Daml.Script
@@ -136,5 +138,71 @@ tradingEndToEndTest = script do
         price = 100.0
 
   Some (_, Order.State{status=Order.FullyExecuted}) <- queryContractKey alice.customer (public, aliceOrderId)
+
+  -- Scenario # 3 Novation via CCP
+  -- ############################################################################
+
+  ccp <- allocateParty "CCP"
+  
+  ccpExchangeRoleOfferCid <- submit providers.operator do exerciseCmd providers.operatorRoleCid Operator.OfferExchangeRole with provider = ccp
+  (ccpExecutionServiceRoleCid, _, _, _) <- submit ccp do exerciseCmd ccpExchangeRoleOfferCid $ Exchange.Accept
+
+  ccpExecutionServiceOfferToAliceCid <- submit ccp do 
+    exerciseCmd ccpExecutionServiceRoleCid Exchange.OfferTradingService with customer = alice.customer
+  aliceCcpExecutionServiceCid <- submit alice.customer do exerciseCmd ccpExecutionServiceOfferToAliceCid $ Trading.Accept
+
+  ccpExecutionServiceOfferToBobCid <- submit ccp do 
+    exerciseCmd ccpExecutionServiceRoleCid Exchange.OfferTradingService with customer = bob.customer
+  bobCcpExecutionServiceCid <- submit bob.customer do exerciseCmd ccpExecutionServiceOfferToBobCid $ Trading.Accept
+
+  let aliceOrderId = "aliceExchangeOrder"
+  aliceOrderReqCid <- submit alice.customer do
+    exerciseCmd aliceCcpExecutionServiceCid $ Trading.RequestCreateOrder
+      Order.Order with
+        originator = alice.customer
+        executor = ccp
+        id = aliceOrderId
+        listingId
+        asset = shareAsset
+        side = Order.Sell
+        timeInForce = Order.GTC
+        price = 100.0
+
+  (aliceOrderCid, aliceOrderStateCid) <- submit ccp do
+    exerciseCmd aliceOrderReqCid Trading.AcknowledgeRequest
+
+  let bobOrderId = "bobExchangeOrder"
+  bobOrderReqCid <- submit bob.customer do
+    exerciseCmd bobCcpExecutionServiceCid $ Trading.RequestCreateOrder
+      Order.Order with
+        originator = bob.customer
+        executor = ccp
+        id = bobOrderId
+        listingId
+        asset = shareAsset
+        side = Order.Buy
+        timeInForce = Order.GTC
+        price = 100.0
+
+  -- FIXME: novate in a single step, so that order is filled and Ack'd at the same time
+  (bobOrderCid, bobOrderStateCid) <- submit ccp do 
+    exerciseCmd bobOrderReqCid $ Trading.AcknowledgeRequest
+  
+  Some aliceOrder <- queryContractId ccp aliceOrderCid
+  Some bobOrder <- queryContractId ccp bobOrderCid
+
+  submit ccp do
+    exerciseCmd bobOrderCid $ Order.Fill { counterparty = ccp, contraOrder = aliceOrder {originator = ccp , executor = bob.customer} }
+    exerciseCmd aliceOrderCid $ Order.Fill { counterparty = ccp, contraOrder = bobOrder {originator = ccp, executor = alice.customer} }
+    return ()
+
+  
+  {-
+  Some Order.State{status=Order.FullyExecuted} <- queryContractId alice.customer aliceOrderStateCid
+  Some Order.State{status=Order.FullyExecuted} <- queryContractId bob.customer bobOrderStateCid
+  -}
+  
+  -- Scenario # 4 Inter-dealer broker
+  -- ############################################################################
 
   return ()
