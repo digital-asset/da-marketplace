@@ -105,7 +105,7 @@ template CreateOrderRequest
   where
     signatory provider, customer
 
-    key (provider, order.details.id) : (Party, Order.OrderId)
+    key (provider, order.id) : (Party, Order.OrderId)
     maintainer key._1
 
     let serviceKey = (operator, provider, customer)

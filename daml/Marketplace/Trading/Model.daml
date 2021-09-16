@@ -25,16 +25,6 @@ data TimeInForce --TODO: split this into 'expiry' and 'entry'
       -- ^ Fill Or Kill (All or nothing)
   deriving (Eq, Show)
 
-data Details = Details with
-    id : Text
-    listingId : Text
-    asset : Asset
-    side : Side
-    price : Decimal
-    timeInForce : TimeInForce
-    optExchangeFee : Optional (ContractId AssetDeposit)
-  deriving (Eq, Show)
-
 data Status
     = New
     | PendingExecution
@@ -86,9 +76,9 @@ newState : Order -> State
 newState order = State with
   originator = order.originator
   executor = order.executor
-  orderId = order.details.id
+  orderId = order.id
   status = New
-  quantityRemaining = order.details.asset.quantity
+  quantityRemaining = order.asset.quantity
 
 
 -- | These are fields that are static throughout the lifetime of the order
@@ -99,12 +89,17 @@ template Order
   with
     originator : Party
     executor : Party
-    details : Details
+    id : Text
+    listingId : Text
+    asset : Asset
+    side : Side
+    price : Decimal
+    timeInForce : TimeInForce
     -- createdAt : Time -- can't guarantee this in on a bare create
   where
     signatory originator, executor 
 
-    key (originator, details.id) : (Party, OrderId)
+    key (originator, id) : (Party, OrderId)
     maintainer key._1
 
     controller executor can 
@@ -113,8 +108,8 @@ template Order
         with contraCid : ContractId Order
         do timestamp <- getTime
            contraOrder <- fetch contraCid
-           (contraStateCid, contraState) <- fetchByKey (originator, contraOrder.details.id)
-           (stateCid, state) <- fetchByKey (executor, this.details.id)
+           (contraStateCid, contraState) <- fetchByKey (originator, contraOrder.id)
+           (stateCid, state) <- fetchByKey (executor, this.id)
            let order = this
                quantity = min state.quantityRemaining contraState.quantityRemaining
                execution = Execution with
@@ -123,12 +118,12 @@ template Order
                  makerOrderCid = self -- TODO: What if we amend the order? e.g. change price?
                  takerOrderCid = contraCid
                  quantity
-                 price = contraOrder.details.price
+                 price = contraOrder.price
                  timestamp
-           assertMsg "order direction is the same" $ order.details.side /= contraOrder.details.side
-           assertMsg "invalid price" case order.details.side of
-             Buy -> order.details.price <= contraOrder.details.price
-             Sell -> order.details.price >= contraOrder.details.price
+           assertMsg "order direction is the same" $ order.side /= contraOrder.side
+           assertMsg "invalid price" case order.side of
+             Buy -> order.price <= contraOrder.price
+             Sell -> order.price >= contraOrder.price
            archive stateCid
            archive contraStateCid
            [stateCid', contraStateCid'] <- forA [state, contraState] \s ->

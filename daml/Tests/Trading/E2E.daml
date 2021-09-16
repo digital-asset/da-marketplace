@@ -68,14 +68,12 @@ tradingEndToEndTest = script do
       Order.Order with
         originator = alice.customer
         executor = bob.customer
-        details = Order.Details with
-            id = aliceOrderId
-            listingId
-            asset = shareAsset
-            side = Order.Sell
-            timeInForce = Order.GTC
-            optExchangeFee = None
-            price = 100.0
+        id = aliceOrderId
+        listingId
+        asset = shareAsset
+        side = Order.Sell
+        timeInForce = Order.GTC
+        price = 100.0
   (aliceOrderCid, aliceOrderStateCid) <- submit bob.customer do
     exerciseCmd aliceOrderReqCid Trading.AcknowledgeRequest
 
@@ -89,14 +87,12 @@ tradingEndToEndTest = script do
         contraOrder = Order.Order with
             originator = bob.customer
             executor = alice.customer
-            details = Order.Details with
-                        id = bobOrderId
-                        listingId
-                        asset = shareAsset
-                        side = Order.Buy
-                        optExchangeFee = None
-                        timeInForce = Order.GTC
-                        price = 100.0
+            id = bobOrderId
+            listingId
+            asset = shareAsset
+            side = Order.Buy
+            timeInForce = Order.GTC
+            price = 100.0
 
   Some (_, Order.State{status=Order.FullyExecuted}) <- queryContractKey alice.customer (bob.customer, aliceOrderId)
 
@@ -118,14 +114,12 @@ tradingEndToEndTest = script do
       Order.Order with
         originator = alice.customer
         executor = public
-        details = Order.Details with
-                    id = aliceOrderId
-                    listingId
-                    asset = shareAsset
-                    side = Order.Sell
-                    timeInForce = Order.GTC -- INFO Note that when creating a public order, it's likely you'll want to make it FoK. Otherwise it will be left with the executor, unfilled.
-                    optExchangeFee = None
-                    price = 100.0
+        id = aliceOrderId
+        listingId
+        asset = shareAsset
+        side = Order.Sell
+        timeInForce = Order.GTC -- INFO Note that when creating a public order, it's likely you'll want to make it FoK. Otherwise it will be left with the executor, unfilled.
+        price = 100.0
 
   let bobOrderId = "bobPublicFill"
   submitMulti [bob.customer, public] [public] do
@@ -133,15 +127,13 @@ tradingEndToEndTest = script do
       counterparty = bob.customer
       contraOrder = Order.Order with
         originator = bob.customer
-        executor = alice.customer
-        details = Order.Details with
-                    id = bobOrderId
-                    listingId
-                    asset = shareAsset
-                    side = Order.Buy
-                    optExchangeFee = None
-                    timeInForce = Order.GTC
-                    price = 100.0
+        executor = alice.customer -- TODO: note this doesn't match the other order's executor!
+        id = bobOrderId
+        listingId
+        asset = shareAsset
+        side = Order.Buy
+        timeInForce = Order.GTC
+        price = 100.0
 
   Some (_, Order.State{status=Order.FullyExecuted}) <- queryContractKey alice.customer (public, aliceOrderId)
 
