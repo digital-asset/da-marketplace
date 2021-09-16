@@ -3,8 +3,6 @@ module Marketplace.Trading.Model where
 import DA.Set (Set, toList)
 import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Account, Id(..), Asset(..))
-import DA.Optional (fromSomeNote)
-import DA.Foldable (forA_)
 import Marketplace.Trading.Error qualified as Error
 
 data Side
@@ -12,7 +10,7 @@ data Side
     | Sell
   deriving (Eq, Show)
 
-data TimeInForce
+data TimeInForce --TODO: split this into 'expiry' and 'entry'
     = GTC
       -- ^ Good Till Cancelled (Rests on book until cancellation)
     | GTD with
@@ -32,7 +30,7 @@ data Details = Details with
     listingId : Text
     asset : Asset
     side : Side
-    price : Optional Decimal
+    price : Decimal
     timeInForce : TimeInForce
     optExchangeFee : Optional (ContractId AssetDeposit)
   deriving (Eq, Show)
@@ -119,24 +117,18 @@ template Order
            (stateCid, state) <- fetchByKey (executor, this.details.id)
            let order = this
                quantity = min state.quantityRemaining contraState.quantityRemaining
-               (<|>) None x = x --TODO: add `Alternative` to Daml.Control
-               (<|>) x _ = x
-               price = fromSomeNote "Matched two market orders" $
-                 order.details.price <|> contraOrder.details.price
                execution = Execution with
                  maker = originator
                  taker = executor
                  makerOrderCid = self -- TODO: What if we amend the order? e.g. change price?
                  takerOrderCid = contraCid
                  quantity
-                 price
+                 price = contraOrder.details.price
                  timestamp
            assertMsg "order direction is the same" $ order.details.side /= contraOrder.details.side
-           forA_ [order, contraOrder] \o ->
-             forA_ o.details.price \limitPx ->
-               assertMsg "Prices don't cross" case o.details.side of
-                 Buy -> price <= limitPx
-                 Sell -> price >= limitPx
+           assertMsg "invalid price" case order.details.side of
+             Buy -> order.details.price <= contraOrder.details.price
+             Sell -> order.details.price >= contraOrder.details.price
            archive stateCid
            archive contraStateCid
            [stateCid', contraStateCid'] <- forA [state, contraState] \s ->

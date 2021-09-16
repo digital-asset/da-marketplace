@@ -75,7 +75,7 @@ tradingEndToEndTest = script do
             side = Order.Sell
             timeInForce = Order.GTC
             optExchangeFee = None
-            price = Some 100.0
+            price = 100.0
   (aliceOrderCid, aliceOrderStateCid) <- submit bob.customer do
     exerciseCmd aliceOrderReqCid Trading.AcknowledgeRequest
 
@@ -96,7 +96,7 @@ tradingEndToEndTest = script do
                         side = Order.Buy
                         optExchangeFee = None
                         timeInForce = Order.GTC
-                        price = Some 100.0
+                        price = 100.0
 
   Some (_, Order.State{status=Order.FullyExecuted}) <- queryContractKey alice.customer (bob.customer, aliceOrderId)
 
@@ -123,9 +123,9 @@ tradingEndToEndTest = script do
                     listingId
                     asset = shareAsset
                     side = Order.Sell
-                    timeInForce = Order.GTC
+                    timeInForce = Order.GTC -- INFO Note that when creating a public order, it's likely you'll want to make it FoK. Otherwise it will be left with the executor, unfilled.
                     optExchangeFee = None
-                    price = Some 100.0
+                    price = 100.0
 
   let bobOrderId = "bobPublicFill"
   submitMulti [bob.customer, public] [public] do
@@ -141,7 +141,7 @@ tradingEndToEndTest = script do
                     side = Order.Buy
                     optExchangeFee = None
                     timeInForce = Order.GTC
-                    price = Some 100.0
+                    price = 100.0
 
   Some (_, Order.State{status=Order.FullyExecuted}) <- queryContractKey alice.customer (public, aliceOrderId)
 
