@@ -10,7 +10,7 @@ import { Request as DistributionRequest } from '@daml.js/da-marketplace/lib/Mark
 import { Request as SettlementRequest } from '@daml.js/da-marketplace/lib/Marketplace/Settlement/Service';
 import { Role as OperatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
 
-import { Fields } from '../../components/InputDialog/Fields';
+import { defaultItems, Fields } from '../../components/InputDialog/Fields';
 import {
   RoleKind,
   RoleRequest,
@@ -19,11 +19,13 @@ import {
 } from '../../context/RolesContext';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { usePartyName, useVerifiedParties } from '../../config';
-import { useParty, useStreamQueries } from '@daml/react';
+import { useParty } from '@daml/react';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { RoleRequestDialog } from '../../components/InputDialog/RoleDialog';
 import { useRoleRequestKinds } from '../../context/RequestsContext';
 import { AddPlusIcon } from '../../icons/icons';
+
+import { useStreamQueries } from '../../Main';
 
 interface RequestInterface {
   operator: string;
@@ -36,10 +38,20 @@ const RoleRequestMenu: React.FC = () => {
   const { getName } = usePartyName(party);
   const operatorRoles = useStreamQueries(OperatorRole);
 
+  console.log('Operator role contracts!', operatorRoles);
+
   const operators = useMemo(
-    () => operatorRoles.contracts.map(o => o.payload.operator),
-    [operatorRoles]
+    () =>
+      operatorRoles.contracts.map(o => ({
+        key: o.payload.operator,
+        value: o.payload.operator,
+        text: getName(o.payload.operator),
+      })),
+    [operatorRoles, getName]
   );
+
+  console.log('Operators!', operators);
+
   const requests = useRoleRequestKinds();
   const roles = usePartyRoleKinds(party);
 
@@ -48,7 +60,7 @@ const RoleRequestMenu: React.FC = () => {
   const [request, setRequest] = useState<RoleRequest>();
   const [roleKind, setRoleKind] = useState<RoleKind>();
   const [openDialog, setOpenDialog] = useState(false);
-  const [fields, setFields] = useState<object>({});
+  const [fields, setFields] = useState<Fields>({});
   const [dialogState, setDialogState] = useState<any>({});
   const [requestParams, setRequestParams] = useState<RequestInterface>({
     operator: '',
@@ -65,25 +77,28 @@ const RoleRequestMenu: React.FC = () => {
   );
 
   useEffect(() => {
-    const operator =
-      identities.find(i => i.payload.legalName === dialogState?.operator)?.payload.customer ||
-      'Operator';
+    console.log('DIALOG IS: ', { dialogState });
+    const operator = dialogState?.operator;
 
-    let params: RequestInterface = {
-      operator,
-      provider: party,
-    };
+    console.log('OPERATOR IS: ', { operator });
 
-    if (dialogState?.ccpAccount) {
-      const ccpAccount = accounts.find(a => a.id.label === dialogState.ccpAccount);
-      params = {
-        ...params,
-        ccpAccount,
+    if (!!operator) {
+      let params: RequestInterface = {
+        operator,
+        provider: party,
       };
-    }
 
-    setRequestParams(params);
-  }, [dialogState, accounts, identities, party, operators]);
+      if (dialogState?.ccpAccount) {
+        const ccpAccount = accounts.find(a => a.id.label === dialogState.ccpAccount);
+        params = {
+          ...params,
+          ccpAccount,
+        };
+      }
+
+      setRequestParams(params);
+    }
+  }, [dialogState, accounts, identities, party]);
 
   const requestRole = <T extends RoleRequestTemplates>(
     role: Template<T, undefined, string>,
@@ -94,7 +109,7 @@ const RoleRequestMenu: React.FC = () => {
       operator: {
         label: 'Operator',
         type: 'selection',
-        items: operators.map(o => getName(o)),
+        items: operators,
       },
       ...extraFields,
     });
@@ -175,7 +190,7 @@ const RoleRequestMenu: React.FC = () => {
               ccpAccount: {
                 label: 'CCP Account',
                 type: 'selection',
-                items: accounts.map(a => a.id.label),
+                items: defaultItems(accounts.map(a => a.id.label)),
               },
             })
           }

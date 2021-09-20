@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Form, Header } from 'semantic-ui-react';
+import { DropdownItemProps, Form, Header } from 'semantic-ui-react';
 
 export type FieldCallback<T> = (arg: T) => Field;
 export type FieldCallbacks<T> = Record<string, FieldCallback<T>>;
@@ -12,7 +12,11 @@ interface RegularField {
 interface SelectionField {
   label: string;
   type: 'selection';
-  items: string[];
+  items: DropdownItemProps[];
+}
+
+export function defaultItems(items: string[]): DropdownItemProps[] {
+  return items.map(item => ({ key: item, value: item, text: item }));
 }
 
 interface CheckBoxField {
@@ -46,11 +50,7 @@ export function FieldComponents<T extends Record<string, string>>(props: FieldCo
           label={!placeholderLabels ? <Header as="h4">{field.label}</Header> : undefined}
           placeholder={!!placeholderLabels ? field.label : undefined}
           onChange={(_, change) => setState(state => ({ ...state, [fieldName]: change.value }))}
-          options={field.items.map(item => ({
-            key: item,
-            value: item,
-            text: item,
-          }))}
+          options={field.items}
           value={state[fieldName]}
         />
       );

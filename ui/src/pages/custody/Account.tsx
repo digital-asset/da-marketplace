@@ -16,6 +16,7 @@ import { ServicePageProps, damlSetValues } from '../common';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 import OverflowMenu, { OverflowMenuEntry } from '../../pages/page/OverflowMenu';
+import { defaultItems } from '../../components/InputDialog/Fields';
 
 interface AccountProps {
   targetAccount: {
@@ -118,7 +119,7 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
       },
       fields: {
         ...defaultTransferRequestDialogProps.fields,
-        account: { label: 'Account', type: 'selection', items: relatedAccounts },
+        account: { label: 'Account', type: 'selection', items: defaultItems(relatedAccounts) },
       },
       open: true,
       onClose,

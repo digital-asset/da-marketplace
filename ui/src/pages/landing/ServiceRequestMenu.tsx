@@ -19,7 +19,12 @@ import { Request as AuctionRequest } from '@daml.js/da-marketplace/lib/Marketpla
 import { Request as BiddingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
 
 import _ from 'lodash';
-import { Fields, FieldCallbacks, FieldCallback } from '../../components/InputDialog/Fields';
+import {
+  Fields,
+  FieldCallbacks,
+  FieldCallback,
+  defaultItems,
+} from '../../components/InputDialog/Fields';
 import { RoleKind, useProvidersByRole } from '../../context/RolesContext';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { usePartyName, useVerifiedParties } from '../../config';
@@ -154,7 +159,7 @@ const ServiceRequestMenu: React.FC = () => {
       provider: {
         label: 'Provider',
         type: 'selection',
-        items: providerNames,
+        items: defaultItems(providerNames),
       },
       ...extraFields,
     });
@@ -193,11 +198,14 @@ const ServiceRequestMenu: React.FC = () => {
       return {
         label,
         type: 'selection',
-        items: assetSettlementRules
-          .filter(
-            ar => ar.payload.observers.map.has(provider) || ar.payload.account.provider === provider
-          )
-          .map(ar => ar.payload.account.id.label),
+        items: defaultItems(
+          assetSettlementRules
+            .filter(
+              ar =>
+                ar.payload.observers.map.has(provider) || ar.payload.account.provider === provider
+            )
+            .map(ar => ar.payload.account.id.label)
+        ),
       };
     };
   const makeAllocationAccountFilterField =
@@ -206,9 +214,11 @@ const ServiceRequestMenu: React.FC = () => {
       return {
         label,
         type: 'selection',
-        items: allocationAccountRules
-          .filter(ar => ar.payload.nominee === provider)
-          .map(ar => ar.payload.account.id.label),
+        items: defaultItems(
+          allocationAccountRules
+            .filter(ar => ar.payload.nominee === provider)
+            .map(ar => ar.payload.account.id.label)
+        ),
       };
     };
   return (
