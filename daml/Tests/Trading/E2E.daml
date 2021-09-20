@@ -197,4 +197,66 @@ tradingEndToEndTest = script do
   -- Scenario # 4 Inter-dealer broker
   -- ############################################################################
 
+  -- We're re-using the services created above for this
+
+  let aliceOrderId = "aliceAgencyOrder"
+  aliceOrderReqCid <- submit alice.customer do
+    exerciseCmd bobExecutionServiceCid $ Trading.RequestCreateOrder
+      Order.Order with
+        originator = alice.customer
+        executor = bob.customer
+        id = aliceOrderId
+        listingId
+        asset = shareAsset
+        side = Order.Sell
+        timeInForce = Order.GTC
+        price = 100.0
+  (aliceOrderCid, aliceOrderStateCid) <- submit bob.customer do
+    exerciseCmd aliceOrderReqCid Trading.AcknowledgeRequest
+
+  Some Order.State{status=Order.PendingExecution} <- 
+    queryContractId alice.customer aliceOrderStateCid
+
+  Some aliceOrder <- queryContractId bob.customer aliceOrderCid
+
+  let bobOrderId = "bobAgencyOrder"
+  bobOrderReqCid <- submit bob.customer do
+    exerciseCmd bobCcpExecutionServiceCid $ Trading.RequestCreateOrder
+      aliceOrder with originator = bob.customer, executor = ccp, id = bobOrderId
+
+  (bobOrderCid, bobOrderStateCid) <- submit ccp do 
+     exerciseCmd bobOrderReqCid $ Trading.AcknowledgeRequest
+
+  -- FIXME : make the two fills atomic
+  (_, _, bobOrderStateCid,_ ) <- submit ccp do 
+    exerciseCmd bobOrderCid $ 
+      Order.Fill with
+        counterparty = ccp
+        contraOrder = Order.Order with
+          originator = ccp
+          executor = bob.customer
+          id = "CCP principal fill"
+          listingId
+          asset = shareAsset
+          side = Order.Buy
+          timeInForce = Order.GTC
+          price = 100.0
+
+  (_, _, aliceOrderStateCid, _) <- submit bob.customer do
+     exerciseCmd aliceOrderCid $ 
+      Order.Fill with
+        counterparty = bob.customer
+        contraOrder = Order.Order with
+          originator = bob.customer
+          executor = alice.customer
+          id = "bob agency fill"
+          listingId
+          asset = shareAsset
+          side = Order.Buy
+          timeInForce = Order.GTC
+          price = 100.0
+   
+  Some Order.State{status=Order.FullyExecuted} <- queryContractId bob.customer bobOrderStateCid
+  Some Order.State{status=Order.FullyExecuted} <- queryContractId alice.customer aliceOrderStateCid
+
   return ()
