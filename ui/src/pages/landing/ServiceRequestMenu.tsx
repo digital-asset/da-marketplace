@@ -28,9 +28,11 @@ import {
 import { RoleKind, useProvidersByRole } from '../../context/RolesContext';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { usePartyName, useVerifiedParties } from '../../config';
-import { useParty, useStreamQueries } from '@daml/react';
+import { useParty } from '@daml/react';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
+
+import { useStreamQueries } from '../../Main';
 
 interface RequestInterface {
   customer: string;
