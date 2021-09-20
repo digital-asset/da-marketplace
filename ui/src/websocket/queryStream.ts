@@ -130,12 +130,6 @@ const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken
     }
   };
 
-  console.log(
-    'TEMPLATE IDS: ',
-    publicTemplateIds.map(s => s.split(':').slice(1).join(':')),
-    partyTemplateIds.map(s => s.split(':').slice(1).join(':'))
-  );
-
   const [queryStream, setQueryStream] = useState<QueryStream>({
     publicTemplateIds: [],
     publicContracts: [],

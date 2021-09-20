@@ -38,8 +38,6 @@ const RoleRequestMenu: React.FC = () => {
   const { getName } = usePartyName(party);
   const operatorRoles = useStreamQueries(OperatorRole);
 
-  console.log('Operator role contracts!', operatorRoles);
-
   const operators = useMemo(
     () =>
       operatorRoles.contracts.map(o => ({
@@ -49,8 +47,6 @@ const RoleRequestMenu: React.FC = () => {
       })),
     [operatorRoles, getName]
   );
-
-  console.log('Operators!', operators);
 
   const requests = useRoleRequestKinds();
   const roles = usePartyRoleKinds(party);
@@ -77,10 +73,7 @@ const RoleRequestMenu: React.FC = () => {
   );
 
   useEffect(() => {
-    console.log('DIALOG IS: ', { dialogState });
     const operator = dialogState?.operator;
-
-    console.log('OPERATOR IS: ', { operator });
 
     if (!!operator) {
       let params: RequestInterface = {
