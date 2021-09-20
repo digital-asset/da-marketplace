@@ -139,12 +139,12 @@ workflows:
             branches:
               ignore:
                 - main
-      - ui_test:
-          daml_sdk_version: "1.12.0"
-          filters:
-            branches:
-              ignore:
-                - main
+#     - ui_test:
+#         daml_sdk_version: "1.12.0"
+#         filters:
+#           branches:
+#             ignore:
+#               - main
   publish:
     jobs:
       - publish:
