@@ -9,11 +9,11 @@
   .quick-setup {
     display: flex;
     align-items: center;
-    justify-content: center;
     flex-direction: column;
     height: 100%;
     width: 100%;
     animation: fadeIn 0.5s;
+
     .info {
       padding-bottom: $spacing-s;
     }
@@ -25,9 +25,27 @@
       display: flex;
       flex-direction: row;
       padding-left: $spacing-xs;
+      align-items: center;
 
       p.p2.dark.cleared-exchange {
         padding-left: $spacing-xs;
+      }
+
+      .ui.checkbox input:checked ~ label:after {
+        color: var(--green-50);
+      }
+    }
+
+    .advanced-setup {
+      color: var(--green-50);
+      background-color: transparent;
+      border: none;
+      text-align: left;
+      width: fit-content;
+      font-size: 13px;
+
+      &:hover {
+        cursor: pointer;
       }
     }
 
