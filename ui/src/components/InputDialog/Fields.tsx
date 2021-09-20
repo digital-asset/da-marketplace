@@ -12,11 +12,11 @@ interface RegularField {
 interface SelectionField {
   label: string;
   type: 'selection';
-  items: DropdownItemProps[];
+  items: DropdownItemProps[] | string[];
 }
 
-export function defaultItems(items: string[]): DropdownItemProps[] {
-  return items.map(item => ({ key: item, value: item, text: item }));
+function isStringArray(sa: any[]): sa is string[] {
+  return sa.reduce((s, bool) => bool && typeof s === 'string', true);
 }
 
 interface CheckBoxField {
@@ -44,13 +44,17 @@ export function FieldComponents<T extends Record<string, string>>(props: FieldCo
     const key = field.label + field.type;
 
     if (field.type === 'selection') {
+      const options = isStringArray(field.items)
+        ? field.items.map(item => ({ key: item, value: item, text: item }))
+        : field.items;
+
       return (
         <Form.Select
           key={key}
           label={!placeholderLabels ? <Header as="h4">{field.label}</Header> : undefined}
           placeholder={!!placeholderLabels ? field.label : undefined}
           onChange={(_, change) => setState(state => ({ ...state, [fieldName]: change.value }))}
-          options={field.items}
+          options={options}
           value={state[fieldName]}
         />
       );

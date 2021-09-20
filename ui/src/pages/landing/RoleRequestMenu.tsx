@@ -10,7 +10,7 @@ import { Request as DistributionRequest } from '@daml.js/da-marketplace/lib/Mark
 import { Request as SettlementRequest } from '@daml.js/da-marketplace/lib/Marketplace/Settlement/Service';
 import { Role as OperatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
 
-import { defaultItems, Fields } from '../../components/InputDialog/Fields';
+import { Fields } from '../../components/InputDialog/Fields';
 import {
   RoleKind,
   RoleRequest,
@@ -183,7 +183,7 @@ const RoleRequestMenu: React.FC = () => {
               ccpAccount: {
                 label: 'CCP Account',
                 type: 'selection',
-                items: defaultItems(accounts.map(a => a.id.label)),
+                items: accounts.map(a => a.id.label),
               },
             })
           }
