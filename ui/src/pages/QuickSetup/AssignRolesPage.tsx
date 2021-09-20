@@ -10,8 +10,8 @@ import {
 } from '@daml-ui.js/da-marketplace-ui/lib/UI/Onboarding';
 import { useHistory } from 'react-router-dom';
 import { useStreamQueries } from '../../Main';
-import Credentials from '../../Credentials';
-import { useVerifiedParties } from '../../config';
+import Credentials, { computeToken } from '../../Credentials';
+import { useVerifiedParties, isHubDeployment, publicParty } from '../../config';
 import QuickSetupPage from './QuickSetupPage';
 import {
   Form,
@@ -26,8 +26,13 @@ import {
 import { createDropdownProp } from '../common';
 import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
 import classNames from 'classnames';
+import { retrieveParties } from '../../Parties';
 
 import { LoadingWheel } from './QuickSetup';
+import { MarketplaceTrigger, deployAutomation } from '../../automation';
+
+import { useDisplayErrorMessage } from '../../context/MessagesContext';
+import { useAutomations } from '../../context/AutomationContext';
 
 interface InstFieldsWithTitle {
   title: string;
@@ -179,21 +184,8 @@ const AssignRolesPage = (props: { adminCredentials: Credentials }) => {
   );
 
   function handleToggleIsClearedExchange() {
-    const title = instructionFields?.title as InstructionType;
-
-    switch (title) {
-      case InstructionType.INVESTOR:
-        setInstructionFields({
-          title: InstructionType.INVESTOR,
-          instructions: investorInstructions(!isClearedExchange),
-        });
-        break;
-      case InstructionType.EXCHANGE:
-        setInstructionFields({
-          title: InstructionType.EXCHANGE,
-          instructions: exchangeInstructions(!isClearedExchange),
-        });
-        break;
+    if (instructionFields) {
+      handleNewInstructionFields(instructionFields.title as InstructionType);
     }
     setIsClearedExchange(!isClearedExchange);
   }
@@ -207,7 +199,10 @@ const AssignRolesPage = (props: { adminCredentials: Credentials }) => {
         });
         break;
       case InstructionType.ISSUER:
-        setInstructionFields({ title: InstructionType.ISSUER, instructions: issuerInstructions() });
+        setInstructionFields({
+          title: InstructionType.ISSUER,
+          instructions: issuerInstructions(),
+        });
         break;
       case InstructionType.EXCHANGE:
         setInstructionFields({
@@ -216,7 +211,10 @@ const AssignRolesPage = (props: { adminCredentials: Credentials }) => {
         });
         break;
       case InstructionType.BANK:
-        setInstructionFields({ title: InstructionType.BANK, instructions: bankInstructions() });
+        setInstructionFields({
+          title: InstructionType.BANK,
+          instructions: bankInstructions(),
+        });
         break;
       default:
         setInstructionFields({
@@ -520,6 +518,21 @@ const issuerInstructions = () => {
   });
 };
 
+const getInstructionTriggers = (inst: InstructionType) => {
+  switch (inst) {
+    case InstructionType.INVESTOR:
+      return [MarketplaceTrigger.SettlementInstructionTrigger];
+    case InstructionType.CLEARING:
+    case InstructionType.CLEARINGHOUSE:
+    case InstructionType.MARKETCLEARING:
+      return [MarketplaceTrigger.ClearingTrigger];
+    case InstructionType.TRADING:
+      return [MarketplaceTrigger.SettlementInstructionTrigger];
+    default:
+      return [];
+  }
+};
+
 const Instructions = (props: {
   instructionFields: InstFieldsWithTitle;
   setInstructionFields: React.Dispatch<React.SetStateAction<InstFieldsWithTitle | undefined>>;
@@ -530,10 +543,26 @@ const Instructions = (props: {
     props;
 
   const ledger = useLedger();
+  const automations = useAutomations();
+
+  const displayErrorMessage = useDisplayErrorMessage();
 
   const { instructions, title } = instructionFields;
 
   const { identities, loading: loadingIdentities } = useVerifiedParties();
+
+  const parties = retrieveParties() || [];
+
+  const allTriggers =
+    automations?.flatMap(auto => {
+      if (auto.automationEntity.tag === 'DamlTrigger') {
+        return auto.automationEntity.value.triggerNames.map(tn => {
+          return `${tn}#${auto.artifactHash}`;
+        });
+      } else {
+        return `${auto.automationEntity.value.entityName}#${auto.artifactHash}`;
+      }
+    }) || [];
 
   const partyOptions = identities.map(p => {
     return createDropdownProp(p.payload.legalName.replaceAll("'", ''), p.payload.customer);
@@ -586,12 +615,53 @@ const Instructions = (props: {
         );
       })
     )
+      .then(async _ => {
+        const triggers = getInstructionTriggers(title as InstructionType);
+        await Promise.all(
+          onboardParties.map(async party => {
+            const token = isHubDeployment
+              ? parties.find(p => p.party === party)?.token
+              : computeToken(party);
+
+            if (!token) {
+              setLoadingInstructions(false);
+              return displayErrorMessage({
+                header: 'Failed to fetch party token',
+                message: `Could not find party token for party ID: ${party}`,
+              });
+            }
+
+            await Promise.all(triggers.map(async t => await handleDeployment(token, t)));
+          })
+        );
+      })
       .then(_ => {
         setOnboardParties([]);
         setInstructionFields(undefined);
         setLoadingInstructions(false);
       })
-      .catch(_ => setLoadingInstructions(false));
+      .catch(_ => {
+        setLoadingInstructions(false);
+        return displayErrorMessage({
+          message:
+            'An error occurred while onboarding this role. Please confirm all required fields are filled out and that an Operator Onboarding contract exists on the ledger.',
+        });
+      });
+  }
+
+  async function handleDeployment(token: string, autoName: string) {
+    if (!isHubDeployment) {
+      return;
+    }
+
+    const trigger = allTriggers.find(auto => auto.startsWith(autoName));
+
+    if (trigger) {
+      const [name, hash] = trigger.split('#');
+      if (hash) {
+        await deployAutomation(hash, name, token, publicParty);
+      }
+    }
   }
 
   return (
