@@ -31,22 +31,22 @@
         padding-left: $spacing-xs;
       }
 
-      .ui.checkbox input:checked~label:after {
-          color: var(--green-50);
+      .ui.checkbox input:checked ~ label:after {
+        color: var(--green-50);
       }
     }
 
     .advanced-setup {
-        color: var(--green-50);
-        background-color: transparent;
-        border: none;
-        text-align: left;
-        width: fit-content;
-        font-size: 13px;
+      color: var(--green-50);
+      background-color: transparent;
+      border: none;
+      text-align: left;
+      width: fit-content;
+      font-size: 13px;
 
-        &:hover {
-            cursor: pointer;
-        }
+      &:hover {
+        cursor: pointer;
+      }
     }
 
     .setup-page {
