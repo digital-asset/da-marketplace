@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { useLedger, useParty, useStreamQueries } from '@daml/react';
+import { useLedger, useParty } from '@daml/react';
 import { Party } from '@daml/types';
 import { ServicePageProps } from '../common';
 import { Form } from 'semantic-ui-react';
@@ -14,6 +14,8 @@ import { usePartyName } from '../../config';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { CurrencySelect } from './CurrencySelect';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
+
+import { useStreamQueries } from '../../Main';
 
 type MarginCallProps = {
   member?: Party;

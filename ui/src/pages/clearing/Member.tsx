@@ -1,6 +1,6 @@
 import React from 'react';
 import { RouteComponentProps, useParams, withRouter } from 'react-router-dom';
-import { useLedger, useParty, useStreamQueries } from '@daml/react';
+import { useLedger, useParty } from '@daml/react';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import {
@@ -22,6 +22,8 @@ import { ContractId } from '@daml/types';
 import { formatCurrency } from '../../util';
 import TitleWithActions from '../../components/Common/TitleWithActions';
 import InfoCard from '../../components/Common/InfoCard';
+
+import { useStreamQueries } from '../../Main';
 
 type Props = {
   member?: boolean;

@@ -19,11 +19,13 @@ import {
 } from '../../context/RolesContext';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { usePartyName, useVerifiedParties } from '../../config';
-import { useParty, useStreamQueries } from '@daml/react';
+import { useParty } from '@daml/react';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { RoleRequestDialog } from '../../components/InputDialog/RoleDialog';
 import { useRoleRequestKinds } from '../../context/RequestsContext';
 import { AddPlusIcon } from '../../icons/icons';
+
+import { useStreamQueries } from '../../Main';
 
 interface RequestInterface {
   operator: string;
@@ -37,9 +39,15 @@ const RoleRequestMenu: React.FC = () => {
   const operatorRoles = useStreamQueries(OperatorRole);
 
   const operators = useMemo(
-    () => operatorRoles.contracts.map(o => o.payload.operator),
-    [operatorRoles]
+    () =>
+      operatorRoles.contracts.map(o => ({
+        key: o.payload.operator,
+        value: o.payload.operator,
+        text: getName(o.payload.operator),
+      })),
+    [operatorRoles, getName]
   );
+
   const requests = useRoleRequestKinds();
   const roles = usePartyRoleKinds(party);
 
@@ -48,7 +56,7 @@ const RoleRequestMenu: React.FC = () => {
   const [request, setRequest] = useState<RoleRequest>();
   const [roleKind, setRoleKind] = useState<RoleKind>();
   const [openDialog, setOpenDialog] = useState(false);
-  const [fields, setFields] = useState<object>({});
+  const [fields, setFields] = useState<Fields>({});
   const [dialogState, setDialogState] = useState<any>({});
   const [requestParams, setRequestParams] = useState<RequestInterface>({
     operator: '',
@@ -65,25 +73,25 @@ const RoleRequestMenu: React.FC = () => {
   );
 
   useEffect(() => {
-    const operator =
-      identities.find(i => i.payload.legalName === dialogState?.operator)?.payload.customer ||
-      'Operator';
+    const operator = dialogState?.operator;
 
-    let params: RequestInterface = {
-      operator,
-      provider: party,
-    };
-
-    if (dialogState?.ccpAccount) {
-      const ccpAccount = accounts.find(a => a.id.label === dialogState.ccpAccount);
-      params = {
-        ...params,
-        ccpAccount,
+    if (!!operator) {
+      let params: RequestInterface = {
+        operator,
+        provider: party,
       };
-    }
 
-    setRequestParams(params);
-  }, [dialogState, accounts, identities, party, operators]);
+      if (dialogState?.ccpAccount) {
+        const ccpAccount = accounts.find(a => a.id.label === dialogState.ccpAccount);
+        params = {
+          ...params,
+          ccpAccount,
+        };
+      }
+
+      setRequestParams(params);
+    }
+  }, [dialogState, accounts, identities, party]);
 
   const requestRole = <T extends RoleRequestTemplates>(
     role: Template<T, undefined, string>,
@@ -94,7 +102,7 @@ const RoleRequestMenu: React.FC = () => {
       operator: {
         label: 'Operator',
         type: 'selection',
-        items: operators.map(o => getName(o)),
+        items: operators,
       },
       ...extraFields,
     });
