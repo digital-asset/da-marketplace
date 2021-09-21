@@ -23,7 +23,6 @@ import { AppError } from "./common/errorTypes"
 import FormErrorHandled from "./common/FormErrorHandled"
 import LoadingScreen from "./common/LoadingScreen"
 import SetupRequired from "./SetupRequired"
-import { useDablParties } from "./common/common"
 
 type Props = {
     onLogin: (credentials?: Credentials) => void
@@ -88,13 +87,13 @@ const LoginScreen: React.FC<Props> = ({ onLogin }) => {
 
 const LocalLoginForm: React.FC<Props> = ({ onLogin }) => {
     const [username, setUsername] = useState("")
-    const history = useHistory()
+    const history = useHistory();
 
     const handleLogin = async (event: React.FormEvent) => {
         event.preventDefault()
         const credentials = computeCredentials(username)
         onLogin(credentials)
-        history.push("/role")
+        history.push('/role');
     }
 
     return (
@@ -122,13 +121,11 @@ const LocalLoginForm: React.FC<Props> = ({ onLogin }) => {
 const JWTLoginForm: React.FC<Props> = ({ onLogin }) => {
     const [partyId, setPartyId] = useState("")
     const [jwt, setJwt] = useState("")
-    const { parties, loading } = useDablParties()
-
     const history = useHistory()
 
     const handleDablTokenLogin = () => {
         onLogin({ token: jwt, party: partyId, ledgerId })
-        history.push("/role")
+        history.push('/role');
     }
 
     return (
@@ -171,8 +168,7 @@ const PartiesLoginForm: React.FC<PartiesLoginFormProps> = ({ onLogin, setUploade
     const [selectedPartyId, setSelectedPartyId] = useState("")
     const [parties, setParties] = useState<PartyToken[]>()
     const publicPartyId = usePublicParty();
-
-    const history = useHistory()
+    const history = useHistory();
 
     const options =
         parties?.map(party => ({
@@ -205,7 +201,7 @@ const PartiesLoginForm: React.FC<PartiesLoginFormProps> = ({ onLogin, setUploade
         if (partyDetails) {
             const { ledgerId, party, token } = partyDetails
             onLogin({ ledgerId, party, token })
-            history.push("/role")
+            history.push('/role');
         } else {
             throw new AppError("Failed to Login", "No parties.json or party selected")
         }
@@ -237,7 +233,6 @@ const PartiesLoginForm: React.FC<PartiesLoginFormProps> = ({ onLogin, setUploade
                     <Form.Group widths='equal'>
                         <Form.Input className='upload-file-input'>
                         <DamlHubLogin withFile
-                            onLogin={() => { }}
                             options={{
                                 method: {
                                     file: {
@@ -289,10 +284,18 @@ const PartiesLoginForm: React.FC<PartiesLoginFormProps> = ({ onLogin, setUploade
 }
 
 const DablLoginForm: React.FC<Props> = ({ onLogin }) => {
+    const history = useHistory();
+
     return (
         <Form size='large'>
             <DamlHubLogin
-                onLogin={onLogin}
+                onLogin={creds => {
+                    if (creds) {
+                        const { party, token, ledgerId } = creds;
+                        onLogin({ party, token, ledgerId });
+                        history.push('/role');
+                    }
+                }}
                 options={{
                     method: {
                         button: {

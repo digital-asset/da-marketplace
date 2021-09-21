@@ -191,6 +191,7 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
 
         if (creds) {
             setCredentials(creds)
+            history.push('/role');
         } else {
             clearPartyRoleSelect("Error: invalid credentials")
         }
