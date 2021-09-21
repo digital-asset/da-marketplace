@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useState, useEffect } from "react"
-import { useHistory } from "react-router-dom"
+import { useHistory, useLocation } from "react-router-dom"
 import { Button, Form, Icon } from "semantic-ui-react"
 
 import { PartyToken, DamlHubLogin, usePublicParty } from "@daml/hub-react"
@@ -24,6 +24,21 @@ import FormErrorHandled from "./common/FormErrorHandled"
 import LoadingScreen from "./common/LoadingScreen"
 import SetupRequired from "./SetupRequired"
 
+function deleteQueryParams() {
+    const url = new URL(window.location.href)
+
+    // When DABL login redirects back to app, hoist the query into the hash route.
+    // This allows react-router's HashRouter to see and parse the supplied params
+
+    // i.e., we want to turn
+    // ledgerid.projectdabl.com/?party=party&token=token/#/
+    // into
+    // ledgerid.projectdabl.com/#/
+    if (url.search !== "" && url.hash === "#/") {
+        window.location.href = `${url.origin}${url.pathname}#/`
+    }
+}
+
 type Props = {
     onLogin: (credentials?: Credentials) => void
 }
@@ -38,6 +53,16 @@ const LoginScreen: React.FC<Props> = ({ onLogin }) => {
     const isLoading = usePublicLoading()
     const appInfos = useContractQuery(PublicAppInfo, AS_PUBLIC)
     const history = useHistory()
+    const location = window.location;
+
+    useEffect(() => {
+        const url = new URL(location.href)
+
+        // Remove the query params set by Daml Hub
+        if (url.search !== "" && url.hash === "#/") {
+            location.href = `${url.origin}${url.pathname}#/`
+        }
+    }, [location])
 
     const [uploadedParties, setUploadedParties] = useState<PartyToken[]>([])
 
@@ -208,9 +233,11 @@ const PartiesLoginForm: React.FC<PartiesLoginFormProps> = ({ onLogin, setUploade
     }
 
     const handleLoad = async (parties: PartyToken[]) => {
-        setParties(parties)
-        setSelectedPartyId(parties[0]?.party || "")
-        storeParties(parties)
+        if (parties.length > 0) {
+            setParties(parties)
+            setSelectedPartyId(parties[0].party)
+            storeParties(parties)
+        }
     }
 
     const handleError = (error: string): (() => Promise<void>) => {

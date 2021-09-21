@@ -9,11 +9,11 @@ import {
 } from 'react-router-dom'
 
 import DamlLedger from '@daml/react'
-import DamlHub, { PartyToken } from '@daml/hub-react'
+import DamlHub, { damlHubLogout, PartyToken } from '@daml/hub-react'
 
 import QueryStreamProvider from '../websocket/queryStream'
 import Credentials, { storeCredentials, retrieveCredentials } from '../Credentials'
-import { httpBaseUrl } from '../config'
+import { deploymentMode, DeploymentMode, httpBaseUrl } from '../config'
 
 import { RegistryLookupProvider } from './common/RegistryLookup'
 
@@ -57,7 +57,10 @@ const App: React.FC = () => {
                   >
                     <QueryStreamProvider>
                       <RegistryLookupProvider>
-                        <MainScreen onLogout={() => handleCredentials(undefined)}/>
+                      <MainScreen onLogout={() => {
+                        handleCredentials(undefined);
+                        deploymentMode === DeploymentMode.PROD_DABL && damlHubLogout();
+                      }}/>
                       </RegistryLookupProvider>
                     </QueryStreamProvider>
                 </DamlLedger>

@@ -1,4 +1,4 @@
-import { convertPartiesJson, PartyToken } from '@daml/hub-react'
+import { convertPartiesJson, PartyToken, InvalidPartiesError, PartiesInputErrors } from '@daml/hub-react'
 
 const PARTIES_STORAGE_KEY = 'imported_parties';
 
@@ -14,15 +14,21 @@ export function retrieveParties(publicParty: string, validateParties: boolean = 
     }
 
     try {
-        const parties = convertPartiesJson(partiesJson, publicParty, validateParties);
-
-        return parties;
+        return convertPartiesJson(partiesJson, publicParty, validateParties);
     } catch (error) {
-        console.warn("Tried to load an invalid parties file from cache.", error);
-
-        if (validateParties) {
-            localStorage.removeItem(PARTIES_STORAGE_KEY);
-            return undefined;
+        console.log(typeof error, (error as any)?.message, (error as any)?.name);
+        if (error instanceof InvalidPartiesError) {
+            if (error.type === PartiesInputErrors.EmptyPartiesList) {
+                console.warn("Tried to load an invalid parties file from cache.", error);
+            }
+        }
+        else {
+            console.warn("OTHER ERROR FOUND: ", error);
+            if (validateParties) {
+                console.warn("REMOVING PARTIES STORAGE!");
+                localStorage.removeItem(PARTIES_STORAGE_KEY);
+                return undefined;
+            }
         }
     }
 }

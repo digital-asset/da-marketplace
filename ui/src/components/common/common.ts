@@ -5,6 +5,14 @@ import { deploymentMode, DeploymentMode } from '../../config'
 
 export const useOperator = () => {
     const { parties } = useDablParties();
+    // Note... there's a timing bug where this falls back to "Operator"
+    // on Daml Hub deployments, before the API call to get default
+    // parties is used.
+    //
+    // Fixing this means returning a type of `string | undefined`, which
+    // affects too many other parts of the codebase to be worth doing on 0.1.x
+    //
+    // However, this bug is fixed in 0.2.0
     return parties.userAdminParty;
 }
 
@@ -22,11 +30,7 @@ export const useDablParties = () => {
     const [result, setResult] = useState<Result>({ parties: devParties, loading: true });
 
     useEffect(() => {
-        if (!publicParty) {
-            setLoading(true);
-        } else {
-            setLoading(false);
-        }
+        setLoading(!publicParty);
     }, [publicParty]);
 
     useEffect(() => {
