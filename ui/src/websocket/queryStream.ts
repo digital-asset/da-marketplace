@@ -103,10 +103,11 @@ const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken
   ) => {
     if (asPublic) {
       setTemplateMap(prev => new Map(prev).set(templateId, template));
-      setPublicTemplateIds(templateIds => [...templateIds, templateId]);
+      // Avoid duplicates in template id subscription list
+      setPublicTemplateIds(templateIds => _.union(templateIds, [templateId]));
     } else {
       setTemplateMap(prev => new Map(prev).set(templateId, template));
-      setPartyTemplateIds(templateIds => [...templateIds, templateId]);
+      setPartyTemplateIds(templateIds => _.union(templateIds, [templateId]));
     }
   };
 

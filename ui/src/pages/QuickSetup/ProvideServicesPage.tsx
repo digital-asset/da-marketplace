@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 
 import { Button, Form } from 'semantic-ui-react';
 
-import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
+import DamlLedger, { useLedger } from '@daml/react';
 import { Template, Party } from '@daml/types';
 
 import {
@@ -15,6 +15,8 @@ import {
 import { itemListAsText } from '../page/utils';
 import Credentials, { computeToken } from '../../Credentials';
 import QueryStreamProvider from '../../websocket/queryStream';
+
+import { useStreamQueries } from '../../Main';
 
 import { Request as AuctionRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
 import { Request as BiddingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';

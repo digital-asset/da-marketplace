@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { RouteComponentProps, useParams, withRouter } from 'react-router-dom';
-import { useLedger, useParty, useStreamQueries } from '@daml/react';
+import { useLedger, useParty } from '@daml/react';
 import { usePartyName } from '../../config';
 import { Listing as ListingTemplate } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import { Service as ClearedMarketService } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
@@ -21,6 +21,8 @@ import BackButton from '../../components/Common/BackButton';
 import { getMarketType } from './Listings';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 import TitleWithActions from '../../components/Common/TitleWithActions';
+
+import { useStreamQueries } from '../../Main';
 
 type FairValueRequestProps = {
   service?: Readonly<CreateEvent<ClearedMarketService, any, any>>;

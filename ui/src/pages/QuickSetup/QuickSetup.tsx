@@ -45,6 +45,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
 
   const [adminCredentials, setAdminCredentials] = useState<Credentials>();
   const [activeMenuItem, setActiveMenuItem] = useState<MenuItems>();
+  const [showAdvancedSetup, setShowAdvancedSetup] = useState<boolean>(false);
 
   useEffect(() => {
     const parties = retrieveParties();
@@ -111,30 +112,40 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
                   <ArrowRightIcon />
                 </Button>
               </NavLink>
-              <NavLink to={`${matchUrl}/${MenuItems.CONFIGURE_PROVIDERS}`}>
-                <Button className="main-button ghost dark">
-                  Configure Providers
-                  <ArrowRightIcon />
-                </Button>
-              </NavLink>
-              <NavLink to={`${matchUrl}/${MenuItems.PROVIDE_SERVICES}`}>
-                <Button className="main-button ghost dark">
-                  Provide Services
-                  <ArrowRightIcon />
-                </Button>
-              </NavLink>
-              <NavLink to={`${matchUrl}/${MenuItems.CREATE_ACCOUNTS}`}>
-                <Button className="main-button ghost dark">
-                  Create accounts
-                  <ArrowRightIcon />
-                </Button>
-              </NavLink>
               <NavLink to={`${matchUrl}/${MenuItems.ADD_PARTIES}`}>
                 <Button className="main-button ghost dark">
-                  Add Parties
+                  Upload More Parties
                   <ArrowRightIcon />
                 </Button>
               </NavLink>
+              {showAdvancedSetup && (
+                <>
+                  <NavLink to={`${matchUrl}/${MenuItems.CONFIGURE_PROVIDERS}`}>
+                    <Button className="main-button ghost dark">
+                      Configure Providers
+                      <ArrowRightIcon />
+                    </Button>
+                  </NavLink>
+                  <NavLink to={`${matchUrl}/${MenuItems.PROVIDE_SERVICES}`}>
+                    <Button className="main-button ghost dark">
+                      Provide Services
+                      <ArrowRightIcon />
+                    </Button>
+                  </NavLink>
+                  <NavLink to={`${matchUrl}/${MenuItems.CREATE_ACCOUNTS}`}>
+                    <Button className="main-button ghost dark">
+                      Create accounts
+                      <ArrowRightIcon />
+                    </Button>
+                  </NavLink>
+                </>
+              )}
+              <button
+                className="p2 advanced-setup"
+                onClick={() => setShowAdvancedSetup(!showAdvancedSetup)}
+              >
+                {showAdvancedSetup ? 'Hide ' : 'Show '}Advanced Setup
+              </button>
             </div>
           )}
           <Switch>
