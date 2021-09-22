@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 
 import { ArchiveEvent, CreateEvent } from '@daml/ledger'
 
-import { deploymentMode, DeploymentMode, httpBaseUrl, ledgerId } from '../config'
+import { deploymentMode, DeploymentMode, httpBaseUrl, wsURL } from '../config'
 
 import { ContractInfo, makeContractInfo } from '../components/common/damlTypes'
 
@@ -24,9 +24,10 @@ const newDamlWebsocket = (token: string): WebSocket => {
   const url = new URL(httpBaseUrl || 'http://localhost:3000');
 
   const subprotocols = [`jwt.token.${token}`, "daml.ws.auth"];
+
   const apiUrl = deploymentMode === DeploymentMode.DEV
     ? `ws://${url.host}/v1/stream/query`
-    : `wss://${url.host}/data/${ledgerId}/v1/stream/query`;
+    : `${wsURL}v1/stream/query` || `wss://${url.host}/v1/stream/query`
 
   return new WebSocket(apiUrl, subprotocols);
 }

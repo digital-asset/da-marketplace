@@ -34,7 +34,7 @@ type Props = {
  */
 const MainScreen: React.FC<Props> = ({ onLogout }) => {
   const { path } = useRouteMatch();
-  const { parties, loading, error } = useDablParties();
+  const { parties, loading } = useDablParties();
 
   const [ streamErrors, setStreamErrors ] = React.useState<StreamErrors[]>();
   const queryStream: QueryStream<any> | undefined = React.useContext(QueryStreamContext);
@@ -50,10 +50,9 @@ const MainScreen: React.FC<Props> = ({ onLogout }) => {
   }, [queryStream]);
 
   const loadingScreen = <LoadingScreen/>;
-  const errorScreen = (error || streamErrors) &&
+  const errorScreen = (streamErrors) &&
     <OnboardingTile>
       <Message error>
-        { error && parseError(error)?.message }
         { streamErrors && streamErrors.map(se => se.errors).join(',') }
       </Message>
     </OnboardingTile>;
@@ -67,7 +66,7 @@ const MainScreen: React.FC<Props> = ({ onLogout }) => {
       return loadingScreen;
     }
 
-    if (error || streamErrors) {
+    if (streamErrors) {
       return errorScreen;
     } else {
       return <RoleSelectScreen operator={parties.userAdminParty} onLogout={onLogout}/>

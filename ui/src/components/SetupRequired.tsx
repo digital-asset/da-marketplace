@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import Ledger from '@daml/ledger';
 import { Form, Button, Loader } from 'semantic-ui-react';
 
-import { useWellKnownParties } from '@daml/hub-react/lib';
+import { useDefaultParties } from '@daml/hub-react/lib';
 import { Operator } from '@daml.js/da-marketplace/lib/Marketplace/Operator';
 import { httpBaseUrl, deploymentMode, DeploymentMode } from "../config";
 import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger, PublicAutomation, getPublicAutomation } from '../automation';
@@ -14,9 +14,9 @@ const SetupRequired  = () => {
   const [ deploying, setDeploying ] = useState(false);
   const [ setupError, setSetupError ] = useState<string | undefined>(undefined);
   const [ adminJwt, setAdminJwt ] = useState('');
-  const { parties } = useWellKnownParties();
   const [ automations, setAutomations ] = useState<PublicAutomation[] | undefined>([]);
-  const publicParty = useDablParties().parties.publicParty;
+  const { parties } = useDablParties();
+  const publicParty = parties.publicParty;
 
   useEffect(() => {
     getPublicAutomation(publicParty).then(autos => { setAutomations(autos) });

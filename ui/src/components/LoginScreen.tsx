@@ -2,64 +2,34 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useState, useEffect } from "react"
-import { useHistory, useLocation } from "react-router-dom"
+import { useHistory } from "react-router-dom"
 import { Button, Form, Icon } from "semantic-ui-react"
 
-import { DablPartiesInput, PartyDetails } from "@daml/hub-react"
+import { PartyToken, DamlHubLogin, usePublicParty } from "@daml/hub-react"
 
 import { PublicAppInfo } from "@daml.js/da-marketplace/lib/Marketplace/Operator"
 
-import QueryStreamProvider, {
+import {
     useContractQuery,
     AS_PUBLIC,
     usePublicLoading,
 } from "../websocket/queryStream"
 import Credentials, { computeCredentials } from "../Credentials"
 import { retrieveParties, storeParties } from "../Parties"
-import { DeploymentMode, deploymentMode, ledgerId, dablHostname } from "../config"
+import { DeploymentMode, deploymentMode, ledgerId } from "../config"
 
 import OnboardingTile, { Tile, logoHeader } from "./common/OnboardingTile"
 import { AppError } from "./common/errorTypes"
 import FormErrorHandled from "./common/FormErrorHandled"
 import LoadingScreen from "./common/LoadingScreen"
 import SetupRequired from "./SetupRequired"
-import { useDablParties } from "./common/common"
-import {
-    HashRouter as Router,
-    useRouteMatch,
-} from "react-router-dom"
-
-function useQuery() {
-    return new URLSearchParams(useLocation().search)
-}
-
-function raiseParamsToHash() {
-    const url = new URL(window.location.href)
-
-    // When DABL login redirects back to app, hoist the query into the hash route.
-    // This allows react-router's HashRouter to see and parse the supplied params
-
-    // i.e., we want to turn
-    // ledgerid.projectdabl.com/?party=party&token=token/#/
-    // into
-    // ledgerid.projectdabl.com/#/?party=party&token=token
-    if (url.search !== "" && url.hash === "#/") {
-        window.location.href = `${url.origin}${url.pathname}#/${url.search}`
-    }
-}
-
-function getTokenFromCookie(): string {
-    const tokenCookiePair =
-        document.cookie.split("; ").find(row => row.startsWith("DABL_LEDGER_ACCESS_TOKEN")) || ""
-    return tokenCookiePair.slice(tokenCookiePair.indexOf("=") + 1)
-}
 
 type Props = {
     onLogin: (credentials?: Credentials) => void
 }
 
 interface PartiesLoginFormProps extends Props {
-    setUploadedParties: (parties: PartyDetails[]) => void
+  setUploadedParties: (parties: PartyToken[]) => void;
 }
 /**
  * React component for the login screen of the `App`.
@@ -67,28 +37,19 @@ interface PartiesLoginFormProps extends Props {
 const LoginScreen: React.FC<Props> = ({ onLogin }) => {
     const isLoading = usePublicLoading()
     const appInfos = useContractQuery(PublicAppInfo, AS_PUBLIC)
-    const query = useQuery()
     const history = useHistory()
-    const location = useLocation()
-    const { path, url } = useRouteMatch()
-
-    const [uploadedParties, setUploadedParties] = useState<PartyDetails[]>([])
+    const location = window.location;
 
     useEffect(() => {
-        raiseParamsToHash()
+        const url = new URL(location.href)
+
+        // Remove the query params set by Daml Hub
+        if (url.search !== "" && url.hash === "#/") {
+            location.href = `${url.origin}${url.pathname}#/`
+        }
     }, [location])
 
-    useEffect(() => {
-        const party = query.get("party")
-        const token = getTokenFromCookie()
-
-        if (!token || !party) {
-            return
-        }
-
-        onLogin({ token, party, ledgerId })
-        history.push("/role")
-    }, [onLogin, query, history])
+    const [uploadedParties, setUploadedParties] = useState<PartyToken[]>([])
 
     const localTiles = [
         <Tile key='login' header={logoHeader}>
@@ -136,13 +97,13 @@ const LoginScreen: React.FC<Props> = ({ onLogin }) => {
 
 const LocalLoginForm: React.FC<Props> = ({ onLogin }) => {
     const [username, setUsername] = useState("")
-    const history = useHistory()
+    const history = useHistory();
 
     const handleLogin = async (event: React.FormEvent) => {
         event.preventDefault()
         const credentials = computeCredentials(username)
         onLogin(credentials)
-        history.push("/role")
+        history.push('/role');
     }
 
     return (
@@ -170,18 +131,16 @@ const LocalLoginForm: React.FC<Props> = ({ onLogin }) => {
 const JWTLoginForm: React.FC<Props> = ({ onLogin }) => {
     const [partyId, setPartyId] = useState("")
     const [jwt, setJwt] = useState("")
-    const { parties, loading } = useDablParties()
-
     const history = useHistory()
 
     const handleDablTokenLogin = () => {
         onLogin({ token: jwt, party: partyId, ledgerId })
-        history.push("/role")
+        history.push('/role');
     }
 
     return (
         <>
-            <p className='login-details dark'>or via DABL Console JWT Token:</p>
+            <p className='login-details dark'>or via Daml Hub Console JWT Token:</p>
             <Form size='large' className='login-form'>
                 <Form.Input
                     fluid
@@ -217,9 +176,9 @@ const JWTLoginForm: React.FC<Props> = ({ onLogin }) => {
 
 const PartiesLoginForm: React.FC<PartiesLoginFormProps> = ({ onLogin, setUploadedParties }) => {
     const [selectedPartyId, setSelectedPartyId] = useState("")
-    const [parties, setParties] = useState<PartyDetails[]>()
-
-    const history = useHistory()
+    const [parties, setParties] = useState<PartyToken[]>()
+    const publicPartyId = usePublicParty();
+    const history = useHistory();
 
     const options =
         parties?.map(party => ({
@@ -229,18 +188,20 @@ const PartiesLoginForm: React.FC<PartiesLoginFormProps> = ({ onLogin, setUploade
         })) || []
 
     useEffect(() => {
-        const parties = retrieveParties()
-        if (parties) {
-            setParties(parties)
-            setSelectedPartyId(parties[0]?.party || "")
+        if (publicPartyId) {
+            const parties = retrieveParties(publicPartyId)
+            if (parties) {
+                setParties(parties)
+                setSelectedPartyId(parties[0]?.party || "")
+            }
         }
-    }, [])
+    }, [publicPartyId])
 
     useEffect(() => {
         setUploadedParties(parties || [])
     }, [parties])
 
-    const handleLogin = async (party?: PartyDetails) => {
+    const handleLogin = async (party?: PartyToken) => {
         let partyDetails = parties?.find(p => p.party === selectedPartyId)
 
         if (party) {
@@ -250,16 +211,18 @@ const PartiesLoginForm: React.FC<PartiesLoginFormProps> = ({ onLogin, setUploade
         if (partyDetails) {
             const { ledgerId, party, token } = partyDetails
             onLogin({ ledgerId, party, token })
-            history.push("/role")
+            history.push('/role');
         } else {
             throw new AppError("Failed to Login", "No parties.json or party selected")
         }
     }
 
-    const handleLoad = async (parties: PartyDetails[]) => {
-        setParties(parties)
-        setSelectedPartyId(parties[0]?.party || "")
-        storeParties(parties)
+    const handleLoad = async (parties: PartyToken[]) => {
+        if (parties.length > 0) {
+            setParties(parties)
+            setSelectedPartyId(parties[0].party)
+            storeParties(parties)
+        }
     }
 
     const handleError = (error: string): (() => Promise<void>) => {
@@ -273,45 +236,58 @@ const PartiesLoginForm: React.FC<PartiesLoginFormProps> = ({ onLogin, setUploade
             <p className='login-details dark'>
                 <span>
                     Alternatively, login with <code className='link'>parties.json</code> located in
-                    the DABL Console Users tab:{" "}
+                    the Daml Hub Console Identities tab:{" "}
                 </span>
             </p>
             <FormErrorHandled size='large' className='login-form' onSubmit={handleLogin}>
                 {loadAndCatch => (
                     <>
-                        <Form.Group widths='equal'>
-                            <Form.Input className='upload-file-input'>
-                                <label className='custom-file-upload button ui'>
-                                    <DablPartiesInput
-                                        ledgerId={ledgerId}
-                                        onError={error => loadAndCatch(handleError(error))}
-                                        onLoad={handleLoad}
-                                    />
-                                    <Icon name='file' className='white' />
-                                    <p className='dark'>Load Parties</p>
-                                </label>
-                            </Form.Input>
-                            <Form.Select
-                                selection
-                                disabled={!parties}
-                                placeholder='Choose a party'
-                                options={options}
-                                value={selectedPartyId}
-                                onChange={(_, d) =>
-                                    typeof d.value === "string" && setSelectedPartyId(d.value)
+                    <Form.Group widths='equal'>
+                        <Form.Input className='upload-file-input'>
+                        <DamlHubLogin withFile
+                            options={{
+                                method: {
+                                    file: {
+                                        render: () => (
+                                            <label className='custom-file-upload button ui'>
+                                                <Icon name='file' className='white' />
+                                                <p className='dark'>Load Parties</p>
+                                            </label>
+                                        )
+
+                                    }
                                 }
-                            />
-                        </Form.Group>
-                        <Button
-                            fluid
-                            submit
-                            icon='right arrow'
-                            labelPosition='right'
-                            disabled={!parties?.find(p => p.party === selectedPartyId)}
-                            className='ghost dark'
-                            content={<p className='dark bold'>Log in</p>}
+                            }}
+                            onPartiesLoad={(creds, err) => {
+                                if (creds) {
+                                    handleLoad(creds)
+                                } else {
+                                    loadAndCatch(handleError(err || 'Parties login error'))
+                                }
+                            }}
                         />
-                        {/* FORM_END */}
+                        </Form.Input>
+                        <Form.Select
+                            selection
+                            disabled={!parties}
+                            placeholder='Choose a party'
+                            options={options}
+                            value={selectedPartyId}
+                            onChange={(_, d) =>
+                                typeof d.value === "string" && setSelectedPartyId(d.value)
+                            }
+                        />
+                    </Form.Group>
+                    <Button
+                        fluid
+                        submit
+                        icon='right arrow'
+                        labelPosition='right'
+                        disabled={!parties?.find(p => p.party === selectedPartyId)}
+                        className='ghost dark'
+                        content={<p className='dark bold'>Log in</p>}
+                    />
+                    {/* FORM_END */}
                     </>
                 )}
             </FormErrorHandled>
@@ -320,19 +296,30 @@ const PartiesLoginForm: React.FC<PartiesLoginFormProps> = ({ onLogin, setUploade
 }
 
 const DablLoginForm: React.FC<Props> = ({ onLogin }) => {
-    const handleDablLogin = () => {
-        window.location.assign(`https://login.${dablHostname}/auth/login?ledgerId=${ledgerId}`)
-    }
+    const history = useHistory();
 
     return (
         <Form size='large'>
-            <Button
-                fluid
-                icon='right arrow blue'
-                labelPosition='right'
-                className='dabl-login-button'
-                content={<p className='bold'>Log in with Daml Hub</p>}
-                onClick={handleDablLogin}
+            <DamlHubLogin
+                onLogin={creds => {
+                    if (creds) {
+                        const { party, token, ledgerId } = creds;
+                        onLogin({ party, token, ledgerId });
+                        history.push('/role');
+                    }
+                }}
+                options={{
+                    method: {
+                        button: {
+                            render: () => <Button
+                                fluid
+                                icon='right arrow blue'
+                                labelPosition='right'
+                                className='dabl-login-button'
+                            />
+                        }
+                    }
+                }}
             />
         </Form>
     )

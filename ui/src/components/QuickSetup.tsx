@@ -6,7 +6,7 @@ import DamlLedger, { useLedger, useParty } from "@daml/react"
 
 import Ledger from "@daml/ledger"
 
-import { PartyDetails, WellKnownPartiesProvider } from "@daml/hub-react"
+import DamlHub, { PartyToken, usePublicParty } from "@daml/hub-react"
 import { retrieveParties } from "../Parties"
 
 import { BrokerInvitation } from "@daml.js/da-marketplace/lib/Marketplace/Broker"
@@ -39,8 +39,10 @@ import { httpBaseUrl, deploymentMode, DeploymentMode } from "../config"
 
 import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger } from "../../src/automation"
 
-interface IPartyLoginData extends PartyDetails {
+interface IPartyLoginData {
     role: MarketRole
+    party: string
+    token: string
     name: string
     location: string
     title?: string
@@ -55,21 +57,24 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
     const { onLogin } = props
 
     const history = useHistory()
+    const publicPartyId = usePublicParty()
 
     const [credentials, setCredentials] = useState<Credentials | undefined>()
-    const [parties, setParties] = useState<PartyDetails[]>([])
-    const [publicParty, setPublicParty] = useState<PartyDetails>()
-    const [selectedParty, setSelectedParty] = useState<PartyDetails>()
+    const [parties, setParties] = useState<PartyToken[]>([])
+    const [publicParty, setPublicParty] = useState<PartyToken>()
+    const [selectedParty, setSelectedParty] = useState<PartyToken>()
     const [selectedRole, setSelectedRole] = useState<MarketRole>()
     const [successMessage, setSuccessMessage] = useState<string>()
 
     useEffect(() => {
-        const parties = retrieveParties()
-        if (parties) {
-            setParties(parties)
-            setPublicParty(parties.find(p => p.partyName === PUBLIC_PARTY_NAME))
+        if (publicPartyId) {
+            const parties = retrieveParties(publicPartyId)
+            if (parties) {
+                setParties(parties)
+                setPublicParty(parties.find(p => p.partyName === PUBLIC_PARTY_NAME))
+            }
         }
-    }, [])
+    }, [publicPartyId])
 
     const partyOptions =
         parties.map(party => {
@@ -125,7 +130,7 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
                             token={credentials.token}
                             party={credentials.party}
                             httpBaseUrl={httpBaseUrl}>
-                            <WellKnownPartiesProvider>
+                            <DamlHub token={credentials.token}>
                                 <QueryStreamProvider>
                                     <RegistryLookupProvider>
                                         <RoleSetup
@@ -135,7 +140,7 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
                                         />
                                     </RegistryLookupProvider>
                                 </QueryStreamProvider>
-                            </WellKnownPartiesProvider>
+                            </DamlHub>
                         </DamlLedger>
                     ) : (
                         <Button
@@ -156,13 +161,13 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
                         token={publicParty.token}
                         party={publicParty.party}
                         httpBaseUrl={httpBaseUrl}>
-                        <WellKnownPartiesProvider>
+                        <DamlHub>
                             <QueryStreamProvider>
                                 <RegistryLookupProvider>
                                     <PartyRegistry parties={parties} />
                                 </RegistryLookupProvider>
                             </QueryStreamProvider>
-                        </WellKnownPartiesProvider>
+                        </DamlHub>
                     </DamlLedger>
                 ) : (
                     <Loader active indeterminate inverted size='small'>
@@ -186,6 +191,7 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
 
         if (creds) {
             setCredentials(creds)
+            history.push('/role');
         } else {
             clearPartyRoleSelect("Error: invalid credentials")
         }
@@ -227,7 +233,7 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
     }
 }
 
-const PartyRegistry = (props: { parties: PartyDetails[] }) => {
+const PartyRegistry = (props: { parties: PartyToken[] }) => {
     const { parties } = props
 
     const registry = useRegistryLookup()
@@ -291,7 +297,7 @@ const PartyRegistry = (props: { parties: PartyDetails[] }) => {
     )
 }
 
-const RegistryTableRow = (props: { index: number; party: PartyDetails; roles: string[] }) => {
+const RegistryTableRow = (props: { index: number; party: PartyToken; roles: string[] }) => {
     const { index, party, roles } = props
     const rowClassname = index % 2 === 0 ? "odd-row" : ""
     const partyName = <p className='bold'>{party.partyName}</p>
@@ -317,7 +323,7 @@ const RegistryTableRow = (props: { index: number; party: PartyDetails; roles: st
 }
 
 const RoleSetup = (props: {
-    selectedParty: PartyDetails
+    selectedParty: PartyToken
     selectedRole: MarketRole
     clearPartyRoleSelect: (message: string) => void
 }) => {
@@ -329,7 +335,7 @@ const RoleSetup = (props: {
     const operator = useOperator()
     const registry = useRegistryLookup()
 
-    const { loading, error } = useDablParties()
+    const { loading } = useDablParties()
 
     const userSessions = useContractQuery(UserSession)
     const userContracts = useContractQuery(User)
@@ -370,10 +376,6 @@ const RoleSetup = (props: {
                 <p className='dark'>Loading contracts and parties...</p>
             </Loader>
         )
-    }
-
-    if (error) {
-        return <p className='dark login-details'>Error: {error}</p>
     }
 
     if (findRegisteredParty()) {
@@ -428,7 +430,7 @@ const RoleSetup = (props: {
 }
 
 const InviteAccept = (props: {
-    party: PartyDetails
+    party: PartyToken
     role: MarketRole
     clearPartyRoleSelect: (message: string) => void
 }) => {
@@ -449,8 +451,9 @@ const InviteAccept = (props: {
     const [partyLoggingIn, setPartyLoggingIn] = useState<boolean>(false)
 
     const [partyLoginData, setPartyLoginData] = useState<IPartyLoginData>({
-        ...party,
         role: role,
+        party: party.party,
+        token: party.token,
         name: party.partyName,
         location: "NYC",
         deployMatchingEngine: true,
