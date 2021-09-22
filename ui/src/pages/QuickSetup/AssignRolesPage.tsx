@@ -524,7 +524,6 @@ const getInstructionTriggers = (inst: InstructionType) => {
       return [MarketplaceTrigger.ClearingTrigger];
     case InstructionType.INVESTOR:
     case InstructionType.EXCHANGE:
-    case InstructionType.TRADING:
       return [MarketplaceTrigger.SettlementInstructionTrigger];
     default:
       return [];
