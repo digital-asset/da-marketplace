@@ -143,7 +143,7 @@ const AppComponent = () => {
         label: 'Clearing Services',
         activeSubroutes: true,
         path: paths.app.clearingServices.root,
-        render: () => <ClearingServiceTable clearingServices={clearingService} custodyServices={custodyService} />,
+        render: () => <ClearingServiceTable services={clearingService} />,
         icon: <ControlsIcon />,
         children: [],
       },
