@@ -13,7 +13,7 @@ import { Service as TradingService } from '@daml.js/da-marketplace/lib/Marketpla
 import { CreateEvent } from '@daml/ledger';
 import { ContractId } from '@daml/types';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import {makeDamlSet, ServicePageProps} from '../common';
+import {isEmptySet, makeDamlSet, ServicePageProps} from '../common';
 import { Button, Form, Header, Label, Popup, Table } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
@@ -285,8 +285,8 @@ export const Market: React.FC<Props> = ({
             ds.filter(
               ad =>
                 ad.contractId !== depositCid &&
-                ad.payload.asset.id.label === feeCurrency //&&
-                // ad.payload.account.id.label === service.payload.tradingAccount.id.label
+                ad.payload.asset.id.label === feeCurrency &&
+                isEmptySet(ad.payload.lockers)
             )
           );
         optExchangeFee = await getAsset(feeAssets, feeAmount);
