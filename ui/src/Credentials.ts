@@ -45,7 +45,11 @@ export function retrieveCredentials(): Credentials | undefined {
         const at = new PartyToken(credentials.token);
         if (at.isExpired) {
           throw new Error('Expired token');
+        } else {
+          return at;
         }
+      } else {
+        return credentials;
       }
     }
   } catch {

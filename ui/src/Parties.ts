@@ -16,16 +16,13 @@ export function retrieveParties(publicParty: string, validateParties: boolean = 
     try {
         return convertPartiesJson(partiesJson, publicParty, validateParties);
     } catch (error) {
-        console.log(typeof error, (error as any)?.message, (error as any)?.name);
         if (error instanceof InvalidPartiesError) {
             if (error.type === PartiesInputErrors.EmptyPartiesList) {
                 console.warn("Tried to load an invalid parties file from cache.", error);
             }
         }
         else {
-            console.warn("OTHER ERROR FOUND: ", error);
             if (validateParties) {
-                console.warn("REMOVING PARTIES STORAGE!");
                 localStorage.removeItem(PARTIES_STORAGE_KEY);
                 return undefined;
             }

@@ -74,9 +74,18 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
     })
   }, [publicParty]);
 
-  const { contracts: partyContracts, errors: partyStreamErrors, loading: partyLoading, active: connectionActive }
-    = useDamlStreamQuery(partyTemplateIds, partyToken);
-  const { contracts: publicContracts, errors: publicStreamErrors, loading: publicLoading } = useDamlStreamQuery(publicTemplateIds, publicToken);
+  const {
+    contracts: partyContracts,
+    errors: partyStreamErrors,
+    loading: partyLoading,
+    active: connectionActive
+  } = useDamlStreamQuery(partyTemplateIds, partyToken);
+
+  const {
+    contracts: publicContracts,
+    errors: publicStreamErrors,
+    loading: publicLoading
+  } = useDamlStreamQuery(publicTemplateIds, publicToken);
 
   useEffect(() => {
     if (partyStreamErrors) {
