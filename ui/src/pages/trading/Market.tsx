@@ -166,9 +166,6 @@ export const Market: React.FC<Props> = ({
         parseFloat((a.payload.details.orderType.value as OrderType.Limit).price)
     );
 
-  // const available = assets.filter(
-  //   c => c.payload.account.id.label === service.payload.tradingAccount.id.label
-  // );
   const available = assets;
   const tradedAssets = available.filter(
     c => c.payload.asset.id.label === listing.payload.tradedAssetId.label
@@ -177,7 +174,9 @@ export const Market: React.FC<Props> = ({
     c => c.payload.asset.id.label === listing.payload.quotedAssetId.label
   );
 
-  const accounts = custodyServices.map(c => c.payload.account);
+  const accounts = custodyServices
+    .filter(a => a.payload.account.owner === party)
+    .map(c => c.payload.account);
   const account = accounts.find(a => a.id.label === accountLabel);
 
   const feeCurrency = feeSchedule?.payload.currentFee.currency.label || 'USD';
