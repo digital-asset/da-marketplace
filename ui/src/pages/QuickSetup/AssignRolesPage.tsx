@@ -520,12 +520,10 @@ const issuerInstructions = () => {
 
 const getInstructionTriggers = (inst: InstructionType) => {
   switch (inst) {
-    case InstructionType.INVESTOR:
-      return [MarketplaceTrigger.SettlementInstructionTrigger];
-    case InstructionType.CLEARING:
     case InstructionType.CLEARINGHOUSE:
-    case InstructionType.MARKETCLEARING:
       return [MarketplaceTrigger.ClearingTrigger];
+    case InstructionType.INVESTOR:
+    case InstructionType.EXCHANGE:
     case InstructionType.TRADING:
       return [MarketplaceTrigger.SettlementInstructionTrigger];
     default:
