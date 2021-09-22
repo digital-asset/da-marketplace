@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { encode } from 'jwt-simple'
-import { PartyToken } from '@daml/hub-react'
+import { isRunningOnHub, PartyToken } from '@daml/hub-react'
 
 import { ledgerId } from './config'
 
@@ -27,11 +27,11 @@ function isCredentials(credentials: any): credentials is Credentials {
 
 const CREDENTIALS_STORAGE_KEY = 'credentials';
 
-export function storeCredentials(credentials?: PartyToken): void {
+export function storeCredentials(credentials?: Credentials): void {
   sessionStorage.setItem(CREDENTIALS_STORAGE_KEY, JSON.stringify(credentials));
 }
 
-export function retrieveCredentials(): PartyToken | undefined {
+export function retrieveCredentials(): Credentials | undefined {
   const credentialsJson = sessionStorage.getItem(CREDENTIALS_STORAGE_KEY);
 
   if (!credentialsJson) {
@@ -41,9 +41,11 @@ export function retrieveCredentials(): PartyToken | undefined {
   try {
     const credentials = JSON.parse(credentialsJson);
     if (isCredentials(credentials)) {
-      const at = new PartyToken(credentials.token);
-      if (!at.isExpired) {
-        return at;
+      if (isRunningOnHub()) {
+        const at = new PartyToken(credentials.token);
+        if (at.isExpired) {
+          throw new Error('Expired token');
+        }
       }
     }
   } catch {

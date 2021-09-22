@@ -9,7 +9,7 @@ import {
 } from 'react-router-dom'
 
 import DamlLedger from '@daml/react'
-import DamlHub, { damlHubLogout, PartyToken } from '@daml/hub-react'
+import DamlHub, { damlHubLogout } from '@daml/hub-react'
 
 import QueryStreamProvider from '../websocket/queryStream'
 import Credentials, { storeCredentials, retrieveCredentials } from '../Credentials'
@@ -29,8 +29,9 @@ const App: React.FC = () => {
   const [credentials, setCredentials] = React.useState<Credentials | undefined>(retrieveCredentials());
 
   const handleCredentials = (credentials?: Credentials) => {
+    console.log('handling credentials')
     setCredentials(credentials);
-    storeCredentials(credentials ? new PartyToken(credentials.token) : undefined);
+    storeCredentials(credentials);
   }
 
   return (
