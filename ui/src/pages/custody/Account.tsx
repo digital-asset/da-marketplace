@@ -33,9 +33,6 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
   const cid = targetAccount.contractId.replace('_', '#');
 
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
-  // const existingCloseRequest = !!useStreamQueries(CloseAccountRequest).contracts.find(
-  //   c => c.payload.accountId.label === targetAccount.account.id.label
-  // );
 
   const defaultTransferRequestDialogProps: InputDialogProps<any> = {
     open: false,
@@ -112,16 +109,6 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
     });
   };
 
-  // const requestCloseAccount = async (c: CreateEvent<AssetSettlementRule>) => {
-  //   if (!service)
-  //     return displayErrorMessage({
-  //       message: 'The account provider does not offer issuance services.',
-  //     });
-  //   await ledger.exercise(Service.RequestCloseAccount, service.contractId, {
-  //     accountId: c.payload.account.id,
-  //   });
-  // };
-
   return (
     <>
       <InputDialog {...transferDialogProps} isModal />
@@ -129,19 +116,6 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
         <div className="account-details">
           <div className="account-data">
             <h4> {targetAccount.account.id.label} </h4>
-            {/*{ targetAccount.account.owner === party &&*/}
-            {/*  (existingCloseRequest ? (*/}
-            {/*    <p className="close-request">*/}
-            {/*      <i> close request pending</i>*/}
-            {/*    </p>*/}
-            {/*  ) : (*/}
-            {/*    <OverflowMenu>*/}
-            {/*      <OverflowMenuEntry*/}
-            {/*        label={'Close Account'}*/}
-            {/*        onClick={() => requestCloseAccount(normalAccount)}*/}
-            {/*      />*/}
-            {/*    </OverflowMenu>*/}
-            {/*  ))}*/}
           </div>
           <div className="account-data body">
             <p className="p2">Provider: {getName(targetAccount.account.provider)}</p>
@@ -173,9 +147,9 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
                       />
                 }
               </p>
-              {party === targetAccount.account.owner && (
+              {party === targetAccount.account.owner && isEmptySet(c.payload.lockers) && (
                 <OverflowMenu>
-                  <OverflowMenuEntry label={'Withdraw'} onClick={() => requestWithdrawDeposit(c)} />
+                    <OverflowMenuEntry label={'Withdraw'} onClick={() => requestWithdrawDeposit(c)}/>
                   {/*<OverflowMenuEntry label={'Transfer'} onClick={() => requestTransfer(c)} />*/}
                 </OverflowMenu>
               )}

@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { CreateEvent } from '@daml/ledger';
-
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { getTemplateId, usePartyName } from '../../config';
 import { Offer as RoleOffer, Role } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
-import { Offer, Request, Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
+import { Offer, Request, Service as ClearingService } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import {
   Offer as MarketOffer,
   Request as MarketRequest,
@@ -13,7 +12,6 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
 import StripedTable from '../../components/Table/StripedTable';
 import { Button, DropdownItemProps, Form } from 'semantic-ui-react';
-import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
 import { createDropdownProp } from '../common';
 import { FairValueRequest } from '../listing/Listing';
@@ -21,16 +19,18 @@ import TitleWithActions from '../../components/Common/TitleWithActions';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 import ClearingOfferModal from '../clearing/ClearingOfferModal';
 import paths from '../../paths';
+import { Service as CustodyService } from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
 
 const CLEARING_SERVICE_TEMPLATE = 'Marketplace.Clearing.Service.Service';
 const CLEARING_REQUEST_TEMPLATE = 'Marketplace.Clearing.Service.Request';
 const CLEARING_OFFER_TEMPLATE = 'Marketplace.Clearing.Service.Offer';
 
 type Props = {
-  services: Readonly<CreateEvent<Service, any, any>[]>;
+  clearingServices: Readonly<CreateEvent<ClearingService, any, any>[]>;
+  custodyServices: Readonly<CreateEvent<CustodyService, any, any>[]>;
 };
 
-export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
+export const ClearingServiceTable: React.FC<Props> = ({ clearingServices, custodyServices }) => {
   const party = useParty();
   const { getName } = usePartyName(party);
   const ledger = useLedger();
@@ -49,9 +49,9 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
   const roles = useStreamQueries(Role).contracts;
   const hasRole = roles.length > 0 && roles[0].payload.provider === party;
 
-  const terminateService = async (c: CreateEvent<Service> | CreateEvent<MarketService>) => {
+  const terminateService = async (c: CreateEvent<ClearingService> | CreateEvent<MarketService>) => {
     if (getTemplateId(c.templateId) === CLEARING_SERVICE_TEMPLATE) {
-      await ledger.exercise(Service.Terminate, c.contractId, { ctrl: party });
+      await ledger.exercise(ClearingService.Terminate, c.contractId, { ctrl: party });
     } else {
       await ledger.exercise(MarketService.Terminate, c.contractId, { ctrl: party });
     }
@@ -59,8 +59,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
 
   const [ccpAccountName, setCcpAccountName] = useState('');
 
-  const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
-  const accounts = assetSettlementRules
+  const accounts = custodyServices
     .filter(c => c.payload.account.owner === party)
     .map(c => c.payload.account);
   const accountNames: DropdownItemProps[] = accounts.map(a => createDropdownProp(a.id.label));
@@ -148,7 +147,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
       <StripedTable
         headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role', 'Action']}
         loading={marketServicesLoading}
-        rows={[...services, ...marketServices].map(c => {
+        rows={[...clearingServices, ...marketServices].map(c => {
           return {
             elements: [
               getTemplateId(c.templateId),
@@ -218,7 +217,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
                   <Button.Group floated="right">
                     {c.payload.customer === party ? (
                       <>
-                        <ClearingOfferModal offer={c} />
+                        <ClearingOfferModal offer={c} services={custodyServices} />
                         <Button className="ghost warning" onClick={() => rejectOffer(c)}>
                           Reject
                         </Button>

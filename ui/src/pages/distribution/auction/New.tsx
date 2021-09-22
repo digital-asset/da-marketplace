@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../../Main';
 import { transformClaim } from '../../../components/Claims/util';
@@ -61,7 +61,9 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
     .filter((v, i, a) => a.indexOf(v) === i);
   const auctionRequests = useStreamQueries(CreateAuctionRequest).contracts;
   const accounts = custodyServices.map(c => c.payload.account);
-  const account = accounts.find(a => a.id.label === accountLabel);
+  const account = useMemo(() =>
+    accounts.find(a => a.id.label === accountLabel),
+    [accounts]);
 
   const canRequest =
     !!auctionedAssetLabel &&
@@ -119,7 +121,7 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
       quotedAssetId: quotedAsset.payload.assetId,
       floorPrice,
       depositCid,
-      receivableAccount : account //TODO BDW - Get selected account from user
+      receivableAccount : account
     };
     await ledger.exercise(AuctionService.RequestCreateAuction, service.contractId, request);
     history.push(paths.app.distributions);

@@ -308,11 +308,6 @@ export type PendingRequestTemplate =
   | CreateAuctionRequest
   | DepositRequest
   | WithdrawlRequest
-  // | CloseAccountRequest
-  // | DebitAccountRequest
-  // | OpenAccountRequest
-  // | TransferDepositRequest
-  // | CreditAccountRequest;
 
 type PendingRequestNotificationSet = {
   kind: 'Pending';

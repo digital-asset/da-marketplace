@@ -224,7 +224,7 @@ const Landing : React.FC<ServicePageProps<CustodyService>> = ({services}) => {
                   )}
                 </OverflowMenu>
               )}
-              <RoleSetUp />
+              <RoleSetUp services={services} />
             </div>
           </div>
           <AutomationSetup />

@@ -1,25 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 
-import { Button, Loader } from 'semantic-ui-react';
+import {Button, Loader} from 'semantic-ui-react';
 import classNames from 'classnames';
-import {
-  useHistory,
-  Switch,
-  Route,
-  RouteComponentProps,
-  withRouter,
-  NavLink,
-  Redirect,
-} from 'react-router-dom';
+import {NavLink, Redirect, Route, RouteComponentProps, Switch, useHistory, withRouter,} from 'react-router-dom';
 
-import { WellKnownPartiesProvider } from '@daml/hub-react/lib';
+import {WellKnownPartiesProvider} from '@daml/hub-react/lib';
 
-import { ledgerId, isHubDeployment } from '../../config';
+import {isHubDeployment, ledgerId} from '../../config';
 
-import Credentials, { computeCredentials } from '../../Credentials';
-import { retrieveParties } from '../../Parties';
+import Credentials, {computeCredentials} from '../../Credentials';
+import {retrieveParties} from '../../Parties';
 
-import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
+import {ArrowLeftIcon, ArrowRightIcon} from '../../icons/icons';
 
 import AddPartiesPage from './AddPartiesPage';
 import ReviewPage from './ReviewPage';
@@ -27,7 +19,6 @@ import LoginPage from './LoginPage';
 import Widget from '../../components/Widget/Widget';
 import AssignRolesPage from './AssignRolesPage';
 import ProvideServicesPage from './ProvideServicesPage';
-import CreateAccountPage from './CreateAccountPage';
 import ConfigureProvidersPage from './ConfigureProvidersPage';
 
 export enum MenuItems {
@@ -126,12 +117,6 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
                   <ArrowRightIcon />
                 </Button>
               </NavLink>
-              <NavLink to={`${matchUrl}/${MenuItems.CREATE_ACCOUNTS}`}>
-                <Button className="main-button ghost dark">
-                  Create accounts
-                  <ArrowRightIcon />
-                </Button>
-              </NavLink>
               <NavLink to={`${matchUrl}/${MenuItems.ADD_PARTIES}`}>
                 <Button className="main-button ghost dark">
                   Add Parties
@@ -156,10 +141,6 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
             <Route
               path={`${matchPath}/${MenuItems.PROVIDE_SERVICES}`}
               component={() => <ProvideServicesPage adminCredentials={adminCredentials} />}
-            />
-            <Route
-              path={`${matchPath}/${MenuItems.CREATE_ACCOUNTS}`}
-              component={() => <CreateAccountPage adminCredentials={adminCredentials} />}
             />
             <Route
               path={`${matchPath}/${MenuItems.REVIEW}`}

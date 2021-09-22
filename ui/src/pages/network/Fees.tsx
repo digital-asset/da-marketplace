@@ -3,7 +3,6 @@ import AccountComponent from '../custody/Account';
 import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
-import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { Role as ExchangeRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import { CreateEvent } from '@daml/ledger';
@@ -13,13 +12,13 @@ import Tile from '../../components/Tile/Tile';
 import { FeeSchedule } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
 
 type Props = {
-  role: CreateEvent<ExchangeRole, unknown, string>;
+  role: Readonly<CreateEvent<ExchangeRole, any, any>>;
+  custodyServices: Readonly<CreateEvent<CustodyService, any, any>[]>;
 };
 
-const ManageFees: React.FC<Props> = ({ role }: Props) => {
+const ManageFees: React.FC<Props> = ({ role, custodyServices }: Props) => {
   const ledger = useLedger();
   const party = useParty();
-  const custodyServices = useStreamQueries(CustodyService).contracts;
   const { contracts: feeSchedules, loading: schedulesLoading } = useStreamQueries(FeeSchedule);
   const feeSchedule = feeSchedules.find(fs => fs.payload.provider === party);
 
@@ -39,13 +38,11 @@ const ManageFees: React.FC<Props> = ({ role }: Props) => {
   const assets = useStreamQueries(AssetDescription).contracts;
 
   const asset = assets.find(c => c.payload.assetId.label === assetLabel);
-  const { contracts: assetSettlementRules, loading: assetSettlementRulesLoading } =
-    useStreamQueries(AssetSettlementRule);
-  const accounts = assetSettlementRules
-    .map(c => c.payload.account)
-    .filter(acc => acc.owner === party);
+  const accounts = custodyServices
+    .filter(c => c.payload.account.owner === party)
+    .map(c => c.payload.account);
   const account = accounts.find(a => a.id.label === accountLabel);
-  const accountRule = assetSettlementRules.find(ar => ar.payload.account.id.label === accountLabel);
+  const custodyService = custodyServices.find(c => c.payload.account.id.label === accountLabel);
 
   const canRequest = !feeSchedule
     ? !!assetLabel && !!asset && !!accountLabel && !!account && !!quantity
@@ -124,13 +121,13 @@ const ManageFees: React.FC<Props> = ({ role }: Props) => {
           </Button>
         </FormErrorHandled>
       </Tile>
-      <Tile className="inline" loading={assetSettlementRulesLoading}>
+      <Tile className="inline">
         <br />
-        {!!accountRule && (
+        {!!custodyService && (
           <AccountComponent
             targetAccount={{
-              account: accountRule.payload.account,
-              contractId: accountRule.contractId,
+              account: custodyService.payload.account,
+              contractId: custodyService.contractId,
             }}
             services={custodyServices}
           />

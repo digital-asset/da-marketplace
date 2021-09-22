@@ -3,7 +3,6 @@ module Common where
 import Daml.Script
 import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Id(..), Asset(..), Account(..))
-import DA.Optional (fromSome)
 import DA.Set
 import DA.Optional
 import ContingentClaims.Claim (Claim(Zero), serialize)

@@ -12,6 +12,8 @@ import { CogIcon } from '../../icons/icons';
 import { usePartyName } from '../../config';
 import { getBaseSegment } from '../../App';
 import paths from '../../paths';
+import {ServicePageProps} from "../common";
+import {Service as CustodyService} from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
 type Props = {
   className?: string;
   menuTitle?: React.ReactElement;

@@ -168,7 +168,6 @@ const RequestForm = (props: {
         requestInfo?.services?.reduce<AccountInfos>((acc, svc) => {
           if (existing.includes(svc)) return acc;
 
-          // TODO: BDW - refactor out switch statement (only clearing requires an account)
           switch (svc) {
             case ServiceKind.CLEARING:
               return {
@@ -222,7 +221,7 @@ const RequestForm = (props: {
   const hasAccountsForServices = requestInfo?.services?.reduce((acc, svc) => {
     if (existingServices.includes(svc)) return acc;
     const accounts = requestInfo?.accounts;
-    // TODO: BDW - refactor out switch statement (only clearing requires an account)
+
     switch (svc) {
       case ServiceKind.CLEARING:
         return acc && !!accounts?.clearingAccount;

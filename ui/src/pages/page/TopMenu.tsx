@@ -12,7 +12,6 @@ import { usePartyName } from '../../config';
 
 import { useParty } from '@daml/react';
 
-import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import { Auction } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Model';
 import { Auction as BiddingAuctionContract } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model';
@@ -21,6 +20,8 @@ import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuan
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import { useAllNotifications } from '../../pages/notifications/Notifications';
 import _ from 'lodash';
+import {ServicePageProps} from "../common";
+import {Service as CustodyService} from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
 
 type Props = {
   title?: React.ReactElement;
@@ -40,19 +41,6 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle }) => {
 
   const [contractTitle, setContractTitle] = useState<string>();
 
-  const { contracts: accounts } = useStreamQueries(AssetSettlementRule);
-
-  // TODO BDW - Check if we need all accounts as its allocated accounts dont exist anymore
-  const allAccounts = useMemo(
-    () =>
-      accounts
-        .map(a => {
-          return { account: a.payload.account, contractId: a.contractId.replace('#', '_') };
-        }),
-    [accounts]
-  );
-
-  const accountLabel = allAccounts.find(c => c.contractId === contractId)?.account.id.label;
   const customerId = useStreamQueries(Service).contracts.find(c => c.contractId === contractId)
     ?.payload.customer;
   const customer = customerId && getName(customerId);
@@ -85,9 +73,7 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle }) => {
     if (path.includes('notifications')) {
       return setContractTitle('Notifications');
     }
-    if (hasContractId(path, paths.app.wallet.account)) {
-      return setContractTitle(accountLabel);
-    } else if (hasContractId(path, paths.app.clearing.member)) {
+    if (hasContractId(path, paths.app.clearing.member)) {
       return setContractTitle(customer);
     } else if (hasContractId(path, paths.app.auctions.root)) {
       return setContractTitle(auctionId);
@@ -102,7 +88,6 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle }) => {
     }
   }, [
     path,
-    accountLabel,
     customer,
     auctionId,
     biddingId,

@@ -44,12 +44,6 @@ const paths = {
     },
     wallet: {
       root: '/app/wallet',
-      account: '/app/wallet/account',
-      accounts: {
-        root: '/app/wallet/accounts',
-        new: '/app/wallet/accounts/new',
-      },
-      requests: '/app/wallet/requests',
     },
     auctions: {
       root: '/app/auctions',

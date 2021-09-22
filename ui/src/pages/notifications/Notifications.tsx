@@ -96,7 +96,6 @@ import {
   PendingRequestNotification,
   ProcessRequestNotification,
 } from './NotificationComponents';
-import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { useVerifiedParties, usePartyName } from '../../config';
 import { createDropdownProp } from '../common';
 import _ from 'lodash';
@@ -156,22 +155,21 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
     c => party === c.payload.provider
   );
 
-  // const getDebitDepositDetail = (
-  //   c: CreateEvent<DepositRequest>,
-  //   extract: (deposit: AssetDeposit) => string
-  // ): string => {
-  //   console.log(assetDeposits);
-  //   const deposit = assetDeposits.find(a => a.contractId === c.payload.debit.depositCid);
-  //   if (!deposit) return '';
-  //   return extract(deposit.payload);
-  // };
-
-  const accountRules = useStreamQueries(AssetSettlementRule).contracts;
-  const accounts = useStreamQueries(AssetSettlementRule)
-    .contracts.filter(c => c.payload.account.owner === party)
-    .map(c => c.payload.account);
+  const accounts = useStreamQueries(CustodyService)
+    .contracts
+    .filter(s => s.payload.account.owner === party)
+    .map(s => s.payload.account);
 
   const accountNames = accounts.map(a => a.id.label);
+
+  const getDebitDepositDetail = (
+    c: CreateEvent<WithdrawlRequest>,
+    extract: (deposit: AssetDeposit) => string
+  ): string => {
+    const deposit = assetDeposits.find(a => a.contractId === c.payload.depositCid);
+    if (!deposit) return '';
+    return extract(deposit.payload);
+  };
 
   const { identities } = useVerifiedParties();
 
@@ -409,9 +407,7 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
           return {
             label: 'Clearing Account',
             type: 'selection',
-            items: accountRules
-              .filter(ar => ar.payload.observers.map.has(c.provider))
-              .map(acc => acc.payload.account.id.label),
+            items: accountNames,
           };
         },
       },
@@ -620,15 +616,6 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
       lookupFields: fields => fields,
       contracts: biddingServiceRequests.contracts.filter(c => c.payload.provider === party),
     },
-    // TODO BDW - Check if this needs to be replaced with custody requests or not
-    // {
-    //   kind: 'Pending',
-    //   tag: 'pending',
-    //   getCustomDescription: c =>
-    //     `Request to open account ${c.payload.accountId.label} is pending approval from
-    //     ${getName(c.payload.provider)}.`,
-    //   contracts: outboundOpenRequests,
-    // },
     {
       kind: 'Pending',
       tag: 'pending',
@@ -641,7 +628,7 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
       kind: 'Pending',
       tag: 'pending',
       getCustomDescription: c => `Request to withdraw 
-        is pending approval from ${getName(c.payload.provider)}.`, //TODO BDW - Fix description
+        is pending approval from ${getName(c.payload.provider)}.`,
       contracts: outboundWithdrawlRequests,
     },
     {
@@ -654,74 +641,33 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
         ${c.payload.quotedAssetId.label}`,
       contracts: outboundAuctionRequests,
     },
-    // TODO : Should this be replaced with custody service request ??
-    // {
-    //   kind: 'Process',
-    //   tag: 'process',
-    //   processChoice: CustodyService.OpenAccount as ProcessRequestChoice,
-    //   contracts: inboundOpenRequests,
-    //   requiredService: ServiceKind.CUSTODY,
-    //   getCustomDescription: c =>
-    //     `${getName(c.payload.customer)} requesting Open Account: ${c.payload.accountId.label}`,
-    //   getCustomArgs: c => {
-    //     return { openAccountRequestCid: c.contractId };
-    //   },
-    // },
-    // {
-    //   kind: 'Process',
-    //   tag: 'process',
-    //   processChoice: CustodyService.CloseAccount as ProcessRequestChoice,
-    //   contracts: inboundCloseRequests,
-    //   requiredService: ServiceKind.CUSTODY,
-    //   getCustomDescription: c =>
-    //     `Request from ${getName(c.payload.customer)} to close account
-    //     ${c.payload.accountId.label}.`,
-    //   getCustomArgs: c => {
-    //     return { closeAccountRequestCid: c.contractId };
-    //   },
-    // },
-    // {
-    //   kind: 'Process',
-    //   tag: 'process',
-    //   processChoice: CustodyService.CreditAccount as ProcessRequestChoice,
-    //   contracts: inboundCreditRequests,
-    //   requiredService: ServiceKind.CUSTODY,
-    //   getCustomDescription: c =>
-    //     `Request from ${getName(c.payload.customer)} to credit account ${c.payload.accountId.label}:
-    //     ${c.payload.asset.quantity} ${c.payload.asset.id.label}.`,
-    //   getCustomArgs: c => {
-    //     return { creditAccountRequestCid: c.contractId };
-    //   },
-    // },
-    // {
-    //   kind: 'Process',
-    //   tag: 'process',
-    //   processChoice: CustodyService.DebitAccount as ProcessRequestChoice,
-    //   contracts: inboundDebitRequests,
-    //   requiredService: ServiceKind.CUSTODY,
-    //   getCustomDescription: c =>
-    //     `Request from ${getName(c.payload.customer)} to debit account ${c.payload.accountId.label}:
-    //     ${getDebitDepositDetail(c, d => d.asset.quantity)}
-    //     ${getDebitDepositDetail(c, d => d.asset.id.label)}`,
-    //   getCustomArgs: c => {
-    //     return { debitAccountRequestCid: c.contractId };
-    //   },
-    // },
-    // {
-    //   kind: 'Process',
-    //   tag: 'process',
-    //   processChoice: CustodyService.TransferDeposit as ProcessRequestChoice,
-    //   contracts: inboundTransferRequests,
-    //   requiredService: ServiceKind.CUSTODY,
-    //   getCustomDescription: c => `Request from  ${getName(c.payload.customer)} to transfer
-    //       ${getTransferDepositDetail(c, d => d.asset.quantity)}
-    //       ${getTransferDepositDetail(c, d => d.asset.id.label)}
-    //       from
-    //       ${c.payload.accountId.label} to ${c.payload.transfer.receiverAccountId.label}`,
-    //   getCustomArgs: c => {
-    //     return { transferDepositRequestCid: c.contractId };
-    //   },
-    // },
+    {
+      kind: 'Process',
+      tag: 'process',
+      processChoice: CustodyService.Deposit as ProcessRequestChoice,
+      contracts: inboundDepositRequests,
+      requiredService: ServiceKind.CUSTODY,
+      getCustomDescription: c =>
+        `Request from ${getName(c.payload.customer)} to debit asset :
+        ${c.payload.asset.quantity} ${c.payload.asset.id.label}`,
+      getCustomArgs: c => {
+        return { depositRequestCid: c.contractId };
+      },
+    },
+    {
+      kind: 'Process',
+      tag: 'process',
+      processChoice: CustodyService.Withdrawl as ProcessRequestChoice,
+      contracts: inboundWithdrawlRequests,
+      requiredService: ServiceKind.CUSTODY,
+      getCustomDescription: c =>
+        `Request from ${getName(c.payload.customer)} to withdraw asset :
+        ${getDebitDepositDetail(c, d => d.asset.quantity)}
+        ${getDebitDepositDetail(c, d => d.asset.id.label)}`,
+      getCustomArgs: c => {
+        return { withdrawlRequestCid: c.contractId };
+      },
+    },
     {
       kind: 'Process',
       tag: 'process',
@@ -781,6 +727,7 @@ const Notifications: React.FC<Props> = ({ notifications }) => {
                       requester={c.signatories[0]}
                       approveChoice={n.choices.approve}
                       rejectChoice={n.choices.reject}
+                      lookupFields={n.lookupFields}
                     />
                   ));
                 case 'pending':

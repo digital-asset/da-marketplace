@@ -3,7 +3,6 @@ import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { render } from '../../components/Claims/render';
 import { transformClaim } from '../../components/Claims/util';
-import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { Service as IssuanceService } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';

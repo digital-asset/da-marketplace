@@ -10,8 +10,10 @@ import { isHubDeployment, publicParty } from '../../config';
 import { AutomationProvider } from '../../context/AutomationContext';
 import { useRolesContext } from '../../context/RolesContext';
 import { useRoleRequestKinds } from '../../context/RequestsContext';
+import {ServicePageProps} from "../common";
+import {Service as CustodyService} from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
 
-const RoleSetUp: React.FC = () => {
+const RoleSetUp: React.FC<ServicePageProps<CustodyService>> = ({services}) => {
   const party = useParty();
 
   const roles = useRolesContext()
@@ -34,7 +36,7 @@ const RoleSetUp: React.FC = () => {
               {s}
             </p>
           ))}
-          <RoleRequestMenu />
+          <RoleRequestMenu services={services} />
         </div>
       </div>
     </div>

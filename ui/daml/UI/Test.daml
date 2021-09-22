@@ -73,15 +73,15 @@ testListOnboarding = do
 
   let investorInstructions =
         [ OnboardCustody  with provider = bank
-        , OnboardTrading  with provider = exchange;     custodian = bank; optTradingAccount  = Some "MainAccount"
-        , OnboardBidding  with provider = auctionhouse; custodian = bank; optTradingAccount  = Some "MainAccount"
-        , OnboardClearing with provider = ccp;          custodian = bank; optClearingAccount = Some "ClearingAccount"
+        , OnboardTrading  with provider = exchange;     custodian = bank
+        , OnboardBidding  with provider = auctionhouse; custodian = bank
+        , OnboardClearing with provider = ccp;          custodian = bank
         ]
 
   let issuerInstructions =
         [ OnboardCustody  with provider = bank
-        , OnboardIssuance with provider = bank;         custodian = bank; optSafekeepingAccount = Some "MainAccount"
-        , OnboardAuction  with provider = auctionhouse; custodian = bank; optTradingAccount     = Some "MainAccount"; optReceivableAccount = None
+        , OnboardIssuance with provider = bank;         custodian = bank
+        , OnboardAuction  with provider = auctionhouse; custodian = bank
         ]
 
   let exchangeInstructions =
@@ -93,7 +93,7 @@ testListOnboarding = do
         [
           requestFor bank         [ OnboardCustodian ]
         , requestFor auctionhouse [ OnboardDistributor ]
-        , requestFor ccp          [ OnboardClearinghouse with custodian = bank, optClearingAccount = None ]
+        , requestFor ccp          [ OnboardClearinghouse with custodian = bank ]
         , requestFor exchange     [ OnboardExchange, OnboardMarketClearing with provider = ccp, custodian = bank ]
 
         , requestFor alice investorInstructions
@@ -120,7 +120,7 @@ testOnboarding = do
   operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = auctionhouse; ..
 
   -- Onboard Clearinghouse
-  let instructions = [ OnboardClearinghouse with custodian = bank, optClearingAccount = None ]
+  let instructions = [ OnboardClearinghouse with custodian = bank ]
   operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = ccp; ..
 
   -- Onboard Exchange
@@ -131,9 +131,9 @@ testOnboarding = do
 
   -- Onboard Investors
   let instructions = [ OnboardCustody  with provider = bank
-                     , OnboardTrading  with provider = exchange;     custodian = bank; optTradingAccount  = Some "MainAccount"
-                     , OnboardBidding  with provider = auctionhouse; custodian = bank; optTradingAccount  = Some "MainAccount"
-                     , OnboardClearing with provider = ccp;          custodian = bank; optClearingAccount = Some "ClearingAccount"
+                     , OnboardTrading  with provider = exchange;     custodian = bank
+                     , OnboardBidding  with provider = auctionhouse; custodian = bank
+                     , OnboardClearing with provider = ccp;          custodian = bank
                      ]
 
   operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = alice; ..
@@ -142,8 +142,8 @@ testOnboarding = do
 
   -- Onboard Issuer
   let instructions = [ OnboardCustody  with provider = bank
-                     , OnboardIssuance with provider = bank;         custodian = bank; optSafekeepingAccount = Some "MainAccount"
-                     , OnboardAuction  with provider = auctionhouse; custodian = bank; optTradingAccount     = Some "MainAccount", optReceivableAccount = None ]
+                     , OnboardIssuance with provider = bank;         custodian = bank
+                     , OnboardAuction  with provider = auctionhouse; custodian = bank ]
   operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = issuer; ..
 
   return ()

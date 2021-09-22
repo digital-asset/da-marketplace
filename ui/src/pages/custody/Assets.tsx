@@ -10,8 +10,6 @@ import {ServicePageProps, createDropdownProp, damlSetValues, makeDamlSet} from '
 import { usePartyName } from '../../config';
 import { useLedger, useParty } from '@daml/react';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
-import TitleWithActions from '../../components/Common/TitleWithActions';
-import { NewAccount } from './New';
 
 const Assets: React.FC<ServicePageProps<CustodyService>> = ({ services }: ServicePageProps<CustodyService>) => {
   const party = useParty();
@@ -52,9 +50,6 @@ const Assets: React.FC<ServicePageProps<CustodyService>> = ({ services }: Servic
 
   return (
     <div className="assets">
-      <TitleWithActions title="Accounts">
-        <NewAccount party={party} modal addButton />
-      </TitleWithActions>
       <div className="page-section-row">
         <div>
           {services.map(a => (

@@ -29,11 +29,7 @@ import {ServicePageProps} from "../common";
 interface RequestInterface {
   customer: string;
   provider: string;
-  tradingAccount?: Account;
-  allocationAccount?: Account;
-  receivableAccount?: Account;
   clearingAccount?: Account;
-  marginAccount?: Account;
 }
 
 const ServiceRequestMenu: React.FC<ServicePageProps<Service>> = ({ services}) => {
@@ -47,12 +43,12 @@ const ServiceRequestMenu: React.FC<ServicePageProps<Service>> = ({ services}) =>
   const [serviceKind, setServiceKind] = useState<ServiceKind>();
   const [openDialog, setOpenDialog] = useState(false);
   const [fields, setFields] = useState<object>({});
-  const [fieldsFromProvider, setFieldsFromProvider] = useState<FieldCallbacks<Party>>({});
   const [dialogState, setDialogState] = useState<any>({});
   const [requestParams, setRequestParams] = useState<RequestInterface>({
     provider: '',
     customer: '',
   });
+  const [fieldsFromProvider, setFieldsFromProvider] = useState<FieldCallbacks<Party>>({});
 
   const accounts = useMemo(() =>
       services
@@ -70,36 +66,11 @@ const ServiceRequestMenu: React.FC<ServicePageProps<Service>> = ({ services}) =>
       provider,
     };
 
-    if (dialogState?.tradingAccount) {
-      const tradingAccount = accounts.find(a => a.id.label === dialogState.tradingAccount);
-      params = {
-        ...params,
-        tradingAccount,
-      };
-    }
-
-     if (dialogState?.clearingAccount) {
+    if (dialogState?.clearingAccount) {
       const clearingAccount = accounts.find(a => a.id.label === dialogState.clearingAccount);
       params = {
         ...params,
         clearingAccount,
-      };
-    }
-
-    // TODO: BDW remove margin account state?
-    if (dialogState?.marginAccount) {
-      const marginAccount = accounts.find(a => a.id.label === dialogState.marginAccount);
-      params = {
-        ...params,
-        marginAccount,
-      };
-    }
-
-    if (dialogState?.receivableAccount) {
-      const receivableAccount = accounts.find(a => a.id.label === dialogState.receivableAccount);
-      params = {
-        ...params,
-        receivableAccount,
       };
     }
 
@@ -166,19 +137,6 @@ const ServiceRequestMenu: React.FC<ServicePageProps<Service>> = ({ services}) =>
       />
     );
   }
-  const makeAccountFilterField =
-    (label: string): FieldCallback<Party> =>
-    provider => {
-      return {
-        label,
-        type: 'selection',
-        items: services
-          .filter(
-            s => s.payload.account.provider === provider
-          )
-          .map(ar => ar.payload.account.id.label),
-      };
-    };
 
   return (
     <OverflowMenu>
@@ -207,49 +165,32 @@ const ServiceRequestMenu: React.FC<ServicePageProps<Service>> = ({ services}) =>
             ClearingRequest,
             ServiceKind.CLEARING,
             RoleKind.CLEARING,
-            {},
             {
-              clearingAccount: makeAccountFilterField(
-                'Clearing Account (requires provider to be observer on account'
-              ),
-            }
+              clearingAccount: {
+                label: 'Clearing Account',
+                type: 'selection',
+                items: accounts.map(a => a.id.label),
+            }},
+            {},
           )
         }
       />
       <OverflowMenuEntry
         label="Request Trading Service"
         onClick={() =>
-          requestService(
-            TradingRequest,
-            ServiceKind.TRADING,
-            RoleKind.TRADING,
-            {},
-            {}
-          )
+          requestService(TradingRequest, ServiceKind.TRADING, RoleKind.TRADING)
         }
       />
       <OverflowMenuEntry
         label="Request Auction Service"
         onClick={() =>
-          requestService(
-            AuctionRequest,
-            ServiceKind.AUCTION,
-            RoleKind.DISTRIBUTION,
-            {},
-            {}
-          )
+          requestService(AuctionRequest, ServiceKind.AUCTION, RoleKind.DISTRIBUTION)
         }
       />
       <OverflowMenuEntry
         label="Request Bidding Service"
         onClick={() =>
-          requestService(
-            BiddingRequest,
-            ServiceKind.BIDDING,
-            RoleKind.DISTRIBUTION,
-            {},
-            {}
-          )
+          requestService(BiddingRequest, ServiceKind.BIDDING, RoleKind.DISTRIBUTION)
         }
       />
     </OverflowMenu>
