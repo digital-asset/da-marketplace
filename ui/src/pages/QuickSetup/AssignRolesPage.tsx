@@ -522,7 +522,6 @@ const getInstructionTriggers = (inst: InstructionType) => {
   switch (inst) {
     case InstructionType.CLEARINGHOUSE:
       return [MarketplaceTrigger.ClearingTrigger];
-    case InstructionType.INVESTOR:
     case InstructionType.EXCHANGE:
       return [MarketplaceTrigger.SettlementInstructionTrigger];
     default:
