@@ -19,6 +19,7 @@ import DA.Finance.Types
 import Setup
 
 import DA.Next.Set
+import DA.List (head)
 
 setupTransfer : Script ()
 setupTransfer = allocateParties >>= doSetupTransfer
@@ -47,46 +48,43 @@ doSetupTransfer lp@(LedgerParties operator public custodian exchange issuer _ al
       with baseTokenId = btcTokenId, baseType = TokenAsset, quoteTokenId = usdTokenId, quoteType = TokenAsset
            minQuantity = 0.01, maxQuantity = 10000.0, clearedMarket = False, defaultCCP = None
 
-  aliceUsdId <- setupExchangeAccount lp usdTokenId 10000.0 alice
+  aliceUsdId <- setupExchangeAccount lp usdTokenId 150.0 alice
   bobBtcId <- setupExchangeAccount lp btcTokenId 10.0 bob
 
   -- setup done --
 
-  -- > alice places a bid for BTC
-  (bidOrderRequestCid, debitRequestCid) <- alice `submit` exerciseByKeyCmd @ExchangeParticipant (exchange, operator, alice) ExchangeParticipant_PlaceBid
-      with depositCids = [aliceUsdId], amount = 10000.0, pair = (btcTokenId, usdTokenId), price = 10000.00
-  custodian `submit` exerciseCmd debitRequestCid DepositDebitRequest_Approve
-
-  -- > exchange rejects bid
-  creditRequestCid <- exchange `submit` exerciseCmd bidOrderRequestCid OrderRequest_Reject
-  aliceUsdId <- custodian `submit` exerciseCmd creditRequestCid DepositCreditRequest_Approve
-
   -- > alice places a new bid for BTC
   (bidOrderRequestCid, debitRequestCid) <- alice `submit` exerciseByKeyCmd @ExchangeParticipant (exchange, operator, alice) ExchangeParticipant_PlaceBid
-      with depositCids = [aliceUsdId], amount = 10000.0, pair = (btcTokenId, usdTokenId), price = 10000.00
+      with depositCids = [aliceUsdId], amount = 150.0, pair = (btcTokenId, usdTokenId), price = 50.00
   custodian `submit` exerciseCmd debitRequestCid DepositDebitRequest_Approve
   bidOrderCid <- exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_ApproveOrderRequest
       with orderRequestCid = bidOrderRequestCid, orderId = 1
 
   -- > bob places a new offer for BTC
   (offerOrderRequestCid, debitRequestCid) <- bob `submit` exerciseByKeyCmd @ExchangeParticipant (exchange, operator, bob) ExchangeParticipant_PlaceOffer
-      with depositCids = [bobBtcId], amount = 10.0, pair = (btcTokenId, usdTokenId), price = 10000.00
+      with depositCids = [bobBtcId], amount = 1.0, pair = (btcTokenId, usdTokenId), price = 40.00
   custodian `submit` exerciseCmd debitRequestCid DepositDebitRequest_Approve
   offerOrderCid <- exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_ApproveOrderRequest
       with orderRequestCid = offerOrderRequestCid, orderId = 2
 
-  -- exchange matches the two orders
+  -- -- exchange matches the two orders
   (buyTradeCid, _) <- exchange `submit` exerciseCmd bidOrderCid Order_Fill
-      with fillQty = 0.01, fillPrice = 10000.0, counterParty = bob, counterOrderId = 1, timeMatched = "1601394768171637000"
+      with fillQty = 1.0, fillPrice = 40.0, counterParty = bob, counterOrderId = 1, timeMatched = "1601394768171637000"
+  --
   (sellTradeCid, _) <- exchange `submit` exerciseCmd offerOrderCid Order_Fill
-      with fillQty = 0.01, fillPrice = 10000.00, counterParty = alice, counterOrderId = 2, timeMatched = "1601394768171637000"
+      with fillQty = 1.0, fillPrice = 40.0, counterParty = alice, counterOrderId = 2, timeMatched = "1601394768171637000"
+  -- --
+  (_, txReqCid1s) <- exchange `submit` exerciseCmd buyTradeCid TradeSide_Settle
+  (_, txReqCid2s) <- exchange `submit` exerciseCmd sellTradeCid TradeSide_Settle
+  -- --
+  bobDepositCid <- head <$> mapA (\txCid -> custodian `submit` exerciseCmd txCid DepositCreditRequest_Approve) txReqCid1s
+  aliceDepositCid  <- head <$> mapA (\txCid -> custodian `submit` exerciseCmd txCid DepositCreditRequest_Approve) txReqCid2s
+  -- aliceDepositCid <- custodian `submit` exerciseCmd txReqCid2 DepositCreditRequest_Approve
+  (Some bobDeposit)      <- queryContractId bob bobDepositCid
+  (Some aliceDeposit) <- queryContractId alice aliceDepositCid
+  assert $ aliceDeposit.asset.quantity == 1.0
+  assertMsg ("quantity is: " <> show bobDeposit.asset.quantity) $ bobDeposit.asset.quantity == 40.0
   --
-  (_, Some txReqCid1) <- exchange `submit` exerciseCmd buyTradeCid TradeSide_Settle
-  (_, Some txReqCid2) <- exchange `submit` exerciseCmd sellTradeCid TradeSide_Settle
-  --
-  bobDepositCid <- custodian `submit` exerciseCmd txReqCid1 DepositCreditRequest_Approve
-  aliceDepositCid <- custodian `submit` exerciseCmd txReqCid2 DepositCreditRequest_Approve
-
   return ()
 
 
