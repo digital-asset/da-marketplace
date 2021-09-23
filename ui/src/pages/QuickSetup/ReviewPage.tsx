@@ -298,8 +298,11 @@ const RoleNode = (props: { data: { label: string; partyId: string } }) => {
     <div className="role-node">
       <Handle type="target" position={Position.Top} id="a" style={{ background: 'black' }} />
       <h4>{label}</h4>
-      <p className="p2">{roleList.map(r => r.roleKind).join(', ')}</p>
       <p className="p2">
+        {roleList.length > 0 && <b>Provides: </b>} {roleList.map(r => r.roleKind).join(', ')}
+      </p>
+      <p className="p2">
+        {deployedAutomations.length > 0 && <b>Automation: </b>}
         {deployedAutomations.map(da => formatTriggerName(da.config.value.name)).join(', ')}
       </p>
       <Handle
