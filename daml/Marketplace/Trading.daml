@@ -95,6 +95,9 @@ template Order
           assertMsg "Fill price is outside of the order's price bounds"
                  $ if isBid then fillPrice <= price
                             else fillPrice >= price
+          let senderAccountId = Id
+                with signatories = account.id.signatories,
+                      label = getAccountLabel exchParticipant exchange, version = 0
           let receiverAccountId = Id
                 with signatories = account.id.signatories,
                       label = getAccountLabel counterParty exchange, version = 0
@@ -126,7 +129,8 @@ template Order
           timeMatched : Text
         do
           assertMsg "Fill quantity must be greater than 0" $ fillQty > 0.0
-          assertMsg "Fill quantity must be less than or equal to order quantity" $ fillQty <= qty
+          assertMsg "Fill quantity must be less than or equal to order quantity"
+            $ fillQty <= qty
           assertMsg "Fill price is outside of the order's price bounds"
                  $ if isBid then fillPrice <= price
                             else fillPrice >= price
@@ -135,6 +139,9 @@ template Order
                 with signatories = account.id.signatories,
                       label = getAccountLabel counterParty exchange, version = 0
               isBinaryOption = False
+          let senderAccountId = Id
+                with signatories = account.id.signatories,
+                      label = getAccountLabel exchParticipant exchange, version = 0
           (_, baseToken) <- fetchByKey @Token pair._1
           (_, quoteToken) <- fetchByKey @Token pair._2
           if fillQty < qty then do
@@ -482,26 +489,42 @@ template TradeSide
     timeMatched : Text
     optAsset : Optional Asset
     receiverAccountId : Id
+    senderAccountId : Id
     isBinaryOption : Bool
   where
     signatory exchange, exchParticipant
 
+    let getAccount : Id -> Account
+        getAccount accountId = account
+          where
+            (party, partyProvider) = getAccountOwnerProvider accountId.label
+            account = Account with id = accountId, provider = partyProvider, owner = party
+
     controller exchange can
-      TradeSide_Settle : (ContractId SettledTradeSide, Optional (ContractId DepositCreditRequest))
+      TradeSide_Settle : (ContractId SettledTradeSide, [ContractId DepositCreditRequest])
         do
           assertMsg "Binary option settlement must be done with the SettleBinaryOption choice." $ not isBinaryOption
-          optDepositTxReqCid <- case optAsset of
+          depositTxReqCids <- case optAsset of
             Some asset -> do
-              let (receiver, receiverProvider) = getAccountOwnerProvider receiverAccountId.label
-                  receiverAccount = Account with id = receiverAccountId, provider = receiverProvider, owner = receiver
+              (asset, requestCids) <-
+                if isBuy && (asset.quantity > qty * price)
+                then do
+                  let [sendAsset, restAsset] = assetSplit asset [qty * price]
+                  restReqCid <- create DepositCreditRequest
+                      with owner = exchange
+                           account = getAccount senderAccountId
+                           asset = restAsset
+                  return (sendAsset, [restReqCid])
+                else return (asset, [])
+
               creditRequestCid <- create DepositCreditRequest
                   with owner = exchange
-                       account = receiverAccount
+                       account = getAccount receiverAccountId
                        asset = asset
-              return $ Some creditRequestCid
-            None -> return None
+              return $ creditRequestCid :: requestCids
+            None -> return []
           settledTradeCid <- create SettledTradeSide with ..
-          return (settledTradeCid, optDepositTxReqCid)
+          return (settledTradeCid, depositTxReqCids)
 
       TradeSide_SettleBinaryOption : (ContractId SettledTradeSide, Optional (ContractId DepositCreditRequest))
         with
