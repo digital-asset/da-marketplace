@@ -10,7 +10,7 @@ import { Request as ListingRequest } from '@daml.js/da-marketplace/lib/Marketpla
 import { Request as TradingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
 import { Request as AuctionRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
-import { useParty, useStreamQueries } from '@daml/react';
+import { useParty } from '@daml/react';
 import { ServiceRequestDialog } from '../../components/InputDialog/ServiceDialog';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import {
@@ -25,6 +25,8 @@ import { useHistory } from 'react-router-dom';
 import { useServiceRequestKinds } from '../../context/RequestsContext';
 import MissingServiceModal from '../../components/Common/MissingServiceModal';
 import {ServicePageProps} from "../common";
+
+import { useStreamQueries } from '../../Main';
 
 type ServiceRequiredProps = {
   service: ServiceKind;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useHistory, useParams } from 'react-router-dom';
 import { CreateEvent } from '@daml/ledger';
-import { useParty, useStreamQueries } from '@daml/react';
+import { useParty } from '@daml/react';
 import { usePartyName, getTemplateId } from '../../config';
 import {
   Service,
@@ -19,6 +19,8 @@ import {
 import { FairValueCalculationRequests } from './ManualCalculationRequests';
 import TitleWithActions from '../../components/Common/TitleWithActions';
 import paths from '../../paths';
+
+import { useStreamQueries } from '../../Main';
 
 const LISTING_REQUEST_TEMPLATE = 'Marketplace.Listing.Service.CreateListingRequest';
 

@@ -1,6 +1,6 @@
 import React, {useMemo} from 'react';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
-import { useLedger, useParty, useStreamQueries } from '@daml/react';
+import { useLedger, useParty } from '@daml/react';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { usePartyName } from '../../config';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
@@ -18,6 +18,8 @@ import MTMCalculationModal from './MTMCalculationModal';
 import { CreateEvent } from '@daml/ledger';
 import { formatCurrency } from '../../util';
 import paths from '../../paths';
+
+import { useStreamQueries } from '../../Main';
 
 const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,

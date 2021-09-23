@@ -23,8 +23,10 @@ import { Fields, FieldCallbacks, FieldCallback } from '../../components/InputDia
 import { RoleKind, useProvidersByRole } from '../../context/RolesContext';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { usePartyName, useVerifiedParties } from '../../config';
-import { useParty, useStreamQueries } from '@daml/react';
+import { useParty } from '@daml/react';
 import {ServicePageProps} from "../common";
+
+import { useStreamQueries } from '../../Main';
 
 interface RequestInterface {
   customer: string;
@@ -43,12 +45,12 @@ const ServiceRequestMenu: React.FC<ServicePageProps<Service>> = ({ services}) =>
   const [serviceKind, setServiceKind] = useState<ServiceKind>();
   const [openDialog, setOpenDialog] = useState(false);
   const [fields, setFields] = useState<object>({});
+  const [fieldsFromProvider, setFieldsFromProvider] = useState<FieldCallbacks<Party>>({});
   const [dialogState, setDialogState] = useState<any>({});
   const [requestParams, setRequestParams] = useState<RequestInterface>({
     provider: '',
     customer: '',
   });
-  const [fieldsFromProvider, setFieldsFromProvider] = useState<FieldCallbacks<Party>>({});
 
   const accounts = useMemo(() =>
       services

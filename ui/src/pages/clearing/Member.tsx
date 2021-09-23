@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import { RouteComponentProps, useParams, withRouter } from 'react-router-dom';
-import { useLedger, useParty, useStreamQueries } from '@daml/react';
+import { useLedger, useParty } from '@daml/react';
 import {
   AssetDeposit,
   AssetDeposit_SetObservers,
@@ -29,6 +29,7 @@ import OverflowMenu, {OverflowMenuEntry} from "../page/OverflowMenu";
 import {usePartyName} from "../../config";
 import {CreateEvent} from "@daml/ledger";
 import AllocationModal from "./AllocationModal";
+import { useStreamQueries } from '../../Main';
 
 type Props = {
   member?: boolean;
