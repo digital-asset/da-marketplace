@@ -84,15 +84,7 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle }) => {
     } else if (hasContractId(path, paths.app.listings.root)) {
       return setContractTitle(listingLabel);
     }
-  }, [
-    path,
-    customer,
-    auctionId,
-    biddingId,
-    orderLabel,
-    instrumentLabel,
-    listingLabel,
-  ]);
+  }, [path, customer, auctionId, biddingId, orderLabel, instrumentLabel, listingLabel]);
 
   function hasContractId(path: string, matchPath: string) {
     return path.includes(matchPath) && path.split('/').length > 3;

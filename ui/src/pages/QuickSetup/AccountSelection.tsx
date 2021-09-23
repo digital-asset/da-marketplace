@@ -41,11 +41,11 @@ const AccountSelection: React.FC<Props> = ({
     .map(c => c.payload.account);
   const accountNames: DropdownItemProps[] = accounts.map(a => createDropdownProp(a.id.label));
 
-    const custodyServices = useStreamQueries(CustodyService).contracts.filter(
+  const custodyServices = useStreamQueries(CustodyService).contracts.filter(
     c => c.payload.customer === party
   );
 
-  const accountNeeded = !accountNames.length
+  const accountNeeded = !accountNames.length;
 
   return (
     <>
@@ -77,13 +77,7 @@ const ProviderOption = (props: {
   accountsForServices: { [k: string]: Account | undefined };
   onChangeAccount: (k: string, acct: Account | undefined) => void;
 }) => {
-  const {
-    accountInfo,
-    accounts,
-    accountsForServices,
-    onChangeAccount,
-    accountKey,
-  } = props;
+  const { accountInfo, accounts, accountsForServices, onChangeAccount, accountKey } = props;
 
   const accountNames: DropdownItemProps[] = accounts.map(a => createDropdownProp(a.id.label));
 

@@ -6,12 +6,14 @@ import Account from './Account';
 import Tile from '../../components/Tile/Tile';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { Button, Form } from 'semantic-ui-react';
-import {ServicePageProps, createDropdownProp, makeDamlSet} from '../common';
+import { ServicePageProps, createDropdownProp, makeDamlSet } from '../common';
 import { usePartyName } from '../../config';
 import { useLedger, useParty } from '@daml/react';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
-const Assets: React.FC<ServicePageProps<CustodyService>> = ({ services }: ServicePageProps<CustodyService>) => {
+const Assets: React.FC<ServicePageProps<CustodyService>> = ({
+  services,
+}: ServicePageProps<CustodyService>) => {
   const party = useParty();
   const ledger = useLedger();
   const { getName } = usePartyName(party);
@@ -42,7 +44,7 @@ const Assets: React.FC<ServicePageProps<CustodyService>> = ({ services }: Servic
 
     await ledger.exercise(CustodyService.RequestDeposit, service.contractId, {
       asset: { id: asset.payload.assetId, quantity: creditQuantity },
-      observers: makeDamlSet<string>([])
+      observers: makeDamlSet<string>([]),
     });
     setCreditAsset('');
     setCreditQuantity('');
@@ -53,12 +55,14 @@ const Assets: React.FC<ServicePageProps<CustodyService>> = ({ services }: Servic
       <div className="page-section-row">
         <div>
           {services.map(a => (
-            <Account key={a.contractId}
-                     targetAccount={{
-                         account: a.payload.account,
-                         contractId: a.contractId.replace('#', '_')
-                       }}
-                     services={services} />
+            <Account
+              key={a.contractId}
+              targetAccount={{
+                account: a.payload.account,
+                contractId: a.contractId.replace('#', '_'),
+              }}
+              services={services}
+            />
           ))}
         </div>
 

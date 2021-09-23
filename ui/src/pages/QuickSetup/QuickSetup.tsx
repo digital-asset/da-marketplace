@@ -1,17 +1,25 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 
-import {Button, Loader} from 'semantic-ui-react';
+import { Button, Loader } from 'semantic-ui-react';
 import classNames from 'classnames';
-import {NavLink, Redirect, Route, RouteComponentProps, Switch, useHistory, withRouter,} from 'react-router-dom';
+import {
+  NavLink,
+  Redirect,
+  Route,
+  RouteComponentProps,
+  Switch,
+  useHistory,
+  withRouter,
+} from 'react-router-dom';
 
-import {WellKnownPartiesProvider} from '@daml/hub-react/lib';
+import { WellKnownPartiesProvider } from '@daml/hub-react/lib';
 
-import {isHubDeployment, ledgerId} from '../../config';
+import { isHubDeployment, ledgerId } from '../../config';
 
-import Credentials, {computeCredentials} from '../../Credentials';
-import {retrieveParties} from '../../Parties';
+import Credentials, { computeCredentials } from '../../Credentials';
+import { retrieveParties } from '../../Parties';
 
-import {ArrowLeftIcon, ArrowRightIcon} from '../../icons/icons';
+import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
 
 import AddPartiesPage from './AddPartiesPage';
 import ReviewPage from './ReviewPage';
@@ -126,12 +134,12 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
                       <ArrowRightIcon />
                     </Button>
                   </NavLink>
-              <NavLink to={`${matchUrl}/${MenuItems.ADD_PARTIES}`}>
-                <Button className="main-button ghost dark">
-                  Add Parties
-                  <ArrowRightIcon />
-                </Button>
-              </NavLink>
+                  <NavLink to={`${matchUrl}/${MenuItems.ADD_PARTIES}`}>
+                    <Button className="main-button ghost dark">
+                      Add Parties
+                      <ArrowRightIcon />
+                    </Button>
+                  </NavLink>
                 </>
               )}
               <button

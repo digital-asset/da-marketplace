@@ -23,17 +23,14 @@ import { usePartyName } from '../../../config';
 import Tile from '../../../components/Tile/Tile';
 import FormErrorHandled from '../../../components/Form/FormErrorHandled';
 import BackButton from '../../../components/Common/BackButton';
-import {Service as CustodyService} from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 
 type Props = {
   biddingServices: Readonly<CreateEvent<BiddingService, any, any>[]>;
   custodyServices: Readonly<CreateEvent<CustodyService, any, any>[]>;
 };
 
-export const BiddingAuction: React.FC<Props> = ({
-  biddingServices,
-  custodyServices
-}) => {
+export const BiddingAuction: React.FC<Props> = ({ biddingServices, custodyServices }) => {
   const party = useParty();
   const { getName } = usePartyName(party);
   const ledger = useLedger();
@@ -42,9 +39,9 @@ export const BiddingAuction: React.FC<Props> = ({
   const [quantity, setQuantity] = useState<number>(0);
   const [price, setPrice] = useState<number>(0);
   const [allowPublishing, setAllowPublishing] = useState<boolean>(false);
-  const [accountLabel, setAccountLabel] = useState(custodyServices.length === 1
-    ? custodyServices[0].payload.account.id.label
-    : '');
+  const [accountLabel, setAccountLabel] = useState(
+    custodyServices.length === 1 ? custodyServices[0].payload.account.id.label : ''
+  );
 
   const { contracts: allBiddingAuctions, loading: allBiddingAuctionsLoading } =
     useStreamQueries(BiddingAuctionContract);
@@ -121,7 +118,7 @@ export const BiddingAuction: React.FC<Props> = ({
       quantity: quantity.toString(),
       depositCid,
       allowPublishing,
-      receivableAccount: account
+      receivableAccount: account,
     };
     await ledger.exercise(BiddingService.SubmitBid, service.contractId, arg);
   };

@@ -9,7 +9,10 @@ import {
 import { ServiceRequestDialog } from '../../components/InputDialog/ServiceDialog';
 
 import { Template, Party } from '@daml/types';
-import { Request as CustodyRequest, Service} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import {
+  Request as CustodyRequest,
+  Service,
+} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { Request as MarketClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service/module';
 import { Request as ClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
@@ -24,7 +27,7 @@ import { RoleKind, useProvidersByRole } from '../../context/RolesContext';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { usePartyName, useVerifiedParties } from '../../config';
 import { useParty } from '@daml/react';
-import {ServicePageProps} from "../common";
+import { ServicePageProps } from '../common';
 
 interface RequestInterface {
   customer: string;
@@ -32,7 +35,7 @@ interface RequestInterface {
   clearingAccount?: Account;
 }
 
-const ServiceRequestMenu: React.FC<ServicePageProps<Service>> = ({ services}) => {
+const ServiceRequestMenu: React.FC<ServicePageProps<Service>> = ({ services }) => {
   const party = useParty();
   const { getName } = usePartyName(party);
   const providersByRole = useProvidersByRole();
@@ -50,10 +53,8 @@ const ServiceRequestMenu: React.FC<ServicePageProps<Service>> = ({ services}) =>
     customer: '',
   });
 
-  const accounts = useMemo(() =>
-      services
-        .filter(c => c.payload.account.owner === party)
-        .map(c => c.payload.account),
+  const accounts = useMemo(
+    () => services.filter(c => c.payload.account.owner === party).map(c => c.payload.account),
     [party, services]
   );
 
@@ -170,28 +171,23 @@ const ServiceRequestMenu: React.FC<ServicePageProps<Service>> = ({ services}) =>
                 label: 'Clearing Account',
                 type: 'selection',
                 items: accounts.map(a => a.id.label),
-            }},
-            {},
+              },
+            },
+            {}
           )
         }
       />
       <OverflowMenuEntry
         label="Request Trading Service"
-        onClick={() =>
-          requestService(TradingRequest, ServiceKind.TRADING, RoleKind.TRADING)
-        }
+        onClick={() => requestService(TradingRequest, ServiceKind.TRADING, RoleKind.TRADING)}
       />
       <OverflowMenuEntry
         label="Request Auction Service"
-        onClick={() =>
-          requestService(AuctionRequest, ServiceKind.AUCTION, RoleKind.DISTRIBUTION)
-        }
+        onClick={() => requestService(AuctionRequest, ServiceKind.AUCTION, RoleKind.DISTRIBUTION)}
       />
       <OverflowMenuEntry
         label="Request Bidding Service"
-        onClick={() =>
-          requestService(BiddingRequest, ServiceKind.BIDDING, RoleKind.DISTRIBUTION)
-        }
+        onClick={() => requestService(BiddingRequest, ServiceKind.BIDDING, RoleKind.DISTRIBUTION)}
       />
     </OverflowMenu>
   );

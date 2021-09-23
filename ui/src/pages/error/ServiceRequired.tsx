@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Button, Modal } from 'semantic-ui-react';
 import {
   Request as CustodyRequest,
-  Service as CustodyService
+  Service as CustodyService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { Request as ClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
@@ -24,7 +24,7 @@ import { Template } from '@daml/types';
 import { useHistory } from 'react-router-dom';
 import { useServiceRequestKinds } from '../../context/RequestsContext';
 import MissingServiceModal from '../../components/Common/MissingServiceModal';
-import {ServicePageProps} from "../common";
+import { ServicePageProps } from '../common';
 
 import { useStreamQueries } from '../../Main';
 
@@ -40,19 +40,17 @@ interface RequestInterface {
 }
 
 export const ServiceRequired: React.FC<ServiceRequiredProps & ServicePageProps<CustodyService>> = ({
-    service,
-    action,
-    children,
-    services
-  }) => {
+  service,
+  action,
+  children,
+  services,
+}) => {
   const party = useParty();
   const identities = useStreamQueries(VerifiedIdentity).contracts;
   const legalNames = useMemo(() => identities.map(c => c.payload.legalName), [identities]);
 
-  const accounts = useMemo(() =>
-      services
-        .filter(c => c.payload.account.owner === party)
-        .map(c => c.payload.account),
+  const accounts = useMemo(
+    () => services.filter(c => c.payload.account.owner === party).map(c => c.payload.account),
     [party, services]
   );
   const accountNames = useMemo(() => accounts.map(a => a.id.label), [accounts]);

@@ -1,4 +1,4 @@
-import React, {useMemo} from 'react';
+import React, { useMemo } from 'react';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { useLedger, useParty } from '@daml/react';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
@@ -9,7 +9,7 @@ import {
   ClearedTradeSide,
   MemberStanding,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
-import {ServicePageProps, damlSetValues, makeDamlSet, isEmptySet} from '../common';
+import { ServicePageProps, damlSetValues, makeDamlSet, isEmptySet } from '../common';
 import { Button } from 'semantic-ui-react';
 import StripedTable from '../../components/Table/StripedTable';
 import TitleWithActions from '../../components/Common/TitleWithActions';
@@ -35,9 +35,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
     useStreamQueries(ClearedTradeSide);
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
   const { contracts: standings, loading: standingsLoading } = useStreamQueries(MemberStanding);
-  const accounts = useMemo(() =>
-    services.map(c => c.payload.clearingAccount)
-    , [services]);
+  const accounts = useMemo(() => services.map(c => c.payload.clearingAccount), [services]);
   const ccpDeposits = deposits.filter(
     d => d.payload.account.id.label === services[0]?.payload.ccpAccount.id.label
   );
@@ -62,12 +60,14 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
             standing => standing.payload.customer === s.payload.customer
           );
           const clearingDeposits = deposits.filter(
-            d => d.payload.account.id.label === s.payload.clearingAccount.id.label
-              && isEmptySet(d.payload.lockers)
+            d =>
+              d.payload.account.id.label === s.payload.clearingAccount.id.label &&
+              isEmptySet(d.payload.lockers)
           );
           const marginDeposits = deposits.filter(
-            d => d.payload.account.id.label === s.payload.clearingAccount.id.label
-              && d.payload.lockers === makeDamlSet([s.payload.provider]) //TODO BDW - Should it be a `contains`?
+            d =>
+              d.payload.account.id.label === s.payload.clearingAccount.id.label &&
+              d.payload.lockers === makeDamlSet([s.payload.provider]) //TODO BDW - Should it be a `contains`?
           );
           const clearingAmount = clearingDeposits.reduce(
             (acc, val) => acc + Number(val.payload.asset.quantity),

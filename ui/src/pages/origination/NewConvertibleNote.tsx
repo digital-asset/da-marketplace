@@ -14,12 +14,14 @@ import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import Tile from '../../components/Tile/Tile';
 import { Button, Form, Header } from 'semantic-ui-react';
 import CalendarInput from '../../components/Form/CalendarInput';
-import {makeDamlSet, ServicePageProps} from '../common';
+import { makeDamlSet, ServicePageProps } from '../common';
 import BackButton from '../../components/Common/BackButton';
 import { IconClose } from '../../icons/icons';
-import { Service as CustodyService } from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 
-const NewConvertibleNoteComponent : React.FC<RouteComponentProps & ServicePageProps<CustodyService>> = ({ services, history }) => {
+const NewConvertibleNoteComponent: React.FC<
+  RouteComponentProps & ServicePageProps<CustodyService>
+> = ({ services, history }) => {
   const el = useRef<HTMLDivElement>(null);
 
   const [underlying, setUnderlying] = useState('');

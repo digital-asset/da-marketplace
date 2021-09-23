@@ -8,7 +8,7 @@ import { Service as TradingService } from '@daml.js/da-marketplace/lib/Marketpla
 import { getTemplateId, usePartyName } from '../../config';
 import StripedTable from '../../components/Table/StripedTable';
 import ManageFees from './Fees';
-import { Service as CustodyService } from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 
 type Props = {
   tradingServices: Readonly<CreateEvent<TradingService, any, any>[]>;
@@ -31,14 +31,7 @@ export const TradingServiceTable: React.FC<Props> = ({ tradingServices, custodyS
       {!!role && <ManageFees role={role} custodyServices={custodyServices} />}
       <StripedTable
         title="Trading"
-        headings={[
-          'Service',
-          'Operator',
-          'Provider',
-          'Consumer',
-          'Role',
-          'Trading Account',
-        ]}
+        headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role', 'Trading Account']}
         rows={tradingServices.map((c, i) => {
           return {
             elements: [

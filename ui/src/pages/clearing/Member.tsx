@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import { RouteComponentProps, useParams, withRouter } from 'react-router-dom';
 import { useLedger, useParty } from '@daml/react';
 import {
@@ -15,37 +15,35 @@ import {
   RejectedMarginCalculation,
   RejectedMarkToMarketCalculation,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
-import {damlSetValues, isEmptySet, makeDamlSet, ServicePageProps} from '../common';
+import { damlSetValues, isEmptySet, makeDamlSet, ServicePageProps } from '../common';
 import { Button, Header } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import MarginCallModal from './MarginCallModal';
 import MTMCalculationModal from './MTMCalculationModal';
-import {ContractId} from '@daml/types';
+import { ContractId } from '@daml/types';
 import { formatCurrency } from '../../util';
 import TitleWithActions from '../../components/Common/TitleWithActions';
 import InfoCard from '../../components/Common/InfoCard';
-import OverflowMenu, {OverflowMenuEntry} from "../page/OverflowMenu";
-import {usePartyName} from "../../config";
-import {CreateEvent} from "@daml/ledger";
-import AllocationModal from "./AllocationModal";
+import OverflowMenu, { OverflowMenuEntry } from '../page/OverflowMenu';
+import { usePartyName } from '../../config';
+import { CreateEvent } from '@daml/ledger';
+import AllocationModal from './AllocationModal';
 import { useStreamQueries } from '../../Main';
 
 type Props = {
   member?: boolean;
 };
 
-const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<Service> & Props> = ({
-  history,
-  services,
-  member}) => {
+const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<Service> & Props> =
+  ({ history, services, member }) => {
     const { contractId } = useParams<any>();
     let party = useParty();
     const { getName } = usePartyName(party);
     const [openMarginDialog, setOpenMarginDialog] = useState(false);
     const [deposit, setDeposit] = useState<CreateEvent<AssetDeposit>>();
     const [observers, setObservers] = useState<AssetDeposit_SetObservers>({
-      newObservers : makeDamlSet<string>([])
+      newObservers: makeDamlSet<string>([]),
     });
     const [modalTitle, setModalTitle] = useState('');
 
@@ -59,10 +57,18 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
     const standing = standings.find(standing => standing.payload.customer === customer);
 
     const { contracts: allDeposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
-    const deposits = allDeposits.filter(a => a.payload.account.id.label === service?.clearingAccount.id.label);
-    const availableDeposits = deposits.filter(d => isEmptySet(d.payload.lockers) && !d.payload.observers.map.has(service?.provider || ''));
-    const clearingDeposits = deposits.filter(d => isEmptySet(d.payload.lockers) && d.payload.observers.map.has(service?.provider || ''));
-    const marginDeposits = deposits.filter(d => d.payload.lockers.map.has(service?.provider || 'unknown'));
+    const deposits = allDeposits.filter(
+      a => a.payload.account.id.label === service?.clearingAccount.id.label
+    );
+    const availableDeposits = deposits.filter(
+      d => isEmptySet(d.payload.lockers) && !d.payload.observers.map.has(service?.provider || '')
+    );
+    const clearingDeposits = deposits.filter(
+      d => isEmptySet(d.payload.lockers) && d.payload.observers.map.has(service?.provider || '')
+    );
+    const marginDeposits = deposits.filter(d =>
+      d.payload.lockers.map.has(service?.provider || 'unknown')
+    );
     const clearingAmount = clearingDeposits.reduce(
       (acc, val) => acc + Number(val.payload.asset.quantity),
       0
@@ -110,31 +116,31 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
       await ledger.exercise(choice, cid, {});
     };
 
-    if (!service) return <></>
+    if (!service) return <></>;
 
-    const onAllocateToClearing = (targetDeposit : CreateEvent<AssetDeposit>) => {
+    const onAllocateToClearing = (targetDeposit: CreateEvent<AssetDeposit>) => {
       if (targetDeposit && service) {
-        setModalTitle("Allocate to Clearing")
+        setModalTitle('Allocate to Clearing');
         setDeposit(targetDeposit);
         setObservers({
-            newObservers: makeDamlSet<string>([...targetDeposit.observers, service.provider])
-          }
-        );
+          newObservers: makeDamlSet<string>([...targetDeposit.observers, service.provider]),
+        });
         setOpenMarginDialog(true);
       }
-    }
+    };
 
-  const onDeallocateFromClearing = (targetDeposit : CreateEvent<AssetDeposit>) => {
-    if (targetDeposit && service) {
-      setModalTitle("Deallocate from Clearing")
-      setDeposit(targetDeposit);
-      setObservers({
-          newObservers: makeDamlSet<string>([...targetDeposit.observers.filter(o => o !== service.provider)])
-        }
-      );
-      setOpenMarginDialog(true);
-    }
-  }
+    const onDeallocateFromClearing = (targetDeposit: CreateEvent<AssetDeposit>) => {
+      if (targetDeposit && service) {
+        setModalTitle('Deallocate from Clearing');
+        setDeposit(targetDeposit);
+        setObservers({
+          newObservers: makeDamlSet<string>([
+            ...targetDeposit.observers.filter(o => o !== service.provider),
+          ]),
+        });
+        setOpenMarginDialog(true);
+      }
+    };
 
     return (
       <div className="member">
@@ -324,53 +330,9 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
             observers={observers}
           />
         </>
-        {party === service.clearingAccount.owner &&
-        <div>
+        {party === service.clearingAccount.owner && (
+          <div>
             <Header as="h2">Available Deposits</Header>
-            <div className="account">
-                <div className="account-details">
-                    <div className="account-data">
-                        <h4> {service.clearingAccount.id.label} </h4>
-                    </div>
-                    <div className="account-data body">
-                        <p className="p2">Provider: {getName(service.clearingAccount.provider)}</p>
-                        <p className="p2">Owner: {getName(service.clearingAccount.owner)}</p>
-                        <p className="p2">
-                            Role: {party === service.clearingAccount.provider ? 'Provider' : 'Client'}
-                        </p>
-                        <p className="p2">
-                            Signatories:{' '}
-                          {damlSetValues(service.clearingAccount.id.signatories)
-                            .map(a => getName(a))
-                            .sort()
-                            .join(', ')}
-                        </p>
-                    </div>
-                </div>
-              {availableDeposits.length > 0 ? (
-                availableDeposits.map(c => (
-                  <Tile className="account-holding" key={c.contractId} loading={depositsLoading} >
-                    <p>
-                      <b>{c.payload.asset.id.label}</b> {c.payload.asset.quantity}{' '}
-                    </p>
-                    {party === service.clearingAccount.owner && (
-                      <OverflowMenu align={'right'}>
-                        <OverflowMenuEntry label={'Allocate to Clearing Account'}
-                                           onClick={() => onAllocateToClearing(c)}/>
-                      </OverflowMenu>
-                    )}
-                  </Tile>
-                ))
-              ) : (
-                <Tile className="account-holding">
-                  <i>There are no holdings in this account.</i>
-                </Tile>
-              )}
-            </div>
-        </div>
-        }
-        <div>
-          <Header as="h2">Clearing Deposits</Header>
             <div className="account">
               <div className="account-details">
                 <div className="account-data">
@@ -391,17 +353,20 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
                   </p>
                 </div>
               </div>
-              {clearingDeposits.length > 0 ? (
-                clearingDeposits.map(c => (
+              {availableDeposits.length > 0 ? (
+                availableDeposits.map(c => (
                   <Tile className="account-holding" key={c.contractId} loading={depositsLoading}>
                     <p>
                       <b>{c.payload.asset.id.label}</b> {c.payload.asset.quantity}{' '}
                     </p>
                     {party === service.clearingAccount.owner && (
-                       <OverflowMenu align={'right'}>
-                         <OverflowMenuEntry label={'Deallocate from Clearing'} onClick={() => onDeallocateFromClearing(c)} />
-                       </OverflowMenu>
-                     )}
+                      <OverflowMenu align={'right'}>
+                        <OverflowMenuEntry
+                          label={'Allocate to Clearing Account'}
+                          onClick={() => onAllocateToClearing(c)}
+                        />
+                      </OverflowMenu>
+                    )}
                   </Tile>
                 ))
               ) : (
@@ -410,6 +375,52 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
                 </Tile>
               )}
             </div>
+          </div>
+        )}
+        <div>
+          <Header as="h2">Clearing Deposits</Header>
+          <div className="account">
+            <div className="account-details">
+              <div className="account-data">
+                <h4> {service.clearingAccount.id.label} </h4>
+              </div>
+              <div className="account-data body">
+                <p className="p2">Provider: {getName(service.clearingAccount.provider)}</p>
+                <p className="p2">Owner: {getName(service.clearingAccount.owner)}</p>
+                <p className="p2">
+                  Role: {party === service.clearingAccount.provider ? 'Provider' : 'Client'}
+                </p>
+                <p className="p2">
+                  Signatories:{' '}
+                  {damlSetValues(service.clearingAccount.id.signatories)
+                    .map(a => getName(a))
+                    .sort()
+                    .join(', ')}
+                </p>
+              </div>
+            </div>
+            {clearingDeposits.length > 0 ? (
+              clearingDeposits.map(c => (
+                <Tile className="account-holding" key={c.contractId} loading={depositsLoading}>
+                  <p>
+                    <b>{c.payload.asset.id.label}</b> {c.payload.asset.quantity}{' '}
+                  </p>
+                  {party === service.clearingAccount.owner && (
+                    <OverflowMenu align={'right'}>
+                      <OverflowMenuEntry
+                        label={'Deallocate from Clearing'}
+                        onClick={() => onDeallocateFromClearing(c)}
+                      />
+                    </OverflowMenu>
+                  )}
+                </Tile>
+              ))
+            ) : (
+              <Tile className="account-holding">
+                <i>There are no holdings in this account.</i>
+              </Tile>
+            )}
+          </div>
         </div>
         <div>
           <Header as="h2">Margin Deposits</Header>

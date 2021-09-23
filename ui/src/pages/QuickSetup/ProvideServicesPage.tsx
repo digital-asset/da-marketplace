@@ -39,7 +39,7 @@ import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 
 import { CreateEvent } from '@daml/ledger';
 import AccountSelection, { AccountType, AccountInfos } from './AccountSelection';
-import { Service as CustodyService} from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module";
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
 import QuickSetupPage from './QuickSetupPage';
 
 export type AccountsForServices = {
@@ -134,10 +134,7 @@ const AccountsForParty = (props: {
     [allAccounts, party]
   );
 
-  useEffect(
-    () => setAccountsForParty({ accounts }),
-    [accounts, setAccountsForParty]
-  );
+  useEffect(() => setAccountsForParty({ accounts }), [accounts, setAccountsForParty]);
   return null;
 };
 
@@ -177,7 +174,7 @@ const RequestForm = (props: {
                 clearingAccount: {
                   accountType: AccountType.REGULAR,
                   accountLabel: 'Clearing Account',
-                }
+                },
               };
             default:
               return acc;
@@ -381,7 +378,7 @@ const CreateServiceRequests = (props: {
               }
               const clearingParams = {
                 ...params,
-                clearingAccount: clearingAccounts.clearingAccount
+                clearingAccount: clearingAccounts.clearingAccount,
               };
               await ledger.create(ClearingRequest, clearingParams);
               break;

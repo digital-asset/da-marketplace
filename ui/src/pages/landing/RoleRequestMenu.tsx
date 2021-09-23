@@ -23,8 +23,8 @@ import { useParty } from '@daml/react';
 import { RoleRequestDialog } from '../../components/InputDialog/RoleDialog';
 import { useRoleRequestKinds } from '../../context/RequestsContext';
 import { AddPlusIcon } from '../../icons/icons';
-import {ServicePageProps} from "../common";
-import {Service as CustodyService} from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
+import { ServicePageProps } from '../common';
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 
 import { useStreamQueries } from '../../Main';
 
@@ -34,7 +34,7 @@ interface RequestInterface {
   ccpAccount?: Account;
 }
 
-const RoleRequestMenu: React.FC<ServicePageProps<CustodyService>> = ({services}) => {
+const RoleRequestMenu: React.FC<ServicePageProps<CustodyService>> = ({ services }) => {
   const party = useParty();
   const { getName } = usePartyName(party);
   const operatorRoles = useStreamQueries(OperatorRole);
@@ -65,10 +65,7 @@ const RoleRequestMenu: React.FC<ServicePageProps<CustodyService>> = ({services})
   });
 
   const accounts = useMemo(
-    () =>
-      services
-        .filter(c => c.payload.account.owner === party)
-        .map(c => c.payload.account),
+    () => services.filter(c => c.payload.account.owner === party).map(c => c.payload.account),
     [party, services]
   );
 

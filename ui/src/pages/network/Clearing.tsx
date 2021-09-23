@@ -1,16 +1,16 @@
 import React from 'react';
-import {CreateEvent} from '@daml/ledger';
-import {useLedger, useParty} from '@daml/react';
-import {useStreamQueries} from '../../Main';
-import {getTemplateId, usePartyName} from '../../config';
-import {Service as ClearingService} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
-import {Service as MarketService,} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
+import { CreateEvent } from '@daml/ledger';
+import { useLedger, useParty } from '@daml/react';
+import { useStreamQueries } from '../../Main';
+import { getTemplateId, usePartyName } from '../../config';
+import { Service as ClearingService } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
+import { Service as MarketService } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
 import StripedTable from '../../components/Table/StripedTable';
-import {Button} from 'semantic-ui-react';
-import {FairValueRequest} from '../listing/Listing';
+import { Button } from 'semantic-ui-react';
+import { FairValueRequest } from '../listing/Listing';
 import TitleWithActions from '../../components/Common/TitleWithActions';
 import paths from '../../paths';
-import {ServicePageProps} from "../common";
+import { ServicePageProps } from '../common';
 
 const CLEARING_SERVICE_TEMPLATE = 'Marketplace.Clearing.Service.Service';
 

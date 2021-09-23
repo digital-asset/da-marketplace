@@ -26,7 +26,7 @@ import paths from '../../paths';
 import ServiceRequestMenu from './ServiceRequestMenu';
 import RoleSetUp, { AutomationSetup } from '../../pages/setup/SetUp';
 import OverflowMenu, { OverflowMenuEntry } from '../../pages/page/OverflowMenu';
-import {ServicePageProps} from "../common";
+import { ServicePageProps } from '../common';
 
 type DamlHubParty = string;
 function isDamlHubParty(party: string): party is DamlHubParty {
@@ -145,7 +145,7 @@ const ProfileSection: React.FC<{ name: string }> = ({ name }) => {
   return <></>;
 };
 
-const Landing : React.FC<ServicePageProps<CustodyService>> = ({services}) => {
+const Landing: React.FC<ServicePageProps<CustodyService>> = ({ services }) => {
   const party = useParty();
   const history = useHistory();
 

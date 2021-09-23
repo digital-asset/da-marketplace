@@ -38,7 +38,7 @@ import { useHistory } from 'react-router-dom';
 import { usePartyName } from '../../config';
 import paths from '../../paths';
 import { formatCurrency } from '../../util';
-import {Service as CustodyService} from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 
 type Props = {
   cid: string;
@@ -67,9 +67,9 @@ export const Market: React.FC<Props> = ({
   const [timeInForce, setTimeInForce] = useState<TimeInForces>('GTC');
   const [expiryDate, setExpiryDate] = useState(0);
 
-  const [accountLabel, setAccountLabel] = useState(custodyServices.length === 1
-    ? custodyServices[0].payload.account.id.label
-    : '');
+  const [accountLabel, setAccountLabel] = useState(
+    custodyServices.length === 1 ? custodyServices[0].payload.account.id.label : ''
+  );
 
   const handlePriceChange = (p: number) => {
     const perc = isBuy
@@ -197,7 +197,9 @@ export const Market: React.FC<Props> = ({
     setPercentage(0.0);
     setTotal(0.0);
     setExpiryDate(0);
-    setAccountLabel(custodyServices.length === 1 ? custodyServices[0].payload.account.id.label : '');
+    setAccountLabel(
+      custodyServices.length === 1 ? custodyServices[0].payload.account.id.label : ''
+    );
   };
 
   const getAsset = async (
@@ -269,7 +271,7 @@ export const Market: React.FC<Props> = ({
           ? { tag: 'GTD', value: { expiryDate: expiryDate.toString() } }
           : { tag: timeInForce, value: {} },
       optExchangeFee: null,
-      receivableAccount: account
+      receivableAccount: account,
     };
     clearOrderForm();
     if (listing.payload.listingType.tag === 'Collateralized') {
@@ -513,11 +515,7 @@ export const Market: React.FC<Props> = ({
                 <input />
                 <Label>{listing.payload.quotedAssetId.label}</Label>
               </Form.Input>
-              <Form.Input
-                label="Fee"
-                disabled={true}
-                value={formatCurrency(feeAmount)}
-              />
+              <Form.Input label="Fee" disabled={true} value={formatCurrency(feeAmount)} />
               <Form.Select
                 selection
                 label="Receivable Account"
@@ -529,7 +527,11 @@ export const Market: React.FC<Props> = ({
                 value={accountLabel}
                 onChange={(_, d) => setAccountLabel((d.value && (d.value as string)) || '')}
               />
-              <Button className="ghost" type="submit" disabled={(isLimit && !price) || !quantity || !account}>
+              <Button
+                className="ghost"
+                type="submit"
+                disabled={(isLimit && !price) || !quantity || !account}
+              >
                 {isBuy ? 'Buy' : 'Sell'} {listing.payload.tradedAssetId.label}
               </Button>
             </FormErrorHandled>

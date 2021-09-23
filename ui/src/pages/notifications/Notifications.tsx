@@ -156,8 +156,7 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
   );
 
   const accounts = useStreamQueries(CustodyService)
-    .contracts
-    .filter(s => s.payload.account.owner === party)
+    .contracts.filter(s => s.payload.account.owner === party)
     .map(s => s.payload.account);
 
   const accountNames = accounts.map(a => a.id.label);
@@ -620,7 +619,9 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
       kind: 'Pending',
       tag: 'pending',
       getCustomDescription: c =>
-        `Request to deposit asset ${c.payload.asset.id.label} of quantity ${c.payload.asset.quantity}
+        `Request to deposit asset ${c.payload.asset.id.label} of quantity ${
+          c.payload.asset.quantity
+        }
         is pending approval from ${getName(c.payload.provider)}.`,
       contracts: outboundDepositRequests,
     },

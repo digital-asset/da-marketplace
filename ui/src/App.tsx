@@ -219,7 +219,11 @@ const AppComponent = () => {
       {
         path: paths.app.instruments.new.base,
         render: () => (
-          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Base Instrument" services={custodyService}>
+          <ServiceRequired
+            service={ServiceKind.ISSUANCE}
+            action="New Base Instrument"
+            services={custodyService}
+          >
             <NewBaseInstrument services={custodyService} />
           </ServiceRequired>
         ),
@@ -227,7 +231,11 @@ const AppComponent = () => {
       {
         path: paths.app.instruments.new.convertiblenote,
         render: () => (
-          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Convertible Note" services={custodyService}>
+          <ServiceRequired
+            service={ServiceKind.ISSUANCE}
+            action="New Convertible Note"
+            services={custodyService}
+          >
             <NewConvertibleNote services={custodyService} />
           </ServiceRequired>
         ),
@@ -235,7 +243,11 @@ const AppComponent = () => {
       {
         path: paths.app.instruments.new.binaryoption,
         render: () => (
-          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Binary Option" services={custodyService}>
+          <ServiceRequired
+            service={ServiceKind.ISSUANCE}
+            action="New Binary Option"
+            services={custodyService}
+          >
             <NewBinaryOption services={custodyService} />
           </ServiceRequired>
         ),
@@ -243,7 +255,11 @@ const AppComponent = () => {
       {
         path: paths.app.instruments.new.simplefuture,
         render: () => (
-          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Simple Future" services={custodyService}>
+          <ServiceRequired
+            service={ServiceKind.ISSUANCE}
+            action="New Simple Future"
+            services={custodyService}
+          >
             <NewSimpleFuture services={custodyService} />
           </ServiceRequired>
         ),
@@ -269,7 +285,11 @@ const AppComponent = () => {
       {
         path: paths.app.issuance.new,
         render: () => (
-          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Issuance" services={custodyService}>
+          <ServiceRequired
+            service={ServiceKind.ISSUANCE}
+            action="New Issuance"
+            services={custodyService}
+          >
             <IssuanceNew issuanceServices={issuanceService} custodyServices={custodyService} />
           </ServiceRequired>
         ),
@@ -283,7 +303,9 @@ const AppComponent = () => {
       {
         label: 'Trading',
         path: paths.app.trading,
-        render: () => <TradingServiceTable tradingServices={tradingService} custodyServices={custodyService} />,
+        render: () => (
+          <TradingServiceTable tradingServices={tradingService} custodyServices={custodyService} />
+        ),
         icon: <ControlsIcon />,
         children: [],
       },
@@ -306,7 +328,11 @@ const AppComponent = () => {
       {
         path: paths.app.listings.new,
         render: () => (
-          <ServiceRequired service={ServiceKind.LISTING} action="New Listing" services={custodyService}>
+          <ServiceRequired
+            service={ServiceKind.LISTING}
+            action="New Listing"
+            services={custodyService}
+          >
             <ListingNew services={listingService} />
           </ServiceRequired>
         ),
@@ -352,7 +378,11 @@ const AppComponent = () => {
       {
         path: paths.app.auctions.new,
         render: () => (
-          <ServiceRequired service={ServiceKind.AUCTION} action="New Auction" services={custodyService}>
+          <ServiceRequired
+            service={ServiceKind.AUCTION}
+            action="New Auction"
+            services={custodyService}
+          >
             <NewAuction auctionServices={auctionService} custodyServices={custodyService} />
           </ServiceRequired>
         ),
@@ -423,7 +453,9 @@ const AppComponent = () => {
     additionalRoutes: [
       {
         path: paths.app.biddingAuctions + '/:contractId',
-        render: () => <BiddingAuction biddingServices={biddingService} custodyServices={custodyService} />,
+        render: () => (
+          <BiddingAuction biddingServices={biddingService} custodyServices={custodyService} />
+        ),
       },
     ],
   });
@@ -467,7 +499,11 @@ const AppComponent = () => {
       ) : (
         <div>
           <Switch>
-            <Route exact path={paths.app.root} render={() => <Landing services={custodyService} />} />
+            <Route
+              exact
+              path={paths.app.root}
+              render={() => <Landing services={custodyService} />}
+            />
             {routeEntries(entriesToDisplay)}
             {additionRouting.map((routeProps, i) => (
               <Route key={i} {...routeProps} />

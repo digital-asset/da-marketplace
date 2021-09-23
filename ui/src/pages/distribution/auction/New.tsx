@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useRef, useState} from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../../Main';
 import { transformClaim } from '../../../components/Claims/util';
@@ -17,10 +17,10 @@ import { Button, Form, Header, Icon } from 'semantic-ui-react';
 import FormErrorHandled from '../../../components/Form/FormErrorHandled';
 import { IconClose } from '../../../icons/icons';
 import Tile from '../../../components/Tile/Tile';
-import {isEmptySet} from '../../common';
+import { isEmptySet } from '../../common';
 import BackButton from '../../../components/Common/BackButton';
 import paths from '../../../paths';
-import {Service as CustodyService} from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 
 type Props = {
   auctionServices: Readonly<CreateEvent<AuctionService, any, any>[]>;
@@ -30,7 +30,7 @@ type Props = {
 const NewComponent: React.FC<RouteComponentProps & Props> = ({
   history,
   auctionServices,
-  custodyServices
+  custodyServices,
 }) => {
   const el1 = useRef<HTMLDivElement>(null);
   const el2 = useRef<HTMLDivElement>(null);
@@ -43,9 +43,9 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
   const [quantity, setQuantity] = useState('');
   const [floorPrice, setFloorPrice] = useState('');
   const [auctionId, setAuctionId] = useState('');
-  const [accountLabel, setAccountLabel] = useState(custodyServices.length === 1
-    ? custodyServices[0].payload.account.id.label
-    : '');
+  const [accountLabel, setAccountLabel] = useState(
+    custodyServices.length === 1 ? custodyServices[0].payload.account.id.label : ''
+  );
 
   const ledger = useLedger();
   const party = useParty();
@@ -61,9 +61,10 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
     .filter((v, i, a) => a.indexOf(v) === i);
   const auctionRequests = useStreamQueries(CreateAuctionRequest).contracts;
   const accounts = custodyServices.map(c => c.payload.account);
-  const account = useMemo(() =>
-    accounts.find(a => a.id.label === accountLabel),
-    [accounts, accountLabel]);
+  const account = useMemo(
+    () => accounts.find(a => a.id.label === accountLabel),
+    [accounts, accountLabel]
+  );
 
   const canRequest =
     !!auctionedAssetLabel &&
@@ -121,7 +122,7 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
       quotedAssetId: quotedAsset.payload.assetId,
       floorPrice,
       depositCid,
-      receivableAccount : account
+      receivableAccount: account,
     };
     await ledger.exercise(AuctionService.RequestCreateAuction, service.contractId, request);
     history.push(paths.app.distributions);

@@ -8,10 +8,10 @@ import { CreateEvent } from '@daml/ledger';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { usePartyName } from '../../config';
 import Tile from '../../components/Tile/Tile';
-import {ServicePageProps, damlSetValues, isEmptySet} from '../common';
+import { ServicePageProps, damlSetValues, isEmptySet } from '../common';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 import OverflowMenu, { OverflowMenuEntry } from '../../pages/page/OverflowMenu';
-import {Icon, Popup} from "semantic-ui-react";
+import { Icon, Popup } from 'semantic-ui-react';
 
 interface AccountProps {
   targetAccount: {
@@ -55,7 +55,7 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
         message: 'The account provider does not offer issuance services.',
       });
     await ledger.exercise(Service.RequestWithdrawl, service.contractId, {
-      depositCid: c.contractId
+      depositCid: c.contractId,
     });
   };
 
@@ -73,12 +73,12 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
               Role: {party === targetAccount.account.provider ? 'Provider' : 'Client'}
             </p>
             <p className="p2">
-                Signatories:{' '}
-                {damlSetValues(targetAccount.account.id.signatories)
-                  .map(a => getName(a))
-                  .sort()
-                  .join(', ')}
-              </p>
+              Signatories:{' '}
+              {damlSetValues(targetAccount.account.id.signatories)
+                .map(a => getName(a))
+                .sort()
+                .join(', ')}
+            </p>
           </div>
         </div>
         {accountDeposits.length > 0 ? (
@@ -86,19 +86,22 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
             <Tile className="account-holding" key={c.contractId}>
               <p>
                 <b>{c.payload.asset.id.label}</b> {c.payload.asset.quantity}{' '}
-                { !isEmptySet(c.payload.lockers) &&
-                    <Popup
-                        trigger={<Icon name="lock" />}
-                        content={"Locked by " + damlSetValues(c.payload.lockers)
-                                    .map(a => getName(a))
-                                    .sort()
-                                    .join(', ')}
-                      />
-                }
+                {!isEmptySet(c.payload.lockers) && (
+                  <Popup
+                    trigger={<Icon name="lock" />}
+                    content={
+                      'Locked by ' +
+                      damlSetValues(c.payload.lockers)
+                        .map(a => getName(a))
+                        .sort()
+                        .join(', ')
+                    }
+                  />
+                )}
               </p>
               {party === targetAccount.account.owner && isEmptySet(c.payload.lockers) && (
                 <OverflowMenu>
-                    <OverflowMenuEntry label={'Withdraw'} onClick={() => requestWithdrawDeposit(c)}/>
+                  <OverflowMenuEntry label={'Withdraw'} onClick={() => requestWithdrawDeposit(c)} />
                   {/*<OverflowMenuEntry label={'Transfer'} onClick={() => requestTransfer(c)} />*/}
                 </OverflowMenu>
               )}

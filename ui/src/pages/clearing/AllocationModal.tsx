@@ -1,19 +1,19 @@
-import React, {useEffect, useState} from 'react';
-import {useLedger} from '@daml/react';
-import {CreateEvent} from "@daml/ledger";
+import React, { useEffect, useState } from 'react';
+import { useLedger } from '@daml/react';
+import { CreateEvent } from '@daml/ledger';
 import {
   AssetDeposit,
   AssetDeposit_SetObservers,
-  AssetDeposit_Split
-} from "@daml.js/da-marketplace/lib/DA/Finance/Asset";
-import {Button, Form, Header, Modal} from "semantic-ui-react";
+  AssetDeposit_Split,
+} from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
+import { Button, Form, Header, Modal } from 'semantic-ui-react';
 
 type MarginCallProps = {
-  deposit : CreateEvent<AssetDeposit> | undefined;
-  title : string;
-  open : boolean;
-  onClose : (open : boolean) => void;
-  observers : AssetDeposit_SetObservers
+  deposit: CreateEvent<AssetDeposit> | undefined;
+  title: string;
+  open: boolean;
+  onClose: (open: boolean) => void;
+  observers: AssetDeposit_SetObservers;
 };
 
 const AllocationModal: React.FC<MarginCallProps> = ({
@@ -27,8 +27,7 @@ const AllocationModal: React.FC<MarginCallProps> = ({
   const [allocation, setAllocation] = useState<number>(0.0);
 
   useEffect(() => {
-    if (!!deposit)
-      setAllocation(parseFloat(deposit.payload.asset.quantity));
+    if (!!deposit) setAllocation(parseFloat(deposit.payload.asset.quantity));
   }, [open, deposit]);
 
   if (!deposit) return <></>;
@@ -42,29 +41,23 @@ const AllocationModal: React.FC<MarginCallProps> = ({
     }
 
     if (allocation < depositQuantity) {
-      const splitRequest : AssetDeposit_Split = {
-        quantities: [allocation.toString()]
+      const splitRequest: AssetDeposit_Split = {
+        quantities: [allocation.toString()],
       };
       await ledger
         .exercise(AssetDeposit.AssetDeposit_Split, deposit.contractId, splitRequest)
         .then(([[depositCid]]) =>
           ledger.exercise(AssetDeposit.AssetDeposit_SetObservers, depositCid, observers)
         );
-    }
-    else {
-        await ledger.exercise(AssetDeposit.AssetDeposit_SetObservers, deposit.contractId, observers);
+    } else {
+      await ledger.exercise(AssetDeposit.AssetDeposit_SetObservers, deposit.contractId, observers);
     }
 
     onClose(false);
   };
 
   return (
-    <Modal
-      className="input-dialog"
-      open={open}
-      size="small"
-      onClose={() => onClose(false)}
-    >
+    <Modal className="input-dialog" open={open} size="small" onClose={() => onClose(false)}>
       <Modal.Header as="h2">{title}</Modal.Header>
       <Modal.Content>
         <Form>
@@ -79,7 +72,7 @@ const AllocationModal: React.FC<MarginCallProps> = ({
         </Form>
       </Modal.Content>
       <Modal.Actions>
-        <Button className="ghost" onClick={() => requestAllocation()} >
+        <Button className="ghost" onClick={() => requestAllocation()}>
           Confirm
         </Button>
         <Button className="ghost warning" onClick={() => onClose(false)}>
