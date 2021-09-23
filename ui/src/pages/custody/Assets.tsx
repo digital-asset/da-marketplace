@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useStreamQueries } from '../../Main';
 import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
@@ -6,7 +6,7 @@ import Account from './Account';
 import Tile from '../../components/Tile/Tile';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { Button, Form } from 'semantic-ui-react';
-import {ServicePageProps, createDropdownProp, damlSetValues, makeDamlSet} from '../common';
+import {ServicePageProps, createDropdownProp, makeDamlSet} from '../common';
 import { usePartyName } from '../../config';
 import { useLedger, useParty } from '@daml/react';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';

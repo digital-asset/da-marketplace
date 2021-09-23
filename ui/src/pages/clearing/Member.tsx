@@ -21,7 +21,7 @@ import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import MarginCallModal from './MarginCallModal';
 import MTMCalculationModal from './MTMCalculationModal';
-import {ContractId, Party} from '@daml/types';
+import {ContractId} from '@daml/types';
 import { formatCurrency } from '../../util';
 import TitleWithActions from '../../components/Common/TitleWithActions';
 import InfoCard from '../../components/Common/InfoCard';
@@ -129,7 +129,7 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
       setModalTitle("Deallocate from Clearing")
       setDeposit(targetDeposit);
       setObservers({
-          newObservers: makeDamlSet<string>([...targetDeposit.observers.filter(o => o != service.provider)])
+          newObservers: makeDamlSet<string>([...targetDeposit.observers.filter(o => o !== service.provider)])
         }
       );
       setOpenMarginDialog(true);
@@ -349,7 +349,7 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
                 </div>
               {availableDeposits.length > 0 ? (
                 availableDeposits.map(c => (
-                  <Tile className="account-holding" key={c.contractId}>
+                  <Tile className="account-holding" key={c.contractId} loading={depositsLoading} >
                     <p>
                       <b>{c.payload.asset.id.label}</b> {c.payload.asset.quantity}{' '}
                     </p>
@@ -393,7 +393,7 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
               </div>
               {clearingDeposits.length > 0 ? (
                 clearingDeposits.map(c => (
-                  <Tile className="account-holding" key={c.contractId}>
+                  <Tile className="account-holding" key={c.contractId} loading={depositsLoading}>
                     <p>
                       <b>{c.payload.asset.id.label}</b> {c.payload.asset.quantity}{' '}
                     </p>
@@ -435,7 +435,7 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
             </div>
             {marginDeposits.length > 0 ? (
               marginDeposits.map(c => (
-                <Tile className="account-holding" key={c.contractId}>
+                <Tile className="account-holding" key={c.contractId} loading={depositsLoading}>
                   <p>
                     <b>{c.payload.asset.id.label}</b> {c.payload.asset.quantity}{' '}
                   </p>

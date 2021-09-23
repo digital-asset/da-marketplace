@@ -17,7 +17,7 @@ import { Button, Form, Header, Icon } from 'semantic-ui-react';
 import FormErrorHandled from '../../../components/Form/FormErrorHandled';
 import { IconClose } from '../../../icons/icons';
 import Tile from '../../../components/Tile/Tile';
-import {isEmptySet, ServicePageProps} from '../../common';
+import {isEmptySet} from '../../common';
 import BackButton from '../../../components/Common/BackButton';
 import paths from '../../../paths';
 import {Service as CustodyService} from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
@@ -63,7 +63,7 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
   const accounts = custodyServices.map(c => c.payload.account);
   const account = useMemo(() =>
     accounts.find(a => a.id.label === accountLabel),
-    [accounts]);
+    [accounts, accountLabel]);
 
   const canRequest =
     !!auctionedAssetLabel &&

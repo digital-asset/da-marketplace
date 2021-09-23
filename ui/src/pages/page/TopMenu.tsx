@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useHistory, useLocation } from 'react-router-dom';
 import { Button, Header, Menu } from 'semantic-ui-react';
 
@@ -20,8 +20,6 @@ import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuan
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import { useAllNotifications } from '../../pages/notifications/Notifications';
 import _ from 'lodash';
-import {ServicePageProps} from "../common";
-import {Service as CustodyService} from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
 
 type Props = {
   title?: React.ReactElement;

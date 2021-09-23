@@ -13,7 +13,7 @@ import { Service as TradingService } from '@daml.js/da-marketplace/lib/Marketpla
 import { CreateEvent } from '@daml/ledger';
 import { ContractId } from '@daml/types';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import {isEmptySet, makeDamlSet, ServicePageProps} from '../common';
+import { isEmptySet } from '../common';
 import { Button, Form, Header, Label, Popup, Table } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';

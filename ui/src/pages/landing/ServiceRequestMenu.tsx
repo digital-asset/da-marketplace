@@ -19,14 +19,12 @@ import { Request as AuctionRequest } from '@daml.js/da-marketplace/lib/Marketpla
 import { Request as BiddingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
 
 import _ from 'lodash';
-import { Fields, FieldCallbacks, FieldCallback } from '../../components/InputDialog/Fields';
+import { Fields, FieldCallbacks } from '../../components/InputDialog/Fields';
 import { RoleKind, useProvidersByRole } from '../../context/RolesContext';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { usePartyName, useVerifiedParties } from '../../config';
 import { useParty } from '@daml/react';
 import {ServicePageProps} from "../common";
-
-import { useStreamQueries } from '../../Main';
 
 interface RequestInterface {
   customer: string;

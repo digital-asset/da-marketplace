@@ -14,7 +14,6 @@ import Tile from '../../components/Tile/Tile';
 import BackButton from '../../components/Common/BackButton';
 import paths from '../../paths';
 import { EyeClosed, EyeOpen } from '../../icons/icons';
-import {ServicePageProps} from "../common";
 
 type Props = {
   issuanceServices: Readonly<CreateEvent<IssuanceService, any, any>[]>;

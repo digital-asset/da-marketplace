@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
@@ -6,7 +6,6 @@ import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { Account as AccountContract } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { CreateEvent } from '@daml/ledger';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
 import { usePartyName } from '../../config';
 import Tile from '../../components/Tile/Tile';
 import {ServicePageProps, damlSetValues, isEmptySet} from '../common';
@@ -30,24 +29,7 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
   const ledger = useLedger();
   const displayErrorMessage = useDisplayErrorMessage();
 
-  const cid = targetAccount.contractId.replace('_', '#');
-
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
-
-  const defaultTransferRequestDialogProps: InputDialogProps<any> = {
-    open: false,
-    title: 'Transfer Account Request',
-    defaultValue: { account: '' },
-    fields: {
-      account: { label: 'Account', type: 'selection', items: [] },
-    },
-    onClose: async function (state: any | null) {},
-  };
-
-  const [transferDialogProps, setTransferDialogProps] = useState<InputDialogProps<any>>(
-    defaultTransferRequestDialogProps
-  );
-
   const clientServices = services.filter(s => s.payload.customer === party);
 
   if (depositsLoading) {
@@ -77,41 +59,8 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
     });
   };
 
-  const relatedAccounts = services
-    .filter(s => s.contractId !== cid)
-    .filter(s => s.payload.account.owner === targetAccount.account.owner)
-    .map(s => s.payload.account.id.label);
-
-  const requestTransfer = (deposit: CreateEvent<AssetDeposit>) => {
-    const onClose = async (state: any | null) => {
-      setTransferDialogProps({ ...defaultTransferRequestDialogProps, open: false });
-      if (!state) return;
-      const transferToAccount = services.find(a => a.payload.account.id.label === state.account);
-
-      if (!service || !transferToAccount) return;
-
-      await ledger.exercise(AssetDeposit.AssetDeposit_Transfer, deposit.contractId, {
-        receiverAccount: transferToAccount.payload.account
-      });
-    };
-    setTransferDialogProps({
-      ...defaultTransferRequestDialogProps,
-      defaultValue: {
-        ...defaultTransferRequestDialogProps.defaultValue,
-        deposit: deposit.contractId,
-      },
-      fields: {
-        ...defaultTransferRequestDialogProps.fields,
-        account: { label: 'Account', type: 'selection', items: relatedAccounts },
-      },
-      open: true,
-      onClose,
-    });
-  };
-
   return (
     <>
-      <InputDialog {...transferDialogProps} isModal />
       <div className="account">
         <div className="account-details">
           <div className="account-data">

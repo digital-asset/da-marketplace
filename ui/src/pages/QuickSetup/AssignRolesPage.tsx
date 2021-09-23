@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 import { useLedger } from '@daml/react';
-import { Party, Optional } from '@daml/types';
+import { Party } from '@daml/types';
 import _ from 'lodash';
 
 import {
