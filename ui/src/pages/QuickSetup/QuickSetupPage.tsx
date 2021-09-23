@@ -15,6 +15,7 @@ import { ServicesProvider } from '../../context/ServicesContext';
 import { OffersProvider } from '../../context/OffersContext';
 import { RolesProvider } from '../../context/RolesContext';
 import { AutomationProvider } from '../../context/AutomationContext';
+import { MessagesProvider } from '../../context/MessagesContext';
 
 interface QuickSetupPageProps {
   adminCredentials: Credentials;
@@ -36,22 +37,24 @@ const QuickSetupPage: React.FC<QuickSetupPageProps> = ({
       wsBaseUrl={wsBaseUrl}
     >
       <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
-        <AutomationProvider publicParty={publicParty}>
-          <ServicesProvider>
-            <RolesProvider>
-              <OffersProvider>
-                <div className={classNames('setup-page', className)}>
-                  {!!title && (
-                    <Header as="h2" className="title">
-                      {title}
-                    </Header>
-                  )}
-                  {children}
-                </div>
-              </OffersProvider>
-            </RolesProvider>
-          </ServicesProvider>
-        </AutomationProvider>
+        <MessagesProvider>
+          <AutomationProvider publicParty={publicParty}>
+            <ServicesProvider>
+              <RolesProvider>
+                <OffersProvider>
+                  <div className={classNames('setup-page', className)}>
+                    {!!title && (
+                      <Header as="h2" className="title">
+                        {title}
+                      </Header>
+                    )}
+                    {children}
+                  </div>
+                </OffersProvider>
+              </RolesProvider>
+            </ServicesProvider>
+          </AutomationProvider>
+        </MessagesProvider>
       </QueryStreamProvider>
     </DamlLedger>
   );
