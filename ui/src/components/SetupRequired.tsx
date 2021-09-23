@@ -2,12 +2,11 @@ import React, { useState, useEffect } from 'react'
 import Ledger from '@daml/ledger';
 import { Form, Button, Loader } from 'semantic-ui-react';
 
-import { useDefaultParties } from '@daml/hub-react/lib';
 import { Operator } from '@daml.js/da-marketplace/lib/Marketplace/Operator';
 import { httpBaseUrl, deploymentMode, DeploymentMode } from "../config";
 import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger, PublicAutomation, getPublicAutomation } from '../automation';
 import { Tile, logoHeader } from './common/OnboardingTile'
-import { useDablParties } from './common/common';
+import { useOperator, usePublicParty } from './common/common';
 import { parseError } from './common/errorTypes';
 
 const SetupRequired  = () => {
@@ -15,8 +14,8 @@ const SetupRequired  = () => {
   const [ setupError, setSetupError ] = useState<string | undefined>(undefined);
   const [ adminJwt, setAdminJwt ] = useState('');
   const [ automations, setAutomations ] = useState<PublicAutomation[] | undefined>([]);
-  const { parties } = useDablParties();
-  const publicParty = parties.publicParty;
+  const operator = useOperator();
+  const publicParty = usePublicParty();
 
   useEffect(() => {
     getPublicAutomation(publicParty).then(autos => { setAutomations(autos) });
@@ -33,15 +32,15 @@ const SetupRequired  = () => {
 
   const handleSetup = async (event: React.FormEvent) => {
     setDeploying(true);
-    if (!parties) { return }
+    if (!publicParty || !operator) { return }
     try {
       const ledger = new Ledger({token: adminJwt, httpBaseUrl})
       if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH) {
         deployTrigger(TRIGGER_HASH, MarketplaceTrigger.OperatorTrigger, adminJwt, publicParty);
       }
       const args = {
-        operator: parties.userAdminParty,
-        public: parties.publicParty
+        operator,
+        public: publicParty
       }
       await ledger.create(Operator, args).catch(e => {
         setSetupError(`${parseError(e)?.message}`);
@@ -109,7 +108,7 @@ const SetupRequired  = () => {
             tab in the console, then clicking on "Settings".
            </p>
         </div>
-      ) : !!parties ? setupForm : userAdminRequired }
+      ) : !!operator ? setupForm : userAdminRequired }
       <h4>See <a className='dark' href='https://github.com/digital-asset/da-marketplace#add-the-operator-role-contract'>here</a> for more information.</h4>
     </>
   );

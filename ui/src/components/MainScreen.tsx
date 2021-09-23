@@ -10,9 +10,8 @@ import { User } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
 import { QueryStream, QueryStreamContext, useContractQuery, useLoading } from '../websocket/queryStream'
 import { StreamErrors } from '../websocket/websocket'
 
-import { useDablParties } from './common/common'
+import { useOperator } from './common/common'
 import { roleRoute } from './common/utils'
-import { parseError } from './common/errorTypes'
 import OnboardingTile from './common/OnboardingTile'
 
 import RoleSelectScreen from './RoleSelectScreen'
@@ -34,7 +33,7 @@ type Props = {
  */
 const MainScreen: React.FC<Props> = ({ onLogout }) => {
   const { path } = useRouteMatch();
-  const { parties, loading } = useDablParties();
+  const userAdminParty = useOperator();
 
   const [ streamErrors, setStreamErrors ] = React.useState<StreamErrors[]>();
   const queryStream: QueryStream<any> | undefined = React.useContext(QueryStreamContext);
@@ -62,14 +61,14 @@ const MainScreen: React.FC<Props> = ({ onLogout }) => {
       return <Redirect to={roleRoute(currentRole)}/>
     }
 
-    if (loading || !parties || wsLoading) {
+    if (!userAdminParty || wsLoading) {
       return loadingScreen;
     }
 
     if (streamErrors) {
       return errorScreen;
     } else {
-      return <RoleSelectScreen operator={parties.userAdminParty} onLogout={onLogout}/>
+      return <RoleSelectScreen operator={userAdminParty} onLogout={onLogout}/>
     }
   };
 

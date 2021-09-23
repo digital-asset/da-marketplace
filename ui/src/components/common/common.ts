@@ -3,51 +3,76 @@ import { useState, useEffect } from 'react'
 import { useDefaultParties } from '@daml/hub-react'
 import { deploymentMode, DeploymentMode } from '../../config'
 
-export const useOperator = () => {
+export const useOperator = (): string | undefined => {
     const { parties } = useDablParties();
-    // Note... there's a timing bug where this falls back to "Operator"
-    // on Daml Hub deployments, before the API call to get default
-    // parties is used.
-    //
-    // Fixing this means returning a type of `string | undefined`, which
-    // affects too many other parts of the codebase to be worth doing on 0.1.x
-    //
-    // However, this bug is fixed in 0.2.0
     return parties.userAdminParty;
+}
+
+export const usePublicParty = (): string | undefined => {
+    const { parties } = useDablParties();
+    return parties.publicParty;
 }
 
 type Result = {
     parties: {
-        userAdminParty: string;
-        publicParty: string;
+        userAdminParty?: string;
+        publicParty?: string;
     };
     loading: boolean;
 }
 
+const USER_ADMIN_PARTY_ID_KEY = 'default_parties/user_admin_party_id';
+const PUBLIC_PARTY_ID_KEY = 'default_parties/public_party_id';
+
 export const useDablParties = () => {
     const [publicParty, userAdminParty] = useDefaultParties();
-    const [loading, setLoading] = useState(true);
-    const [result, setResult] = useState<Result>({ parties: devParties, loading: true });
+    const [result, setResult] = useState<Result>({
+        parties: {
+            userAdminParty: undefined,
+            publicParty: undefined
+        },
+        loading: true
+    });
 
     useEffect(() => {
-        setLoading(!publicParty);
-    }, [publicParty]);
+        const cachedUserAdmin = localStorage.getItem(USER_ADMIN_PARTY_ID_KEY) || undefined;
+        const cachedPublicParty = localStorage.getItem(PUBLIC_PARTY_ID_KEY) || undefined;
+
+        if (cachedUserAdmin || cachedPublicParty) {
+            setResult({
+                parties: {
+                    userAdminParty: cachedUserAdmin,
+                    publicParty: cachedPublicParty
+                },
+                loading: !cachedUserAdmin || !cachedPublicParty
+            })
+        }
+    }, [])
 
     useEffect(() => {
         if (deploymentMode === DeploymentMode.PROD_DABL) {
-            publicParty && userAdminParty && setResult({
+            if (publicParty) {
+                localStorage.setItem(PUBLIC_PARTY_ID_KEY, publicParty);
+            }
+
+            if (userAdminParty) {
+                localStorage.setItem(USER_ADMIN_PARTY_ID_KEY, userAdminParty);
+            }
+
+            setResult({
                 parties: { publicParty, userAdminParty },
-                loading
-            });
+                loading: !publicParty
+            })
         } else {
-            setResult({ parties: devParties, loading: false });
+            setResult({
+                parties: {
+                    userAdminParty: "Operator",
+                    publicParty: "Public"
+                },
+                loading: false
+            });
         }
-    }, [publicParty, userAdminParty, loading]);
+    }, [publicParty, userAdminParty]);
 
     return result;
-}
-
-const devParties = {
-    userAdminParty: "Operator",
-    publicParty: "Public"
 }

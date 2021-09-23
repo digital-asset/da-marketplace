@@ -31,7 +31,7 @@ import QueryStreamProvider, {
     AS_PUBLIC,
 } from "../websocket/queryStream"
 
-import { useDablParties, useOperator } from "../components/common/common"
+import { useOperator } from "../components/common/common"
 
 import Credentials, { retrieveCredentials } from "../Credentials"
 
@@ -191,7 +191,6 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
 
         if (creds) {
             setCredentials(creds)
-            history.push('/role');
         } else {
             clearPartyRoleSelect("Error: invalid credentials")
         }
@@ -335,26 +334,30 @@ const RoleSetup = (props: {
     const operator = useOperator()
     const registry = useRegistryLookup()
 
-    const { loading } = useDablParties()
-
     const userSessions = useContractQuery(UserSession)
     const userContracts = useContractQuery(User)
 
     const [currentRole, setCurrentRole] = useState<MarketRole>()
 
     useEffect(() => {
-        const createUserSession = async () => {
+        const createUserSession = async (operator: string) => {
             const role = selectedRole
             await ledger.create(UserSession, { user, role, operator })
         }
-        if (!wsLoading && !loading && userSessions.length === 0 && userContracts.length === 0) {
-            createUserSession()
+
+        if (
+            !!operator &&
+            !wsLoading &&
+            userSessions.length === 0 &&
+            userContracts.length === 0
+        ) {
+            createUserSession(operator)
         }
-    }, [loading, wsLoading])
+    }, [operator, wsLoading])
 
     useEffect(() => {
         const role = userContracts[0]?.contractData?.currentRole
-        if (role != selectedRole) {
+        if (!!operator && role != selectedRole) {
             const changeRole = async () => {
                 const key = { _1: operator, _2: user }
                 const args = { newRole: selectedRole }
@@ -368,9 +371,9 @@ const RoleSetup = (props: {
         } else {
             setCurrentRole(role)
         }
-    }, [userContracts, selectedRole])
+    }, [userContracts, selectedRole, operator])
 
-    if (loading || wsLoading) {
+    if (!operator || wsLoading) {
         return (
             <Loader active indeterminate inverted size='small'>
                 <p className='dark'>Loading contracts and parties...</p>
@@ -437,8 +440,8 @@ const InviteAccept = (props: {
     const { party, role, clearPartyRoleSelect } = props
 
     const ledger = useLedger()
-    const publicParty = useDablParties().parties.publicParty
-    const operator = useDablParties().parties.userAdminParty
+    const publicParty = usePublicParty()
+    const operator = useOperator()
 
     const custodianInvites = useContractQuery(CustodianInvitation)
     const issuerInvites = useContractQuery(IssuerInvitation)
@@ -597,9 +600,9 @@ const InviteAccept = (props: {
                 fluid
                 icon='right arrow'
                 labelPosition='right'
-                disabled={!partyLoginData}
+                disabled={!partyLoginData || !publicParty || !operator}
                 className='ghost dark submit-button'
-                onClick={() => setupRole()}
+                onClick={() => publicParty && operator && setupRole(publicParty, operator)}
                 content={<p className='dark bold'>Submit role</p>}
             />
         </>
@@ -634,7 +637,7 @@ const InviteAccept = (props: {
         setLoginStatus(status)
     }
 
-    async function setupRole() {
+    async function setupRole(publicParty: string, operator: string) {
         setPartyLoggingIn(true)
 
         if (!getRoleInvitation(role)) {
