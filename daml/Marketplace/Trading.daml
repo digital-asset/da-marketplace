@@ -129,7 +129,7 @@ template Order
           timeMatched : Text
         do
           assertMsg "Fill quantity must be greater than 0" $ fillQty > 0.0
-          assertMsg ("Fill quantity: " <> show fillQty <> " must be less than or equal to order quantity " <> show qty)
+          assertMsg "Fill quantity must be less than or equal to order quantity"
             $ fillQty <= qty
           assertMsg "Fill price is outside of the order's price bounds"
                  $ if isBid then fillPrice <= price
@@ -494,6 +494,12 @@ template TradeSide
   where
     signatory exchange, exchParticipant
 
+    let getAccount : Id -> Account
+        getAccount accountId = account
+          where
+            (party, partyProvider) = getAccountOwnerProvider accountId.label
+            account = Account with id = accountId, provider = partyProvider, owner = party
+
     controller exchange can
       TradeSide_Settle : (ContractId SettledTradeSide, [ContractId DepositCreditRequest])
         do
@@ -504,17 +510,16 @@ template TradeSide
                 if isBuy && (asset.quantity > qty * price)
                 then do
                   let [sendAsset, restAsset] = assetSplit asset [qty * price]
-                  let (sender, senderProvider) = getAccountOwnerProvider senderAccountId.label
-                  let senderAccount = Account with id = senderAccountId, provider = senderProvider, owner = sender
-                  restReqCid <- create DepositCreditRequest with owner = exchange, account = senderAccount, asset = restAsset
+                  restReqCid <- create DepositCreditRequest
+                      with owner = exchange
+                           account = getAccount senderAccountId
+                           asset = restAsset
                   return (sendAsset, [restReqCid])
                 else return (asset, [])
 
-              let (receiver, receiverProvider) = getAccountOwnerProvider receiverAccountId.label
-                  receiverAccount = Account with id = receiverAccountId, provider = receiverProvider, owner = receiver
               creditRequestCid <- create DepositCreditRequest
                   with owner = exchange
-                       account = receiverAccount
+                       account = getAccount receiverAccountId
                        asset = asset
               return $ creditRequestCid :: requestCids
             None -> return []
