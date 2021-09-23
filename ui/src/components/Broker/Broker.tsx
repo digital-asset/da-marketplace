@@ -19,7 +19,7 @@ import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger } from '../../automatio
 import { WalletIcon, OrdersIcon } from '../../icons/Icons'
 import { useContractQuery, usePartyLoading } from '../../websocket/queryStream'
 
-import { useOperator, useDablParties } from '../common/common'
+import { useOperator, usePublicParty } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
 import BrokerProfile, { Profile, createField } from '../common/Profile'
 
@@ -98,7 +98,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
     }
 
     const token = retrieveCredentials()?.token;
-    const publicParty = useDablParties().parties.publicParty;
+    const publicParty = usePublicParty();
 
     const acceptInvite = async () => {
         if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && token) {

@@ -29,7 +29,6 @@ const App: React.FC = () => {
   const [credentials, setCredentials] = React.useState<Credentials | undefined>(retrieveCredentials());
 
   const handleCredentials = (credentials?: Credentials) => {
-    console.log('handling credentials')
     setCredentials(credentials);
     storeCredentials(credentials);
   }

@@ -21,7 +21,7 @@ import { retrieveCredentials } from '../../Credentials'
 import { deploymentMode, DeploymentMode } from '../../config'
 import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger } from '../../automation'
 
-import { useOperator, useDablParties } from '../common/common'
+import { useOperator, usePublicParty } from '../common/common'
 import { unwrapDamlTuple, wrapDamlTuple } from '../common/damlTypes'
 import CustodianProfile, { Profile, createField } from '../common/Profile'
 import InviteAcceptTile from '../common/InviteAcceptTile'
@@ -136,7 +136,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
     }
 
     const token = retrieveCredentials()?.token;
-    const publicParty = useDablParties().parties.publicParty;
+    const publicParty = usePublicParty();
 
     const acceptInvite = async () => {
         if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && token) {

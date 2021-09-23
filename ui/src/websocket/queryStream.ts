@@ -4,7 +4,7 @@ import _ from 'lodash'
 import { Template } from '@daml/types'
 
 import { ContractInfo } from '../components/common/damlTypes'
-import { useDablParties } from '../components/common/common'
+import { usePublicParty } from '../components/common/common'
 import { computeCredentials, retrieveCredentials } from '../Credentials'
 import { DeploymentMode, deploymentMode } from '../config'
 
@@ -61,17 +61,20 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
     }
   }, []);
 
-  const publicParty = useDablParties().parties.publicParty;
+  const publicParty = usePublicParty();
+
   useEffect(() => {
-    getPublicToken(publicParty).then(token => {
-      if (token) {
-        setPublicToken(token);
-        setQueryStream(queryStream => ({
-          ...queryStream,
-          publicToken: token
-        }));
-      }
-    })
+    if (publicParty) {
+      getPublicToken(publicParty).then(token => {
+        if (token) {
+          setPublicToken(token);
+          setQueryStream(queryStream => ({
+            ...queryStream,
+            publicToken: token
+          }));
+        }
+      })
+    }
   }, [publicParty]);
 
   const {
