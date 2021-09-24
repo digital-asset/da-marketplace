@@ -16,7 +16,7 @@ interface SelectionField {
 }
 
 function isStringArray(sa: any[]): sa is string[] {
-  return sa.reduce((s, bool) => bool && typeof s === 'string', true);
+  return sa.reduce((bool, s) => bool && typeof s === 'string', true);
 }
 
 interface CheckBoxField {
@@ -25,7 +25,7 @@ interface CheckBoxField {
 }
 
 export type Field = RegularField | SelectionField | CheckBoxField;
-export type Fields = Record<string, Field>;
+export type Fields<T> = Record<keyof T, Field>;
 
 type FieldComponentsProps<T> = {
   defaultValue: T;
@@ -41,7 +41,7 @@ export function FieldComponents<T extends Record<string, string>>(props: FieldCo
   useEffect(() => onChange && onChange(state), [state, onChange]);
 
   function fieldsToInput([fieldName, field]: [string, Field]): JSX.Element {
-    const key = field.label + field.type;
+    const key = `${field.label} ${field.type}`;
 
     if (field.type === 'selection') {
       const options = isStringArray(field.items)
