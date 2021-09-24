@@ -182,7 +182,7 @@ const ServiceRequestMenu: React.FC = () => {
       <ServiceRequestDialog
         open={openDialog}
         service={serviceKind}
-        fields={{ ...fields }}
+        fields={fields}
         params={requestParams}
         request={request}
         onChange={state => setDialogState(state)}
