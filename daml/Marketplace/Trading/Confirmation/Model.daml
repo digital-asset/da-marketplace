@@ -93,7 +93,7 @@ template Confirmation
                     feeDetails <- createFeeDetails feeDepositCid
                     return $ (Some remainingFeeDepositCid, Some feeDetails)
 
-                (depositCid :: depositRemainingCid :: _) <- exercise depositCid AssetDeposit_Split with ..
+                (depositCid :: depositRemainingCid :: _) <- exercise depositCid AssetDeposit_Split with quantities
                 create order with
                   executions, remainingQuantity
                   collateral = Order.Collateral depositRemainingCid, status = Order.PartiallyExecuted

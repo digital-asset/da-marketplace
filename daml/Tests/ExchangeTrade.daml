@@ -2,6 +2,8 @@ module Tests.ExchangeTrade where
 
 import Common
 import Daml.Script
+import DA.Assert ((===))
+import DA.Finance.Asset (AssetDeposit_Split(..), AssetDeposit)
 import DA.List
 import DA.Set
 import DA.Finance.Asset (AssetDeposit_Split(..))
@@ -13,8 +15,8 @@ import qualified Marketplace.Trading.Service as TradingService
 import qualified Marketplace.Listing.Service as Listing
 import qualified Marketplace.Listing.Model as Listing
 
-setup : Script ()
-setup = do
+fullExecutionTest : Script ()
+fullExecutionTest = do
   parties@Parties{..} <- allocateParties
   providers@Providers{operator; exchange; matchingServiceCid} <- onboardProviders parties
 
@@ -30,8 +32,8 @@ setup = do
     cashAsset = usd with quantity = 20000.0
     priceAsset = usd with quantity = 100.0
 
-  aliceDepositCid <- depositAsset providers alice shareAsset alice.mainAccount.id empty
-  bobDepositCid <- depositAsset providers bob cashAsset bob.mainAccount.id empty
+  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id empty
+  bobDepositCid <- depositAsset providers bob shareAsset bob.mainAccount.id empty
 
   -- List a Security to trade
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
@@ -98,6 +100,13 @@ setup = do
 
   -- Exchange settles the instructed trade
   submit exchange do exerciseCmd settlementInstructionCid Settlement.Settle
+
+  -- Asset the DvP exchange was successful
+  [aliceDepositCid] <- queryFilter @AssetDeposit alice.customer \a -> a.asset == shareAsset
+  [bobsDepositCid] <- queryFilter @AssetDeposit bob.customer \a -> a.asset == cashAsset
+  -- Assert no other deposits exist
+  [] <- queryFilter @AssetDeposit alice.customer \a -> a.asset /= shareAsset
+  [] <- queryFilter @AssetDeposit bob.customer \a -> a.asset /= cashAsset
 
   pure ()
 
@@ -233,5 +242,106 @@ partialExecutionsTest = do
   -- Exchange settles the instructed trade
   forA_ settlementInstructionCids (\(Matching.Collateralized settlementInstructionCid) ->
     submit exchange do exerciseCmd settlementInstructionCid Settlement.Settle)
+
+  -- Assert we have 4 DvPs with the expected asset and quantity
+  [ad1, ad2, ad3, ad4] <- queryFilter @AssetDeposit alice.customer \a -> a.asset == shareAsset with quantity = 50.0
+  [ad1, ad2, ad3, ad4] <- queryFilter @AssetDeposit bob.customer \a -> a.asset == cashAsset with quantity = 5000.0
+  -- Assert no other deposits exist
+  [] <- queryFilter @AssetDeposit alice.customer \a -> a.asset /= shareAsset with quantity = 50.0
+  [] <- queryFilter @AssetDeposit bob.customer \a -> a.asset /= cashAsset with quantity = 5000.0
+
+  pure ()
+
+overCollateralizedTest : Script ()
+overCollateralizedTest = do
+  parties@Parties{..} <- allocateParties
+  providers@Providers{operator; exchange; matchingServiceCid} <- onboardProviders parties
+
+  alice  <- onboardCustomer providers "Alice" alice
+  bob    <- onboardCustomer providers "Bob" bob
+  issuer <- onboardCustomer providers "Issuer" issuer
+
+  Assets{usd; tsla} <- onboardAssets providers issuer
+
+  -- Assets
+  let
+    shareAsset = tsla with quantity = 200.0
+    cashAsset = usd with quantity = 1000000.0
+    priceAsset = usd with quantity = 100.0
+
+  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id
+  bobDepositCid <- depositAsset providers bob shareAsset bob.mainAccount.id
+
+  -- List a Security to trade
+  (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
+  let
+    symbol = "TSLAUSD"
+    listingType = Listing.CollateralizedRequest
+    calendarId = "1"
+    description = "Tesla Inc."
+    tradedAssetId = shareAsset.id
+    quotedAssetId = cashAsset.id
+    tradedAssetPrecision = 2
+    quotedAssetPrecision = 2
+    minimumTradableQuantity = 1.0
+    maximumTradableQuantity = 1000000.0
+    providerId = "12345"
+    observers = []
+  createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
+  listingCid <- exchange `submit` do exerciseCmd listingServiceCid Listing.CreateListing with ..
+  (Some Listing.Listing{listingId}) <- queryContractId @Listing.Listing exchange listingCid
+
+  -- > Bob places 1 offer
+  submit bob.customer do
+    exerciseByKeyCmd @TradingService.T (operator, exchange, bob.customer) TradingService.RequestCreateOrder
+      with
+        details = Order.Details with
+          id = "100"
+          listingId
+          asset = shareAsset
+          orderType = Order.Limit with price = 100.0
+          side = Order.Sell
+          timeInForce = Order.GTC
+          optExchangeFee = None
+        collateral = Order.Collateral bobDepositCid
+
+  -- > Alice places an order to buy shares, above Bobs price - thus over collateralizing the order
+  ( aliceDepositCid ::  _ ) <- alice.customer `submit` do exerciseCmd aliceDepositCid AssetDeposit_Split with quantities = [30000.0]
+  submit alice.customer do
+    exerciseByKeyCmd @TradingService.T (operator, exchange, alice.customer) TradingService.RequestCreateOrder
+      with
+        details = Order.Details with
+          id = "101"
+          listingId
+          asset = shareAsset
+          orderType = Order.Limit with price = 150.0
+          side = Order.Buy
+          timeInForce = Order.GTC
+          optExchangeFee = None
+        collateral = Order.Collateral aliceDepositCid
+
+  -- Exchange matches the two orders
+  Matching.Collateralized settlementInstructionCid <- submit exchange do
+    exerciseCmd matchingServiceCid Matching.MatchOrders
+      with
+        execution = Order.Execution with
+          matchId = "789"
+          makerOrderId = "100"
+          takerOrderId = "101"
+          quantity = 200.0
+          price = 100.0
+          timestamp = ""
+
+  -- Exchange settles the instructed trade
+  submit exchange do exerciseCmd settlementInstructionCid Settlement.Settle
+
+  -- Asset the DvP exchange was successful
+  [aliceDepositCid] <- queryFilter @AssetDeposit alice.customer \a -> a.asset == shareAsset
+  [bobsDepositCid] <- queryFilter @AssetDeposit bob.customer \a -> a.asset == cashAsset with quantity = 20000.0
+  -- Assert no other deposits exist for Bob
+  [] <- queryFilter @AssetDeposit bob.customer \a -> a.asset /= cashAsset with quantity = 20000.0
+  -- Assert Alice got her deposit returned to her main account
+  [(_, aliceDeposit1), (_, aliceDeposit2)] <- queryFilter @AssetDeposit alice.customer \a -> a.asset.id.label == cashAsset.id.label && a.account == alice.mainAccount
+  aliceDeposit1.asset.quantity + aliceDeposit2.asset.quantity === 980000.0
 
   pure ()

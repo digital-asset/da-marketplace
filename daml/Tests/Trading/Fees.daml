@@ -48,9 +48,9 @@ setup = do
     feeAsset = usd with quantity = 2.0
     observers = Set.fromList [ ]
 
-  aliceDepositCid <- depositAsset providers alice shareAsset alice.mainAccount.id observers
+  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id observers
   aliceFeeDepositCid <- depositAsset providers alice feeAsset alice.mainAccount.id observers
-  bobDepositCid <- depositAsset providers bob cashAsset bob.mainAccount.id observers
+  bobDepositCid <- depositAsset providers bob shareAsset bob.mainAccount.id observers
   bobFeeDepositCid <- depositAsset providers bob feeAsset bob.mainAccount.id observers
 
   -- List a Security to trade
