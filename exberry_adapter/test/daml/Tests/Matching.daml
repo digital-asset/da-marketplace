@@ -48,7 +48,7 @@ runMatchingTest lp@LedgerParties{userAdmin = operator; btcIssuer = issuer; ..} =
       with baseTokenId = testTokenId, baseType = TokenAsset, quoteTokenId = usdTokenId, quoteType = TokenAsset
            minQuantity = 0.01, maxQuantity = 10000.0, clearedMarket = False, defaultCCP = None
 
-  sleep (seconds 2)
+  sleep (seconds 10)
 
   debug "Setting up accounts..."
   aliceUsdId <- setupExchangeAccount lp usdTokenId 10000.0 alice
