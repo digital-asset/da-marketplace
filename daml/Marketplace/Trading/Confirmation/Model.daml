@@ -9,6 +9,8 @@ import DA.Set (Set, insert)
 import Marketplace.Settlement.Model qualified as Settlement
 import Marketplace.Trading.Model qualified as Order
 import DA.Optional.Total (optionalToList)
+import Marketplace.Rule.AllocationAccount qualified as Allocation
+import Marketplace.Rule.AllocationAccount (AllocationAccountRule(..))
 
 -- TODO: Try to turn this into a service
 
@@ -108,7 +110,7 @@ template Confirmation
                     feeDetails <- createFeeDetails feeDepositCid
                     return $ (Some remainingFeeDepositCid, Some feeDetails)
 
-                (depositCid :: depositRemainingCid :: _) <- exercise depositCid AssetDeposit_Split with ..
+                (depositCid :: depositRemainingCid :: _) <- exercise depositCid AssetDeposit_Split with quantities
                 create order with
                   executions, remainingQuantity
                   collateral = Order.Collateral depositRemainingCid, status = Order.PartiallyExecuted
@@ -118,6 +120,14 @@ template Confirmation
                 optFeeDetails <- case order.details.optExchangeFee of
                   Some feeCid -> Some <$> createFeeDetails feeCid
                   _           -> return None
+
+                depositCid <- exercise depositCid AssetDeposit_Split with quantities >>= \case
+                  [depositCid] -> pure depositCid
+                  (depositCid :: remainingDepositCid :: _) -> do
+                    exerciseByKey @AllocationAccountRule (getAllocationAccount party).id Allocation.Withdraw with transferTo = (getTradingAccount party); depositCid = remainingDepositCid
+                    pure depositCid
+                  [] -> pure depositCid
+
                 create order with
                   executions, remainingQuantity
                   status = Order.FullyExecuted, details = order.details with optExchangeFee = None
