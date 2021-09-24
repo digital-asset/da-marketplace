@@ -9,7 +9,7 @@ import StripedTable from '../../components/Table/StripedTable';
 export const makeAutomationOptions = (automations?: Automation[]): DropdownItemProps[] => {
   return (
     automations?.flatMap(auto => {
-      if (!!auto.automationEntity.value.triggerNames) {
+      if (auto.automationEntity.tag === 'DamlTrigger') {
         return auto.automationEntity.value.triggerNames.map(tn => {
           return {
             key: tn,
@@ -64,10 +64,11 @@ export const SetupAutomation: React.FC<SetupAutomationProps> = ({
   };
 
   const handleUndeploy = async (instance: Instance) => {
-    if (deleteInstance) {
-      setUndeploying(prev => new Map(prev).set(instance.config.value.name, true));
+    const instanceName = instance.config.value.name;
+    if (deleteInstance && instanceName) {
+      setUndeploying(prev => new Map(prev).set(instanceName, true));
       await deleteInstance(instance.id, instance.owner);
-      setUndeploying(prev => new Map(prev).set(instance.config.value.name, false));
+      setUndeploying(prev => new Map(prev).set(instanceName, false));
     }
   };
 
@@ -113,24 +114,27 @@ export const SetupAutomation: React.FC<SetupAutomationProps> = ({
         title={'Running Automation'}
         headings={['Automation', 'Action']}
         rows={deployedAutomations.map(da => {
-          return {
-            elements: [
-              da.config.value.name.split(':')[0],
-              <Button.Group size="mini">
-                <Button
-                  negative
-                  loading={undeploying.get(da.config.value.name)}
-                  className="ghost"
-                  onClick={() => {
-                    setUndeploying(prev => new Map(prev).set(da.config.value.name, true));
-                    handleUndeploy(da);
-                  }}
-                >
-                  Undeploy
-                </Button>
-              </Button.Group>,
-            ],
-          };
+          const instanceName = da.config.value.name;
+          const elements = instanceName
+            ? [
+                instanceName.split(':')[0],
+                <Button.Group size="mini">
+                  <Button
+                    negative
+                    loading={undeploying.get(instanceName)}
+                    className="ghost"
+                    onClick={() => {
+                      setUndeploying(prev => new Map(prev).set(instanceName, true));
+                      handleUndeploy(da);
+                    }}
+                  >
+                    Undeploy
+                  </Button>
+                </Button.Group>,
+              ]
+            : [];
+
+          return { elements };
         })}
       />
     </div>

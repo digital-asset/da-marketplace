@@ -44,7 +44,7 @@ const ConfigureProvidersPage = () => {
 
   const allTriggers =
     automations?.flatMap(auto => {
-      if (!!auto.automationEntity.value.triggerNames) {
+      if (auto.automationEntity.tag === 'DamlTrigger') {
         return auto.automationEntity.value.triggerNames.map(tn => {
           return `${tn}#${auto.artifactHash}`;
         });

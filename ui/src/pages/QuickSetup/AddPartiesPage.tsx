@@ -142,6 +142,8 @@ const AddPartiesPage = () => {
     );
   }
 
+  console.log('ADD PARTIES LOADING STATUS: ', { loadingStatus });
+
   return (
     <div className="setup-page">
       <div className="add-parties-page">
@@ -291,6 +293,13 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
   const regulatorCompleted = useRegulatorOnboarding(adminCredentials);
   const deploysCompleted = useDeployAll();
 
+  console.log('ADMIN LEDGER: ', {
+    adminCredentials,
+    operatorCompleted,
+    regulatorCompleted,
+    deploysCompleted,
+  });
+
   useEffect(() => {
     if (operatorCompleted && regulatorCompleted && deploysCompleted) {
       return onComplete();
@@ -438,6 +447,13 @@ const useDeployAll = () => {
   useEffect(() => {
     const artifactHash = TRIGGER_HASH;
     const parties = retrieveParties();
+
+    console.log('INSIDE DEPLOY ALL EFFECT: ', {
+      artifactHash,
+      parties,
+      deployAutomation,
+      isHubDeployment,
+    });
 
     async function deployAllTriggers() {
       if (!artifactHash || !deployAutomation) {

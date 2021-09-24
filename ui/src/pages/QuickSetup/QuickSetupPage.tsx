@@ -11,6 +11,7 @@ import { ServicesProvider } from '../../context/ServicesContext';
 import { OffersProvider } from '../../context/OffersContext';
 import { RolesProvider } from '../../context/RolesContext';
 import Credentials from '../../Credentials';
+import { MessagesProvider } from '../../context/MessagesContext';
 
 interface QuickSetupPageProps {
   adminCredentials: Credentials;
@@ -32,20 +33,22 @@ const QuickSetupPage: React.FC<QuickSetupPageProps> = ({
       wsBaseUrl={wsBaseUrl}
     >
       <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
-        <ServicesProvider>
-          <RolesProvider>
-            <OffersProvider>
-              <div className={classNames('setup-page', className)}>
-                {!!title && (
-                  <Header as="h2" className="title">
-                    {title}
-                  </Header>
-                )}
-                {children}
-              </div>
-            </OffersProvider>
-          </RolesProvider>
-        </ServicesProvider>
+        <MessagesProvider>
+          <ServicesProvider>
+            <RolesProvider>
+              <OffersProvider>
+                <div className={classNames('setup-page', className)}>
+                  {!!title && (
+                    <Header as="h2" className="title">
+                      {title}
+                    </Header>
+                  )}
+                  {children}
+                </div>
+              </OffersProvider>
+            </RolesProvider>
+          </ServicesProvider>
+        </MessagesProvider>
       </QueryStreamProvider>
     </DamlLedger>
   );
