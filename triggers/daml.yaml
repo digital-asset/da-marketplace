@@ -11,7 +11,7 @@ parties:
   - Public
   - Exchange
   - Broker
-version: 0.1.19
+version: 0.1.20
 # trigger-dependencies-begin
 dependencies:
   - daml-prim
@@ -20,6 +20,6 @@ dependencies:
 build-options:
   - --ghc-option=-Wno-deprecations
 data-dependencies:
-  - ../.daml/dist/da-marketplace-0.1.19.dar
+  - ../.daml/dist/da-marketplace-0.1.20.dar
 sandbox-options:
   - --wall-clock-time
