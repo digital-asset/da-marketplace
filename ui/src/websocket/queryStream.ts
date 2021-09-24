@@ -57,9 +57,9 @@ const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken
     if (defaultPartyToken) {
       setPartyToken(defaultPartyToken);
     } else {
-      const token = retrieveCredentials()?.token;
-      if (token) {
-        setPartyToken(token);
+      const creds = retrieveCredentials();
+      if (creds?.token) {
+        setPartyToken(creds.token);
       }
     }
   }, [defaultPartyToken]);

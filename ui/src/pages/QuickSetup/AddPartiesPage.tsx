@@ -127,13 +127,11 @@ const AddPartiesPage = () => {
                 httpBaseUrl={httpBaseUrl}
                 wsBaseUrl={wsBaseUrl}
               >
-                <QueryStreamProvider defaultPartyToken={p.token}>
-                  <CreateVerifiedIdentity
-                    party={p}
-                    onComplete={() => history.push('/quick-setup')}
-                    operator={adminCredentials.party}
-                  />
-                </QueryStreamProvider>
+                <CreateVerifiedIdentity
+                  party={p}
+                  onComplete={() => history.push('/quick-setup')}
+                  operator={adminCredentials.party}
+                />
               </UnifiedDamlProvider>
             ))
           )}
@@ -141,8 +139,6 @@ const AddPartiesPage = () => {
       </div>
     );
   }
-
-  console.log('ADD PARTIES LOADING STATUS: ', { loadingStatus });
 
   return (
     <div className="setup-page">
@@ -192,41 +188,49 @@ const CreateVerifiedIdentity = (props: {
   operator: string;
 }) => {
   const { onComplete, party, operator } = props;
+
+  const completedIdentityVerifications = useIdentityVerification(party);
+  const completedPartyOnboarding = usePartyOnboarding(party, operator);
+
+  useEffect(() => {
+    if (completedIdentityVerifications && completedPartyOnboarding) {
+      return onComplete();
+    }
+  }, [completedIdentityVerifications, completedPartyOnboarding]);
+
+  return null;
+};
+
+const useIdentityVerification = (party: PartyToken) => {
+  const [completed, setCompleted] = useState(false);
+
   const ledger = useLedger();
   const userParties = retrieveUserParties();
 
   const { contracts: regulatorServices, loading: regulatorServicesLoading } =
     useStreamQueries(RegulatorService);
+
   const { contracts: verifiedIdentities, loading: verifiedIdentitiesLoading } =
     useStreamQueries(VerifiedIdentity);
-  const { contracts: partyOnboarding, loading: partyOnboardingLoading } =
-    useStreamQueries(PartyOnboarding);
+
   const { contracts: verifiedIdentityRequests, loading: verifiedIdentityRequestsLoading } =
     useStreamQueries(IdentityVerificationRequest);
 
   useEffect(() => {
-    const hasPartyOnboarding = !!partyOnboarding.find(c => c.payload.party === party.party);
+    setCompleted(
+      userParties.length > 0 &&
+        userParties.every(p => !!verifiedIdentities.find(v => v.payload.customer === p.party))
+    );
+  }, [verifiedIdentities, userParties]);
 
-    const createPartyOnboarding = async () => {
-      return await ledger.create(PartyOnboarding, {
-        operator,
-        party: party.party,
-      });
-    };
-
-    if (
-      regulatorServicesLoading ||
-      verifiedIdentitiesLoading ||
-      verifiedIdentityRequestsLoading ||
-      partyOnboardingLoading
-    ) {
+  useEffect(() => {
+    if (regulatorServicesLoading || verifiedIdentitiesLoading || verifiedIdentityRequestsLoading) {
       return;
     }
 
     const handleVerifiedIdentity = async () => {
-      let retries = 0;
-
       const currentServices = regulatorServices.filter(s => s.payload.customer === party.party);
+      let retries = 0;
 
       while (retries < 3) {
         if (currentServices.length > 0) {
@@ -257,20 +261,9 @@ const CreateVerifiedIdentity = (props: {
     ) {
       handleVerifiedIdentity();
     }
-    if (!hasPartyOnboarding) {
-      createPartyOnboarding();
-    }
-
-    if (
-      userParties.every(p => !!verifiedIdentities.find(v => v.payload.customer === p.party)) &&
-      hasPartyOnboarding
-    ) {
-      return onComplete();
-    }
   }, [
     ledger,
-    operator,
-    onComplete,
+    party,
     userParties,
     verifiedIdentities,
     verifiedIdentitiesLoading,
@@ -278,12 +271,41 @@ const CreateVerifiedIdentity = (props: {
     regulatorServicesLoading,
     verifiedIdentityRequestsLoading,
     verifiedIdentityRequests,
-    partyOnboardingLoading,
-    partyOnboarding,
-    party,
   ]);
 
-  return null;
+  return completed;
+};
+
+const usePartyOnboarding = (party: PartyToken, operator: string) => {
+  const [completed, setCompleted] = useState(false);
+
+  const ledger = useLedger();
+
+  const { contracts: partyOnboarding, loading: partyOnboardingLoading } =
+    useStreamQueries(PartyOnboarding);
+
+  useEffect(() => {
+    setCompleted(!!partyOnboarding.find(c => c.payload.party === party.party));
+  }, [party, partyOnboarding]);
+
+  useEffect(() => {
+    const createPartyOnboarding = async () => {
+      await ledger.create(PartyOnboarding, {
+        operator,
+        party: party.party,
+      });
+    };
+
+    if (partyOnboardingLoading) {
+      return;
+    }
+
+    if (!completed) {
+      createPartyOnboarding();
+    }
+  }, [ledger, operator, completed, partyOnboardingLoading, party]);
+
+  return completed;
 };
 
 const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => void }) => {
@@ -292,13 +314,6 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
   const operatorCompleted = useOperatorOnboarding(adminCredentials);
   const regulatorCompleted = useRegulatorOnboarding(adminCredentials);
   const deploysCompleted = useDeployAll();
-
-  console.log('ADMIN LEDGER: ', {
-    adminCredentials,
-    operatorCompleted,
-    regulatorCompleted,
-    deploysCompleted,
-  });
 
   useEffect(() => {
     if (operatorCompleted && regulatorCompleted && deploysCompleted) {
@@ -448,13 +463,6 @@ const useDeployAll = () => {
     const artifactHash = TRIGGER_HASH;
     const parties = retrieveParties();
 
-    console.log('INSIDE DEPLOY ALL EFFECT: ', {
-      artifactHash,
-      parties,
-      deployAutomation,
-      isHubDeployment,
-    });
-
     async function deployAllTriggers() {
       if (!artifactHash || !deployAutomation) {
         return;
@@ -465,7 +473,6 @@ const useDeployAll = () => {
           .filter(p => p.party !== publicParty)
           .map(p => deployAutomation(artifactHash, MarketplaceTrigger.AutoApproveTrigger, p.token))
       );
-
       setDeployedAll(true);
     }
 

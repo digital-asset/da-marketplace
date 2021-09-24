@@ -106,7 +106,7 @@ export const UnifiedDamlProvider: React.FC<UnifiedDamlProviderProps> = ({
 }) => (
   <DamlHub token={token}>
     <DamlLedger party={party} token={token} httpBaseUrl={httpBaseUrl} wsBaseUrl={wsBaseUrl}>
-      <QueryStreamProvider>{children}</QueryStreamProvider>
+      <QueryStreamProvider defaultPartyToken={token}>{children}</QueryStreamProvider>
     </DamlLedger>
   </DamlHub>
 );
