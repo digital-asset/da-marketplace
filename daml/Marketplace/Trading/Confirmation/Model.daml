@@ -1,7 +1,7 @@
 module Marketplace.Trading.Confirmation.Model where
 
 import DA.Foldable (forA_)
-import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..))
+import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..), AssetDeposit_Unlock(..))
 import DA.Finance.Utils (fetchAndArchive)
 import DA.Set (Set, insert)
 import Marketplace.Settlement.Model qualified as Settlement
@@ -70,6 +70,7 @@ template Confirmation
               isPartialFill = execution.quantity < order.remainingQuantity
               executions = execution :: order.executions
               remainingQuantity = order.remainingQuantity - execution.quantity
+              (Order.Collateral depositCid) = order.collateral
               quantities = [case order.details.side of
                 Order.Buy  -> execution.quantity * execution.price
                 Order.Sell -> execution.quantity]
@@ -80,7 +81,7 @@ template Confirmation
                   senderAccount <- (.account) <$> fetch depositCid
                   pure $ Settlement.SettlementDetails with depositCid; senderAccount; receiverAccount = feeAccount
 
-            let (Order.Collateral depositCid) = order.collateral
+            -- TODO: Handle when error scenarios such as when execution quantity is larger than remainingQuantity
             (depositCid, optFeeDetails) <- if isPartialFill
               then do
                 (newOptExchangeFee, feeDetails) <- case order.details.optExchangeFee of
@@ -102,6 +103,12 @@ template Confirmation
                 optFeeDetails <- case order.details.optExchangeFee of
                   Some feeCid -> Some <$> createFeeDetails feeCid
                   _           -> return None
+
+                depositCid <- exercise depositCid AssetDeposit_Split with quantities >>= \case
+                  [depositCid] -> pure depositCid
+                  (depositCid :: remainingDepositCid :: _) -> exercise remainingDepositCid AssetDeposit_Unlock >> pure depositCid
+                  [] -> pure depositCid
+
                 create order with
                   executions, remainingQuantity
                   status = Order.FullyExecuted, details = order.details with optExchangeFee = None
