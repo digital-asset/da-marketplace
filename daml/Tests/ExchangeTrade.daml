@@ -269,8 +269,8 @@ overCollateralizedTest = do
     cashAsset = usd with quantity = 1000000.0
     priceAsset = usd with quantity = 100.0
 
-  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id
-  bobDepositCid <- depositAsset providers bob shareAsset bob.mainAccount.id
+  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id empty
+  bobDepositCid <- depositAsset providers bob shareAsset bob.mainAccount.id empty
 
   -- List a Security to trade
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
@@ -298,6 +298,7 @@ overCollateralizedTest = do
         details = Order.Details with
           id = "100"
           listingId
+          receivableAccount = bob.mainAccount
           asset = shareAsset
           orderType = Order.Limit with price = 100.0
           side = Order.Sell
@@ -313,6 +314,7 @@ overCollateralizedTest = do
         details = Order.Details with
           id = "101"
           listingId
+          receivableAccount = alice.mainAccount
           asset = shareAsset
           orderType = Order.Limit with price = 150.0
           side = Order.Buy
