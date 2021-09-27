@@ -14,7 +14,6 @@ import DA.Map qualified as Map
 import qualified Marketplace.Trading.Model as Order
 import qualified Marketplace.Trading.Service as Service
 import qualified Marketplace.Listing.Service as ListingService
-import qualified Marketplace.Clearing.Market.Service as MarketClearingService
 import qualified Marketplace.Trading.Matching.Service as Matching
 
 import Utils
@@ -32,10 +31,8 @@ handleMatching = Trigger
   { initialize = return $ MatchingState with currentOrderId = 0; remainingOrders = mempty
   , updateState = \_ -> pure ()
   , rule = handleMatchingRule
-  , registeredTemplates = RegisteredTemplates [ registeredTemplate @ListingService.Service
-                                              , registeredTemplate @AssetDeposit
+  , registeredTemplates = RegisteredTemplates [ registeredTemplate @AssetDeposit
                                               , registeredTemplate @ListingService.CreateListingRequest
-                                              , registeredTemplate @MarketClearingService.Service
                                               , registeredTemplate @Service.CreateOrderRequest
                                               , registeredTemplate @Service.CancelOrderRequest
                                               , registeredTemplate @Order.FeeSchedule
@@ -74,9 +71,8 @@ handleMatchingRule party = do
       put $ state with currentOrderId = state.currentOrderId + 1
 
   time <- getTime
-  -- Acknowledge all 'Order.CancelRequest'
-  listingServices <- query @ListingService.Service
-  clearedMarketServices <- query @MarketClearingService.Service
+
+  -- Acknowledge all 'ListingService.CreateListingRequest'
   createListingRequests <- query @ListingService.CreateListingRequest
 
   forA_ createListingRequests \(cid,lr) -> do
@@ -95,7 +91,7 @@ handleMatchingRule party = do
   let remainingOrders = Map.fromList $ map (\op -> (key op._2, op))
                                      $ filter (\(_,o) -> shouldProcess o) orders
   put $ state with remainingOrders
-  matchOrders party $ sortOn (\(_,o) -> o.createdAt) $ Map.values remainingOrders
+  matchOrders party $ sortOn (\(_,o) -> Down o.createdAt) $ Map.values remainingOrders
 
 -- |Match all orders removing orders that are matched or do not have any match
 matchOrders : Party -> [ContractPair Order.T] -> TriggerA MatchingState ()
@@ -158,20 +154,18 @@ matchOrder party orders op@(orderCid, order) = do
 
     fill : ContractPair Order.T -> ContractPair Order.T -> TriggerA MatchingState ()
     fill (aggressiveCid, aggressive) (passiveCid, passive) = do
-      debug $ "Matching order: " <> show aggressive.details.id <> " to : " <> show passive.details.id
+      debug $ "Matching order: Taker=" <> show aggressive.details.id <> " to Maker" <> show passive.details.id
 
+      time <- getTime
       let price = case (aggressive.details.orderType, passive.details.orderType) of
             (Order.Limit price, Order.Market) -> price
             (Order.Market, Order.Limit price) -> price
-            (Order.Limit aggressivePrice, Order.Limit passivePrice) -> if aggressive.details.side == Order.Buy then aggressivePrice else passivePrice
+            (Order.Limit _, Order.Limit passivePrice) -> passivePrice
             (_, _) -> error "Shouldn't be here - can't match two market orders together"
           makerOrderId = passive.details.id
           takerOrderId = aggressive.details.id
           quantity = min passive.remainingQuantity aggressive.remainingQuantity
-
-      time <- getTime
-
-      let execution = Order.Execution with matchId = "matchId"; makerOrderId; takerOrderId; quantity; price; timestamp = show time
+          execution = Order.Execution with matchId = "matchId"; makerOrderId; takerOrderId; quantity; price; timestamp = show time
 
       emitCommands [exerciseByKeyCmd @Matching.Service aggressive.provider Matching.MatchOrders with execution] [toAnyContractId aggressiveCid, toAnyContractId passiveCid]
 

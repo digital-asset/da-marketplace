@@ -2,13 +2,23 @@ module Tests.Matching where
 
 import Daml.Script
 import Common
+import DA.Assert ((===))
 import DA.List
+import DA.Foldable (forA_)
+import DA.Finance.Asset
 import Marketplace.Trading.Service qualified as Trading
 import Marketplace.Trading.Model qualified as Order
 import Marketplace.Listing.Service qualified as Listing
 import Marketplace.Listing.Model qualified as Listing
+import Marketplace.Settlement.Service qualified as Settlement
+import Marketplace.Settlement.Model qualified as Settlement
 
 import Utils
+
+-- To run this test, in separate terminals
+-- 1/ triggers/test/ clear && daml clean && daml start
+-- 2/ triggers/ clear && daml clean && daml build &&  daml trigger --dar .daml/dist/da-marketplace-triggers-0.2.0.dar --trigger-name MatchingEngine:handleMatching --ledger-host localhost --ledger-port 6865 --ledger-party Exchange
+-- 3/ triggers/test/ clear && daml script --dar .daml/dist/marketplace-matching-test-0.2.0.dar --script-name Tests.Matching:matchingTest --wall-clock-time --ledger-host localhost --ledger-port 6865
 
 checkOrderStatusMatches : Text -> Party -> Order.Status -> Script Bool
 checkOrderStatusMatches orderId party status = do
@@ -33,7 +43,7 @@ runMatchingTest parties@Parties{userAdmin = operator; ..} = do
   Assets{usd; tsla} <- onboardAssets providers issuer
   let
     shareAsset = tsla with quantity = 200.0
-    cashAsset = usd with quantity = 20000.0
+    cashAsset = usd with quantity = 30000.0
   aliceDepositCid <- depositAsset providers alice shareAsset alice.mainAccount.id
   bobDepositCid <- depositAsset providers bob cashAsset bob.mainAccount.id
 
@@ -56,13 +66,14 @@ runMatchingTest parties@Parties{userAdmin = operator; ..} = do
     observers = []
   createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
 
-  debug "Waiting for listing to be accepted..."
+  -- debug "Waiting for listing to be accepted..."
   (listingCid, Listing.Listing{listingId}) <- waitQuery 10.0 $ queryContractKey @Listing.Listing exchange (operator, exchange, listingId)
   debug $ listingId
 
-  -- -- Create orders
+  -- Create orders
   orderNumber <- getRandom 5000 10000
 
+  debug "Testing resting Sell order"
   let aliceOrderId = show orderNumber
   Right (aliceOrderCid, aliceCreateOrderRequestCid, aliceAssetDepositCid) <- alice.customer `submit` do
     exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with
@@ -90,9 +101,170 @@ runMatchingTest parties@Parties{userAdmin = operator; ..} = do
             side = Order.Buy
             optExchangeFee = None
             timeInForce = Order.GTC
-            orderType = Order.Limit with price = 100.0
+            orderType = Order.Limit with price = 150.0
 
   debug "Waiting for orders to be executed..."
   waitUntil 10.0 $ checkOrderStatusMatches aliceOrderId exchange Order.FullyExecuted
   waitUntil 10.0 $ checkOrderStatusMatches bobOrderId exchange Order.FullyExecuted
+
+  debug "Running Settlement..."
+  [ (settlementCid, _) ] <- query @Settlement.SettlementInstruction exchange
+  exchange `submit` exerciseByKeyCmd @Settlement.Service (operator, exchange) Settlement.SettleInstruction with settlementInstructionCid = settlementCid
+
+  debug "Checking settled positions..."
+  [ (aliceDepositCid, aliceCashDeposit) ] <- queryFilter @AssetDeposit alice.customer \a -> a.asset == cashAsset with quantity = 20000.0
+  [ ]                                     <- queryFilter @AssetDeposit alice.customer \a -> a.asset /= aliceCashDeposit.asset
+  [ (_, bobCashDeposit) ]                 <- queryFilter @AssetDeposit bob.customer   \a -> a.asset == cashAsset with quantity = 10000.0
+  [ (bobDepositCid, bobShareDeposit) ]    <- queryFilter @AssetDeposit bob.customer   \a -> a.asset == shareAsset
+  [ ]                                     <- queryFilter @AssetDeposit bob.customer   \a -> a.asset `notElem` [bobCashDeposit.asset, bobShareDeposit.asset]
+
+  debug "Testing resting Buy order"
+  let aliceOrderId = show $ orderNumber + 2
+  Right (aliceOrderCid, aliceCreateOrderRequestCid, aliceAssetDepositCid) <- alice.customer `submit` do
+    exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with
+        collateral = Order.Collateral aliceDepositCid
+        details = Order.Details with
+            id = aliceOrderId
+            listingId
+            asset = tsla with quantity = 200.0
+            side = Order.Buy
+            timeInForce = Order.GTC
+            optExchangeFee = None
+            orderType = Order.Limit with price = 100.0
+
+  debug "Waiting for Alice's order to be accepted..."
+  waitUntil 10.0 $ checkOrderStatusMatches aliceOrderId exchange Order.PendingExecution
+
+  let bobOrderId = show $ orderNumber + 3
+  Right (bobOrderCid, bobCreateOrderRequestCid, bobAssetDepositCid) <- bob.customer `submit` do
+    exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with
+        collateral = Order.Collateral bobDepositCid
+        details = Order.Details with
+            id = bobOrderId
+            listingId
+            asset = shareAsset
+            side = Order.Sell
+            optExchangeFee = None
+            timeInForce = Order.GTC
+            orderType = Order.Limit with price = 50.0
+
+  debug "Waiting for orders to be executed..."
+  waitUntil 10.0 $ checkOrderStatusMatches aliceOrderId exchange Order.FullyExecuted
+  waitUntil 10.0 $ checkOrderStatusMatches bobOrderId exchange Order.FullyExecuted
+
+  debug "Running Settlement..."
+  [ (settlementCid, _) ] <- query @Settlement.SettlementInstruction exchange
+  exchange `submit` exerciseByKeyCmd @Settlement.Service (operator, exchange) Settlement.SettleInstruction with settlementInstructionCid = settlementCid
+
+  debug "Checking settled positions..."
+  [ (aliceDepositCid, aliceShareDeposit) ] <- queryFilter @AssetDeposit alice.customer \a -> a.asset == shareAsset
+  [ ]                                      <- queryFilter @AssetDeposit alice.customer \a -> a.asset /= aliceShareDeposit.asset
+  [ (bobDepositCid1, bobCashDeposit1) ]    <- queryFilter @AssetDeposit bob.customer   \a -> a.asset == cashAsset with quantity = 10000.0
+  [ (bobDepositCid2, bobCashDeposit2) ]    <- queryFilter @AssetDeposit bob.customer   \a -> a.asset == cashAsset with quantity = 20000.0
+  [ ]                                      <- queryFilter @AssetDeposit bob.customer   \a -> a.asset `notElem` [bobCashDeposit1.asset, bobCashDeposit2.asset]
+
+  debug "Testing multiple resting Sell orders"
+  [ aliceDepositCid1, aliceDepositCid2, aliceDepositCid3, aliceDepositCid4 ] <- alice.customer `submit` exerciseCmd aliceDepositCid AssetDeposit_Split with quantities = [50.0, 50.0, 50.0]
+
+  let aliceOrderId1 = show $ orderNumber + 4
+  Right (aliceOrderCid1, _, _) <- alice.customer `submit` do
+    exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with
+        collateral = Order.Collateral aliceDepositCid1
+        details = Order.Details with
+            id = aliceOrderId1
+            listingId
+            asset = tsla with quantity = 50.0
+            side = Order.Sell
+            timeInForce = Order.GTC
+            optExchangeFee = None
+            orderType = Order.Limit with price = 100.0
+
+  debug "Waiting for Alice's first order to be accepted..."
+  waitUntil 10.0 $ checkOrderStatusMatches aliceOrderId1 exchange Order.PendingExecution
+
+  let aliceOrderId2 = show $ orderNumber + 5
+  Right (aliceOrderCid2, _, _) <- alice.customer `submit` do
+    exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with
+        collateral = Order.Collateral aliceDepositCid2
+        details = Order.Details with
+            id = aliceOrderId2
+            listingId
+            asset = tsla with quantity = 50.0
+            side = Order.Sell
+            timeInForce = Order.GTC
+            optExchangeFee = None
+            orderType = Order.Limit with price = 110.0
+
+  debug "Waiting for Alice's second order to be accepted..."
+  waitUntil 10.0 $ checkOrderStatusMatches aliceOrderId2 exchange Order.PendingExecution
+
+  let aliceOrderId3 = show $ orderNumber + 6
+  Right (aliceOrderCid3, _, _) <- alice.customer `submit` do
+    exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with
+        collateral = Order.Collateral aliceDepositCid3
+        details = Order.Details with
+            id = aliceOrderId3
+            listingId
+            asset = tsla with quantity = 50.0
+            side = Order.Sell
+            timeInForce = Order.GTC
+            optExchangeFee = None
+            orderType = Order.Limit with price = 120.0
+
+  debug "Waiting for Alice's third order to be accepted..."
+  waitUntil 10.0 $ checkOrderStatusMatches aliceOrderId3 exchange Order.PendingExecution
+
+  let aliceOrderId4 = show $ orderNumber + 7
+  Right (aliceOrderCid4, _, _) <- alice.customer `submit` do
+    exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with
+        collateral = Order.Collateral aliceDepositCid4
+        details = Order.Details with
+            id = aliceOrderId4
+            listingId
+            asset = tsla with quantity = 50.0
+            side = Order.Sell
+            timeInForce = Order.GTC
+            optExchangeFee = None
+            orderType = Order.Limit with price = 130.0
+
+  debug "Waiting for Alice's forth order to be accepted..."
+  waitUntil 10.0 $ checkOrderStatusMatches aliceOrderId4 exchange Order.PendingExecution
+
+  let bobOrderId = show $ orderNumber + 8
+  bobDepositCid <- bob.customer `submit` exerciseCmd bobDepositCid1 AssetDeposit_Merge with depositCids = [ bobDepositCid2 ]
+  Right (bobOrderCid, bobCreateOrderRequestCid, bobAssetDepositCid) <- bob.customer `submit` do
+    exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with
+        collateral = Order.Collateral bobDepositCid
+        details = Order.Details with
+            id = bobOrderId
+            listingId
+            asset = shareAsset
+            side = Order.Buy
+            optExchangeFee = None
+            timeInForce = Order.GTC
+            orderType = Order.Limit with price = 150.0
+
+  debug "Waiting for orders to be executed..."
+  waitUntil 10.0 $ checkOrderStatusMatches aliceOrderId1 exchange Order.FullyExecuted
+  waitUntil 10.0 $ checkOrderStatusMatches aliceOrderId2 exchange Order.FullyExecuted
+  waitUntil 10.0 $ checkOrderStatusMatches aliceOrderId3 exchange Order.FullyExecuted
+  waitUntil 10.0 $ checkOrderStatusMatches aliceOrderId4 exchange Order.FullyExecuted
+  waitUntil 10.0 $ checkOrderStatusMatches bobOrderId exchange Order.FullyExecuted
+
+  debug "Running Settlement..."
+  settlementCids <- map fst <$> query @Settlement.SettlementInstruction exchange
+  forA_ settlementCids \cid -> exchange `submit` exerciseByKeyCmd @Settlement.Service (operator, exchange) Settlement.SettleInstruction with settlementInstructionCid = cid
+
+  debug "Checking settled positions..."
+  [ (_, aliceCashDeposit1) ] <- queryFilter @AssetDeposit alice.customer \a -> a.asset == cashAsset with quantity = 5000.0
+  [ (_, aliceCashDeposit2) ] <- queryFilter @AssetDeposit alice.customer \a -> a.asset == cashAsset with quantity = 5500.0
+  [ (_, aliceCashDeposit3) ] <- queryFilter @AssetDeposit alice.customer \a -> a.asset == cashAsset with quantity = 6000.0
+  [ (_, aliceCashDeposit4) ] <- queryFilter @AssetDeposit alice.customer \a -> a.asset == cashAsset with quantity = 6500.0
+  [ ]                        <- queryFilter @AssetDeposit alice.customer \a -> a.asset `notElem` [ aliceCashDeposit1.asset, aliceCashDeposit2.asset, aliceCashDeposit3.asset, aliceCashDeposit4.asset ]
+
+  bobAssetQuantity <- sum . map (.asset.quantity) . (map snd) <$> queryFilter @AssetDeposit bob.customer \a -> a.asset == shareAsset with quantity = 50.0
+  bobCashQuantity  <- sum . map (.asset.quantity) . (map snd) <$> queryFilter @AssetDeposit bob.customer \a -> a.asset.id.label == cashAsset.id.label
+  bobAssetQuantity === 200.0
+  bobCashQuantity  === 7000.0
+
   debug "Test passed!"
