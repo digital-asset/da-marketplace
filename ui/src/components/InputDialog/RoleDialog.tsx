@@ -6,9 +6,10 @@ import { InputDialog } from './InputDialog';
 
 import { Template } from '@daml/types';
 import { RoleRequestTemplates, RoleKind } from '../../context/RolesContext';
+import { Fields } from './Fields';
 
 interface RequestProps<T extends RoleRequestTemplates> {
-  fields: any;
+  fields: Fields<{ operator: string }>;
   open?: boolean;
   params: T;
   request: Template<T, undefined, string>;

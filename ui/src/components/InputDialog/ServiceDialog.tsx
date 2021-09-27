@@ -15,10 +15,11 @@ import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Tra
 import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
 import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
+import { Fields } from './Fields';
 
 interface OfferProps<T extends ServiceOfferTemplates> {
   choice?: any;
-  fields: any;
+  fields: Fields<{ customer: string }>;
   open?: boolean;
   params: T;
   offer: Template<T, undefined, string>;
@@ -124,7 +125,7 @@ export const ServiceOfferDialog = <T extends ServiceOfferTemplates>({
       open={!!open}
       title={`Offer ${service} Service`}
       defaultValue={{
-        provider: '',
+        customer: '',
       }}
       fields={fields}
       onChange={onChange}
@@ -134,7 +135,7 @@ export const ServiceOfferDialog = <T extends ServiceOfferTemplates>({
 };
 
 interface RequestProps<T extends ServiceRequestTemplates> {
-  fields: any;
+  fields: Fields<{ provider: string }>;
   open?: boolean;
   params: T;
   request: Template<T, undefined, string>;

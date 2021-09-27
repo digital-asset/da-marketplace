@@ -49,7 +49,13 @@ const ServiceRequestMenu: React.FC = () => {
   const [request, setRequest] = useState<ServiceRequest>();
   const [serviceKind, setServiceKind] = useState<ServiceKind>();
   const [openDialog, setOpenDialog] = useState(false);
-  const [fields, setFields] = useState<object>({});
+  const [fields, setFields] = useState<Fields<{ provider: string }>>({
+    provider: {
+      label: 'Provider',
+      type: 'selection',
+      items: [],
+    },
+  });
   const [fieldsFromProvider, setFieldsFromProvider] = useState<FieldCallbacks<Party>>({});
   const [dialogState, setDialogState] = useState<any>({});
   const [requestParams, setRequestParams] = useState<RequestInterface>({
@@ -133,7 +139,7 @@ const ServiceRequestMenu: React.FC = () => {
     const provider =
       identities.find(i => i.payload.legalName === dialogState?.provider)?.payload.customer || '';
 
-    const filteredFields: Fields = _.mapValues(fieldsFromProvider, createFieldFn =>
+    const filteredFields = _.mapValues(fieldsFromProvider, createFieldFn =>
       createFieldFn(provider)
     );
 
@@ -147,7 +153,6 @@ const ServiceRequestMenu: React.FC = () => {
     service: Template<T, undefined, string>,
     kind: ServiceKind,
     role: RoleKind,
-    extraFields?: Fields,
     fieldsFromProvider?: FieldCallbacks<Party>
   ) => {
     const providerNames = providersByRole.get(role)?.map(p => getName(p.payload.provider)) || [];
@@ -158,7 +163,6 @@ const ServiceRequestMenu: React.FC = () => {
         type: 'selection',
         items: providerNames,
       },
-      ...extraFields,
     });
 
     setRequest(service as unknown as Template<ServiceRequestTemplates, undefined, string>);
@@ -236,80 +240,56 @@ const ServiceRequestMenu: React.FC = () => {
       <OverflowMenuEntry
         label="Request Clearing Service"
         onClick={() =>
-          requestService(
-            ClearingRequest,
-            ServiceKind.CLEARING,
-            RoleKind.CLEARING,
-            {},
-            {
-              clearingAccount: makeAccountFilterField(
-                'Clearing Account (requires provider to be observer on account'
-              ),
-              marginAccount: makeAllocationAccountFilterField(
-                'Margin Account (requires provider to be nominee of allocation account)'
-              ),
-            }
-          )
+          requestService(ClearingRequest, ServiceKind.CLEARING, RoleKind.CLEARING, {
+            clearingAccount: makeAccountFilterField(
+              'Clearing Account (requires provider to be observer on account'
+            ),
+            marginAccount: makeAllocationAccountFilterField(
+              'Margin Account (requires provider to be nominee of allocation account)'
+            ),
+          })
         }
       />
       <OverflowMenuEntry
         label="Request Trading Service"
         onClick={() =>
-          requestService(
-            TradingRequest,
-            ServiceKind.TRADING,
-            RoleKind.TRADING,
-            {},
-            {
-              tradingAccount: makeAccountFilterField(
-                'Trading Account (requires provider to be provider on account)'
-              ),
-              allocationAccount: makeAllocationAccountFilterField(
-                'Allocation Account (requires provider to be nominee on account)'
-              ),
-            }
-          )
+          requestService(TradingRequest, ServiceKind.TRADING, RoleKind.TRADING, {
+            tradingAccount: makeAccountFilterField(
+              'Trading Account (requires provider to be provider or observer on account)'
+            ),
+            allocationAccount: makeAllocationAccountFilterField(
+              'Allocation Account (requires provider to be nominee on account)'
+            ),
+          })
         }
       />
       <OverflowMenuEntry
         label="Request Auction Service"
         onClick={() =>
-          requestService(
-            AuctionRequest,
-            ServiceKind.AUCTION,
-            RoleKind.DISTRIBUTION,
-            {},
-            {
-              tradingAccount: makeAccountFilterField(
-                'Trading Account (requires provider to be provider or observer on account)'
-              ),
-              allocationAccount: makeAllocationAccountFilterField(
-                'Allocation Account (requires provider to be nominee on account)'
-              ),
-              receivableAccount: makeAccountFilterField(
-                'Receivable Account (requires provider to be provider or observer on account)'
-              ),
-            }
-          )
+          requestService(AuctionRequest, ServiceKind.AUCTION, RoleKind.DISTRIBUTION, {
+            tradingAccount: makeAccountFilterField(
+              'Trading Account (requires provider to be provider or observer on account)'
+            ),
+            allocationAccount: makeAllocationAccountFilterField(
+              'Allocation Account (requires provider to be nominee on account)'
+            ),
+            receivableAccount: makeAccountFilterField(
+              'Receivable Account (requires provider to be provider or observer on account)'
+            ),
+          })
         }
       />
       <OverflowMenuEntry
         label="Request Bidding Service"
         onClick={() =>
-          requestService(
-            BiddingRequest,
-            ServiceKind.BIDDING,
-            RoleKind.DISTRIBUTION,
-            {},
-            {
-              tradingAccount: makeAccountFilterField(
-                'Trading Account (requires provider to be provider on account)'
-              ),
-              allocationAccount: makeAllocationAccountFilterField(
-                'Allocation Account (requires provider to be nominee on account)'
-              ),
-            }
-          )
+          requestService(BiddingRequest, ServiceKind.BIDDING, RoleKind.DISTRIBUTION, {
+            tradingAccount: makeAccountFilterField(
+              'Trading Account (requires provider to be provider on account)'
+            ),
+            allocationAccount: makeAllocationAccountFilterField(
+              'Allocation Account (requires provider to be nominee on account)'
+            ),
+          })
         }
       />
     </OverflowMenu>
