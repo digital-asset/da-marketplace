@@ -18,6 +18,7 @@ import { AppError } from '../error/errorTypes';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { loginUser, useUserDispatch } from '../../context/UserContext';
 import paths from '../../paths';
+import { usePublicParty } from '../common';
 
 /**
  * React component for the login screen of the `App`.
@@ -53,12 +54,9 @@ const LoginScreen: React.FC = () => {
               },
             },
           }}
-          onLogin={(creds, err) => {
+          onLogin={creds => {
             if (creds) {
-              // onLogin(creds);
               loginUser(userDispatch, history, creds);
-            } else {
-              console.warn('Error with button login: ', err);
             }
           }}
         />
@@ -186,6 +184,7 @@ const PartiesLoginForm: React.FC = () => {
 
   const history = useHistory();
   const userDispatch = useUserDispatch();
+  const publicParty = usePublicParty();
 
   const options =
     parties?.map(party => ({
@@ -195,12 +194,12 @@ const PartiesLoginForm: React.FC = () => {
     })) || [];
 
   useEffect(() => {
-    const parties = retrieveParties();
+    const parties = retrieveParties(publicParty);
     if (parties.length > 0) {
       setParties(parties);
       setSelectedPartyId(parties[0].party);
     }
-  }, []);
+  }, [publicParty]);
 
   const handleLogin = async () => {
     const partyDetails = parties?.find(p => p.party === selectedPartyId);

@@ -5,7 +5,7 @@ import { encode } from 'jwt-simple';
 import { PartyToken } from '@daml/hub-react';
 
 import { isHubDeployment } from './config';
-import { cache } from './pages/common';
+import { cache } from './util';
 
 const APPLICATION_ID: string = 'da-marketplace';
 

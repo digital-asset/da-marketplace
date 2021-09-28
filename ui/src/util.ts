@@ -32,3 +32,13 @@ export function safeUrlPath(url: string): string {
     .filter(x => !!x)
     .join('/')}${u.search}`;
 }
+
+export function cache(options?: { permanent: boolean }) {
+  const store = options?.permanent ? localStorage : sessionStorage;
+
+  return {
+    save: (key: string, value: string) => store.setItem(key, value),
+    remove: (key: string) => store.removeItem(key),
+    load: (key: string) => store.getItem(key),
+  };
+}

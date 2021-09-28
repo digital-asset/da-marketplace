@@ -58,16 +58,6 @@ export function damlSetValues<T>(damlSet: DamlSet<T>): T[] {
   return r;
 }
 
-export function cache(options?: { permanent: boolean }) {
-  const store = options?.permanent ? localStorage : sessionStorage;
-
-  return {
-    save: (key: string, value: string) => store.setItem(key, value),
-    remove: (key: string) => store.removeItem(key),
-    load: (key: string) => store.getItem(key),
-  };
-}
-
 const PUBLIC_PARTY_ID_KEY = 'default_parties/public_party_id';
 
 export function usePublicParty() {

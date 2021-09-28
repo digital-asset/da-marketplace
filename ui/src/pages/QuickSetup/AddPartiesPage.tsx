@@ -61,12 +61,12 @@ const AddPartiesPage = () => {
   }, [userAdminId]);
 
   useEffect(() => {
-    const storedParties = retrieveUserParties();
+    const storedParties = retrieveUserParties(publicParty);
 
     if (storedParties) {
       setParties(storedParties);
     }
-  }, []);
+  }, [publicParty]);
 
   const uploadButton = (
     <DamlHubLogin

@@ -42,6 +42,7 @@ import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asse
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import AccountSelection, { AccountType, AccountInfos } from './AccountSelection';
 import QuickSetupPage from './QuickSetupPage';
+import { usePublicParty } from '../common';
 
 export type AccountsForServices = {
   clearingAccount?: Account;
@@ -76,7 +77,8 @@ const SUPPORTED_REQUESTS = [
 
 const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
-  const userParties = retrieveUserParties();
+  const publicParty = usePublicParty();
+  const userParties = retrieveUserParties(publicParty);
 
   const [requestInfo, setRequestInfo] = useState<IRequestServiceInfo>();
   const [token, setToken] = useState<string>();

@@ -19,16 +19,15 @@ import _ from 'lodash';
 import DamlLedger from '@daml/react';
 import { useAutomationInstances } from '@daml/hub-react';
 
-import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
+import { httpBaseUrl, wsBaseUrl, useVerifiedParties } from '../../config';
 import { ServicesProvider, useServiceContext } from '../../context/ServicesContext';
 import { RolesProvider, useRolesContext } from '../../context/RolesContext';
 import { OffersProvider } from '../../context/OffersContext';
 import QueryStreamProvider from '../../websocket/queryStream';
-import { retrieveParties } from '../../Parties';
 import Credentials from '../../Credentials';
 
 import { formatTriggerName } from './ConfigureProvidersPage';
-import { useOperatorParty, usePublicParty } from '../common';
+import { useOperatorParty } from '../common';
 
 const NODE_WIDTH = 200;
 const NODE_HEIGHT = 130;
@@ -262,22 +261,10 @@ const Network = (props: { passedElements: any[] }) => {
 
 const RoleNode = (props: { data: { label: string; partyId: string } }) => {
   const { roles, loading: rolesLoading } = useRolesContext();
-  const publicParty = usePublicParty();
-  const parties = retrieveParties(publicParty);
-
   const { instances } = useAutomationInstances();
 
   const { label, partyId } = props.data;
-
   const roleList = roles.filter(r => r.contract.payload.provider === partyId);
-  const token = parties.find(p => p.party === partyId)?.token;
-
-  useEffect(() => {
-    if (token && isHubDeployment) {
-      const timer = setInterval(() => {}, 1000);
-      return () => clearInterval(timer);
-    }
-  }, [token]);
 
   if (rolesLoading) {
     return null;
@@ -286,14 +273,13 @@ const RoleNode = (props: { data: { label: string; partyId: string } }) => {
     <div className="role-node">
       <Handle type="target" position={Position.Top} id="a" style={{ background: 'black' }} />
       <h4>{label}</h4>
-      {/* <p className="p2">
-        // my change {instances?.map(da => formatTriggerName(da.config.value.name)).join(', ')}
-        // main change {roleList.length > 0 && <b>Provides: </b>} {roleList.map(r => r.roleKind).join(', ')}
+      <p className="p2">
+        {roleList.length > 0 && <b>Provides: </b>} {roleList.map(r => r.roleKind).join(', ')}
       </p>
       <p className="p2">
-        {deployedAutomations.length > 0 && <b>Automation: </b>}
-        {deployedAutomations.map(da => formatTriggerName(da.config.value.name)).join(', ')}
-      </p> */}
+        {instances && instances.length > 0 && <b>Automation: </b>}
+        {instances && instances.map(da => formatTriggerName(da.config.value.name || '')).join(', ')}
+      </p>
       <Handle
         type="source"
         position={Position.Bottom}

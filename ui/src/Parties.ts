@@ -4,7 +4,7 @@ import {
   PartiesInputErrors,
   PartyToken,
 } from '@daml/hub-react';
-import { cache } from './pages/common';
+import { cache } from './util';
 
 const { save, remove, load } = cache();
 

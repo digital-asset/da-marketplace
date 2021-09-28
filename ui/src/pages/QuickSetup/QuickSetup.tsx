@@ -67,127 +67,125 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   }, [history.location, publicParty]);
 
   return (
-    <DamlHub>
-      <Widget
-        subtitle={
-          <NavLink to="/quick-setup">
-            <h2>Quick Setup</h2>
-          </NavLink>
-        }
-        pageControls={{
-          left:
-            activeMenuItem === MenuItems.ADD_PARTIES ||
-            activeMenuItem === MenuItems.ASSIGN_ROLES ? undefined : (
-              <NavLink to={!!activeMenuItem ? `${matchUrl}` : ''}>
-                <Button className="button ghost dark control-button">
-                  <ArrowLeftIcon color={'white'} />
-                  Back
-                </Button>
-              </NavLink>
-            ),
-          right:
-            activeMenuItem === MenuItems.ADD_PARTIES ? undefined : activeMenuItem ===
-              MenuItems.REVIEW ? (
-              <NavLink to={`${matchUrl}/${MenuItems.LOG_IN}`}>
-                <Button className="button ghost dark control-button">
-                  Skip to Log In
-                  <ArrowRightIcon color={'white'} />
-                </Button>
-              </NavLink>
-            ) : activeMenuItem !== MenuItems.LOG_IN ? (
-              <NavLink to={`${matchUrl}/${MenuItems.REVIEW}`}>
-                <Button className="button ghost dark control-button">
-                  Review Setup
-                  <ArrowRightIcon color={'white'} />
-                </Button>
-              </NavLink>
-            ) : undefined,
-        }}
-      >
-        <div className="quick-setup">
-          {!activeMenuItem && (
-            <div className="setup-page main-select">
-              <h4 className="dark">What would you like to do?</h4>
-              <NavLink to={`${matchUrl}/${MenuItems.ASSIGN_ROLES}`}>
-                <Button className="main-button ghost dark">
-                  Assign Roles
-                  <ArrowRightIcon />
-                </Button>
-              </NavLink>
-              <NavLink to={`${matchUrl}/${MenuItems.ADD_PARTIES}`}>
-                <Button className="main-button ghost dark">
-                  Upload More Parties
-                  <ArrowRightIcon />
-                </Button>
-              </NavLink>
-              {showAdvancedSetup && (
-                <>
-                  <NavLink to={`${matchUrl}/${MenuItems.CONFIGURE_PROVIDERS}`}>
-                    <Button className="main-button ghost dark">
-                      Configure Providers
-                      <ArrowRightIcon />
-                    </Button>
-                  </NavLink>
-                  <NavLink to={`${matchUrl}/${MenuItems.PROVIDE_SERVICES}`}>
-                    <Button className="main-button ghost dark">
-                      Provide Services
-                      <ArrowRightIcon />
-                    </Button>
-                  </NavLink>
-                  <NavLink to={`${matchUrl}/${MenuItems.CREATE_ACCOUNTS}`}>
-                    <Button className="main-button ghost dark">
-                      Create accounts
-                      <ArrowRightIcon />
-                    </Button>
-                  </NavLink>
-                </>
-              )}
-              <button
-                className="p2 advanced-setup"
-                onClick={() => setShowAdvancedSetup(!showAdvancedSetup)}
-              >
-                {showAdvancedSetup ? 'Hide ' : 'Show '}Advanced Setup
-              </button>
-            </div>
-          )}
-          <Switch>
-            <Route
-              path={`${matchPath}/${MenuItems.ADD_PARTIES}`}
-              component={() => <AddPartiesPage />}
-            />
-            {adminCredentials && (
+    <Widget
+      subtitle={
+        <NavLink to="/quick-setup">
+          <h2>Quick Setup</h2>
+        </NavLink>
+      }
+      pageControls={{
+        left:
+          activeMenuItem === MenuItems.ADD_PARTIES ||
+          activeMenuItem === MenuItems.ASSIGN_ROLES ? undefined : (
+            <NavLink to={!!activeMenuItem ? `${matchUrl}` : ''}>
+              <Button className="button ghost dark control-button">
+                <ArrowLeftIcon color={'white'} />
+                Back
+              </Button>
+            </NavLink>
+          ),
+        right:
+          activeMenuItem === MenuItems.ADD_PARTIES ? undefined : activeMenuItem ===
+            MenuItems.REVIEW ? (
+            <NavLink to={`${matchUrl}/${MenuItems.LOG_IN}`}>
+              <Button className="button ghost dark control-button">
+                Skip to Log In
+                <ArrowRightIcon color={'white'} />
+              </Button>
+            </NavLink>
+          ) : activeMenuItem !== MenuItems.LOG_IN ? (
+            <NavLink to={`${matchUrl}/${MenuItems.REVIEW}`}>
+              <Button className="button ghost dark control-button">
+                Review Setup
+                <ArrowRightIcon color={'white'} />
+              </Button>
+            </NavLink>
+          ) : undefined,
+      }}
+    >
+      <div className="quick-setup">
+        {!activeMenuItem && (
+          <div className="setup-page main-select">
+            <h4 className="dark">What would you like to do?</h4>
+            <NavLink to={`${matchUrl}/${MenuItems.ASSIGN_ROLES}`}>
+              <Button className="main-button ghost dark">
+                Assign Roles
+                <ArrowRightIcon />
+              </Button>
+            </NavLink>
+            <NavLink to={`${matchUrl}/${MenuItems.ADD_PARTIES}`}>
+              <Button className="main-button ghost dark">
+                Upload More Parties
+                <ArrowRightIcon />
+              </Button>
+            </NavLink>
+            {showAdvancedSetup && (
               <>
-                <Route
-                  path={`${matchPath}/${MenuItems.ASSIGN_ROLES}`}
-                  component={() => <AssignRolesPage adminCredentials={adminCredentials} />}
-                />
-                <Route
-                  path={`${matchPath}/${MenuItems.CONFIGURE_PROVIDERS}`}
-                  component={() => <ConfigureProvidersPage adminCredentials={adminCredentials} />}
-                />
-                <Route
-                  path={`${matchPath}/${MenuItems.PROVIDE_SERVICES}`}
-                  component={() => <ProvideServicesPage adminCredentials={adminCredentials} />}
-                />
-                <Route
-                  path={`${matchPath}/${MenuItems.CREATE_ACCOUNTS}`}
-                  component={() => <CreateAccountPage adminCredentials={adminCredentials} />}
-                />
-                <Route
-                  path={`${matchPath}/${MenuItems.REVIEW}`}
-                  component={() => <ReviewPage adminCredentials={adminCredentials} />}
-                />
-                <Route
-                  path={`${matchPath}/${MenuItems.LOG_IN}`}
-                  component={() => <LoginPage adminCredentials={adminCredentials} />}
-                />
+                <NavLink to={`${matchUrl}/${MenuItems.CONFIGURE_PROVIDERS}`}>
+                  <Button className="main-button ghost dark">
+                    Configure Providers
+                    <ArrowRightIcon />
+                  </Button>
+                </NavLink>
+                <NavLink to={`${matchUrl}/${MenuItems.PROVIDE_SERVICES}`}>
+                  <Button className="main-button ghost dark">
+                    Provide Services
+                    <ArrowRightIcon />
+                  </Button>
+                </NavLink>
+                <NavLink to={`${matchUrl}/${MenuItems.CREATE_ACCOUNTS}`}>
+                  <Button className="main-button ghost dark">
+                    Create accounts
+                    <ArrowRightIcon />
+                  </Button>
+                </NavLink>
               </>
             )}
-            <Redirect to={matchPath} />
-          </Switch>
-        </div>
-      </Widget>
-    </DamlHub>
+            <button
+              className="p2 advanced-setup"
+              onClick={() => setShowAdvancedSetup(!showAdvancedSetup)}
+            >
+              {showAdvancedSetup ? 'Hide ' : 'Show '}Advanced Setup
+            </button>
+          </div>
+        )}
+        <Switch>
+          <Route
+            path={`${matchPath}/${MenuItems.ADD_PARTIES}`}
+            component={() => <AddPartiesPage />}
+          />
+          {adminCredentials && (
+            <>
+              <Route
+                path={`${matchPath}/${MenuItems.ASSIGN_ROLES}`}
+                component={() => <AssignRolesPage adminCredentials={adminCredentials} />}
+              />
+              <Route
+                path={`${matchPath}/${MenuItems.CONFIGURE_PROVIDERS}`}
+                component={() => <ConfigureProvidersPage adminCredentials={adminCredentials} />}
+              />
+              <Route
+                path={`${matchPath}/${MenuItems.PROVIDE_SERVICES}`}
+                component={() => <ProvideServicesPage adminCredentials={adminCredentials} />}
+              />
+              <Route
+                path={`${matchPath}/${MenuItems.CREATE_ACCOUNTS}`}
+                component={() => <CreateAccountPage adminCredentials={adminCredentials} />}
+              />
+              <Route
+                path={`${matchPath}/${MenuItems.REVIEW}`}
+                component={() => <ReviewPage adminCredentials={adminCredentials} />}
+              />
+              <Route
+                path={`${matchPath}/${MenuItems.LOG_IN}`}
+                component={() => <LoginPage adminCredentials={adminCredentials} />}
+              />
+            </>
+          )}
+          <Redirect to={matchPath} />
+        </Switch>
+      </div>
+    </Widget>
   );
 });
 

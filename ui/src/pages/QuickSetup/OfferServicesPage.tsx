@@ -30,7 +30,7 @@ import {
 } from '../../context/OffersContext';
 import { RoleKind } from '../../context/RolesContext';
 import { retrieveUserParties } from '../../Parties';
-import { useOperatorParty } from '../common';
+import { useOperatorParty, usePublicParty } from '../common';
 
 interface IOfferServiceInfo {
   provider?: string;
@@ -40,7 +40,8 @@ interface IOfferServiceInfo {
 
 const OfferServicesPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
-  const userParties = retrieveUserParties();
+  const publicParty = usePublicParty();
+  const userParties = retrieveUserParties(publicParty);
 
   const [offerInfo, setOfferInfo] = useState<IOfferServiceInfo>();
   const [token, setToken] = useState<string>();
