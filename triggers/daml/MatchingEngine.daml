@@ -154,7 +154,7 @@ matchOrder party orders op@(orderCid, order) = do
 
     fill : ContractPair Order.T -> ContractPair Order.T -> TriggerA MatchingState ()
     fill (aggressiveCid, aggressive) (passiveCid, passive) = do
-      debug $ "Matching order: Taker=" <> show aggressive.details.id <> " to Maker" <> show passive.details.id
+      debug $ "Matching order: Taker=" <> show aggressive.details.id <> " to Maker=" <> show passive.details.id
 
       time <- getTime
       let price = case (aggressive.details.orderType, passive.details.orderType) of
