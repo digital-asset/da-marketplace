@@ -6,7 +6,6 @@ import DA.Assert ((===))
 import DA.Finance.Asset (AssetDeposit_Split(..), AssetDeposit)
 import DA.List
 import DA.Set
-import DA.Finance.Asset (AssetDeposit_Split(..))
 import DA.Foldable (forA_)
 import qualified Marketplace.Settlement.Model as Settlement
 import qualified Marketplace.Trading.Matching.Service as Matching
