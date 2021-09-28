@@ -34,7 +34,7 @@ const Notification: React.FC = ({ children }) => {
   return <div className="notification">{children}</div>;
 };
 
-type OfferProps<F extends Fields, T = OfferTemplates> = {
+type OfferProps<F extends Fields<{ provider: string }>, T = OfferTemplates> = {
   contractId: ContractId<T>;
   contract: T;
   serviceText: string;
@@ -44,7 +44,7 @@ type OfferProps<F extends Fields, T = OfferTemplates> = {
   declineChoice: OfferDeclineChoice;
 } & OfferAcceptFields<F, T>;
 
-export function OfferNotification<T extends Fields>({
+export function OfferNotification<T extends Fields<{ provider: string }>>({
   acceptChoice,
   declineChoice,
   contract,
@@ -125,7 +125,7 @@ export function OfferNotification<T extends Fields>({
   );
 }
 
-type RequestProps<F extends Fields> = {
+type RequestProps<F extends Fields<{ operator: string }>> = {
   serviceText: string;
   requester: string;
 
@@ -134,7 +134,7 @@ type RequestProps<F extends Fields> = {
   rejectChoice: RequestRejectChoice;
 } & RequestApproveFields<F>;
 
-export function RequestNotification<T extends Fields>({
+export function RequestNotification<T extends Fields<{ operator: string }>>({
   approveChoice,
   rejectChoice,
   contract,

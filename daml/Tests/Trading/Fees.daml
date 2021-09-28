@@ -50,9 +50,9 @@ setup = do
     priceAsset = usd with quantity = 100.0
     feeAsset = usd with quantity = 2.0
 
-  aliceDepositCid <- depositAsset providers alice shareAsset alice.mainAccount.id
+  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id
   aliceFeeDepositCid <- depositAsset providers alice feeAsset alice.mainAccount.id
-  bobDepositCid <- depositAsset providers bob cashAsset bob.mainAccount.id
+  bobDepositCid <- depositAsset providers bob  shareAsset bob.mainAccount.id
   bobFeeDepositCid <- depositAsset providers bob feeAsset bob.mainAccount.id
 
   -- List a Security to trade

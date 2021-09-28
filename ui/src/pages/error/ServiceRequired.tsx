@@ -25,6 +25,7 @@ import { useServiceRequestKinds } from '../../context/RequestsContext';
 import MissingServiceModal from '../../components/Common/MissingServiceModal';
 
 import { useStreamQueries } from '../../Main';
+import { Fields } from '../../components/InputDialog/Fields';
 
 type ServiceRequiredProps = {
   service: ServiceKind;
@@ -72,7 +73,13 @@ export const ServiceRequired: React.FC<ServiceRequiredProps> = ({ service, actio
   const [newRequest, setNewRequest] = useState(false);
   const [request, setRequest] = useState<ServiceRequest>(CustodyRequest);
   const [openDialog, setOpenDialog] = useState(true);
-  const [fields, setFields] = useState<object>({});
+  const [fields, setFields] = useState<Fields<{ provider: string }>>({
+    provider: {
+      label: 'Provider',
+      type: 'selection',
+      items: [],
+    },
+  });
   const [dialogState, setDialogState] = useState<any>({});
   const [requestParams, setRequestParams] = useState<RequestInterface>({
     provider: '',

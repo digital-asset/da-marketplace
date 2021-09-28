@@ -17,6 +17,7 @@ import { ServiceKind, ServiceOffer, ServiceRoleOfferChoice } from '../../context
 import { ServiceOfferDialog } from '../../components/InputDialog/ServiceDialog';
 import { useVerifiedParties } from '../../config';
 import { useOperatorParty } from '../common';
+import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 
 interface RequestInterface {
   operator: string;
@@ -85,7 +86,14 @@ const Offer: React.FC<{ service: ServiceKind }> = ({ service }) => {
       identities.find(i => i.payload.legalName === dialogState?.customer)?.payload.customer || '';
 
     if (dialogState?.tradingAccount && dialogState?.allocationAccount) {
-      operator && setParams({ provider, customer, operator });
+      operator &&
+        setParams({
+          provider,
+          customer,
+          operator,
+          tradingAccount: dialogState.tradingAccount,
+          allocationAccount: dialogState.allocationAccount,
+        });
     } else {
       operator &&
         setParams({

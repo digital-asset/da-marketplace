@@ -543,11 +543,10 @@ const Instructions = (props: {
   const { automations } = useAutomations();
   const { deployAutomation } = useAutomationInstances();
   const { identities, loading: loadingIdentities } = useVerifiedParties();
+  const displayErrorMessage = useDisplayErrorMessage();
 
   const publicParty = usePublicParty();
   const parties = retrieveParties(publicParty);
-
-  const displayErrorMessage = useDisplayErrorMessage();
 
   const allTriggers =
     automations?.flatMap(auto => {
