@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 
 import { useParty } from '@daml/react';
-import { useAdminParty } from '@daml/hub-react';
 
 import { Offer as MarketClearingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
 import { Offer as CustodyOffer } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
@@ -17,6 +16,7 @@ import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Cl
 import { ServiceKind, ServiceOffer, ServiceRoleOfferChoice } from '../../context/ServicesContext';
 import { ServiceOfferDialog } from '../../components/InputDialog/ServiceDialog';
 import { useVerifiedParties } from '../../config';
+import { useOperatorParty } from '../common';
 
 interface RequestInterface {
   operator: string;
@@ -29,7 +29,7 @@ interface RequestInterface {
 const Offer: React.FC<{ service: ServiceKind }> = ({ service }) => {
   const provider = useParty();
   const history = useHistory();
-  const operator = useAdminParty() || 'Operator';
+  const operator = useOperatorParty();
 
   const { identities, legalNames } = useVerifiedParties();
 
@@ -38,8 +38,8 @@ const Offer: React.FC<{ service: ServiceKind }> = ({ service }) => {
   const [openDialog, setOpenDialog] = useState(true);
   const [dialogState, setDialogState] = useState<any>({});
   const [params, setParams] = useState<RequestInterface>({
-    operator,
     provider,
+    operator: '',
     customer: '',
   });
 
@@ -85,14 +85,14 @@ const Offer: React.FC<{ service: ServiceKind }> = ({ service }) => {
       identities.find(i => i.payload.legalName === dialogState?.customer)?.payload.customer || '';
 
     if (dialogState?.tradingAccount && dialogState?.allocationAccount) {
-      const params = { provider, customer, operator };
-      setParams(params);
+      operator && setParams({ provider, customer, operator });
     } else {
-      setParams({
-        provider,
-        customer,
-        operator,
-      });
+      operator &&
+        setParams({
+          provider,
+          customer,
+          operator,
+        });
     }
   }, [dialogState, identities, operator, provider]);
 

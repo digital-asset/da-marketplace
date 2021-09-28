@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 
 import DamlLedger, { useLedger } from '@daml/react';
-import { useAdminParty } from '@daml/hub-react';
 
 import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
@@ -31,6 +30,7 @@ import {
 } from '../../context/OffersContext';
 import { RoleKind } from '../../context/RolesContext';
 import { retrieveUserParties } from '../../Parties';
+import { useOperatorParty } from '../common';
 
 interface IOfferServiceInfo {
   provider?: string;
@@ -296,8 +296,7 @@ const CreateServiceOffers = (props: { offerInfo: IOfferServiceInfo; onFinish: ()
   const { provider, customer, services } = offerInfo;
 
   const ledger = useLedger();
-
-  const operator = useAdminParty() || 'Operator';
+  const operator = useOperatorParty();
 
   const { contracts: tradingRoles, loading: tradingRoleLoading } = useStreamQueries(TradingRole);
   const { contracts: clearingRoles, loading: clearingRoleLoading } = useStreamQueries(ClearingRole);

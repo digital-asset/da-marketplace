@@ -34,18 +34,10 @@ export const deploymentMode: DeploymentMode =
 
 export const isHubDeployment = deploymentMode === DeploymentMode.PROD_DAML_HUB;
 
-// Decide the ledger ID based on the deployment mode first,
-// then an environment variable, falling back on the sandbox ledger ID.
-export const ledgerId: string =
-  deploymentMode === DeploymentMode.PROD_DAML_HUB
-    ? hubEnv?.ledgerId || ''
-    : process.env.REACT_APP_LEDGER_ID ?? 'da-marketplace-sandbox';
-
 export const wsBaseUrl =
   deploymentMode === DeploymentMode.DEV ? 'ws://localhost:7575/' : hubEnv?.wsURL;
 
 export const httpBaseUrl = hubEnv?.baseURL || undefined;
-export const publicParty = deploymentMode === DeploymentMode.DEV ? 'Public' : `public-${ledgerId}`;
 
 const inferPartyName = (party: string, defaultParties: DefaultParties): string | undefined => {
   // Check if we can extract a readable party name from any data we have client-side.
@@ -54,19 +46,21 @@ const inferPartyName = (party: string, defaultParties: DefaultParties): string |
   const creds = retrieveCredentials();
 
   if (isHubDeployment) {
+    const publicParty = defaultParties[0];
+
     if (party === creds?.party) {
       return new PartyToken(creds.token).partyName || undefined;
     }
 
-    if (party === defaultParties[0]) {
+    if (party === publicParty) {
       return 'Public';
     }
 
     if (party === defaultParties[1]) {
       return 'Operator';
     }
-  } else {
-    return retrieveParties().find(p => p.party === party)?.partyName;
+
+    return publicParty && retrieveParties(publicParty).find(p => p.party === party)?.partyName;
   }
 };
 

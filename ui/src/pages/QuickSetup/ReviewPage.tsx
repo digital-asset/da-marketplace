@@ -17,7 +17,7 @@ import dagre from 'dagre';
 import _ from 'lodash';
 
 import DamlLedger from '@daml/react';
-import { useAdminParty, useAutomationInstances } from '@daml/hub-react';
+import { useAutomationInstances } from '@daml/hub-react';
 
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
 import { ServicesProvider, useServiceContext } from '../../context/ServicesContext';
@@ -28,6 +28,7 @@ import { retrieveParties } from '../../Parties';
 import Credentials from '../../Credentials';
 
 import { formatTriggerName } from './ConfigureProvidersPage';
+import { useOperatorParty, usePublicParty } from '../common';
 
 const NODE_WIDTH = 200;
 const NODE_HEIGHT = 130;
@@ -94,7 +95,7 @@ const ReviewItems = () => {
     return [...acc.filter(i => i !== providerDetails), { provider, services, customer }];
   }, [] as GroupedCustomerServices);
 
-  const operator = useAdminParty() || 'Operator';
+  const operator = useOperatorParty();
 
   const serviceEdges = groupedServices
     .filter(s => s.provider !== s.customer && s.provider !== operator)
@@ -261,7 +262,8 @@ const Network = (props: { passedElements: any[] }) => {
 
 const RoleNode = (props: { data: { label: string; partyId: string } }) => {
   const { roles, loading: rolesLoading } = useRolesContext();
-  const parties = retrieveParties();
+  const publicParty = usePublicParty();
+  const parties = retrieveParties(publicParty);
 
   const { instances } = useAutomationInstances();
 

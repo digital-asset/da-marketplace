@@ -16,6 +16,7 @@ import { retrieveParties } from '../../Parties';
 import Credentials, { computeToken } from '../../Credentials';
 
 import QuickSetupPage from './QuickSetupPage';
+import { usePublicParty } from '../common';
 
 const ConfigureProviders = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
@@ -29,6 +30,7 @@ const ConfigureProviders = (props: { adminCredentials: Credentials }) => {
 
 const ConfigureProvidersPage = () => {
   const ledger = useLedger();
+  const publicParty = usePublicParty();
   const { automations } = useAutomations();
   const { deployAutomation } = useAutomationInstances();
 
@@ -69,7 +71,7 @@ const ConfigureProvidersPage = () => {
     return { text: p.payload.legalName, value: p.payload.customer };
   });
 
-  const parties = retrieveParties();
+  const parties = retrieveParties(publicParty);
 
   const hasRole = !!allRoles.find(
     role =>

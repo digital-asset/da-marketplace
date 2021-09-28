@@ -13,10 +13,9 @@ import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { Button, Form, Header } from 'semantic-ui-react';
 import classNames from 'classnames';
 import { IconCircledCheck, LockIcon, PublicIcon, IconClose } from '../../icons/icons';
-import { publicParty } from '../../config';
 import BackButton from '../../components/Common/BackButton';
 import paths from '../../paths';
-import { createDropdownProp } from '../common';
+import { createDropdownProp, usePublicParty } from '../common';
 
 enum AssetType {
   CURRENCY = 'TCXXXX',
@@ -38,6 +37,7 @@ const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
 
   const ledger = useLedger();
   const party = useParty();
+  const publicParty = usePublicParty();
   const services = useStreamQueries(Service).contracts;
   const customerServices = services.filter(s => s.payload.customer === party);
   const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
@@ -46,12 +46,12 @@ const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
   const zero: Claim<DamlDate, Decimal, Id> = { tag: 'Zero', value: {} };
 
   useEffect(() => {
-    if (isPublic) {
+    if (isPublic && publicParty) {
       setObservers(observers => [...observers, publicParty]);
     } else {
       setObservers(observers => observers.filter(o => o !== publicParty));
     }
-  }, [isPublic]);
+  }, [isPublic, publicParty]);
 
   useEffect(() => {
     if (!el.current) return;

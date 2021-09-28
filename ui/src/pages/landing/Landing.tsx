@@ -4,7 +4,6 @@ import { Link, NavLink } from 'react-router-dom';
 import { Button, Header } from 'semantic-ui-react';
 
 import { useLedger, useParty } from '@daml/react';
-import { useAdminParty } from '@daml/hub-react';
 
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
@@ -28,6 +27,7 @@ import Tile from '../../components/Tile/Tile';
 import paths from '../../paths';
 
 import ServiceRequestMenu from './ServiceRequestMenu';
+import { useOperatorParty } from '../common';
 
 type DamlHubParty = string;
 
@@ -85,8 +85,7 @@ const Relationship: React.FC<RelationshipProps> = ({ provider, services }) => {
 const ProfileSection: React.FC<{ name: string }> = ({ name }) => {
   const customer = useParty();
   const ledger = useLedger();
-  const userAdminId = useAdminParty();
-  const provider = userAdminId || 'Operator';
+  const provider = useOperatorParty();
 
   const { contracts: regulatorServices, loading: regulatorLoading } =
     useStreamQueries(RegulatorService);
@@ -112,14 +111,14 @@ const ProfileSection: React.FC<{ name: string }> = ({ name }) => {
         <p>Regulator Request pending...</p>
       </div>
     );
-  } else if (!regulatorCustomer && !regulatorLoading && !userAdminId) {
+  } else if (!regulatorCustomer && !regulatorLoading && !provider) {
     return (
       <div className="link">
         {damlHubParty}
         <Button
           className="ghost"
           onClick={() => {
-            if (!userAdminId) {
+            if (provider) {
               ledger.create(RegulatorRequest, { customer, provider });
             }
           }}

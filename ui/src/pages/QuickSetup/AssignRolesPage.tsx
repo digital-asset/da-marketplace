@@ -24,13 +24,13 @@ import {
 import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
 import { useVerifiedParties, MarketplaceTrigger, isHubDeployment } from '../../config';
 import { useStreamQueries } from '../../Main';
-import { createDropdownProp } from '../common';
+import { createDropdownProp, usePublicParty } from '../common';
 import Credentials, { computeToken } from '../../Credentials';
 
 import { LoadingWheel } from './QuickSetup';
 import QuickSetupPage from './QuickSetupPage';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
-import { useAutomationInstances, useAutomations, usePublicParty } from '@daml/hub-react';
+import { useAutomationInstances, useAutomations } from '@daml/hub-react';
 import { retrieveParties } from '../../Parties';
 
 interface InstFieldsWithTitle {
@@ -543,7 +543,9 @@ const Instructions = (props: {
   const { automations } = useAutomations();
   const { deployAutomation } = useAutomationInstances();
   const { identities, loading: loadingIdentities } = useVerifiedParties();
-  const parties = retrieveParties();
+
+  const publicParty = usePublicParty();
+  const parties = retrieveParties(publicParty);
 
   const displayErrorMessage = useDisplayErrorMessage();
 

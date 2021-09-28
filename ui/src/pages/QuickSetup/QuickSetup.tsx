@@ -26,6 +26,7 @@ import AssignRolesPage from './AssignRolesPage';
 import ProvideServicesPage from './ProvideServicesPage';
 import CreateAccountPage from './CreateAccountPage';
 import ConfigureProvidersPage from './ConfigureProvidersPage';
+import { usePublicParty } from '../common';
 
 export enum MenuItems {
   ADD_PARTIES = 'add-parties',
@@ -39,6 +40,7 @@ export enum MenuItems {
 
 const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   const history = useHistory();
+  const publicParty = usePublicParty();
 
   const matchPath = props.match.path;
   const matchUrl = props.match.url;
@@ -48,7 +50,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   const [showAdvancedSetup, setShowAdvancedSetup] = useState<boolean>(false);
 
   useEffect(() => {
-    const parties = retrieveParties();
+    const parties = retrieveParties(publicParty);
 
     const newSegment = history.location?.pathname.split('/quick-setup')[1].replace('/', '');
     const activeMenuItem = Object.values(MenuItems).find(s => s === newSegment);
@@ -62,7 +64,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
     } else {
       setAdminCredentials(computeCredentials('Operator'));
     }
-  }, [history.location]);
+  }, [history.location, publicParty]);
 
   return (
     <DamlHub>

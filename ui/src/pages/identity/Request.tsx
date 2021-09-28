@@ -11,11 +11,12 @@ import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regula
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { IconCircledCheck, LockIcon, PublicIcon } from '../../icons/icons';
 import { useStreamQueries } from '../../Main';
-import { publicParty } from '../../config';
+import { usePublicParty } from '../common';
 
 const Request = () => {
   const history = useHistory();
   const party = useParty();
+  const publicParty = usePublicParty();
   const ledger = useLedger();
 
   const { contracts, loading } = useStreamQueries(Service);
@@ -26,15 +27,15 @@ const Request = () => {
   const [isPublic, setIsPublic] = useState(true);
   const [legalName, setLegalName] = useState('');
   const [location, setLocation] = useState('');
-  const [observers, setObservers] = useState<string[]>([publicParty]);
+  const [observers, setObservers] = useState<string[]>([]);
 
   useEffect(() => {
-    if (isPublic) {
+    if (isPublic && publicParty) {
       setObservers([publicParty]);
     } else {
       setObservers([]);
     }
-  }, [isPublic]);
+  }, [isPublic, publicParty]);
 
   if (loading) {
     return (

@@ -13,6 +13,7 @@ import { retrieveParties } from '../../Parties';
 import paths from '../../paths';
 
 import { LoadingWheel } from './QuickSetup';
+import { usePublicParty } from '../common';
 
 const LoginPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
@@ -35,7 +36,8 @@ const LoginPage = (props: { adminCredentials: Credentials }) => {
 const LoginTileGrid = () => {
   const history = useHistory();
   const dispatch = useUserDispatch();
-  const parties = retrieveParties();
+  const publicParty = usePublicParty();
+  const parties = retrieveParties(publicParty);
 
   const { identities, loading: identitiesLoading } = useVerifiedParties();
 

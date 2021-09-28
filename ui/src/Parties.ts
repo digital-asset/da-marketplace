@@ -4,41 +4,46 @@ import {
   PartiesInputErrors,
   PartyToken,
 } from '@daml/hub-react';
+import { cache } from './pages/common';
 
-import { publicParty } from './config';
+const { save, remove, load } = cache();
 
 const PARTIES_STORAGE_KEY = 'imported_parties';
 
 export function storeParties(parties: PartyToken[]): void {
-  sessionStorage.setItem(PARTIES_STORAGE_KEY, JSON.stringify(parties));
+  save(PARTIES_STORAGE_KEY, JSON.stringify(parties));
 }
 
-export function retrieveParties(validateParties: boolean = true): PartyToken[] {
-  const partiesJson = sessionStorage.getItem(PARTIES_STORAGE_KEY);
+export function retrieveParties(
+  publicParty?: string,
+  validateParties: boolean = true
+): PartyToken[] {
+  const partiesJson = load(PARTIES_STORAGE_KEY);
 
-  if (!partiesJson) {
+  if (!partiesJson || !publicParty) {
     return [];
   }
 
   try {
-    return convertPartiesJson(partiesJson, publicParty, validateParties);
+    const parties = convertPartiesJson(partiesJson, publicParty, validateParties);
+    return parties;
   } catch (error) {
     if (error instanceof InvalidPartiesError) {
       if (error.type === PartiesInputErrors.EmptyPartiesList) {
-        console.warn('Tried to load an invalid parties file from cache.', error);
+        console.warn('Parties file was found empty.');
       }
       return [];
     } else {
       if (validateParties) {
-        sessionStorage.removeItem(PARTIES_STORAGE_KEY);
+        remove(PARTIES_STORAGE_KEY);
       }
       return [];
     }
   }
 }
 
-export function retrieveUserParties(): PartyToken[] {
-  const parties = retrieveParties();
+export function retrieveUserParties(publicParty?: string): PartyToken[] {
+  const parties = retrieveParties(publicParty);
   const adminParty = parties.find(p => p.partyName === 'UserAdmin');
   return parties.filter(p => p.party !== adminParty?.party && p.party !== publicParty);
 }

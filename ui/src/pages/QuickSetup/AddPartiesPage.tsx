@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import { Button } from 'semantic-ui-react';
 
-import { DamlHubLogin, PartyToken, useAdminParty, useAutomationInstances } from '@daml/hub-react';
-import DamlLedger, { useLedger } from '@daml/react';
+import { DamlHubLogin, PartyToken, useAutomationInstances } from '@daml/hub-react';
+import { useLedger } from '@daml/react';
 
 import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
 import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
@@ -21,7 +21,6 @@ import {
 import {
   httpBaseUrl,
   wsBaseUrl,
-  publicParty,
   isHubDeployment,
   MarketplaceTrigger,
   TRIGGER_HASH,
@@ -30,10 +29,9 @@ import { storeParties, retrieveParties, retrieveUserParties } from '../../Partie
 import { UnifiedDamlProvider, useStreamQueries } from '../../Main';
 import Credentials from '../../Credentials';
 import { ArrowRightIcon } from '../../icons/icons';
-import QueryStreamProvider from '../../websocket/queryStream';
 
 import { halfSecondPromise } from '../page/utils';
-import { makeDamlSet } from '../common';
+import { makeDamlSet, useOperatorParty, usePublicParty } from '../common';
 
 import { LoadingWheel } from './QuickSetup';
 
@@ -49,10 +47,11 @@ const AddPartiesPage = () => {
   const [parties, setParties] = useState<PartyToken[]>([]);
   const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>();
   const [adminCredentials, setAdminCredentials] = useState<Credentials>();
-  const userAdminId = useAdminParty();
+  const userAdminId = useOperatorParty();
+  const publicParty = usePublicParty();
 
   useEffect(() => {
-    const parties = retrieveParties();
+    const parties = retrieveParties(publicParty);
     if (isHubDeployment) {
       const adminParty = parties.find(p => p.party === userAdminId);
       if (adminParty) {
@@ -105,19 +104,17 @@ const AddPartiesPage = () => {
         <div className="add-parties-page">
           <LoadingWheel label={loadingStatus} />
           {loadingStatus === LoadingStatus.CREATING_ADMIN_CONTRACTS ? (
-            <DamlLedger
+            <UnifiedDamlProvider
               token={adminCredentials.token}
               party={adminCredentials.party}
               httpBaseUrl={httpBaseUrl}
               wsBaseUrl={wsBaseUrl}
             >
-              <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
-                <AdminLedger
-                  adminCredentials={adminCredentials}
-                  onComplete={() => setLoadingStatus(LoadingStatus.WAITING_FOR_TRIGGERS)}
-                />
-              </QueryStreamProvider>
-            </DamlLedger>
+              <AdminLedger
+                adminCredentials={adminCredentials}
+                onComplete={() => setLoadingStatus(LoadingStatus.WAITING_FOR_TRIGGERS)}
+              />
+            </UnifiedDamlProvider>
           ) : (
             loadingStatus === LoadingStatus.WAITING_FOR_TRIGGERS &&
             parties.map(p => (
@@ -205,7 +202,7 @@ const useIdentityVerification = (party: PartyToken) => {
   const [completed, setCompleted] = useState(false);
 
   const ledger = useLedger();
-  const userParties = retrieveUserParties();
+  const publicParty = usePublicParty();
 
   const { contracts: regulatorServices, loading: regulatorServicesLoading } =
     useStreamQueries(RegulatorService);
@@ -217,14 +214,21 @@ const useIdentityVerification = (party: PartyToken) => {
     useStreamQueries(IdentityVerificationRequest);
 
   useEffect(() => {
+    const userParties = retrieveUserParties(publicParty);
+
     setCompleted(
       userParties.length > 0 &&
         userParties.every(p => !!verifiedIdentities.find(v => v.payload.customer === p.party))
     );
-  }, [verifiedIdentities, userParties]);
+  }, [verifiedIdentities]);
 
   useEffect(() => {
-    if (regulatorServicesLoading || verifiedIdentitiesLoading || verifiedIdentityRequestsLoading) {
+    if (
+      regulatorServicesLoading ||
+      verifiedIdentitiesLoading ||
+      verifiedIdentityRequestsLoading ||
+      !publicParty
+    ) {
       return;
     }
 
@@ -264,7 +268,7 @@ const useIdentityVerification = (party: PartyToken) => {
   }, [
     ledger,
     party,
-    userParties,
+    publicParty,
     verifiedIdentities,
     verifiedIdentitiesLoading,
     regulatorServices,
@@ -329,6 +333,7 @@ const useOperatorOnboarding = (adminCredentials: Credentials): boolean => {
   const [operatorOnboarded, setOperatorOnboarded] = useState(false);
 
   const ledger = useLedger();
+  const publicParty = usePublicParty();
 
   const { contracts: operatorService, loading: operatorServiceLoading } =
     useStreamQueries(OperatorService);
@@ -346,7 +351,7 @@ const useOperatorOnboarding = (adminCredentials: Credentials): boolean => {
     }
 
     // Create service if not exists
-    const createOperatorService = async () => {
+    const createOperatorService = async (publicParty: string) => {
       await ledger.create(OperatorService, {
         operator: adminCredentials.party,
         observers: makeDamlSet([publicParty]),
@@ -355,8 +360,8 @@ const useOperatorOnboarding = (adminCredentials: Credentials): boolean => {
       setServiceCreated(true);
     };
 
-    if (!operatorServiceLoading && operatorService.length === 0) {
-      createOperatorService();
+    if (!!publicParty && !operatorServiceLoading && operatorService.length === 0) {
+      createOperatorService(publicParty);
     }
 
     // Create onboarding if not exists
@@ -372,6 +377,7 @@ const useOperatorOnboarding = (adminCredentials: Credentials): boolean => {
   }, [
     adminCredentials,
     ledger,
+    publicParty,
     operatorService,
     operatorServiceLoading,
     operatorOnboarding,
@@ -388,6 +394,7 @@ const useRegulatorOnboarding = (adminCredentials: Credentials) => {
   const [regulatorServicesCreated, setRegulatorServicesCreated] = useState(false);
 
   const ledger = useLedger();
+  const publicParty = usePublicParty();
 
   const { contracts: regulatorRoles, loading: regulatorRolesLoading } =
     useStreamQueries(RegulatorRole);
@@ -395,7 +402,7 @@ const useRegulatorOnboarding = (adminCredentials: Credentials) => {
     useStreamQueries(RegulatorOffer);
 
   useEffect(() => {
-    const userParties = retrieveUserParties();
+    const userParties = retrieveUserParties(publicParty);
 
     // If pre-existing:
     if (!regulatorRolesLoading && regulatorRoles.length > 0) {
@@ -403,7 +410,7 @@ const useRegulatorOnboarding = (adminCredentials: Credentials) => {
     }
 
     // Create the role contract
-    const createRegulatorRole = async () => {
+    const createRegulatorRole = async (publicParty: string) => {
       await ledger.create(RegulatorRole, {
         operator: adminCredentials.party,
         provider: adminCredentials.party,
@@ -413,8 +420,8 @@ const useRegulatorOnboarding = (adminCredentials: Credentials) => {
       setRegulatorRoleCreated(true);
     };
 
-    if (!regulatorRolesLoading && regulatorRoles.length === 0) {
-      createRegulatorRole();
+    if (!!publicParty && !regulatorRolesLoading && regulatorRoles.length === 0) {
+      createRegulatorRole(publicParty);
     }
 
     // Create regulator service offers
@@ -444,6 +451,7 @@ const useRegulatorOnboarding = (adminCredentials: Credentials) => {
     }
   }, [
     ledger,
+    publicParty,
     adminCredentials.party,
     regulatorRolesLoading,
     regulatorServiceOffersLoading,
@@ -458,13 +466,14 @@ const useRegulatorOnboarding = (adminCredentials: Credentials) => {
 const useDeployAll = () => {
   const [deployedAll, setDeployedAll] = useState(false);
   const { deployAutomation } = useAutomationInstances();
+  const publicParty = usePublicParty();
 
   useEffect(() => {
     const artifactHash = TRIGGER_HASH;
-    const parties = retrieveParties();
+    const parties = retrieveParties(publicParty);
 
     async function deployAllTriggers() {
-      if (!artifactHash || !deployAutomation) {
+      if (!artifactHash || !deployAutomation || !publicParty) {
         return;
       }
 
@@ -479,7 +488,7 @@ const useDeployAll = () => {
     if (parties.length > 0 && isHubDeployment) {
       deployAllTriggers();
     }
-  }, [deployAutomation]);
+  }, [deployAutomation, publicParty]);
 
   return deployedAll;
 };

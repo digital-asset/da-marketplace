@@ -27,35 +27,37 @@ export default function Main({ defaultPath }: MainProps) {
 
   return (
     <HashRouter>
-      <Switch>
-        <Route exact path={paths.root} component={() => <Redirect to={defaultPath} />} />
-        <PrivateRoute
-          path={paths.app.root}
-          component={() => {
-            return (
-              <UnifiedDamlProvider
-                party={user.party}
-                token={user.token}
-                httpBaseUrl={httpBaseUrl}
-                wsBaseUrl={wsBaseUrl}
-              >
-                <MessagesProvider>
-                  <ServicesProvider>
-                    <RolesProvider>
-                      <RequestsProvider>
-                        <App />
-                      </RequestsProvider>
-                    </RolesProvider>
-                  </ServicesProvider>
-                </MessagesProvider>
-              </UnifiedDamlProvider>
-            );
-          }}
-        />
-        <PublicRoute path={paths.quickSetup.root} component={QuickSetup} />
-        <PublicRoute path={paths.login} component={Login} />
-        <Route component={ErrorComponent} />
-      </Switch>
+      <DamlHub>
+        <Switch>
+          <Route exact path={paths.root} component={() => <Redirect to={defaultPath} />} />
+          <PrivateRoute
+            path={paths.app.root}
+            component={() => {
+              return (
+                <UnifiedDamlProvider
+                  party={user.party}
+                  token={user.token}
+                  httpBaseUrl={httpBaseUrl}
+                  wsBaseUrl={wsBaseUrl}
+                >
+                  <MessagesProvider>
+                    <ServicesProvider>
+                      <RolesProvider>
+                        <RequestsProvider>
+                          <App />
+                        </RequestsProvider>
+                      </RolesProvider>
+                    </ServicesProvider>
+                  </MessagesProvider>
+                </UnifiedDamlProvider>
+              );
+            }}
+          />
+          <PublicRoute path={paths.quickSetup.root} component={QuickSetup} />
+          <PublicRoute path={paths.login} component={Login} />
+          <Route component={ErrorComponent} />
+        </Switch>
+      </DamlHub>
     </HashRouter>
   );
 
