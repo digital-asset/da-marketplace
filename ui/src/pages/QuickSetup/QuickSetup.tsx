@@ -11,8 +11,6 @@ import {
   Redirect,
 } from 'react-router-dom';
 
-import DamlHub from '@daml/hub-react';
-
 import Widget from '../../components/Widget/Widget';
 import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
 import Credentials, { computeCredentials } from '../../Credentials';

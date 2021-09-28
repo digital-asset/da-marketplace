@@ -4,6 +4,7 @@ import { Map, emptyMap } from '@daml/types';
 import React from 'react';
 import { useAdminParty, usePublicParty as useHubPublicParty } from '@daml/hub-react';
 import { deploymentMode, DeploymentMode } from '../config';
+import { cache } from '../util';
 
 export type ServicePageProps<T extends object> = {
   services: Readonly<CreateEvent<T, any, any>[]>;
@@ -62,7 +63,7 @@ const PUBLIC_PARTY_ID_KEY = 'default_parties/public_party_id';
 
 export function usePublicParty() {
   // Cache in localStorage to share across all tabs & restarts
-  const { save, load } = cache({ permanent: true });
+  const { save, load } = React.useMemo(() => cache({ permanent: true }), []);
 
   const [publicParty, setPublicParty] = React.useState<string>();
   const hubPublicParty = useHubPublicParty();
@@ -72,7 +73,7 @@ export function usePublicParty() {
     if (cachedPublicParty) {
       setPublicParty(cachedPublicParty);
     }
-  }, []);
+  }, [load]);
 
   React.useEffect(() => {
     if (deploymentMode === DeploymentMode.DEV) {
@@ -83,7 +84,7 @@ export function usePublicParty() {
         setPublicParty(hubPublicParty);
       }
     }
-  }, [publicParty, hubPublicParty]);
+  }, [publicParty, hubPublicParty, save]);
 
   return publicParty;
 }
@@ -92,7 +93,7 @@ const USER_ADMIN_PARTY_ID_KEY = 'default_parties/user_admin_party_id';
 
 export function useOperatorParty() {
   // Cache in localStorage to share across all tabs & restarts
-  const { save, load } = cache({ permanent: true });
+  const { save, load } = React.useMemo(() => cache({ permanent: true }), []);
 
   const [operator, setOperator] = React.useState<string>();
   const hubAdminParty = useAdminParty();
@@ -102,7 +103,7 @@ export function useOperatorParty() {
     if (cachedUserAdmin) {
       setOperator(cachedUserAdmin);
     }
-  }, []);
+  }, [load]);
 
   React.useEffect(() => {
     if (deploymentMode === DeploymentMode.DEV) {
@@ -113,7 +114,7 @@ export function useOperatorParty() {
         setOperator(hubAdminParty);
       }
     }
-  }, [operator, hubAdminParty]);
+  }, [operator, hubAdminParty, save]);
 
   return operator;
 }

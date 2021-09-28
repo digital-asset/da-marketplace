@@ -171,6 +171,7 @@ const AssignRolesPage = (props: { adminCredentials: Credentials }) => {
           <h4 className="title dark">Select a role to set up:</h4>
           {instructionTemplates.map(inst => (
             <Button
+              key={inst}
               className="main-button ghost dark"
               onClick={_ => handleNewInstructionFields(inst)}
             >

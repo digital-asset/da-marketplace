@@ -58,7 +58,7 @@ const AddPartiesPage = () => {
         setAdminCredentials(adminParty);
       }
     }
-  }, [userAdminId]);
+  }, [userAdminId, publicParty]);
 
   useEffect(() => {
     const storedParties = retrieveUserParties(publicParty);
@@ -193,7 +193,7 @@ const CreateVerifiedIdentity = (props: {
     if (completedIdentityVerifications && completedPartyOnboarding) {
       return onComplete();
     }
-  }, [completedIdentityVerifications, completedPartyOnboarding]);
+  }, [completedIdentityVerifications, completedPartyOnboarding, onComplete]);
 
   return null;
 };
@@ -220,7 +220,7 @@ const useIdentityVerification = (party: PartyToken) => {
       userParties.length > 0 &&
         userParties.every(p => !!verifiedIdentities.find(v => v.payload.customer === p.party))
     );
-  }, [verifiedIdentities]);
+  }, [verifiedIdentities, publicParty]);
 
   useEffect(() => {
     if (
