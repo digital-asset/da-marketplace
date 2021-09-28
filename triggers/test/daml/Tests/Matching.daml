@@ -66,7 +66,7 @@ runMatchingTest parties@Parties{userAdmin = operator; ..} = do
     observers = []
   createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
 
-  -- debug "Waiting for listing to be accepted..."
+debug "Waiting for listing to be accepted..."
   (listingCid, Listing.Listing{listingId}) <- waitQuery 10.0 $ queryContractKey @Listing.Listing exchange (operator, exchange, listingId)
   debug $ listingId
 
