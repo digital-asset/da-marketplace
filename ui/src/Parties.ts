@@ -6,7 +6,7 @@ import {
 } from '@daml/hub-react';
 import { cache } from './util';
 
-const { save, remove, load } = cache();
+const { save, remove, load } = cache({ permanent: true });
 
 const PARTIES_STORAGE_KEY = 'imported_parties';
 
@@ -14,11 +14,15 @@ export function storeParties(parties: PartyToken[]): void {
   save(PARTIES_STORAGE_KEY, JSON.stringify(parties));
 }
 
+export function getPartiesJSON(): string | undefined {
+  return load(PARTIES_STORAGE_KEY) || undefined;
+}
+
 export function retrieveParties(
   publicParty?: string,
   validateParties: boolean = true
 ): PartyToken[] {
-  const partiesJson = load(PARTIES_STORAGE_KEY);
+  const partiesJson = getPartiesJSON();
 
   if (!partiesJson || !publicParty) {
     return [];

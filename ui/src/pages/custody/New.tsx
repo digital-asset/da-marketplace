@@ -159,9 +159,9 @@ const NewComponent: React.FC<Props> = ({ party, custodyServices, modal, addButto
         readOnly
       />
       <Form.Input
-        label={<p className="input-label">Account Name</p>}
-        placeholder="Provide an Account Name"
         required
+        placeholder="Provide an Account Name"
+        label={<p className="input-label">Account Name</p>}
         onChange={(_, change) => setAccountName(change.value as string)}
       />
       <Form.Select

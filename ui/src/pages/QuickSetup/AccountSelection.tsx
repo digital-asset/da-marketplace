@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { damlSetValues, makeDamlSet, createDropdownProp } from '../common';
 import { useStreamQueries } from '../../Main';
@@ -10,7 +10,7 @@ import {
 import { DropdownItemProps, Form, DropdownProps } from 'semantic-ui-react';
 import { useLedger } from '@daml/react';
 import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/';
-import { usePartyName } from '../../config';
+import { isHubDeployment, usePartyName } from '../../config';
 import {
   OpenAccountRequest,
   OpenAllocationAccountRequest,
@@ -144,8 +144,27 @@ const ProviderOption = (props: {
   const ledger = useLedger();
   const { getName } = usePartyName(party);
 
-  const makeAccountName = (accountInfo: AccountInfo) =>
-    `${getName(party)}-${getName(serviceProvider)}-${accountInfo.accountLabel.replace(/\s+/g, '')}`;
+  const partyName = getName(party);
+  const serviceProviderName = getName(serviceProvider);
+
+  const makeAccountName = useCallback(
+    (accountInfo: AccountInfo): string | undefined => {
+      const name = `${getName(party)}-${getName(
+        serviceProvider
+      )}-${accountInfo.accountLabel.replace(/\s+/g, '')}`;
+
+      if (isHubDeployment) {
+        if (partyName !== party && serviceProviderName !== serviceProvider) {
+          return name;
+        } else {
+          return undefined;
+        }
+      } else {
+        return name;
+      }
+    },
+    [partyName, serviceProviderName]
+  );
 
   const accountNames: DropdownItemProps[] = accounts.map(a => createDropdownProp(a.id.label));
   const allocationAccountNames: DropdownItemProps[] = allocationAccounts
@@ -159,9 +178,12 @@ const ProviderOption = (props: {
     if (!serviceProvider) return;
     const service = custodyServices.find(s => s.payload.provider === provider);
     if (!service) return;
+    const accountName = makeAccountName(accountInfo);
+    if (!accountName) return;
+
     const accountId = {
       signatories: makeDamlSet([service.payload.provider, service.payload.customer]),
-      label: makeAccountName(accountInfo),
+      label: accountName,
       version: '0',
     };
 

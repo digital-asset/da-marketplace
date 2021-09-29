@@ -8,7 +8,7 @@ import { Button, Form, Icon } from 'semantic-ui-react';
 import { PartyToken, DamlHubLogin } from '@daml/hub-react';
 
 import { computeCredentials } from '../../Credentials';
-import { retrieveParties, storeParties } from '../../Parties';
+import { getPartiesJSON, retrieveParties, storeParties } from '../../Parties';
 import { deploymentMode, DeploymentMode, isHubDeployment } from '../../config';
 
 import Tile from '../../components/Tile/Tile';
@@ -132,7 +132,6 @@ const LocalLoginForm: React.FC = () => {
 };
 
 const JWTLoginForm: React.FC = () => {
-  const [partyId, setPartyId] = useState('');
   const [jwt, setJwt] = useState('');
 
   const history = useHistory();
@@ -149,15 +148,6 @@ const JWTLoginForm: React.FC = () => {
         <Form.Input
           fluid
           required
-          label={<p className="dark">Party</p>}
-          placeholder="Party ID"
-          value={partyId}
-          onChange={e => setPartyId(e.currentTarget.value)}
-        />
-
-        <Form.Input
-          fluid
-          required
           type="password"
           label={<p className="dark">Token</p>}
           placeholder="Party JWT"
@@ -169,7 +159,7 @@ const JWTLoginForm: React.FC = () => {
           className="ghost dark"
           icon="right arrow"
           labelPosition="right"
-          disabled={!jwt || !partyId}
+          disabled={!jwt}
           content={<p className="dark bold">Submit</p>}
           onClick={handleTokenLogin}
         />
@@ -212,9 +202,11 @@ const PartiesLoginForm: React.FC = () => {
   };
 
   const handleLoad = async (parties: PartyToken[]) => {
-    setParties(parties);
-    setSelectedPartyId(parties[0]?.party || '');
-    storeParties(parties);
+    if (parties.length > 0) {
+      setParties(parties);
+      setSelectedPartyId(parties[0]?.party || '');
+      storeParties(parties);
+    }
   };
 
   const handleError = (error: string): (() => Promise<void>) => {
@@ -250,6 +242,7 @@ const PartiesLoginForm: React.FC = () => {
                       },
                     },
                   }}
+                  partiesJson={getPartiesJSON()}
                   onPartiesLoad={(creds, err) => {
                     if (creds) {
                       handleLoad(creds);

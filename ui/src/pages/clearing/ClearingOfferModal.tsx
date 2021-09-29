@@ -30,9 +30,9 @@ const ClearingOfferModal: React.FC<ServicePageProps<Service> & OfferProps> = ({
   services,
   offer,
 }) => {
+  const ledger = useLedger();
   const party = useParty();
   const { getName } = usePartyName(party);
-  const ledger = useLedger();
   const [clearingAccountName, setClearingAccountName] = useState('');
   const [marginAccountName, setMarginAccountName] = useState('');
   const [clearingProvider, setClearingProvider] = useState(!!offer ? offer.payload.provider : '');
@@ -85,7 +85,7 @@ const ClearingOfferModal: React.FC<ServicePageProps<Service> & OfferProps> = ({
     const accountRequest: RequestOpenAccount = {
       accountId: {
         signatories: makeDamlSet([service.payload.provider, service.payload.customer]),
-        label: `${party}-${clearingProvider}-clearing`,
+        label: `${getName(party)}-${getName(clearingProvider)}-clearing`,
         version: '0',
       },
       observers: [clearingProvider],
@@ -100,7 +100,7 @@ const ClearingOfferModal: React.FC<ServicePageProps<Service> & OfferProps> = ({
     const request: RequestOpenAllocationAccount = {
       accountId: {
         signatories: makeDamlSet([service.payload.provider, service.payload.customer]),
-        label: `${party}-${clearingProvider}-margin`,
+        label: `${getName(party)}-${getName(clearingProvider)}-margin`,
         version: '0',
       },
       observers: makeDamlSet<string>([]),
