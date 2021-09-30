@@ -10,7 +10,7 @@ import {
 import { DropdownItemProps, Form, DropdownProps } from 'semantic-ui-react';
 import { useLedger } from '@daml/react';
 import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/';
-import { isHubDeployment, usePartyName } from '../../config';
+import { isHubDeployment, useAccountName, usePartyName } from '../../config';
 import {
   OpenAccountRequest,
   OpenAllocationAccountRequest,
@@ -141,34 +141,18 @@ const ProviderOption = (props: {
     onChangeAccount,
     accountKey,
   } = props;
+
   const ledger = useLedger();
-  const { getName } = usePartyName(party);
-
-  const partyName = getName(party);
-  const serviceProviderName = getName(serviceProvider);
-
-  const makeAccountName = useCallback(
-    (accountInfo: AccountInfo): string | undefined => {
-      const name = `${getName(party)}-${getName(
-        serviceProvider
-      )}-${accountInfo.accountLabel.replace(/\s+/g, '')}`;
-
-      if (isHubDeployment) {
-        if (partyName !== party && serviceProviderName !== serviceProvider) {
-          return name;
-        } else {
-          return undefined;
-        }
-      } else {
-        return name;
-      }
-    },
-    [partyName, serviceProviderName]
+  const accountName = useAccountName(
+    accountInfo.accountLabel.replace(/\s+/g, ''),
+    party,
+    serviceProvider
   );
+  const { getName } = usePartyName(party);
 
   const accountNames: DropdownItemProps[] = accounts.map(a => createDropdownProp(a.id.label));
   const allocationAccountNames: DropdownItemProps[] = allocationAccounts
-    .filter(acc => acc.id.label === makeAccountName(accountInfo))
+    .filter(acc => acc.id.label === accountName)
     .map(a => createDropdownProp(a.id.label));
 
   const accountOptions =
@@ -178,7 +162,6 @@ const ProviderOption = (props: {
     if (!serviceProvider) return;
     const service = custodyServices.find(s => s.payload.provider === provider);
     if (!service) return;
-    const accountName = makeAccountName(accountInfo);
     if (!accountName) return;
 
     const accountId = {
@@ -205,7 +188,6 @@ const ProviderOption = (props: {
   };
 
   const accountExists = (accountInfo: AccountInfo) => {
-    const accountName = makeAccountName(accountInfo);
     if (accountInfo.accountType === AccountType.REGULAR) {
       return !!accounts.find(a => a.id.label === accountName);
     } else {
@@ -214,7 +196,6 @@ const ProviderOption = (props: {
   };
 
   const accountRequestExists = (accountInfo: AccountInfo) => {
-    const accountName = makeAccountName(accountInfo);
     if (accountInfo.accountType === AccountType.REGULAR) {
       return !!openAccountRequests.find(rq => rq.payload.accountId.label === accountName);
     } else {

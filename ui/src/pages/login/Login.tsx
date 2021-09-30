@@ -185,10 +185,7 @@ const PartiesLoginForm: React.FC = () => {
 
   useEffect(() => {
     const parties = retrieveParties(publicParty);
-    if (parties.length > 0) {
-      setParties(parties);
-      setSelectedPartyId(parties[0].party);
-    }
+    handleParties(parties);
   }, [publicParty]);
 
   const handleLogin = async () => {
@@ -201,11 +198,11 @@ const PartiesLoginForm: React.FC = () => {
     }
   };
 
-  const handleLoad = async (parties: PartyToken[]) => {
+  const handleParties = async (parties: PartyToken[], store?: boolean) => {
     if (parties.length > 0) {
       setParties(parties);
-      setSelectedPartyId(parties[0]?.party || '');
-      storeParties(parties);
+      setSelectedPartyId(parties[0].party);
+      store && storeParties(parties);
     }
   };
 
@@ -245,7 +242,7 @@ const PartiesLoginForm: React.FC = () => {
                   partiesJson={getPartiesJSON()}
                   onPartiesLoad={(creds, err) => {
                     if (creds) {
-                      handleLoad(creds);
+                      handleParties(creds, true);
                     } else if (err) {
                       loadAndCatch(handleError(err));
                     }

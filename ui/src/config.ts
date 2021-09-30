@@ -1,7 +1,7 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import _ from 'lodash';
 
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
@@ -92,6 +92,30 @@ export const usePartyName = (party: string) => {
   const name = useMemo(() => getName(party), [party, getName]);
 
   return { name, getName };
+};
+
+export const useAccountName = (
+  label: string,
+  party1: string,
+  party2: string
+): string | undefined => {
+  const [accountName, setAccountName] = useState<string>();
+  const { name: p1Name, getName } = usePartyName(party1);
+  const p2Name = getName(party2);
+
+  useEffect(() => {
+    const name = `${p1Name}-${p2Name}-${label}`;
+
+    if (isHubDeployment) {
+      if (p1Name !== party1 && p2Name !== party2) {
+        setAccountName(name);
+      }
+    } else {
+      setAccountName(name);
+    }
+  }, [label, party1, party2, p1Name, p2Name]);
+
+  return accountName;
 };
 
 export const useVerifiedParties = () => {

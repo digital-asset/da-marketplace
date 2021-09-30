@@ -15,7 +15,7 @@ import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/R
 import { createDropdownProp } from '../common';
 import { useParty, useLedger } from '@daml/react';
 import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/';
-import { usePartyName } from '../../config';
+import { useAccountName, usePartyName } from '../../config';
 import {
   OpenAccountRequest,
   OpenAllocationAccountRequest,
@@ -46,6 +46,8 @@ const ClearingOfferModal: React.FC<ServicePageProps<Service> & OfferProps> = ({
   const identityOptions = identities.map(idn =>
     createDropdownProp(idn.payload.legalName, idn.payload.customer)
   );
+
+  const accountName = useAccountName('clearing', party, clearingProvider);
 
   const allocationAccountNames: DropdownItemProps[] = allocationAccounts.map(a =>
     createDropdownProp(a.id.label)
@@ -82,10 +84,12 @@ const ClearingOfferModal: React.FC<ServicePageProps<Service> & OfferProps> = ({
   const requestClearingAccount = async (provider: string) => {
     const service = custodyServices.find(s => s.payload.provider === provider);
     if (!service) return;
+    if (!accountName) return;
+
     const accountRequest: RequestOpenAccount = {
       accountId: {
         signatories: makeDamlSet([service.payload.provider, service.payload.customer]),
-        label: `${getName(party)}-${getName(clearingProvider)}-clearing`,
+        label: accountName,
         version: '0',
       },
       observers: [clearingProvider],
@@ -97,10 +101,12 @@ const ClearingOfferModal: React.FC<ServicePageProps<Service> & OfferProps> = ({
   const requestMarginAccount = async (provider: string) => {
     const service = custodyServices.find(s => s.payload.provider === provider);
     if (!service) return;
+    if (!accountName) return;
+
     const request: RequestOpenAllocationAccount = {
       accountId: {
         signatories: makeDamlSet([service.payload.provider, service.payload.customer]),
-        label: `${getName(party)}-${getName(clearingProvider)}-margin`,
+        label: accountName,
         version: '0',
       },
       observers: makeDamlSet<string>([]),
