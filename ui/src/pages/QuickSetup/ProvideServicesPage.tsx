@@ -13,7 +13,7 @@ import {
   usePartyName,
 } from '../../config';
 import { itemListAsText } from '../page/utils';
-import Credentials, { computeToken } from '../../Credentials';
+import Credentials, { computeLocalToken } from '../../Credentials';
 import QueryStreamProvider from '../../websocket/queryStream';
 
 import { useStreamQueries } from '../../Main';
@@ -91,7 +91,7 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
       if (isHubDeployment) {
         setToken(userParties.find(p => p.party === customer)?.token);
       } else {
-        setToken(computeToken(customer));
+        setToken(computeLocalToken(customer));
       }
     }
   }, [userParties, customer]);

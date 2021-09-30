@@ -5,7 +5,7 @@ import { Template } from '@daml/types';
 import { CreateEvent } from '@daml/ledger';
 import { fetchPublicToken } from '@daml/hub-react';
 
-import { computeCredentials, retrieveCredentials } from '../Credentials';
+import { computeLocalCreds, retrieveCredentials } from '../Credentials';
 import { DeploymentMode, deploymentMode } from '../config';
 
 import useDamlStreamQuery, { StreamErrors } from './websocket';
@@ -34,7 +34,7 @@ const QueryStreamContext = createContext<QueryStream | undefined>(undefined);
 
 const getPublicToken = async (): Promise<string | undefined> => {
   return deploymentMode === DeploymentMode.DEV
-    ? computeCredentials('Public').token
+    ? computeLocalCreds('Public').token
     : (await fetchPublicToken()) || undefined;
 };
 

@@ -13,7 +13,7 @@ import { useOffers } from '../../context/OffersContext';
 import { MarketplaceTrigger, isHubDeployment, useVerifiedParties } from '../../config';
 import { useStreamQueries } from '../../Main';
 import { retrieveParties } from '../../Parties';
-import Credentials, { computeToken } from '../../Credentials';
+import Credentials, { computeLocalToken } from '../../Credentials';
 
 import QuickSetupPage from './QuickSetupPage';
 import { usePublicParty } from '../common';
@@ -141,7 +141,7 @@ const ConfigureProvidersPage = () => {
     const provider = { provider: partyId };
     const token = isHubDeployment
       ? parties.find(p => p.party === partyId)?.token
-      : computeToken(partyId);
+      : computeLocalToken(partyId);
     if (!token) {
       setSelectedParty(undefined);
       setSelectedRoles([]);

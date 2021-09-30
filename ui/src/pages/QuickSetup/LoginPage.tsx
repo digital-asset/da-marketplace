@@ -6,7 +6,7 @@ import DamlLedger from '@daml/react';
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
 import { RolesProvider, useRolesContext } from '../../context/RolesContext';
 import { loginUser, useUserDispatch } from '../../context/UserContext';
-import Credentials, { computeCredentials } from '../../Credentials';
+import Credentials, { computeLocalCreds } from '../../Credentials';
 import QueryStreamProvider from '../../websocket/queryStream';
 import { ArrowRightIcon } from '../../icons/icons';
 import { retrieveParties } from '../../Parties';
@@ -98,7 +98,7 @@ const LoginTileGrid = () => {
         loginUser(dispatch, history, partyDetails);
       }
     } else {
-      loginUser(dispatch, history, computeCredentials(party));
+      loginUser(dispatch, history, computeLocalCreds(party));
     }
   }
 };

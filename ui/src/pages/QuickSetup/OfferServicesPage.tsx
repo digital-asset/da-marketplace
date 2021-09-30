@@ -8,7 +8,7 @@ import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Cus
 import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties, usePartyName } from '../../config';
-import Credentials, { computeToken } from '../../Credentials';
+import Credentials, { computeLocalToken } from '../../Credentials';
 import QueryStreamProvider from '../../websocket/queryStream';
 import { useStreamQueries } from '../../Main';
 import { itemListAsText } from '../../pages/page/utils';
@@ -52,7 +52,7 @@ const OfferServicesPage = (props: { adminCredentials: Credentials }) => {
 
   useEffect(() => {
     if (provider) {
-      const token = computeToken(provider);
+      const token = computeLocalToken(provider);
       setToken(token);
     }
   }, [userParties, provider]);

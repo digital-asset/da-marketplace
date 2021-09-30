@@ -13,7 +13,7 @@ import {
 
 import Widget from '../../components/Widget/Widget';
 import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
-import Credentials, { computeCredentials } from '../../Credentials';
+import Credentials, { computeLocalCreds } from '../../Credentials';
 import { isHubDeployment } from '../../config';
 import { retrieveParties } from '../../Parties';
 
@@ -60,7 +60,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
         setAdminCredentials(adminParty);
       }
     } else {
-      setAdminCredentials(computeCredentials('Operator'));
+      setAdminCredentials(computeLocalCreds('Operator'));
     }
   }, [history.location, publicParty]);
 

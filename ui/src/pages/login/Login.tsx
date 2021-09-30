@@ -7,7 +7,7 @@ import { Button, Form, Icon } from 'semantic-ui-react';
 
 import { PartyToken, DamlHubLogin } from '@daml/hub-react';
 
-import { computeCredentials } from '../../Credentials';
+import { computeLocalCreds } from '../../Credentials';
 import { getPartiesJSON, retrieveParties, storeParties } from '../../Parties';
 import { deploymentMode, DeploymentMode, isHubDeployment } from '../../config';
 
@@ -104,7 +104,7 @@ const LocalLoginForm: React.FC = () => {
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
-    const credentials = computeCredentials(username);
+    const credentials = computeLocalCreds(username);
 
     loginUser(userDispatch, history, credentials);
   };

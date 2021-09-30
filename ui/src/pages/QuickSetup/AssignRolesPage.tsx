@@ -25,7 +25,7 @@ import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
 import { useVerifiedParties, MarketplaceTrigger, isHubDeployment } from '../../config';
 import { useStreamQueries } from '../../Main';
 import { createDropdownProp, usePublicParty } from '../common';
-import Credentials, { computeToken } from '../../Credentials';
+import Credentials, { computeLocalToken } from '../../Credentials';
 
 import { LoadingWheel } from './QuickSetup';
 import QuickSetupPage from './QuickSetupPage';
@@ -617,7 +617,7 @@ const Instructions = (props: {
           onboardParties.map(async party => {
             const token = isHubDeployment
               ? parties.find(p => p.party === party)?.token
-              : computeToken(party);
+              : computeLocalToken(party);
 
             if (!token) {
               setLoadingInstructions(false);

@@ -6,7 +6,7 @@ import DamlLedger from '@daml/react';
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
 import { retrieveUserParties } from '../../Parties';
 import { NewAccount } from '../custody/New';
-import Credentials, { computeToken } from '../../Credentials';
+import Credentials, { computeLocalToken } from '../../Credentials';
 
 import QuickSetupPage from './QuickSetupPage';
 import { usePublicParty } from '../common';
@@ -38,7 +38,7 @@ const CreateAccountPage = () => {
       if (isHubDeployment) {
         setToken(userParties.find(p => p.party === selectedCustomer)?.token);
       } else {
-        setToken(computeToken(selectedCustomer));
+        setToken(computeLocalToken(selectedCustomer));
       }
     }
   }, [userParties, selectedCustomer]);

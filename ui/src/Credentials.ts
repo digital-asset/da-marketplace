@@ -58,7 +58,7 @@ export function retrieveCredentials(): Credentials | undefined {
   return undefined;
 }
 
-export function computeToken(party: string): string {
+export function computeLocalToken(party: string): string {
   const payload = {
     exp: new Date().getTime() / 1000 + 1000000,
     'https://daml.com/ledger-api': {
@@ -74,8 +74,8 @@ export function computeToken(party: string): string {
   return encode(payload, SECRET_KEY, 'HS256');
 }
 
-export const computeCredentials = (party: string): Credentials => {
-  const token = computeToken(party);
+export const computeLocalCreds = (party: string): Credentials => {
+  const token = computeLocalToken(party);
   return { token, party };
 };
 
