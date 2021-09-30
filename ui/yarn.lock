@@ -1195,9 +1195,9 @@
 "@daml-ui.js/da-marketplace-ui@file:../daml-ui.js/da-marketplace-ui-0.2.0":
   version "1.12.0"
   dependencies:
-    "@daml.js/40f452260bef3f29dede136108fc08a88d5a5250310281067087da6f0baddff7" "file:../../../Library/Caches/Yarn/v6/npm-@daml-ui-js-da-marketplace-ui-1.12.0-8da2f3b9-5587-4dee-8d57-deeeaac8f108-1632788308473/node_modules/@daml-ui.js/40f452260bef3f29dede136108fc08a88d5a5250310281067087da6f0baddff7"
-    "@daml.js/97b883cd8a2b7f49f90d5d39c981cf6e110cf1f1c64427a28a6d58ec88c43657" "file:../../../Library/Caches/Yarn/v6/npm-@daml-ui-js-da-marketplace-ui-1.12.0-8da2f3b9-5587-4dee-8d57-deeeaac8f108-1632788308473/node_modules/@daml-ui.js/97b883cd8a2b7f49f90d5d39c981cf6e110cf1f1c64427a28a6d58ec88c43657"
-    "@daml.js/d14e08374fc7197d6a0de468c968ae8ba3aadbf9315476fd39071831f5923662" "file:../../../Library/Caches/Yarn/v6/npm-@daml-ui-js-da-marketplace-ui-1.12.0-8da2f3b9-5587-4dee-8d57-deeeaac8f108-1632788308473/node_modules/@daml-ui.js/d14e08374fc7197d6a0de468c968ae8ba3aadbf9315476fd39071831f5923662"
+    "@daml.js/40f452260bef3f29dede136108fc08a88d5a5250310281067087da6f0baddff7" "file:../../../Library/Caches/Yarn/v6/npm-@daml-ui-js-da-marketplace-ui-1.12.0-04f3e5ab-1b43-48e0-9fcd-db49b81f59d5-1633017071031/node_modules/@daml-ui.js/40f452260bef3f29dede136108fc08a88d5a5250310281067087da6f0baddff7"
+    "@daml.js/97b883cd8a2b7f49f90d5d39c981cf6e110cf1f1c64427a28a6d58ec88c43657" "file:../../../Library/Caches/Yarn/v6/npm-@daml-ui-js-da-marketplace-ui-1.12.0-04f3e5ab-1b43-48e0-9fcd-db49b81f59d5-1633017071031/node_modules/@daml-ui.js/97b883cd8a2b7f49f90d5d39c981cf6e110cf1f1c64427a28a6d58ec88c43657"
+    "@daml.js/d14e08374fc7197d6a0de468c968ae8ba3aadbf9315476fd39071831f5923662" "file:../../../Library/Caches/Yarn/v6/npm-@daml-ui-js-da-marketplace-ui-1.12.0-04f3e5ab-1b43-48e0-9fcd-db49b81f59d5-1633017071031/node_modules/@daml-ui.js/d14e08374fc7197d6a0de468c968ae8ba3aadbf9315476fd39071831f5923662"
     "@mojotech/json-type-validation" "^3.1.0"
 
 "@daml.js/40f452260bef3f29dede136108fc08a88d5a5250310281067087da6f0baddff7@file:../daml-ui.js/40f452260bef3f29dede136108fc08a88d5a5250310281067087da6f0baddff7":
@@ -1238,14 +1238,16 @@
 "@daml.js/da-marketplace@file:../daml.js/da-marketplace-0.2.0":
   version "1.12.0"
   dependencies:
-    "@daml.js/40f452260bef3f29dede136108fc08a88d5a5250310281067087da6f0baddff7" "file:../../../Library/Caches/Yarn/v6/npm-@daml-js-da-marketplace-1.12.0-5ffad431-3cb9-4281-8a95-813c631cb924-1632788308461/node_modules/@daml.js/40f452260bef3f29dede136108fc08a88d5a5250310281067087da6f0baddff7"
-    "@daml.js/97b883cd8a2b7f49f90d5d39c981cf6e110cf1f1c64427a28a6d58ec88c43657" "file:../../../Library/Caches/Yarn/v6/npm-@daml-js-da-marketplace-1.12.0-5ffad431-3cb9-4281-8a95-813c631cb924-1632788308461/node_modules/@daml.js/97b883cd8a2b7f49f90d5d39c981cf6e110cf1f1c64427a28a6d58ec88c43657"
-    "@daml.js/bfcd37bd6b84768e86e432f5f6c33e25d9e7724a9d42e33875ff74f6348e733f" "file:../../../Library/Caches/Yarn/v6/npm-@daml-js-da-marketplace-1.12.0-5ffad431-3cb9-4281-8a95-813c631cb924-1632788308461/node_modules/@daml.js/bfcd37bd6b84768e86e432f5f6c33e25d9e7724a9d42e33875ff74f6348e733f"
-    "@daml.js/d14e08374fc7197d6a0de468c968ae8ba3aadbf9315476fd39071831f5923662" "file:../../../Library/Caches/Yarn/v6/npm-@daml-js-da-marketplace-1.12.0-5ffad431-3cb9-4281-8a95-813c631cb924-1632788308461/node_modules/@daml.js/d14e08374fc7197d6a0de468c968ae8ba3aadbf9315476fd39071831f5923662"
+    "@daml.js/40f452260bef3f29dede136108fc08a88d5a5250310281067087da6f0baddff7" "file:../../../Library/Caches/Yarn/v6/npm-@daml-js-da-marketplace-1.12.0-b6feb57d-818c-4f02-9a70-9b89bf1322d5-1633017071019/node_modules/@daml.js/40f452260bef3f29dede136108fc08a88d5a5250310281067087da6f0baddff7"
+    "@daml.js/97b883cd8a2b7f49f90d5d39c981cf6e110cf1f1c64427a28a6d58ec88c43657" "file:../../../Library/Caches/Yarn/v6/npm-@daml-js-da-marketplace-1.12.0-b6feb57d-818c-4f02-9a70-9b89bf1322d5-1633017071019/node_modules/@daml.js/97b883cd8a2b7f49f90d5d39c981cf6e110cf1f1c64427a28a6d58ec88c43657"
+    "@daml.js/bfcd37bd6b84768e86e432f5f6c33e25d9e7724a9d42e33875ff74f6348e733f" "file:../../../Library/Caches/Yarn/v6/npm-@daml-js-da-marketplace-1.12.0-b6feb57d-818c-4f02-9a70-9b89bf1322d5-1633017071019/node_modules/@daml.js/bfcd37bd6b84768e86e432f5f6c33e25d9e7724a9d42e33875ff74f6348e733f"
+    "@daml.js/d14e08374fc7197d6a0de468c968ae8ba3aadbf9315476fd39071831f5923662" "file:../../../Library/Caches/Yarn/v6/npm-@daml-js-da-marketplace-1.12.0-b6feb57d-818c-4f02-9a70-9b89bf1322d5-1633017071019/node_modules/@daml.js/d14e08374fc7197d6a0de468c968ae8ba3aadbf9315476fd39071831f5923662"
     "@mojotech/json-type-validation" "^3.1.0"
 
-"@daml/hub-react@file:../../dabl-react":
-  version "1.0.0-rc.3"
+"@daml/hub-react@1.0.0-rc.4":
+  version "1.0.0-rc.4"
+  resolved "https://registry.yarnpkg.com/@daml/hub-react/-/hub-react-1.0.0-rc.4.tgz#f0dc6663f0d492f4c21ac9334cb39c56fd9fd40e"
+  integrity sha512-cJt26rew2g0Zfdyq70uj5Yz9DzRJys/gGyu2fJRSRqW7+MzxuNuBg/6/oP+9LANP4ZKAxNRtizy1068uBtPUNQ==
   dependencies:
     "@mojotech/json-type-validation" "^3.1.0"
     jsonwebtoken "^8.5.1"
