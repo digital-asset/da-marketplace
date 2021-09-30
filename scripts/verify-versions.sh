@@ -76,7 +76,7 @@ if [[ exberry_adapter_version -ne 1 ]] ; then
 fi
 
 ui_version=`cat ui/package.json | grep $short_version | wc -l`
-if [[ ui_version -ne 2 ]] ; then
+if [[ ui_version -ne 3 ]] ; then
     decorate_error "  Mismatched version(s) in %s" package.json
     return_code=1
 fi
