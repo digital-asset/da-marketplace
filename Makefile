@@ -114,7 +114,7 @@ test: test-daml test-ui test-tags
 tag:
 	@./scripts/tag-versions.sh \
 		$(VERSION) \
-		dabl-meta.yaml \
+		dit-meta.yaml \
 		daml.yaml \
 		triggers/daml.yaml \
 		triggers/test/daml.yaml \
