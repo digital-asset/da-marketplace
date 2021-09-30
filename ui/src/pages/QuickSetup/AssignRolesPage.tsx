@@ -1,18 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-
-import { useLedger } from '@daml/react';
-import { Party, Optional } from '@daml/types';
-import _ from 'lodash';
-
-import {
-  OperatorOnboarding,
-  OnboardingInstruction,
-} from '@daml-ui.js/da-marketplace-ui/lib/UI/Onboarding';
 import { useHistory } from 'react-router-dom';
-import { useStreamQueries } from '../../Main';
-import Credentials, { computeToken } from '../../Credentials';
-import { useVerifiedParties, isHubDeployment, publicParty } from '../../config';
-import QuickSetupPage from './QuickSetupPage';
 import {
   Form,
   Button,
@@ -23,16 +10,28 @@ import {
   InputOnChangeData,
   DropdownItemProps,
 } from 'semantic-ui-react';
-import { createDropdownProp } from '../common';
-import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
 import classNames from 'classnames';
-import { retrieveParties } from '../../Parties';
+import _ from 'lodash';
+
+import { useLedger } from '@daml/react';
+import { Party, Optional } from '@daml/types';
+
+import {
+  OperatorOnboarding,
+  OnboardingInstruction,
+} from '@daml-ui.js/da-marketplace-ui/lib/UI/Onboarding';
+
+import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
+import { useVerifiedParties, MarketplaceTrigger, isHubDeployment } from '../../config';
+import { useStreamQueries } from '../../Main';
+import { createDropdownProp, usePublicParty } from '../common';
+import Credentials, { computeLocalToken } from '../../Credentials';
 
 import { LoadingWheel } from './QuickSetup';
-import { MarketplaceTrigger, deployAutomation } from '../../automation';
-
+import QuickSetupPage from './QuickSetupPage';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
-import { useAutomations } from '../../context/AutomationContext';
+import { useAutomationInstances, useAutomations } from '@daml/hub-react';
+import { retrieveParties } from '../../Parties';
 
 interface InstFieldsWithTitle {
   title: string;
@@ -172,6 +171,7 @@ const AssignRolesPage = (props: { adminCredentials: Credentials }) => {
           <h4 className="title dark">Select a role to set up:</h4>
           {instructionTemplates.map(inst => (
             <Button
+              key={inst}
               className="main-button ghost dark"
               onClick={_ => handleNewInstructionFields(inst)}
             >
@@ -538,16 +538,16 @@ const Instructions = (props: {
   const { instructionFields, setInstructionFields, isClearedExchange, toggleIsClearedExchange } =
     props;
 
-  const ledger = useLedger();
-  const automations = useAutomations();
-
-  const displayErrorMessage = useDisplayErrorMessage();
-
   const { instructions, title } = instructionFields;
 
+  const ledger = useLedger();
+  const { automations } = useAutomations();
+  const { deployAutomation } = useAutomationInstances();
   const { identities, loading: loadingIdentities } = useVerifiedParties();
+  const displayErrorMessage = useDisplayErrorMessage();
 
-  const parties = retrieveParties() || [];
+  const publicParty = usePublicParty();
+  const parties = retrieveParties(publicParty);
 
   const allTriggers =
     automations?.flatMap(auto => {
@@ -617,7 +617,7 @@ const Instructions = (props: {
           onboardParties.map(async party => {
             const token = isHubDeployment
               ? parties.find(p => p.party === party)?.token
-              : computeToken(party);
+              : computeLocalToken(party);
 
             if (!token) {
               setLoadingInstructions(false);
@@ -654,8 +654,8 @@ const Instructions = (props: {
 
     if (trigger) {
       const [name, hash] = trigger.split('#');
-      if (hash) {
-        await deployAutomation(hash, name, token, publicParty);
+      if (hash && deployAutomation) {
+        await deployAutomation(hash, name, token);
       }
     }
   }

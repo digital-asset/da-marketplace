@@ -1,19 +1,14 @@
 import React from 'react';
-import { Button, Header } from 'semantic-ui-react';
 import { useHistory } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
+import { Button, Header } from 'semantic-ui-react';
 
 import { useLedger, useParty } from '@daml/react';
-import { useStreamQueries } from '../../Main';
+
+import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
 import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
-import { ServiceKind, useProviderServices } from '../../context/ServicesContext';
-import Tile from '../../components/Tile/Tile';
-import { getAbbreviation } from '../page/utils';
-import { usePartyName } from '../../config';
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import { Link, NavLink } from 'react-router-dom';
-
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import {
   Request as RegulatorRequest,
@@ -21,16 +16,23 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service/';
 import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/';
 
-import { useWellKnownParties } from '@daml/hub-react/lib';
-import { formatCurrency } from '../../util';
-import paths from '../../paths';
-import ServiceRequestMenu from './ServiceRequestMenu';
+import { ServiceKind, useProviderServices } from '../../context/ServicesContext';
 import RoleSetUp, { AutomationSetup } from '../../pages/setup/SetUp';
 import OverflowMenu, { OverflowMenuEntry } from '../../pages/page/OverflowMenu';
+import { getAbbreviation } from '../page/utils';
+import { useStreamQueries } from '../../Main';
+import { usePartyName } from '../../config';
+import { formatCurrency } from '../../util';
+import Tile from '../../components/Tile/Tile';
+import paths from '../../paths';
+
+import ServiceRequestMenu from './ServiceRequestMenu';
+import { useOperatorParty } from '../common';
 
 type DamlHubParty = string;
+
 function isDamlHubParty(party: string): party is DamlHubParty {
-  return party.includes('ledger-party-');
+  return party.startsWith('ledger-party-');
 }
 
 const RenderDamlHubParty: React.FC<{ party: string }> = ({ party }) => {
@@ -83,8 +85,7 @@ const Relationship: React.FC<RelationshipProps> = ({ provider, services }) => {
 const ProfileSection: React.FC<{ name: string }> = ({ name }) => {
   const customer = useParty();
   const ledger = useLedger();
-  const { parties, loading: operatorLoading } = useWellKnownParties();
-  const provider = parties?.userAdminParty || 'Operator';
+  const provider = useOperatorParty();
 
   const { contracts: regulatorServices, loading: regulatorLoading } =
     useStreamQueries(RegulatorService);
@@ -110,14 +111,14 @@ const ProfileSection: React.FC<{ name: string }> = ({ name }) => {
         <p>Regulator Request pending...</p>
       </div>
     );
-  } else if (!regulatorCustomer && !regulatorLoading && !operatorLoading) {
+  } else if (!regulatorCustomer && !regulatorLoading && !provider) {
     return (
       <div className="link">
         {damlHubParty}
         <Button
           className="ghost"
           onClick={() => {
-            if (!operatorLoading) {
+            if (provider) {
               ledger.create(RegulatorRequest, { customer, provider });
             }
           }}

@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
+import { Form, Button } from 'semantic-ui-react';
 
 import { useLedger } from '@daml/react';
 import { Choice, ContractId } from '@daml/types';
+import { useAutomationInstances, useAutomations } from '@daml/hub-react';
 
 import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
 
 import { useRolesContext, RoleKind, terminateRole } from '../../context/RolesContext';
 import { useOffers } from '../../context/OffersContext';
-import { useAutomations } from '../../context/AutomationContext';
-import Credentials from '../../Credentials';
 
+import { MarketplaceTrigger, isHubDeployment, useVerifiedParties } from '../../config';
 import { useStreamQueries } from '../../Main';
-import { MarketplaceTrigger, deployAutomation } from '../../automation';
 import { retrieveParties } from '../../Parties';
-import { computeToken } from '../../Credentials';
-import { publicParty, isHubDeployment, useVerifiedParties } from '../../config';
-import { Form, Button } from 'semantic-ui-react';
+import Credentials, { computeLocalToken } from '../../Credentials';
+
 import QuickSetupPage from './QuickSetupPage';
+import { usePublicParty } from '../common';
 
 const ConfigureProviders = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
@@ -30,7 +30,9 @@ const ConfigureProviders = (props: { adminCredentials: Credentials }) => {
 
 const ConfigureProvidersPage = () => {
   const ledger = useLedger();
-  const automations = useAutomations();
+  const publicParty = usePublicParty();
+  const { automations } = useAutomations();
+  const { deployAutomation } = useAutomationInstances();
 
   const { identities, loading: identitiesLoading } = useVerifiedParties();
   const { roles: allRoles, loading: rolesLoading } = useRolesContext();
@@ -69,7 +71,7 @@ const ConfigureProvidersPage = () => {
     return { text: p.payload.legalName, value: p.payload.customer };
   });
 
-  const parties = retrieveParties() || [];
+  const parties = retrieveParties(publicParty);
 
   const hasRole = !!allRoles.find(
     role =>
@@ -139,7 +141,7 @@ const ConfigureProvidersPage = () => {
     const provider = { provider: partyId };
     const token = isHubDeployment
       ? parties.find(p => p.party === partyId)?.token
-      : computeToken(partyId);
+      : computeLocalToken(partyId);
     if (!token) {
       setSelectedParty(undefined);
       setSelectedRoles([]);
@@ -199,8 +201,8 @@ const ConfigureProvidersPage = () => {
     if (trigger) {
       const [name, hash] = trigger.split('#');
 
-      if (hash) {
-        deployAutomation(hash, name, token, publicParty);
+      if (hash && deployAutomation) {
+        deployAutomation(hash, name);
       }
     }
   }

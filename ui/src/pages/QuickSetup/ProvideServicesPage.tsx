@@ -13,7 +13,7 @@ import {
   usePartyName,
 } from '../../config';
 import { itemListAsText } from '../page/utils';
-import Credentials, { computeToken } from '../../Credentials';
+import Credentials, { computeLocalToken } from '../../Credentials';
 import QueryStreamProvider from '../../websocket/queryStream';
 
 import { useStreamQueries } from '../../Main';
@@ -42,6 +42,7 @@ import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asse
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import AccountSelection, { AccountType, AccountInfos } from './AccountSelection';
 import QuickSetupPage from './QuickSetupPage';
+import { usePublicParty } from '../common';
 
 export type AccountsForServices = {
   clearingAccount?: Account;
@@ -76,7 +77,8 @@ const SUPPORTED_REQUESTS = [
 
 const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
-  const userParties = retrieveUserParties() || [];
+  const publicParty = usePublicParty();
+  const userParties = retrieveUserParties(publicParty);
 
   const [requestInfo, setRequestInfo] = useState<IRequestServiceInfo>();
   const [token, setToken] = useState<string>();
@@ -89,7 +91,7 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
       if (isHubDeployment) {
         setToken(userParties.find(p => p.party === customer)?.token);
       } else {
-        setToken(computeToken(customer));
+        setToken(computeLocalToken(customer));
       }
     }
   }, [userParties, customer]);

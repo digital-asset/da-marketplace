@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-
 import { Button, Form } from 'semantic-ui-react';
 
 import DamlLedger, { useLedger } from '@daml/react';
@@ -9,7 +8,7 @@ import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Cus
 import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties, usePartyName } from '../../config';
-import Credentials, { computeToken } from '../../Credentials';
+import Credentials, { computeLocalToken } from '../../Credentials';
 import QueryStreamProvider from '../../websocket/queryStream';
 import { useStreamQueries } from '../../Main';
 import { itemListAsText } from '../../pages/page/utils';
@@ -30,9 +29,8 @@ import {
   ServiceOffer,
 } from '../../context/OffersContext';
 import { RoleKind } from '../../context/RolesContext';
-
-import { useWellKnownParties } from '@daml/hub-react/lib';
 import { retrieveUserParties } from '../../Parties';
+import { useOperatorParty, usePublicParty } from '../common';
 
 interface IOfferServiceInfo {
   provider?: string;
@@ -42,7 +40,8 @@ interface IOfferServiceInfo {
 
 const OfferServicesPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
-  const userParties = retrieveUserParties() || [];
+  const publicParty = usePublicParty();
+  const userParties = retrieveUserParties(publicParty);
 
   const [offerInfo, setOfferInfo] = useState<IOfferServiceInfo>();
   const [token, setToken] = useState<string>();
@@ -53,7 +52,7 @@ const OfferServicesPage = (props: { adminCredentials: Credentials }) => {
 
   useEffect(() => {
     if (provider) {
-      const token = computeToken(provider);
+      const token = computeLocalToken(provider);
       setToken(token);
     }
   }, [userParties, provider]);
@@ -298,8 +297,7 @@ const CreateServiceOffers = (props: { offerInfo: IOfferServiceInfo; onFinish: ()
   const { provider, customer, services } = offerInfo;
 
   const ledger = useLedger();
-
-  const operator = useWellKnownParties().parties?.userAdminParty || 'Operator';
+  const operator = useOperatorParty();
 
   const { contracts: tradingRoles, loading: tradingRoleLoading } = useStreamQueries(TradingRole);
   const { contracts: clearingRoles, loading: clearingRoleLoading } = useStreamQueries(ClearingRole);

@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { Form } from 'semantic-ui-react';
 
 import DamlLedger from '@daml/react';
 
+import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
 import { retrieveUserParties } from '../../Parties';
 import { NewAccount } from '../custody/New';
-import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
-import { computeToken } from '../../Credentials';
-import { Form } from 'semantic-ui-react';
-import Credentials from '../../Credentials';
+import Credentials, { computeLocalToken } from '../../Credentials';
+
 import QuickSetupPage from './QuickSetupPage';
+import { usePublicParty } from '../common';
 
 const CreateAccount = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
@@ -26,8 +27,9 @@ const CreateAccount = (props: { adminCredentials: Credentials }) => {
 
 const CreateAccountPage = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<string>();
-  const userParties = retrieveUserParties() || [];
   const { identities, loading: identitiesLoading } = useVerifiedParties();
+  const publicParty = usePublicParty();
+  const userParties = retrieveUserParties(publicParty);
 
   const [token, setToken] = useState<string>();
 
@@ -36,7 +38,7 @@ const CreateAccountPage = () => {
       if (isHubDeployment) {
         setToken(userParties.find(p => p.party === selectedCustomer)?.token);
       } else {
-        setToken(computeToken(selectedCustomer));
+        setToken(computeLocalToken(selectedCustomer));
       }
     }
   }, [userParties, selectedCustomer]);

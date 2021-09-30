@@ -1,10 +1,14 @@
 import React from 'react';
 import { History } from 'history';
+
+import { damlHubLogout } from '@daml/hub-react';
+
 import Credentials, {
   clearCredentials,
   retrieveCredentials,
   storeCredentials,
 } from '../Credentials';
+
 import paths from '../paths';
 
 const UserStateContext = React.createContext<UserState>({
@@ -101,6 +105,7 @@ async function loginUser(
 
 function signOut(dispatch: React.Dispatch<any>, history: History) {
   clearCredentials();
+  damlHubLogout();
   dispatch({ type: 'SIGN_OUT_SUCCESS' });
   history.push(paths.login);
 }

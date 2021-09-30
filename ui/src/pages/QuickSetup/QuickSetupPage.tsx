@@ -1,20 +1,16 @@
 import React from 'react';
-
 import classNames from 'classnames';
+import { Header } from 'semantic-ui-react';
 
 import DamlLedger from '@daml/react';
 
-import { Header } from 'semantic-ui-react';
-
-import Credentials from '../../Credentials';
-
-import { httpBaseUrl, wsBaseUrl, publicParty } from '../../config';
+import { httpBaseUrl, wsBaseUrl } from '../../config';
 import QueryStreamProvider from '../../websocket/queryStream';
 
 import { ServicesProvider } from '../../context/ServicesContext';
 import { OffersProvider } from '../../context/OffersContext';
 import { RolesProvider } from '../../context/RolesContext';
-import { AutomationProvider } from '../../context/AutomationContext';
+import Credentials from '../../Credentials';
 import { MessagesProvider } from '../../context/MessagesContext';
 
 interface QuickSetupPageProps {
@@ -38,22 +34,20 @@ const QuickSetupPage: React.FC<QuickSetupPageProps> = ({
     >
       <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
         <MessagesProvider>
-          <AutomationProvider publicParty={publicParty}>
-            <ServicesProvider>
-              <RolesProvider>
-                <OffersProvider>
-                  <div className={classNames('setup-page', className)}>
-                    {!!title && (
-                      <Header as="h2" className="title">
-                        {title}
-                      </Header>
-                    )}
-                    {children}
-                  </div>
-                </OffersProvider>
-              </RolesProvider>
-            </ServicesProvider>
-          </AutomationProvider>
+          <ServicesProvider>
+            <RolesProvider>
+              <OffersProvider>
+                <div className={classNames('setup-page', className)}>
+                  {!!title && (
+                    <Header as="h2" className="title">
+                      {title}
+                    </Header>
+                  )}
+                  {children}
+                </div>
+              </OffersProvider>
+            </RolesProvider>
+          </ServicesProvider>
         </MessagesProvider>
       </QueryStreamProvider>
     </DamlLedger>

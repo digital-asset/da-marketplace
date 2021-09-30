@@ -2,9 +2,9 @@
 set -eu
 
 # This script ensures that version literals specified in all of the marketplace sub-components
-# match exactly with the canonical version supplied in `dabl-meta.yaml`
+# match exactly with the canonical version supplied in `dit-meta.yaml`
 
-app_version=$(yq r dabl-meta.yaml 'catalog.version')
+app_version=$(yq r dit-meta.yaml 'catalog.version')
 
 # daml.yaml files can't handle full semver versions, keep just the
 # MAJOR.MINOR.PATCH fields for them
@@ -29,15 +29,15 @@ decorate_error () {
 printf "Verifying versions match up with app version: ${green}${app_version}${nc}...\n"
 
 if echo "$app_version" | grep -q '-'; then
-    if cat dabl-meta.yaml | grep -q 'experimental'; then
+    if cat dit-meta.yaml | grep -q 'experimental'; then
         :
     else
-        decorate_error "  Missing the ['experimental'] tag in " dabl-meta.yaml
+        decorate_error "  Missing the ['experimental'] tag in " dit-meta.yaml
         return_code=1
     fi
 else
-    if cat dabl-meta.yaml | grep -q 'experimental'; then
-        decorate_error "  Found an ['experimental'] tag that must be removed in " dabl-meta.yaml
+    if cat dit-meta.yaml | grep -q 'experimental'; then
+        decorate_error "  Found an ['experimental'] tag that must be removed in " dit-meta.yaml
         return_code=1
     fi
 fi
@@ -76,7 +76,7 @@ if [[ exberry_adapter_version -ne 1 ]] ; then
 fi
 
 ui_version=`cat ui/package.json | grep $short_version | wc -l`
-if [[ ui_version -ne 2 ]] ; then
+if [[ ui_version -ne 3 ]] ; then
     decorate_error "  Mismatched version(s) in %s" package.json
     return_code=1
 fi

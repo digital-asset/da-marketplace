@@ -21,3 +21,24 @@ export function preciseInputSteps(precision: number): PreciseInputSteps {
 
   return { step, placeholder };
 }
+
+// Normalize a url with duplicate path separators like
+// `https://something.com:7777/a//b/c////d/e/f` into
+// `https://something.com:7777/a/b/c/d/e/f
+export function safeUrlPath(url: string): string {
+  const u = new URL(url);
+  return `${u.origin}/${u.pathname
+    .split('/')
+    .filter(x => !!x)
+    .join('/')}${u.search}`;
+}
+
+export function cache(options?: { permanent: boolean }) {
+  const store = options?.permanent ? localStorage : sessionStorage;
+
+  return {
+    save: (key: string, value: string) => store.setItem(key, value),
+    remove: (key: string) => store.removeItem(key),
+    load: (key: string) => store.getItem(key),
+  };
+}

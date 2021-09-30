@@ -1,6 +1,10 @@
 import { CreateEvent } from '@daml/ledger';
 import { DropdownItemProps, DropdownProps } from 'semantic-ui-react';
 import { Map, emptyMap } from '@daml/types';
+import React from 'react';
+import { useAdminParty, usePublicParty as useHubPublicParty } from '@daml/hub-react';
+import { deploymentMode, DeploymentMode } from '../config';
+import { cache } from '../util';
 
 export type ServicePageProps<T extends object> = {
   services: Readonly<CreateEvent<T, any, any>[]>;
@@ -53,4 +57,64 @@ export function damlSetValues<T>(damlSet: DamlSet<T>): T[] {
     i = it.next();
   }
   return r;
+}
+
+const PUBLIC_PARTY_ID_KEY = 'default_parties/public_party_id';
+
+export function usePublicParty() {
+  // Cache in localStorage to share across all tabs & restarts
+  const { save, load } = React.useMemo(() => cache({ permanent: true }), []);
+
+  const [publicParty, setPublicParty] = React.useState<string>();
+  const hubPublicParty = useHubPublicParty();
+
+  React.useEffect(() => {
+    const cachedPublicParty = load(PUBLIC_PARTY_ID_KEY);
+    if (cachedPublicParty) {
+      setPublicParty(cachedPublicParty);
+    }
+  }, [load]);
+
+  React.useEffect(() => {
+    if (deploymentMode === DeploymentMode.DEV) {
+      setPublicParty('Public');
+    } else {
+      if (!publicParty && hubPublicParty) {
+        save(PUBLIC_PARTY_ID_KEY, hubPublicParty);
+        setPublicParty(hubPublicParty);
+      }
+    }
+  }, [publicParty, hubPublicParty, save]);
+
+  return publicParty;
+}
+
+const USER_ADMIN_PARTY_ID_KEY = 'default_parties/user_admin_party_id';
+
+export function useOperatorParty() {
+  // Cache in localStorage to share across all tabs & restarts
+  const { save, load } = React.useMemo(() => cache({ permanent: true }), []);
+
+  const [operator, setOperator] = React.useState<string>();
+  const hubAdminParty = useAdminParty();
+
+  React.useEffect(() => {
+    const cachedUserAdmin = load(USER_ADMIN_PARTY_ID_KEY);
+    if (cachedUserAdmin) {
+      setOperator(cachedUserAdmin);
+    }
+  }, [load]);
+
+  React.useEffect(() => {
+    if (deploymentMode === DeploymentMode.DEV) {
+      setOperator('Operator');
+    } else {
+      if (!operator && hubAdminParty) {
+        save(USER_ADMIN_PARTY_ID_KEY, hubAdminParty);
+        setOperator(hubAdminParty);
+      }
+    }
+  }, [operator, hubAdminParty, save]);
+
+  return operator;
 }
