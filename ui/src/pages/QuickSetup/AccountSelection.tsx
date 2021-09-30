@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { damlSetValues, makeDamlSet, createDropdownProp } from '../common';
 import { useStreamQueries } from '../../Main';
@@ -10,7 +10,7 @@ import {
 import { DropdownItemProps, Form, DropdownProps } from 'semantic-ui-react';
 import { useLedger } from '@daml/react';
 import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/';
-import { isHubDeployment, useAccountName, usePartyName } from '../../config';
+import { useAccountName, usePartyName } from '../../config';
 import {
   OpenAccountRequest,
   OpenAllocationAccountRequest,
