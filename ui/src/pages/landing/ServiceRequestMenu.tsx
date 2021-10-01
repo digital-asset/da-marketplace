@@ -22,7 +22,7 @@ import { Request as AuctionRequest } from '@daml.js/da-marketplace/lib/Marketpla
 import { Request as BiddingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
 
 import _ from 'lodash';
-import { Fields, FieldCallbacks } from '../../components/InputDialog/Fields';
+import {Fields, FieldCallbacks, FieldCallback} from '../../components/InputDialog/Fields';
 import { RoleKind, useProvidersByRole } from '../../context/RolesContext';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { usePartyName, useVerifiedParties } from '../../config';
@@ -45,7 +45,13 @@ const ServiceRequestMenu: React.FC<ServicePageProps<Service>> = ({ services }) =
   const [request, setRequest] = useState<ServiceRequest>();
   const [serviceKind, setServiceKind] = useState<ServiceKind>();
   const [openDialog, setOpenDialog] = useState(false);
-  const [fields, setFields] = useState<object>({});
+  const [fields, setFields] = useState<Fields<{ provider: string }>>({
+    provider: {
+      label: 'Provider',
+      type: 'selection',
+      items: [],
+    },
+  });
   const [fieldsFromProvider, setFieldsFromProvider] = useState<FieldCallbacks<Party>>({});
   const [dialogState, setDialogState] = useState<any>({});
   const [requestParams, setRequestParams] = useState<RequestInterface>({
@@ -82,7 +88,7 @@ const ServiceRequestMenu: React.FC<ServicePageProps<Service>> = ({ services }) =
     const provider =
       identities.find(i => i.payload.legalName === dialogState?.provider)?.payload.customer || '';
 
-    const filteredFields: Fields = _.mapValues(fieldsFromProvider, createFieldFn =>
+    const filteredFields = _.mapValues(fieldsFromProvider, createFieldFn =>
       createFieldFn(provider)
     );
 
@@ -96,7 +102,6 @@ const ServiceRequestMenu: React.FC<ServicePageProps<Service>> = ({ services }) =
     service: Template<T, undefined, string>,
     kind: ServiceKind,
     role: RoleKind,
-    extraFields?: Fields,
     fieldsFromProvider?: FieldCallbacks<Party>
   ) => {
     const providerNames = providersByRole.get(role)?.map(p => getName(p.payload.provider)) || [];
@@ -107,7 +112,6 @@ const ServiceRequestMenu: React.FC<ServicePageProps<Service>> = ({ services }) =
         type: 'selection',
         items: providerNames,
       },
-      ...extraFields,
     });
 
     setRequest(service as unknown as Template<ServiceRequestTemplates, undefined, string>);
@@ -139,6 +143,16 @@ const ServiceRequestMenu: React.FC<ServicePageProps<Service>> = ({ services }) =
     );
   }
 
+  const makeAccountFilterField =
+    (label: string): FieldCallback<Party> =>
+      provider => {
+        return {
+          label,
+          type: 'selection',
+          items: accounts.map(a => a.id.label),
+        };
+      };
+
   return (
     <OverflowMenu>
       <OverflowMenuEntry
@@ -167,14 +181,8 @@ const ServiceRequestMenu: React.FC<ServicePageProps<Service>> = ({ services }) =
             ServiceKind.CLEARING,
             RoleKind.CLEARING,
             {
-              clearingAccount: {
-                label: 'Clearing Account',
-                type: 'selection',
-                items: accounts.map(a => a.id.label),
-              },
-            },
-            {}
-          )
+              clearingAccount: makeAccountFilterField('Clearing Account')
+            })
         }
       />
       <OverflowMenuEntry

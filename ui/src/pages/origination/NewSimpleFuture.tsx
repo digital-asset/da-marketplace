@@ -19,6 +19,8 @@ import BackButton from '../../components/Common/BackButton';
 import { IconClose } from '../../icons/icons';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import _ from "lodash";
+import paths from "../../paths";
 
 const NewSimpleFutureComponent: React.FC<RouteComponentProps & ServicePageProps<CustodyService>> =
   ({ services, history }) => {
@@ -30,14 +32,13 @@ const NewSimpleFutureComponent: React.FC<RouteComponentProps & ServicePageProps<
     const [multiplier, setMultiplier] = useState('');
     const [label, setLabel] = useState('');
     const [description, setDescription] = useState('');
-    const [account, setAccount] = useState('');
+    const [registrar, setRegistrar] = useState('');
 
     const ledger = useLedger();
     const party = useParty();
     const issuanceServices = useStreamQueries(IssuanceService).contracts;
     const customerServices = issuanceServices.filter(s => s.payload.customer === party);
     const allAssets = useStreamQueries(AssetDescription).contracts;
-    const accounts = services.map(c => c.payload.account);
 
     const parseDate = (d: Date | null) =>
       (!!d &&
@@ -51,6 +52,10 @@ const NewSimpleFutureComponent: React.FC<RouteComponentProps & ServicePageProps<
       label: '',
       version: '0',
     };
+
+    const registrars = services
+      .filter(s => !_.isEmpty(customerServices.find(i => i.payload.provider === s.payload.provider)))
+      .map(s => s.payload.provider);
 
     const ineqExpiry: Inequality<DamlDate, Id> = {
       tag: 'TimeGte',
@@ -78,17 +83,14 @@ const NewSimpleFutureComponent: React.FC<RouteComponentProps & ServicePageProps<
       render(el.current, data);
     }, [el, claims]);
 
-    const service = customerServices[0];
-    if (!service) return <>No issuance service found</>;
+    if (_.isEmpty(services)) return <>No issuance service found</>;
 
     const requestOrigination = async () => {
-      const safekeepingAccount = accounts.find(
-        a => a.provider === service.payload.provider && a.id.label === account
-      );
-      if (!safekeepingAccount) {
+      const service = customerServices.find(i => i.payload.provider === registrar);
+      if (!service) {
         return displayErrorMessage({
           header: 'Failed to Create Instrument',
-          message: `Couldn't find account from provider ${service.payload.provider} with label ${account}`,
+          message: `Couldn't find Issuance service for registrar ${registrar}`,
         });
       }
       await ledger.exercise(IssuanceService.RequestOrigination, service.contractId, {
@@ -96,9 +98,9 @@ const NewSimpleFutureComponent: React.FC<RouteComponentProps & ServicePageProps<
         description,
         cfi: { code: 'FXXXXX' },
         claims,
-        safekeepingAccount,
         observers: [service.payload.provider, party],
       });
+      history.push(paths.app.instruments.root);
     };
 
     return (
@@ -154,14 +156,13 @@ const NewSimpleFutureComponent: React.FC<RouteComponentProps & ServicePageProps<
           />
 
           <Form.Select
+            label="Registrar"
             className="issue-asset-form-field select-account"
-            placeholder="Safekeeping Account"
-            label="Safekeeping Account"
-            options={accounts.map(c => ({ text: c.id.label, value: c.id.label }))}
-            onChange={(event: React.SyntheticEvent, result: any) => {
-              setAccount(result.value);
-            }}
+            placeholder="Select Registrar..."
+            options={registrars.map(r => ({ text: r, value: r }))}
+            onChange={(_, result: any) => setRegistrar(result.value)}
           />
+
           <div className="submit-form">
             <Button className="ghost" type="submit" content="Request Origination" />
             <Button className="a a2" onClick={() => history.goBack()}>

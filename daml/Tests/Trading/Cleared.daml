@@ -3,7 +3,6 @@ module Tests.Trading.Cleared where
 import Daml.Script
 import Common
 import DA.Assert ((===))
-import DA.Either
 import DA.List (head)
 import Marketplace.Trading.Service qualified as Trading
 import Marketplace.Trading.Model qualified as Order
@@ -69,42 +68,42 @@ clearedTradingTest = do
 
   -- Create orders
   let aliceOrderId = "1"
-  Right (aliceOrderCid, aliceCreateOrderRequestCid, _) <- alice.customer `submit` do
+  aliceOrderCid <- alice.customer `submit` do
     exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with
-        collateral = Order.Cleared clearinghouse
         details = Order.Details with
             id = aliceOrderId
-            receivableAccount = alice.mainAccount
             optExchangeFee = None
             listingId
             asset = tsla with quantity = 200.0
             side = Order.Sell
             timeInForce = Order.GTC
             orderType = Order.Limit with price = 100.0
+            marketType = Order.Cleared clearinghouse
   checkOrderStatusMatches aliceOrderCid alice.customer Order.New
 
   let bobOrderId = "2"
-  Right (bobOrderCid, bobCreateOrderRequestCid, _) <- submitMulti [bob.customer] [public] $ do
+  bobOrderCid <- bob.customer `submit` do
     exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with
-        collateral = Order.Cleared clearinghouse
         details = Order.Details with
             id = bobOrderId
-            receivableAccount = bob.mainAccount
             listingId
             asset = shareAsset
             optExchangeFee = None
             side = Order.Buy
             timeInForce = Order.GTC
             orderType = Order.Limit with price = 100.0
+            marketType = Order.Cleared clearinghouse
   checkOrderStatusMatches bobOrderCid bob.customer Order.New
 
   -- Acknowledge Orders
+  [(aliceCreateOrderRequestCid, _)] <- query @Trading.CreateOrderRequest alice.customer
   aliceOrderCid <- exchange `submit` do
     exerciseCmd alice.tradingServiceCid Trading.AcknowledgeOrderRequest with
         createOrderRequestCid = aliceCreateOrderRequestCid
         providerOrderId = "alice's exchange order id"
   checkOrderStatusMatches aliceOrderCid alice.customer Order.PendingExecution
 
+  [(bobCreateOrderRequestCid, _)] <- query @Trading.CreateOrderRequest bob.customer
   bobOrderCid <- exchange `submit` do
     exerciseCmd bob.tradingServiceCid Trading.AcknowledgeOrderRequest with
         createOrderRequestCid = bobCreateOrderRequestCid
@@ -142,37 +141,35 @@ clearedTradingTest = do
 
   -- !! Bob is in bad standing, so the new order should fail
   let bobOrderId2 = "3"
-  bobOrderResult <- bob.customer `submit` do
+  bobOrderCid <- bob.customer `submit` do
     exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with
-        collateral = Order.Cleared clearinghouse
         details = Order.Details with
             id = bobOrderId2
-            receivableAccount = bob.mainAccount
             listingId
             asset = shareAsset
             optExchangeFee = None
             side = Order.Buy
             timeInForce = Order.GTC
             orderType = Order.Limit with price = 100.0
-  assert $ isLeft bobOrderResult
+            marketType = Order.Cleared clearinghouse
+  Some (Order.Order{status = Order.Rejected _}) <- queryContractId bob.customer bobOrderCid
 
   -- Terminate Charlie's relationship with the clearing house for further testing
   submit charlie.customer $ exerciseCmd charlie.clearingServiceCid Clearing.Terminate with ctrl = charlie.customer
 
   -- !! Charlie is not a member of the clearinghouse, so Charlie should not be able to place an order
   let charlieOrderId = "4"
-  charlieOrderResult <- charlie.customer `submit` do
+  charlieOrderCid <- charlie.customer `submit` do
     exerciseCmd charlie.tradingServiceCid Trading.RequestCreateOrder with
-        collateral = Order.Cleared clearinghouse
         details = Order.Details with
             id = charlieOrderId
-            receivableAccount = charlie.mainAccount
             listingId
             asset = shareAsset
             optExchangeFee = None
             side = Order.Buy
             timeInForce = Order.GTC
             orderType = Order.Limit with price = 100.0
-  assert $ isLeft charlieOrderResult
+            marketType = Order.Cleared clearinghouse
+  Some (Order.Order{status = Order.Rejected _}) <- queryContractId charlie.customer charlieOrderCid
 
   return ()

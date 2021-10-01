@@ -65,12 +65,15 @@ template Confirmation
           -- TODO: Check that price matches limit order price, quantity is less than order qty, rounding, etc
           -- paymentCurrencyId <- (.quotedAssetId) . snd <$> fetchByKey @Listing (operator, provider, buyOrder.details.symbol)
 
-          details <- concat <$> forA [(buyOrder, sellOrder.details.receivableAccount), (sellOrder, buyOrder.details.receivableAccount)] (\(order, counterPartyAccount) -> do
+          let (Order.Collateralized _ buyerReceivableAccount) = buyOrder.details.marketType
+              (Order.Collateralized _ sellerReceivableAccount) = sellOrder.details.marketType
+
+          details <- concat <$> forA [(buyOrder, sellerReceivableAccount), (sellOrder, buyerReceivableAccount)] (\(order, counterPartyAccount) -> do
             let
               isPartialFill = execution.quantity < order.remainingQuantity
               executions = execution :: order.executions
               remainingQuantity = order.remainingQuantity - execution.quantity
-              (Order.Collateral depositCid) = order.collateral
+              (Order.Collateralized depositCid _) = order.details.marketType
               quantities = [case order.details.side of
                 Order.Buy  -> execution.quantity * execution.price
                 Order.Sell -> execution.quantity]
@@ -93,11 +96,15 @@ template Confirmation
                     feeDetails <- createFeeDetails feeDepositCid
                     return $ (Some remainingFeeDepositCid, Some feeDetails)
 
-                (depositCid :: depositRemainingCid :: _) <- exercise depositCid AssetDeposit_Split with quantities
+                (depositCid :: depositRemainingCid :: _) <- exercise depositCid $ AssetDeposit_Split with quantities
+
                 create order with
-                  executions, remainingQuantity
-                  collateral = Order.Collateral depositRemainingCid, status = Order.PartiallyExecuted
-                  details = order.details with optExchangeFee = newOptExchangeFee
+                    executions
+                    remainingQuantity
+                    status = Order.PartiallyExecuted
+                    details = order.details with
+                        optExchangeFee = newOptExchangeFee
+                        marketType = order.details.marketType with depositCid = depositRemainingCid
                 pure (depositCid, feeDetails)
               else do
                 optFeeDetails <- case order.details.optExchangeFee of
@@ -110,8 +117,10 @@ template Confirmation
                   [] -> pure depositCid
 
                 create order with
-                  executions, remainingQuantity
-                  status = Order.FullyExecuted, details = order.details with optExchangeFee = None
+                    executions
+                    remainingQuantity
+                    status = Order.FullyExecuted
+                    details = order.details with optExchangeFee = None
                 pure (depositCid, optFeeDetails)
 
             senderAccount <- (.account) <$> fetch depositCid

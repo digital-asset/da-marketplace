@@ -1,13 +1,11 @@
 module Tests.Bond where
 -- ^ This module tests the full lifecycle of a binary option
 
-import Common (allocateParties, Parties(..), Customer, Providers, onboardProviders, onboardCustomer)
+import Common (allocateParties, Parties(..), Customer, Providers, onboardProviders, onboardCustomer, Assets(..), onboardAssets)
 import ContingentClaims.Claim (serialize)
 import DA.Date (date, Month(Jan, Oct))
-import DA.Finance.Types (Id(..), Asset(..))
 import DA.Finance.Asset (AssetDeposit, AssetDeposit_Transfer(..))
 import Daml.Script
-import DA.Set qualified as Set
 import DA.Map qualified as Map
 import Marketplace.Issuance.Service (RequestOrigination(..), Originate(..), RequestCreateIssuance(..), CreateIssuance(..))
 import Marketplace.Custody.Service (Service, RequestLifecycle(..), Lifecycle(..), RequestDeposit(..), Deposit(..))
@@ -18,8 +16,6 @@ import Tests.Utils (bond)
 import DA.Time (time)
 import DA.Assert
 
-usd = "USD"
-
 testBond = script do
   let date1 = date 2001 Jan 1
       date2 = date 2002 Oct 31
@@ -27,7 +23,7 @@ testBond = script do
       coupon = 0.1
       couponPayout = notional * coupon
       usdAmount = 3000.0
-  (alice, providers, bob, bondCid, bobsDesc, custodyServiceCid, corpActDepositCid) <-
+  (alice, providers, bob, bondCid, bobsDesc, custodyServiceCid, corpActDepositCid, usdAssetLabel) <-
     requestExerciseBond usdAmount notional coupon [date1, date2]
 
   -- First lifecycle
@@ -48,9 +44,9 @@ testBond = script do
 
   [(_, bobsOption)] <- queryFilter @AssetDeposit bob.customer (\c -> c.asset.id.label == "BondLabel")
   bobsOption.asset.id.version === 1
-  [(_, bobsMoney)] <- getMoneyAssetsFor bob.customer
+  [(_, bobsMoney)] <- getMoneyAssetsFor bob.customer usdAssetLabel
   bobsMoney.asset.quantity === couponPayout
-  [(corpActDepositCid, alicesMoney)] <- getMoneyAssetsFor alice
+  [(corpActDepositCid, alicesMoney)] <- getMoneyAssetsFor alice usdAssetLabel
   alicesMoney.asset.quantity === usdAmount - couponPayout
 
   -- Second lifecycle
@@ -72,36 +68,32 @@ testBond = script do
 
   [(_, bobsOption)] <- queryFilter @AssetDeposit bob.customer (\c -> c.asset.id.label == "BondLabel")
   bobsOption.asset.id.version === 2
-  bobsMoneyWithCids <- getMoneyAssetsFor bob.customer
+  bobsMoneyWithCids <- getMoneyAssetsFor bob.customer usdAssetLabel
   sum (map (\(_, money) -> money.asset.quantity) bobsMoneyWithCids)
     === couponPayout + notional + couponPayout
-  [(_, alicesMoney)] <- getMoneyAssetsFor alice
+  [(_, alicesMoney)] <- getMoneyAssetsFor alice usdAssetLabel
   alicesMoney.asset.quantity === usdAmount - couponPayout - notional - couponPayout
 
-getMoneyAssetsFor : Party -> Script [(ContractId AssetDeposit, AssetDeposit)]
-getMoneyAssetsFor party =
-  queryFilter @AssetDeposit party (\c -> c.asset.id.label == usd)
+getMoneyAssetsFor : Party -> Text -> Script [(ContractId AssetDeposit, AssetDeposit)]
+getMoneyAssetsFor party usdAssetLabel =
+  queryFilter @AssetDeposit party (\c -> c.asset.id.label == usdAssetLabel)
 
-requestExerciseBond: Decimal -> Decimal -> Decimal -> [Date] -> Script (Party, Providers, Customer, ContractId AssetDeposit, AssetDescription, ContractId Service, ContractId AssetDeposit)
+requestExerciseBond: Decimal -> Decimal -> Decimal -> [Date] -> Script (Party, Providers, Customer, ContractId AssetDeposit, AssetDescription, ContractId Service, ContractId AssetDeposit, Text)
 requestExerciseBond usdAmount notional coupon dates = script do
   parties@Parties{..} <- allocateParties
   providers <- onboardProviders parties
 
-  let usdId = Id with
-                signatories = Set.singleton providers.bank
-                label = usd
-                version = 0
-      usdAsset = Asset with id = usdId, quantity = usdAmount
-
   alice <- onboardCustomer providers "Alice" alice
   bob <- onboardCustomer providers "Bob" bob
+  issuer <- onboardCustomer providers "Issuer" issuer
+
+  Assets{usd; tsla} <- onboardAssets providers issuer
 
   -- Alice originates the bond
-  let boClaims = bond usdId notional coupon dates
+  let boClaims = bond usd.id notional coupon dates
   origReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid RequestOrigination with
       assetLabel = "BondLabel"
       description = "TestBond"
-      safekeepingAccount = alice.mainAccount
       claims = serialize boClaims
       cfi = CFI.bond
       observers = []
@@ -121,9 +113,8 @@ requestExerciseBond usdAmount notional coupon dates = script do
 
   -- The issuer, Alice, must deposit the payout in the safekeeping account
   corpActReqCid <- submit alice.customer $ exerciseCmd alice.custodyServiceCid RequestDeposit with
-    asset = usdAsset
-    observers = Set.empty
+    asset = usd with quantity = usdAmount
   corpActDepositCid <- submit providers.bank $ exerciseCmd alice.custodyServiceCid Deposit with
     depositRequestCid = corpActReqCid
 
-  return (alice.customer, providers, bob, bondCid, optionDesc, alice.custodyServiceCid, corpActDepositCid)
+  return (alice.customer, providers, bob, bondCid, optionDesc, alice.custodyServiceCid, corpActDepositCid, usd.id.label)

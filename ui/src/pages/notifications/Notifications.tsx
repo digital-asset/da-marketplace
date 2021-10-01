@@ -73,7 +73,7 @@ import {
 
 import {
   DepositRequest,
-  WithdrawlRequest,
+  WithdrawalRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
 
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
@@ -136,7 +136,7 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
   const biddingServiceRequests = useStreamQueries(BiddingServiceRequest);
 
   const depositRequests = useStreamQueries(DepositRequest).contracts;
-  const withdrawlRequests = useStreamQueries(WithdrawlRequest).contracts;
+  const withdrawalRequests = useStreamQueries(WithdrawalRequest).contracts;
   const assetDeposits = useStreamQueries(AssetDeposit).contracts;
   const auctionRequests = useStreamQueries(CreateAuctionRequest).contracts;
 
@@ -146,8 +146,8 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
     [...depositRequests],
     c => party === c.payload.provider
   );
-  const [inboundWithdrawlRequests, outboundWithdrawlRequests] = _.partition(
-    [...withdrawlRequests],
+  const [inboundWithdrawalRequests, outboundWithdrawalRequests] = _.partition(
+    [...withdrawalRequests],
     c => party === c.payload.provider
   );
   const [inboundAuctionRequests, outboundAuctionRequests] = _.partition(
@@ -162,7 +162,7 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
   const accountNames = accounts.map(a => a.id.label);
 
   const getDebitDepositDetail = (
-    c: CreateEvent<WithdrawlRequest>,
+    c: CreateEvent<WithdrawalRequest>,
     extract: (deposit: AssetDeposit) => string
   ): string => {
     const deposit = assetDeposits.find(a => a.contractId === c.payload.depositCid);
@@ -628,9 +628,9 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
     {
       kind: 'Pending',
       tag: 'pending',
-      getCustomDescription: c => `Request to withdraw 
+      getCustomDescription: c => `Request to withdraw
         is pending approval from ${getName(c.payload.provider)}.`,
-      contracts: outboundWithdrawlRequests,
+      contracts: outboundWithdrawalRequests,
     },
     {
       kind: 'Pending',
@@ -658,15 +658,15 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
     {
       kind: 'Process',
       tag: 'process',
-      processChoice: CustodyService.Withdrawl as ProcessRequestChoice,
-      contracts: inboundWithdrawlRequests,
+      processChoice: CustodyService.Withdrawal as ProcessRequestChoice,
+      contracts: inboundWithdrawalRequests,
       requiredService: ServiceKind.CUSTODY,
       getCustomDescription: c =>
         `Request from ${getName(c.payload.customer)} to withdraw asset :
         ${getDebitDepositDetail(c, d => d.asset.quantity)}
         ${getDebitDepositDetail(c, d => d.asset.id.label)}`,
       getCustomArgs: c => {
-        return { withdrawlRequestCid: c.contractId };
+        return { withdrawalRequestCid: c.contractId };
       },
     },
     {

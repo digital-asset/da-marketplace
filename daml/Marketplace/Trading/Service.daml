@@ -14,10 +14,6 @@ import Marketplace.Utils
 
 type T = Service
 
-whenCollateral : Order.TradeCollateral -> (ContractId AssetDeposit -> Update (ContractId AssetDeposit)) -> Update Order.TradeCollateral
-whenCollateral (Order.Cleared x) _ = return $ Order.Cleared x
-whenCollateral (Order.Collateral depositCid) fn = Order.Collateral <$> fn depositCid
-
 template Service
   with
     operator : Party
@@ -30,16 +26,16 @@ template Service
     maintainer key._1
 
     let
-      unlockCollateral : Order.TradeCollateral -> Update Order.TradeCollateral
+      unlockDeposit : ContractId AssetDeposit -> Update ()
+      unlockDeposit = \depositCid -> exercise depositCid AssetDeposit_Unlock >> pure ()
+      unlockCollateral : Order.MarketType -> Update ()
       unlockCollateral = \case
-        Order.Cleared party         -> return $ Order.Cleared party
-        Order.Collateral depositCid -> Order.Collateral <$> exercise depositCid AssetDeposit_Unlock
+        Order.Collateralized depositCid _ -> unlockDeposit depositCid
+        _ -> pure ()
 
     controller customer can
-      nonconsuming RequestCreateOrder : Either (ContractId Order.T)
-                                               (ContractId Order.T, ContractId CreateOrderRequest, Order.TradeCollateral)
+      nonconsuming RequestCreateOrder : ContractId Order.T
         with
-          collateral : Order.TradeCollateral
           details : Order.Details
         do
           createdAt <- getTime
@@ -48,6 +44,8 @@ template Service
             status = Order.New
             providerOrderId = None
             executions = []
+            observers = Set.empty
+            collateral = None
             remainingQuantity = details.asset.quantity
             detailsWithDepositedFees : Update Order.Details
             detailsWithDepositedFees = case details.optExchangeFee of
@@ -55,37 +53,33 @@ template Service
                 newDepositCid <- exercise feeDepositCid AssetDeposit_Lock with newLockers = Set.fromList [ provider ]
                 return details with optExchangeFee = Some newDepositCid
               None -> return details
+            rejectOrder : Text -> Text -> Update (ContractId Order.T)
+            rejectOrder = \code message -> do
+              let reason = Error with ..
+              create Order.Order with status = Order.Rejected{reason}; ..
 
-          case collateral of
-            (Order.Collateral depositCid) -> do
-                lookupByKey @Custody.Service (operator, details.receivableAccount.provider, customer) >>= \case -- TODO: BDW - review this test
-                  None -> do
-                    let reason = Error with code = "3003"; message = "Customer does not have a custodial relationship with the custodian of the quoted asset"
-                    Left <$> create Order.Order with status = Order.Rejected{reason}; ..
-                  Some _ -> do
-                    details <- detailsWithDepositedFees
-                    collateral <- Order.Collateral <$> exercise depositCid AssetDeposit_Lock with newLockers = Set.fromList [ provider ]
-                    createOrderRequestCid <- create CreateOrderRequest with ..
-                    orderCid <- create Order.Order with ..
+          case details.marketType of
+            Order.Collateralized depositCid receivableAccount ->
+              lookupByKey @Custody.Service (operator, receivableAccount.provider, customer) >>= \case
+                None   -> rejectOrder "3003" "Customer does not have a custodial relationship with the custodian of the asset to be delivered"
+                Some _ -> do
+                  lockedDepositCid <- exercise depositCid AssetDeposit_Lock with newLockers = Set.fromList [ provider ]
+                  details <- (\details -> details with marketType = details.marketType with depositCid = lockedDepositCid) <$> detailsWithDepositedFees
 
-                    return $ Right (orderCid, createOrderRequestCid, collateral)
+                  create CreateOrderRequest with ..
+                  create Order.Order with ..
 
-            (Order.Cleared clearinghouse) -> do
-              optClearingService <- lookupByKey @Clearing.Service (operator,clearinghouse,customer)
-              case optClearingService of
-                None -> do
-                  let reason = Error with code = "3001"; message = "Customer is not a member of clearinghouse"
-                  Left <$> create Order.Order with status = Order.Rejected{reason}; ..
-
-                (Some serviceCid) -> exercise serviceCid Clearing.ApproveTrade >>= \case
+            (Order.Cleared clearinghouse) ->
+              lookupByKey @Clearing.Service (operator,clearinghouse,customer) >>= \case
+                None            -> rejectOrder "3001" "Customer is not a member of clearinghouse"
+                Some serviceCid -> exercise serviceCid Clearing.ApproveTrade >>= \case
                     True -> do
-                        details <- detailsWithDepositedFees
-                        createOrderRequestCid <- create CreateOrderRequest with ..
-                        orderCid <- create Order.Order with ..
-                        return $ Right (orderCid, createOrderRequestCid, collateral)
+                      details <- detailsWithDepositedFees
+
+                      create CreateOrderRequest with ..
+                      create Order.Order with ..
                     False -> do
-                      let reason = Error with code = "3002"; message = "Rejected by Clearinghouse"
-                      Left <$> create Order.Order with status = Order.Rejected{reason}; ..
+                      rejectOrder "3002" "Rejected by Clearinghouse"
 
       nonconsuming RequestCancelOrder : (ContractId Order.T, ContractId CancelOrderRequest)
         with
@@ -115,24 +109,23 @@ template Service
               create order with status = Order.PendingExecution; providerOrderId = Some providerOrderId
             _ -> return orderCid
 
-      nonconsuming RejectOrderRequest : (ContractId Order.T, Order.TradeCollateral)
+      nonconsuming RejectOrderRequest : ContractId Order.T
         with
           createOrderRequestCid : ContractId CreateOrderRequest
           errorCode : Int
           errorMessage : Text
         do
-          CreateOrderRequest{details, collateral} <- fetch createOrderRequestCid
+          CreateOrderRequest{details} <- fetch createOrderRequestCid
           (orderCid, order) <- fetchByKey (provider, details.id)
           archive orderCid
 
+          unlockCollateral order.details.marketType
+          whenSome details.optExchangeFee \depositCid -> unlockDeposit depositCid
           let reason = Error with code = show errorCode; message = errorMessage
-          orderCid <- create order with status = Order.Rejected with reason
-          collateral <- unlockCollateral collateral
-          whenSome details.optExchangeFee \depositCid -> exercise depositCid AssetDeposit_Unlock >> pure ()
 
-          return (orderCid, collateral)
+          create order with status = Order.Rejected with reason
 
-      nonconsuming MarketOrderCancelRequest : (ContractId Order.T, Order.TradeCollateral)
+      nonconsuming MarketOrderCancelRequest : ContractId Order.T
         with
           createOrderRequestCid : ContractId CreateOrderRequest
           providerOrderId : Text
@@ -148,13 +141,12 @@ template Service
           if isMarketOrder && isFullCancellation && isWaitingExecution
             then do
               sequence_ [archive orderCid, archive createOrderRequestCid]
-              orderCid <- create order with status = Order.Cancelled, providerOrderId = Some providerOrderId
-              collateral <- unlockCollateral order.collateral
+              unlockCollateral order.details.marketType
 
-              return (orderCid, collateral)
-            else return (orderCid, order.collateral)
+              create order with status = Order.Cancelled, providerOrderId = Some providerOrderId
+            else pure orderCid
 
-      nonconsuming CancelOrder : (ContractId Order.T, Order.TradeCollateral)
+      nonconsuming CancelOrder : ContractId Order.T
         with
           cancelOrderRequestCid : ContractId CancelOrderRequest
         do
@@ -162,11 +154,10 @@ template Service
           (orderCid, order@Order.Order{..}) <- fetchByKey (provider, details.id)
           archive orderCid
 
-          orderCid <- create order with status = Order.Cancelled
-          collateral <- unlockCollateral order.collateral
-          whenSome details.optExchangeFee \depositCid -> exercise depositCid AssetDeposit_Unlock >> pure ()
+          unlockCollateral order.details.marketType
+          whenSome details.optExchangeFee \depositCid -> unlockDeposit depositCid
 
-          return (orderCid, collateral)
+          create order with status = Order.Cancelled
 
       nonconsuming RejectCancellation : ContractId Order.T
         with
@@ -244,7 +235,6 @@ template CreateOrderRequest
     customer : Party
     operator : Party
     details : Order.Details
-    collateral : Order.TradeCollateral
   where
     signatory provider, customer
 
@@ -260,14 +250,14 @@ template CreateOrderRequest
         do
           exerciseByKey @Service serviceKey AcknowledgeOrderRequest with createOrderRequestCid = self, ..
 
-      nonconsuming RejectRequest : (ContractId Order.T, Order.TradeCollateral)
+      nonconsuming RejectRequest : ContractId Order.T
         with
           errorCode : Int
           errorMessage : Text
         do
           exerciseByKey @Service serviceKey RejectOrderRequest with createOrderRequestCid = self, ..
 
-      nonconsuming CancelRequest : (ContractId Order.T, Order.TradeCollateral)
+      nonconsuming CancelRequest : ContractId Order.T
         with
           providerOrderId : Text
           cancelledQuantity : Decimal
@@ -289,7 +279,7 @@ template CancelOrderRequest
     let serviceKey = (operator, provider, customer)
 
     controller provider can
-      nonconsuming AcknowledgeCancel : (ContractId Order.T, Order.TradeCollateral)
+      nonconsuming AcknowledgeCancel : ContractId Order.T
         do
           exerciseByKey @Service serviceKey CancelOrder with cancelOrderRequestCid = self
 

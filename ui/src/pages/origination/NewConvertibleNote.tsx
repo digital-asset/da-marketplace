@@ -18,6 +18,8 @@ import { makeDamlSet, ServicePageProps } from '../common';
 import BackButton from '../../components/Common/BackButton';
 import { IconClose } from '../../icons/icons';
 import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import _ from "lodash";
+import paths from "../../paths";
 
 const NewConvertibleNoteComponent: React.FC<
   RouteComponentProps & ServicePageProps<CustodyService>
@@ -33,7 +35,7 @@ const NewConvertibleNoteComponent: React.FC<
   const [maturity, setMaturity] = useState<Date | null>(null);
   const [label, setLabel] = useState('');
   const [description, setDescription] = useState('');
-  const [account, setAccount] = useState('');
+  const [registrar, setRegistrar] = useState('');
 
   const ledger = useLedger();
   const party = useParty();
@@ -43,7 +45,6 @@ const NewConvertibleNoteComponent: React.FC<
   const assets = allAssets.filter(
     c => c.payload.claims.tag === 'Zero' && c.payload.assetId.version === '0'
   );
-  const accounts = services.map(s => s.payload.account);
   const ccy = assets.find(c => c.payload.assetId.label === currency);
   const ccyId: Id = ccy?.payload.assetId || {
     signatories: makeDamlSet<string>([]),
@@ -56,6 +57,9 @@ const NewConvertibleNoteComponent: React.FC<
     label: '',
     version: '0',
   };
+  const registrars = services
+    .filter(s => !_.isEmpty(customerServices.find(i => i.payload.provider === s.payload.provider)))
+    .map(s => s.payload.provider);
 
   const parseDate = (d: Date | null) =>
     (!!d &&
@@ -118,16 +122,13 @@ const NewConvertibleNoteComponent: React.FC<
     render(el.current, data);
   }, [el, claims]);
 
-  const service = customerServices[0];
-  if (!service) return <></>;
+  if (_.isEmpty(customerServices)) return <></>;
 
   const requestOrigination = async () => {
-    const safekeepingAccount = accounts.find(
-      a => a.provider === service.payload.provider && a.id.label === account
-    );
-    if (!safekeepingAccount) {
+    const service = customerServices.find(i => i.payload.provider === registrar);
+    if (!service) {
       console.log(
-        `Couldn't find account from provider ${service.payload.provider} with label ${account}`
+        `Couldn't find issuance service for selected registrar ${registrar}`
       );
       return;
     }
@@ -136,9 +137,9 @@ const NewConvertibleNoteComponent: React.FC<
       description,
       cfi: { code: 'ECXXXX' },
       claims,
-      safekeepingAccount,
       observers: [service.payload.provider, party],
     });
+    history.push(paths.app.instruments.root);
   };
 
   return (
@@ -240,14 +241,13 @@ const NewConvertibleNoteComponent: React.FC<
         />
 
         <Form.Select
+          label="Registrar"
           className="issue-asset-form-field select-account"
-          placeholder="Safekeeping Account"
-          label="Safekeeping Account"
-          options={accounts.map(c => ({ text: c.id.label, value: c.id.label }))}
-          onChange={(event: React.SyntheticEvent, result: any) => {
-            setAccount(result.value);
-          }}
+          placeholder="Select Registrar..."
+          options={registrars.map(r => ({ text: r, value: r }))}
+          onChange={(_, result: any) => setRegistrar(result.value)}
         />
+
         <div className="submit-form">
           <Button className="ghost" type="submit" content="Request Origination" />
           <Button className="a a2" onClick={() => history.goBack()}>

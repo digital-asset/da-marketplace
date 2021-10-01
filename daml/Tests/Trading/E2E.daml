@@ -59,34 +59,34 @@ tradingEndToEndTest = do
 
   -- Create orders
   let aliceOrderId = "1"
-  Right (aliceOrderCid, aliceCreateOrderRequestCid, aliceAssetDepositCid) <- alice.customer `submit` do
+  aliceOrderCid <- submitMulti [alice.customer] [public] do
     exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with
-        collateral = Order.Collateral aliceDepositCid
         details = Order.Details with
             id = aliceOrderId
-            receivableAccount = alice.mainAccount
             listingId
             asset = tsla with quantity = 200.0
             side = Order.Sell
             timeInForce = Order.GTC
             optExchangeFee = None
             orderType = Order.Limit with price = 100.0
+            marketType = Order.Collateralized aliceDepositCid alice.mainAccount
   checkOrderStatusMatches aliceOrderCid alice.customer Order.New
 
   let bobOrderId = "2"
-  Right (bobOrderCid, bobCreateOrderRequestCid, bobAssetDepositCid) <- bob.customer `submit` do
+  bobOrderCid <- bob.customer `submit` do
     exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with
-        collateral = Order.Collateral bobDepositCid
         details = Order.Details with
             id = bobOrderId
-            receivableAccount = bob.mainAccount
             listingId
             asset = shareAsset
             side = Order.Buy
             optExchangeFee = None
             timeInForce = Order.GTC
             orderType = Order.Limit with price = 100.0
+            marketType = Order.Collateralized bobDepositCid bob.mainAccount
   checkOrderStatusMatches bobOrderCid bob.customer Order.New
+
+  [(aliceCreateOrderRequestCid, _)] <- query @Trading.CreateOrderRequest alice.customer
 
   -- Acknowledge Orders
   aliceOrderCid <- exchange `submit` do
@@ -94,6 +94,8 @@ tradingEndToEndTest = do
         createOrderRequestCid = aliceCreateOrderRequestCid
         providerOrderId = "alice's exchange order id"
   checkOrderStatusMatches aliceOrderCid alice.customer Order.PendingExecution
+
+  [(bobCreateOrderRequestCid, _)] <- query @Trading.CreateOrderRequest bob.customer
 
   bobOrderCid <- exchange `submit` do
     exerciseCmd bob.tradingServiceCid Trading.AcknowledgeOrderRequest with

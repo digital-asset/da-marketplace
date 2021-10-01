@@ -5,7 +5,7 @@ import DA.Finance.Types
 import DA.Finance.Utils (fetchAndArchive)
 import DA.Map (Map)
 import DA.Set
-import Marketplace.Issuance.AssetDescription (Claims)
+import Marketplace.Issuance.AssetDescription (Claims, AssetDescription(..))
 import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Settlement.Model (SettlementInstruction)
 import Marketplace.Utils
@@ -26,15 +26,14 @@ template Service
       nonconsuming RequestDeposit : ContractId Custody.DepositRequest
         with
           asset : Asset
-          observers : Set Party
         do
           create Custody.DepositRequest with ..
 
-      nonconsuming RequestWithdrawl : ContractId Custody.WithdrawlRequest
+      nonconsuming RequestWithdrawal : ContractId Custody.WithdrawalRequest
         with
           depositCid : ContractId AssetDeposit
         do
-          create Custody.WithdrawlRequest with ..
+          create Custody.WithdrawalRequest with ..
 
       nonconsuming RequestLifecycle: ContractId Custody.LifecycleRequest
         with
@@ -49,14 +48,16 @@ template Service
         with
           depositRequestCid : ContractId Custody.DepositRequest
         do
-          Custody.DepositRequest{asset, observers} <- fetchAndArchive depositRequestCid
-          create AssetDeposit with lockers = empty; ..
+          Custody.DepositRequest{asset} <- fetchAndArchive depositRequestCid
+          (_, AssetDescription{registrar}) <- fetchByKey @AssetDescription asset.id
 
-      nonconsuming Withdrawl : ()
+          create AssetDeposit with asset; account; lockers = empty; observers = fromList [ registrar ]
+
+      nonconsuming Withdrawal : ()
         with
-          withdrawlRequestCid : ContractId Custody.WithdrawlRequest
+          withdrawalRequestCid : ContractId Custody.WithdrawalRequest
         do
-          Custody.WithdrawlRequest{depositCid} <- fetchAndArchive withdrawlRequestCid
+          Custody.WithdrawalRequest{depositCid} <- fetchAndArchive withdrawalRequestCid
           archive depositCid
 
       nonconsuming Lifecycle : (ContractId AssetDeposit, [ContractId SettlementInstruction])

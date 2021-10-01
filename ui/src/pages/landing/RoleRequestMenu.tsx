@@ -57,7 +57,13 @@ const RoleRequestMenu: React.FC<ServicePageProps<CustodyService>> = ({ services 
   const [request, setRequest] = useState<RoleRequest>();
   const [roleKind, setRoleKind] = useState<RoleKind>();
   const [openDialog, setOpenDialog] = useState(false);
-  const [fields, setFields] = useState<Fields>({});
+  const [fields, setFields] = useState<Fields<{ operator: string }>>({
+    operator: {
+      label: 'Operator',
+      type: 'selection',
+      items: [],
+    },
+  });
   const [dialogState, setDialogState] = useState<any>({});
   const [requestParams, setRequestParams] = useState<RequestInterface>({
     operator: '',
@@ -93,7 +99,7 @@ const RoleRequestMenu: React.FC<ServicePageProps<CustodyService>> = ({ services 
   const requestRole = <T extends RoleRequestTemplates>(
     role: Template<T, undefined, string>,
     kind: RoleKind,
-    extraFields?: Fields
+    extraFields?: Fields<{ ccpAccount?: string }>
   ) => {
     setFields({
       operator: {

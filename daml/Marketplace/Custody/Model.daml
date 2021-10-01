@@ -1,6 +1,6 @@
 module Marketplace.Custody.Model (
     DepositRequest (..)
-  , WithdrawlRequest (..)
+  , WithdrawalRequest (..)
   , LifecycleRequest(..)
   , Process(..)
 ) where
@@ -26,11 +26,10 @@ template DepositRequest
     provider : Party
     customer : Party
     asset : Asset
-    observers : Set Party
   where
     signatory operator, provider, customer
 
-template WithdrawlRequest
+template WithdrawalRequest
   with
     operator : Party
     provider : Party
@@ -61,6 +60,7 @@ template LifecycleRequest
           t <- toDateUTC <$> getTime
           assetDeposit <- fetch assetDepositCid
           (_, description) <- fetchByKey @AssetDescription assetDeposit.asset.id
+          (AssetDeposit{account = safekeepingAccount}) <- fetch safekeepingDepositCid
           (versionsCid, versions) <- fetchByKey @AssetDescription.Index (fromList . signatory $ description, assetDeposit.asset.id.label)
           let spot : Text -> Date -> Update Decimal
               spot label dt = pure $ fromSomeNote
@@ -79,18 +79,18 @@ template LifecycleRequest
           splitResultDeposits <- exercise safekeepingDepositCid AssetDeposit_Split with quantities = payoutSplitQuantities
           let payoutCids = init splitResultDeposits
               masterAgreementSignatories = [provider, customer, investor]
-          payoutInstructions <- createPayoutInstructions payoutCids uniquePayoutId description assetDeposit operator provider
+          payoutInstructions <- createPayoutInstructions payoutCids uniquePayoutId safekeepingAccount assetDeposit operator provider
           assetDepositCid' <- create assetDeposit with asset = (assetDeposit.asset with id = (assetDeposit.asset.id with version = postAssetVersion))
           archive assetDepositCid
           return (assetDepositCid', payoutInstructions)
 
-createPayoutInstructions : [ContractId AssetDeposit] -> Text -> AssetDescription -> AssetDeposit -> Party -> Party -> Update [ContractId SettlementInstruction]
-createPayoutInstructions payoutCids uniqueId assetDescription assetDeposit operator provider =
+createPayoutInstructions : [ContractId AssetDeposit] -> Text -> Account -> AssetDeposit -> Party -> Party -> Update [ContractId SettlementInstruction]
+createPayoutInstructions payoutCids uniqueId safekeepingAccount assetDeposit operator provider =
     snd <$> foldlA createSI (1, []) payoutCids
   where
     createSettlementDetails payoutDepositCid =
       SettlementDetails with
-        senderAccount = assetDescription.safekeepingAccount
+        senderAccount = safekeepingAccount
         receiverAccount = assetDeposit.account
         depositCid = payoutDepositCid
     createSI (index, accumulator) payoutDepositCid = do

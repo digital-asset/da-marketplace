@@ -14,6 +14,7 @@ import Tile from '../../components/Tile/Tile';
 import BackButton from '../../components/Common/BackButton';
 import paths from '../../paths';
 import { EyeClosed, EyeOpen } from '../../icons/icons';
+import _ from "lodash";
 
 type Props = {
   issuanceServices: Readonly<CreateEvent<IssuanceService, any, any>[]>;
@@ -29,23 +30,23 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
 
   const [showAsset, setShowAsset] = useState(false);
   const [assetLabel, setAssetLabel] = useState('');
-  const [accountLabel, setAccountLabel] = useState('');
   const [issuanceId, setIssuanceId] = useState('');
   const [quantity, setQuantity] = useState('');
 
   const ledger = useLedger();
   const party = useParty();
   const customerServices = issuanceServices.filter(s => s.payload.customer === party);
+  const registrars = custodyServices
+    .filter(s => !_.isEmpty(customerServices.find(i => i.payload.provider === s.payload.provider)))
+    .map(s => s.payload.provider);
   const allAssets = useStreamQueries(AssetDescription).contracts;
-  const assets = allAssets.filter(
-    c => c.payload.issuer === party && c.payload.assetId.version === '0'
+  const assets = allAssets.filter(c => c.payload.issuer === party
+    && c.payload.assetId.version === '0'
+    && registrars.includes(c.payload.registrar)
   );
   const asset = assets.find(c => c.payload.assetId.label === assetLabel);
-  const accounts = custodyServices.map(c => c.payload.account);
-  const account = accounts.find(a => a.id.label === accountLabel);
 
-  const canRequest =
-    !!assetLabel && !!asset && !!accountLabel && !!account && !!issuanceId && !!quantity;
+  const canRequest = !!assetLabel && !!asset && !!issuanceId && !!quantity;
 
   useEffect(() => {
     if (!el.current || !asset) return;
@@ -54,8 +55,7 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
     render(el.current, data);
   }, [el, asset, showAsset]);
 
-  const service = customerServices[0];
-  if (!service)
+  if ((_.isEmpty(customerServices)))
     return (
       <div>
         <h2>Party "{party}" can not request new issuances.</h2>
@@ -63,10 +63,14 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
     );
 
   const requestIssuance = async () => {
-    if (!asset || !account) return;
+    if (!asset) return;
+    const service = customerServices.find(i => i.payload.provider === asset.payload.registrar);
+    const custody = custodyServices.find(c => c.payload.provider === asset.payload.registrar)
+    if (!service || !custody) return;
+
     await ledger.exercise(IssuanceService.RequestCreateIssuance, service.contractId, {
       issuanceId,
-      account: account,
+      account: custody.payload.account,
       assetId: asset.payload.assetId,
       quantity,
     });
@@ -93,17 +97,6 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
             {showAsset ? <EyeClosed /> : <EyeOpen />}
           </Button>
         </div>
-
-        <Form.Select
-          selection
-          placeholder="Issuance Account"
-          options={accounts.map(c => ({
-            text: c.id.label,
-            value: c.id.label,
-          }))}
-          value={accountLabel}
-          onChange={(_, d) => setAccountLabel((d.value && (d.value as string)) || '')}
-        />
 
         <Form.Input
           required

@@ -6,7 +6,7 @@ import Account from './Account';
 import Tile from '../../components/Tile/Tile';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { Button, Form } from 'semantic-ui-react';
-import { ServicePageProps, createDropdownProp, makeDamlSet } from '../common';
+import { ServicePageProps, createDropdownProp } from '../common';
 import { usePartyName } from '../../config';
 import { useLedger, useParty } from '@daml/react';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
@@ -18,33 +18,32 @@ const Assets: React.FC<ServicePageProps<CustodyService>> = ({
   const ledger = useLedger();
   const { getName } = usePartyName(party);
 
-  const { contracts: assets } = useStreamQueries(AssetDescription);
+  const { contracts: allAssets } = useStreamQueries(AssetDescription);
+  const clientServices = services.filter(s => s.payload.customer === party);
+  const assets = allAssets.filter(a => clientServices
+    .map(c => c.payload.provider)
+    .includes(a.payload.registrar));
   const displayErrorMessage = useDisplayErrorMessage();
 
   const [creditAsset, setCreditAsset] = useState<string>('');
   const [creditQuantity, setCreditQuantity] = useState<string>('');
-  const [selectedAccount, setSelectedAccount] = useState<string>('');
-
-  const clientServices = services.filter(s => s.payload.customer === party);
 
   const onRequestDeposit = async () => {
     const asset = assets.find(i => i.payload.description === creditAsset);
-    const targetAccount = services.find(a => a.contractId === selectedAccount);
 
-    if (!asset || !targetAccount) return;
+    if (!asset) return;
     const service = clientServices.find(
-      s => s.payload.provider === targetAccount.payload.account.provider
+      s => s.payload.provider === asset.payload.registrar
     );
     if (!service)
       return displayErrorMessage({
         message: `${getName(
-          targetAccount.payload.account.provider
+          asset.payload.registrar
         )} does not offer Custodial services to ${getName(party)}`,
       });
 
     await ledger.exercise(CustodyService.RequestDeposit, service.contractId, {
-      asset: { id: asset.payload.assetId, quantity: creditQuantity },
-      observers: makeDamlSet<string>([]),
+      asset: { id: asset.payload.assetId, quantity: creditQuantity }
     });
     setCreditAsset('');
     setCreditQuantity('');
@@ -69,19 +68,6 @@ const Assets: React.FC<ServicePageProps<CustodyService>> = ({
         <Tile className="inline" header="Quick Deposit">
           <br />
           <FormErrorHandled onSubmit={() => onRequestDeposit()}>
-            <Form.Select
-              label="Account"
-              options={services
-                .filter(a => a.payload.account.owner === party)
-                .map(a => {
-                  return {
-                    text: a.payload.account.id.label,
-                    value: a.contractId.replace('#', '_'),
-                  };
-                })}
-              value={selectedAccount}
-              onChange={(_, data) => setSelectedAccount(data.value as string)}
-            />
             <Form.Select
               label="Asset"
               options={assets.map(a => createDropdownProp(a.payload.description))}

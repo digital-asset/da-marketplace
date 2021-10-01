@@ -43,7 +43,7 @@ template Service
           then Collateralized <$> exercise confirmationCid Confirmation.Process with buyCid; sellCid
           else do
             exercise confirmationCid Confirmation.ProcessCleared with buyCid; sellCid
-            let clearinghouse = makerOrder.collateral.clearinghouse
+            let clearinghouse = makerOrder.details.marketType.clearinghouse
             Cleared <$> create Clearing.ClearedTrade with ..
 
     controller operator can

@@ -1,0 +1,70 @@
+Manifest-Version: 1.0
+Created-By: damlc
+Name: marketplace-matching-test-0.2.0
+Sdk-Version: 1.12.0
+Main-Dalf: marketplace-matching-test-0.2.0-32fe7021f0dad3b3f6a78f8e78d3
+ a4e4527b6277b9fc0ac6e9d95c3c2233ad58/marketplace-matching-test-0.2.0-3
+ 2fe7021f0dad3b3f6a78f8e78d3a4e4527b6277b9fc0ac6e9d95c3c2233ad58.dalf
+Dalfs: marketplace-matching-test-0.2.0-32fe7021f0dad3b3f6a78f8e78d3a4e4
+ 527b6277b9fc0ac6e9d95c3c2233ad58/marketplace-matching-test-0.2.0-32fe7
+ 021f0dad3b3f6a78f8e78d3a4e4527b6277b9fc0ac6e9d95c3c2233ad58.dalf, mark
+ etplace-matching-test-0.2.0-32fe7021f0dad3b3f6a78f8e78d3a4e4527b6277b9
+ fc0ac6e9d95c3c2233ad58/da-marketplace-0.2.0-0adf5d6667cc85fd224011d837
+ b53e48e2e05644a314485ed1ed262da771aee9.dalf, marketplace-matching-test
+ -0.2.0-32fe7021f0dad3b3f6a78f8e78d3a4e4527b6277b9fc0ac6e9d95c3c2233ad5
+ 8/daml-prim-b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d
+ 41063a.dalf, marketplace-matching-test-0.2.0-32fe7021f0dad3b3f6a78f8e7
+ 8d3a4e4527b6277b9fc0ac6e9d95c3c2233ad58/daml-prim-DA-Internal-Erased-7
+ 6bf0fd12bd945762a01f8fc5bbcdfa4d0ff20f8762af490f8f41d6237c6524f.dalf, 
+ marketplace-matching-test-0.2.0-32fe7021f0dad3b3f6a78f8e78d3a4e4527b62
+ 77b9fc0ac6e9d95c3c2233ad58/daml-prim-DA-Internal-PromotedText-d58cf993
+ 9847921b2aab78eaa7b427dc4c649d25e6bee3c749ace4c3f52f5c97.dalf, marketp
+ lace-matching-test-0.2.0-32fe7021f0dad3b3f6a78f8e78d3a4e4527b6277b9fc0
+ ac6e9d95c3c2233ad58/daml-prim-DA-Types-40f452260bef3f29dede136108fc08a
+ 88d5a5250310281067087da6f0baddff7.dalf, marketplace-matching-test-0.2.
+ 0-32fe7021f0dad3b3f6a78f8e78d3a4e4527b6277b9fc0ac6e9d95c3c2233ad58/dam
+ l-prim-GHC-Prim-e491352788e56ca4603acc411ffe1a49fefd76ed8b163af86cf5ee
+ 5f4c38645b.dalf, marketplace-matching-test-0.2.0-32fe7021f0dad3b3f6a78
+ f8e78d3a4e4527b6277b9fc0ac6e9d95c3c2233ad58/daml-prim-GHC-Tuple-6839a6
+ d3d430c569b2425e9391717b44ca324b88ba621d597778811b2d05031d.dalf, marke
+ tplace-matching-test-0.2.0-32fe7021f0dad3b3f6a78f8e78d3a4e4527b6277b9f
+ c0ac6e9d95c3c2233ad58/daml-prim-GHC-Types-518032f41fd0175461b35ae0c969
+ 1e08b4aea55e62915f8360af2cc7a1f2ba6c.dalf, marketplace-matching-test-0
+ .2.0-32fe7021f0dad3b3f6a78f8e78d3a4e4527b6277b9fc0ac6e9d95c3c2233ad58/
+ daml-script-1.12.0-1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7
+ 071e9a9ed1fb7.dalf, marketplace-matching-test-0.2.0-32fe7021f0dad3b3f6
+ a78f8e78d3a4e4527b6277b9fc0ac6e9d95c3c2233ad58/daml-stdlib-1.12.0-046a
+ 0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.dalf, mar
+ ketplace-matching-test-0.2.0-32fe7021f0dad3b3f6a78f8e78d3a4e4527b6277b
+ 9fc0ac6e9d95c3c2233ad58/daml-stdlib-DA-Date-Types-bfcd37bd6b84768e86e4
+ 32f5f6c33e25d9e7724a9d42e33875ff74f6348e733f.dalf, marketplace-matchin
+ g-test-0.2.0-32fe7021f0dad3b3f6a78f8e78d3a4e4527b6277b9fc0ac6e9d95c3c2
+ 233ad58/daml-stdlib-DA-Internal-Any-cc348d369011362a5190fe96dd1f0dfbc6
+ 97fdfd10e382b9e9666f0da05961b7.dalf, marketplace-matching-test-0.2.0-3
+ 2fe7021f0dad3b3f6a78f8e78d3a4e4527b6277b9fc0ac6e9d95c3c2233ad58/daml-s
+ tdlib-DA-Internal-Down-057eed1fd48c238491b8ea06b9b5bf85a5d4c9275dd3f61
+ 83e0e6b01730cc2ba.dalf, marketplace-matching-test-0.2.0-32fe7021f0dad3
+ b3f6a78f8e78d3a4e4527b6277b9fc0ac6e9d95c3c2233ad58/daml-stdlib-DA-Inte
+ rnal-Template-d14e08374fc7197d6a0de468c968ae8ba3aadbf9315476fd39071831
+ f5923662.dalf, marketplace-matching-test-0.2.0-32fe7021f0dad3b3f6a78f8
+ e78d3a4e4527b6277b9fc0ac6e9d95c3c2233ad58/daml-stdlib-DA-Logic-Types-c
+ 1f1f00558799eec139fb4f4c76f95fb52fa1837a5dd29600baa1c8ed1bdccfd.dalf, 
+ marketplace-matching-test-0.2.0-32fe7021f0dad3b3f6a78f8e78d3a4e4527b62
+ 77b9fc0ac6e9d95c3c2233ad58/daml-stdlib-DA-Monoid-Types-6c2c0667393c5f9
+ 2f1885163068cd31800d2264eb088eb6fc740e11241b2bf06.dalf, marketplace-ma
+ tching-test-0.2.0-32fe7021f0dad3b3f6a78f8e78d3a4e4527b6277b9fc0ac6e9d9
+ 5c3c2233ad58/daml-stdlib-DA-NonEmpty-Types-e22bce619ae24ca3b8e6519281c
+ b5a33b64b3190cc763248b4c3f9ad5087a92c.dalf, marketplace-matching-test-
+ 0.2.0-32fe7021f0dad3b3f6a78f8e78d3a4e4527b6277b9fc0ac6e9d95c3c2233ad58
+ /daml-stdlib-DA-Semigroup-Types-8a7806365bbd98d88b4c13832ebfa305f6abae
+ af32cfa2b7dd25c4fa489b79fb.dalf, marketplace-matching-test-0.2.0-32fe7
+ 021f0dad3b3f6a78f8e78d3a4e4527b6277b9fc0ac6e9d95c3c2233ad58/daml-stdli
+ b-DA-Set-Types-97b883cd8a2b7f49f90d5d39c981cf6e110cf1f1c64427a28a6d58e
+ c88c43657.dalf, marketplace-matching-test-0.2.0-32fe7021f0dad3b3f6a78f
+ 8e78d3a4e4527b6277b9fc0ac6e9d95c3c2233ad58/daml-stdlib-DA-Time-Types-7
+ 33e38d36a2759688a4b2c4cec69d48e7b55ecc8dedc8067b815926c917a182a.dalf, 
+ marketplace-matching-test-0.2.0-32fe7021f0dad3b3f6a78f8e78d3a4e4527b62
+ 77b9fc0ac6e9d95c3c2233ad58/daml-stdlib-DA-Validation-Types-99a2705ed38
+ c1c26cbb8fe7acf36bbf626668e167a33335de932599219e0a235.dalf
+Format: daml-lf
+Encryption: non-encrypted

@@ -37,7 +37,7 @@ autoApprovalTrigger = Trigger
     , registeredTemplate @CustodyService.Request
     , registeredTemplate @CustodyService.Service
     , registeredTemplate @Custody.DepositRequest
-    , registeredTemplate @Custody.WithdrawlRequest
+    , registeredTemplate @Custody.WithdrawalRequest
     , registeredTemplate @ClearingRole.Role
     , registeredTemplate @ClearingService.Request
     , registeredTemplate @MarketClearingService.Offer
@@ -181,11 +181,11 @@ handleApprovalRule party = do
     generateServiceCommands RegulatorService.VerifyIdentity idVerificationRequests regulatorServices
 
   depositRequests         <- queryByParty @Custody.DepositRequest   (.provider)
-  withdrawlRequests       <- queryByParty @Custody.WithdrawlRequest (.provider)
+  withdrawalRequests       <- queryByParty @Custody.WithdrawalRequest (.provider)
   custodyServices         <- queryByParty @CustodyService.Service   (.provider)
   submitCommands $
     generateServiceCommands CustodyService.Deposit   depositRequests   custodyServices ++
-    generateServiceCommands CustodyService.Withdrawl withdrawlRequests custodyServices
+    generateServiceCommands CustodyService.Withdrawal withdrawalRequests custodyServices
 
   auctionRequests         <- queryByParty @AuctionService.CreateAuctionRequest (.provider)
   auctionServices         <- queryByParty @AuctionService.Service              (.provider)

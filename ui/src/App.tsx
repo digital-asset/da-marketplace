@@ -224,7 +224,7 @@ const AppComponent = () => {
             action="New Base Instrument"
             services={custodyService}
           >
-            <NewBaseInstrument services={custodyService} />
+            <NewBaseInstrument custodyServices={custodyService} issuanceServices={issuanceService} />
           </ServiceRequired>
         ),
       },

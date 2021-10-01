@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLedger, useParty } from '@daml/react';
-import { useStreamQueries } from '../../Main';
 import { render } from '../../components/Claims/render';
 import { transformClaim } from '../../components/Claims/util';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
@@ -16,7 +15,9 @@ import { IconCircledCheck, LockIcon, PublicIcon, IconClose } from '../../icons/i
 import { publicParty } from '../../config';
 import BackButton from '../../components/Common/BackButton';
 import paths from '../../paths';
-import { createDropdownProp, ServicePageProps } from '../common';
+import { createDropdownProp } from '../common';
+import {CreateEvent} from "@daml/ledger";
+import _ from "lodash";
 
 enum AssetType {
   CURRENCY = 'TCXXXX',
@@ -24,24 +25,30 @@ enum AssetType {
   OTHER = 'XXXXXX',
 }
 
-const NewBaseInstrumentComponent: React.FC<RouteComponentProps & ServicePageProps<CustodyService>> =
-  ({ services, history }) => {
+type Props = {
+  custodyServices: Readonly<CreateEvent<CustodyService, any, any>[]>;
+  issuanceServices: Readonly<CreateEvent<IssuanceService, any, any>[]>;
+}
+
+const NewBaseInstrumentComponent: React.FC<RouteComponentProps & Props> =
+  ({ custodyServices, issuanceServices, history }) => {
     const el = useRef<HTMLDivElement>(null);
 
     const [observers, setObservers] = useState<string[]>([]);
     const [isPublic, setIsPublic] = useState(true);
     const [label, setLabel] = useState('');
     const [description, setDescription] = useState('');
-    const [account, setAccount] = useState('');
+    const [registrar, setRegistrar] = useState('');
     const [cfi, setCfi] = useState('');
 
-    const canRequest = !!label && !!description && !!account;
+    const canRequest = !!label && !!description && !!registrar;
 
     const ledger = useLedger();
     const party = useParty();
-    const issuanceServices = useStreamQueries(IssuanceService).contracts;
     const customerServices = issuanceServices.filter(s => s.payload.customer === party);
-    const accounts = services.map(s => s.payload.account);
+    const registrars = custodyServices
+      .filter(s => !_.isEmpty(issuanceServices.find(i => i.payload.provider === s.payload.provider)))
+      .map(s => s.payload.provider);
 
     const zero: Claim<DamlDate, Decimal, Id> = { tag: 'Zero', value: {} };
 
@@ -60,16 +67,13 @@ const NewBaseInstrumentComponent: React.FC<RouteComponentProps & ServicePageProp
       render(el.current, data);
     }, [el, zero]);
 
-    const service = customerServices[0];
-    if (!service) return <></>;
+    if (_.isEmpty(customerServices)) return <></>;
 
     const requestOrigination = async () => {
-      const safekeepingAccount = accounts.find(
-        a => a.provider === service.payload.provider && a.id.label === account
-      );
-      if (!safekeepingAccount) {
+      const service = customerServices.find(i => i.payload.provider === registrar);
+      if (!service) {
         console.log(
-          `Couldn't find account from provider ${service.payload.provider} with label ${account}`
+          `Couldn't find issuance service for selected registrar ${registrar}`
         );
         return;
       }
@@ -78,7 +82,6 @@ const NewBaseInstrumentComponent: React.FC<RouteComponentProps & ServicePageProp
         description,
         cfi: { code: cfi },
         claims: zero,
-        safekeepingAccount,
         observers: [service.payload.provider, party, ...observers],
       });
       history.push(paths.app.instruments.root);
@@ -116,13 +119,11 @@ const NewBaseInstrumentComponent: React.FC<RouteComponentProps & ServicePageProp
           />
 
           <Form.Select
-            label="Account"
+            label="Registrar"
             className="issue-asset-form-field select-account"
-            placeholder="Select Safekeeping Account..."
-            options={accounts.map(c => ({ text: c.id.label, value: c.id.label }))}
-            onChange={(event: React.SyntheticEvent, result: any) => {
-              setAccount(result.value);
-            }}
+            placeholder="Select Registrar ..."
+            options={registrars.map(r => ({ text: r, value: r }))}
+            onChange={(_, result: any) => setRegistrar(result.value)}
           />
 
           <Form.Select

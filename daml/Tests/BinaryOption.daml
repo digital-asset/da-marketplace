@@ -1,10 +1,10 @@
 module Tests.BinaryOption where
 -- ^ This module tests the full lifecycle of a binary option
 
-import Common (allocateParties, Parties(..), onboardProviders, onboardCustomer)
+import Common (allocateParties, Parties(..), onboardProviders, onboardCustomer, onboardAssets, Assets(..))
 import ContingentClaims.Claim (serialize)
 import DA.Date (date, Month(Mar, Oct))
-import DA.Finance.Types (Id(..), Asset(..))
+import DA.Finance.Types (Id(..))
 import DA.Finance.Asset (AssetDeposit, AssetDeposit_Transfer(..))
 import Daml.Script
 import DA.Set qualified as Set
@@ -21,7 +21,6 @@ import DA.Foldable
 
 expiry = date 2022 Oct 22
 notExpiry = date 2020 Mar 18
-usd = "USD"
 strike : Decimal = 700.0
 aboveStrike : Decimal = 920.0
 belowStrike : Decimal = 630.0
@@ -33,66 +32,63 @@ endToEnd = script do
 
 
 testNotExercisedWhenFixingDateIsNotExpiry = script do
-  (alice, bob) <- requestExercise aboveStrike notExpiry
+  (alice, bob, usdLabel) <- requestExercise aboveStrike notExpiry
 
   [(_, bobsOption)] <- queryFilter @AssetDeposit bob (\c -> c.asset.id.label == optionAssetLabel)
   bobsOption.asset.id.version === 0
-  bobsMoneyAssets <- getMoneyAssetsFor bob
+  bobsMoneyAssets <- getMoneyAssetsFor bob usdLabel
   bobsMoneyAssets === []
-  [(_, alicesMoney)] <- getMoneyAssetsFor alice
+  [(_, alicesMoney)] <- getMoneyAssetsFor alice usdLabel
   alicesMoney.asset.quantity === 3000.0
 
 
 testNotExercisedWhenPriceIsBelowStrikeAtExpiry = script do
-  (alice, bob) <- requestExercise belowStrike expiry
+  (alice, bob, usdLabel) <- requestExercise belowStrike expiry
 
   [(_, bobsOption)] <- queryFilter @AssetDeposit bob (\c -> c.asset.id.label == optionAssetLabel)
   bobsOption.asset.id.version === 1
-  bobsMoneyAssets <- getMoneyAssetsFor bob
+  bobsMoneyAssets <- getMoneyAssetsFor bob usdLabel
   bobsMoneyAssets === []
-  [(_, alicesMoney)] <- getMoneyAssetsFor alice
+  [(_, alicesMoney)] <- getMoneyAssetsFor alice usdLabel
   alicesMoney.asset.quantity === 3000.0
 
 testExercisedOnExpiry = script do
-  (alice, bob) <- requestExercise aboveStrike expiry
+  (alice, bob, usdLabel) <- requestExercise aboveStrike expiry
 
   [(_, bobsOption)] <- queryFilter @AssetDeposit bob (\c -> c.asset.id.label == optionAssetLabel)
   bobsOption.asset.id.version === 1
-  [(_, bobsMoney)] <- getMoneyAssetsFor bob
+  [(_, bobsMoney)] <- getMoneyAssetsFor bob usdLabel
   bobsMoney.asset.quantity === 1000.0
-  [(_, alicesMoney)] <- getMoneyAssetsFor alice
+  [(_, alicesMoney)] <- getMoneyAssetsFor alice usdLabel
   alicesMoney.asset.quantity === 2000.0
 
 
-getMoneyAssetsFor party = do
-  queryFilter @AssetDeposit party (\c -> c.asset.id.label == usd)
+getMoneyAssetsFor party assetLabel = do
+  queryFilter @AssetDeposit party (\c -> c.asset.id.label == assetLabel)
 
 
-requestExercise: Decimal -> Date -> Script (Party, Party)
+requestExercise: Decimal -> Date -> Script (Party, Party, Text)
 requestExercise underlyingPrice observationDate = script do
   parties@Parties{..} <- allocateParties
   providers <- onboardProviders parties
 
-  let usdId = Id with
-                signatories = Set.singleton providers.bank
-                label = usd
-                version = 0
-      usdAsset = Asset with id = usdId, quantity = 3000.0
-      underlyingId = Id with
+  let underlyingId = Id with
                        signatories = Set.singleton providers.bank
                        label = "TSLA"
                        version = 0
 
   alice <- onboardCustomer providers "Alice" alice
   bob <- onboardCustomer providers "Bob" bob
+  issuer <- onboardCustomer providers "Issuer" issuer
+
+  Assets{usd; tsla} <- onboardAssets providers issuer
 
   -- Alice originates the option
-  let boClaims = binaryCallOption underlyingId usdId strike expiry
+  let boClaims = binaryCallOption underlyingId usd.id strike expiry
   origReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid RequestOrigination with
       assetLabel = optionAssetLabel
       description = "Tesla Binary Option"
       cfi = CFI.other
-      safekeepingAccount = alice.mainAccount
       claims = serialize boClaims
       observers = []
   (optionDescCid, optionDesc) <- submit providers.bank $ exerciseCmd alice.issuanceServiceCid $ Originate origReqCid
@@ -113,9 +109,7 @@ requestExercise underlyingPrice observationDate = script do
   setTime $ time observationDate 16 30 00
 
   -- The issuer, Alice, must deposit the payout in the safekeeping account
-  corpActReqCid <- submit alice.customer $ exerciseCmd alice.custodyServiceCid RequestDeposit with
-    asset = usdAsset
-    observers = Set.empty
+  corpActReqCid <- submit alice.customer $ exerciseCmd alice.custodyServiceCid $ RequestDeposit usd with quantity = 3000.0
   corpActDepositCid <- submit providers.bank $ exerciseCmd alice.custodyServiceCid Deposit with
     depositRequestCid = corpActReqCid
 
@@ -135,4 +129,4 @@ requestExercise underlyingPrice observationDate = script do
       submitMulti [alice.customer, bob.customer, providers.bank] [] $
         exerciseCmd settlementInstructionCid Settle
 
-  return (alice.customer, bob.customer)
+  return (alice.customer, bob.customer, usd.id.label)

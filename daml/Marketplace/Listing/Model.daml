@@ -14,7 +14,7 @@ data Status
 
 data ListingType
     = Cleared with
-        clearinghouse: Party
+        clearinghouse : Party
         approvalCid : (ContractId ClearedListingApproval)
     | Collateralized
   deriving (Eq, Show)
@@ -24,8 +24,8 @@ template Listing
     operator : Party
     provider : Party
     customer : Party
-    listingType : ListingType
     listingId : Text
+    listingType : ListingType
     calendarId : Text
     description : Text
     tradedAssetId : Id

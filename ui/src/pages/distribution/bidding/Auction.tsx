@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   Auction as BiddingAuctionContract,
   Bid,
@@ -24,6 +24,7 @@ import Tile from '../../../components/Tile/Tile';
 import FormErrorHandled from '../../../components/Form/FormErrorHandled';
 import BackButton from '../../../components/Common/BackButton';
 import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import _ from "lodash";
 
 type Props = {
   biddingServices: Readonly<CreateEvent<BiddingService, any, any>[]>;
@@ -39,9 +40,6 @@ export const BiddingAuction: React.FC<Props> = ({ biddingServices, custodyServic
   const [quantity, setQuantity] = useState<number>(0);
   const [price, setPrice] = useState<number>(0);
   const [allowPublishing, setAllowPublishing] = useState<boolean>(false);
-  const [accountLabel, setAccountLabel] = useState(
-    custodyServices.length === 1 ? custodyServices[0].payload.account.id.label : ''
-  );
 
   const { contracts: allBiddingAuctions, loading: allBiddingAuctionsLoading } =
     useStreamQueries(BiddingAuctionContract);
@@ -58,8 +56,13 @@ export const BiddingAuction: React.FC<Props> = ({ biddingServices, custodyServic
   const [showQuotedAsset, setShowQuotedAsset] = useState<boolean>(false);
   const allAssets = useStreamQueries(AssetDescription).contracts;
   const assets = allAssets.filter(c => c.payload.assetId.version === '0');
-  const accounts = custodyServices.map(c => c.payload.account);
-  const account = accounts.find(a => a.id.label === accountLabel);
+  const auctionedAsset = assets.find(a => _.isEqual(a.payload.assetId, biddingAuction?.payload.asset.id));
+  const receivableAccount = custodyServices
+      .filter(c => c.payload.customer === party)
+      .find(c => c.payload.provider === auctionedAsset?.payload.registrar)?.payload.account
+  const service = biddingServices
+    .filter(s => s.payload.customer === party)
+    .find(s => s.payload.provider === biddingAuction?.payload.provider)
 
   useEffect(() => {
     if (!el1.current || !biddingAuction) return;
@@ -83,8 +86,7 @@ export const BiddingAuction: React.FC<Props> = ({ biddingServices, custodyServic
     render(el2.current, data);
   }, [el2, assets, biddingAuction, showQuotedAsset]);
 
-  if (!biddingAuction || biddingServices.length === 0) return <></>;
-  const service = biddingServices.filter(s => s.payload.customer === party)[0];
+  if (!biddingAuction || !service) return <></>;
 
   const bid = bids.contracts.find(b => b.payload.auctionId === biddingAuction.payload.auctionId);
 
@@ -110,7 +112,7 @@ export const BiddingAuction: React.FC<Props> = ({ biddingServices, custodyServic
         c.payload.asset.id.label === biddingAuction.payload.quotedAssetId.label &&
         parseFloat(c.payload.asset.quantity) >= volume
     );
-    if (!deposit || !account) return;
+    if (!deposit || !receivableAccount) return;
     const depositCid = await rightsizeAsset(deposit, volume.toString());
     const arg: SubmitBid = {
       auctionCid: biddingAuction.contractId,
@@ -118,7 +120,7 @@ export const BiddingAuction: React.FC<Props> = ({ biddingServices, custodyServic
       quantity: quantity.toString(),
       depositCid,
       allowPublishing,
-      receivableAccount: account,
+      receivableAccount: receivableAccount,
     };
     await ledger.exercise(BiddingService.SubmitBid, service.contractId, arg);
   };
@@ -270,18 +272,6 @@ export const BiddingAuction: React.FC<Props> = ({ biddingServices, custodyServic
                   required
                   onChange={(_, change) => setPrice(parseFloat(change.value as string))}
                 />
-                <Form.Select
-                  selection
-                  required
-                  label="Receivable Account"
-                  placeholder="Account"
-                  options={accounts.map(c => ({
-                    text: c.id.label,
-                    value: c.id.label,
-                  }))}
-                  value={accountLabel}
-                  onChange={(_, d) => setAccountLabel((d.value && (d.value as string)) || '')}
-                />
                 <Form.Checkbox
                   label="Allow Publishing of Bid ?"
                   onChange={(_, value) => setAllowPublishing(value.checked as boolean)}
@@ -289,7 +279,7 @@ export const BiddingAuction: React.FC<Props> = ({ biddingServices, custodyServic
                 <Button
                   type="Bid"
                   className="ghost"
-                  disabled={price === 0 || quantity === 0 || !account}
+                  disabled={price === 0 || quantity === 0 || !receivableAccount}
                   content="Submit"
                 />
               </FormErrorHandled>

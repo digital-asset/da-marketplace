@@ -73,12 +73,11 @@ setup = do
   (Some Listing.Listing{listingId}) <- queryContractId @Listing.Listing exchange listingCid
 
   -- > Alice places a bid for shares
-  Right (aliceOrderCid, aliceCreateOrderRequestCid, _) <- submit alice.customer do
+  submit alice.customer do
     exerciseByKeyCmd @TradingService.T (operator, exchange, alice.customer) TradingService.RequestCreateOrder
       with
         details = Order.Details with
           id = "123"
-          receivableAccount = alice.mainAccount
           listingId
           asset = shareAsset
           optExchangeFee = Some aliceFeeDepositCid
@@ -86,23 +85,22 @@ setup = do
             price = 100.0
           side = Order.Buy
           timeInForce = Order.GTC
-        collateral = Order.Collateral aliceDepositCid
+          marketType = Order.Collateralized aliceDepositCid alice.mainAccount
 
   -- > Bob places a new offer for shares
-  Right (bobOrderCid, bobCreateOrderRequestCid, _) <- submit bob.customer do
+  submit bob.customer do
     exerciseByKeyCmd @TradingService.T (operator, exchange, bob.customer) TradingService.RequestCreateOrder
       with
         details = Order.Details with
           id = "456"
           listingId
-          receivableAccount = bob.mainAccount
           asset = shareAsset
           optExchangeFee = Some bobFeeDepositCid
           orderType = Order.Limit with
             price = 100.0
           side = Order.Sell
           timeInForce = Order.GTC
-        collateral = Order.Collateral bobDepositCid
+          marketType = Order.Collateralized bobDepositCid bob.mainAccount
 
   -- Exchange matches the two orders
   Matching.Collateralized settlementInstructionCid <- submit exchange do

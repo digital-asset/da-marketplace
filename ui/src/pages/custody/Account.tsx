@@ -54,7 +54,7 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
       return displayErrorMessage({
         message: 'The account provider does not offer issuance services.',
       });
-    await ledger.exercise(Service.RequestWithdrawl, service.contractId, {
+    await ledger.exercise(Service.RequestWithdrawal, service.contractId, {
       depositCid: c.contractId,
     });
   };

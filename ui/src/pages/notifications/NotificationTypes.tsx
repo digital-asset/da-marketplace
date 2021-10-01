@@ -47,7 +47,7 @@ import {
   Offer as CustodyServiceOffer,
   Reject as CustodyServiceReject,
   Request as CustodyServiceRequest,
-  Withdrawl,
+  Withdrawal,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import {
   Accept as ListingServiceAccept,
@@ -135,7 +135,7 @@ import {
 
 import {
   DepositRequest,
-  WithdrawlRequest,
+  WithdrawalRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
 
 import { CreateEvent } from '@daml/ledger';
@@ -306,7 +306,7 @@ type RequestNotificationSet = {
 
 // -------------------------------------------------------------
 
-export type PendingRequestTemplate = CreateAuctionRequest | DepositRequest | WithdrawlRequest;
+export type PendingRequestTemplate = CreateAuctionRequest | DepositRequest | WithdrawalRequest;
 
 type PendingRequestNotificationSet = {
   kind: 'Pending';
@@ -319,7 +319,7 @@ type PendingRequestNotificationSet = {
 
 export type ProcessRequestTemplate = PendingRequestTemplate;
 
-export type ProcessChoice = Deposit | Withdrawl | CreateAuction;
+export type ProcessChoice = Deposit | Withdrawal | CreateAuction;
 
 export type ProcessRequestChoice = Choice<
   ProcessRequestTemplate,

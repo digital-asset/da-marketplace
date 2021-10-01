@@ -3,7 +3,7 @@ module Marketplace.Issuance.AssetDescription where
 
 import Marketplace.Issuance.CFI
 
-import DA.Finance.Types (Account, Id)
+import DA.Finance.Types (Id)
 import DA.Set (Set)
 import DA.Map (Map, size)
 import DA.Map qualified as Map
@@ -32,7 +32,9 @@ template AssetDescription
     -- ^ The counterparty for any @claims@
     claims: Claims
     -- ^ Rights and obligations of the holder (and issuer)
-    safekeepingAccount: Account
+    registrar: Party
+    -- ^ Party responsible for recordkeeping
+    -- safekeepingAccount: Account
     -- ^ Source account used for issuing the security and any subsequent corporate actions, e.g. paying out a coupon.
     -- terms: Text
     -- ^ Any further contract terms not captured in @claims@; typically a URI.
@@ -44,7 +46,7 @@ template AssetDescription
     -- ^ The price & currency of the *initial* offer.
     observers : Set Party
   where
-    signatory assetId.signatories <> safekeepingAccount.id.signatories
+    signatory assetId.signatories
     observer observers
 
     key assetId : Id
