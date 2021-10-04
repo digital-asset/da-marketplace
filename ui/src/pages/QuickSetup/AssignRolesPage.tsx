@@ -14,7 +14,7 @@ import classNames from 'classnames';
 import _ from 'lodash';
 
 import { useLedger } from '@daml/react';
-import { Party, Optional } from '@daml/types';
+import { Party } from '@daml/types';
 
 import {
   OperatorOnboarding,

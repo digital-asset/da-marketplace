@@ -32,11 +32,12 @@ export const InstrumentsTable: React.FC = () => {
 
       <StripedTable
         rowsClickable
-        headings={['Issuer', 'Signatories', 'Id', 'Version', 'Description']}
+        headings={['Registrar', 'Issuer', 'Signatories', 'Id', 'Version', 'Description']}
         loading={allInstrumentsLoading}
         rows={instruments.map(c => {
           return {
             elements: [
+              getName(c.payload.registrar),
               getName(c.payload.issuer),
               damlSetValues(c.payload.assetId.signatories)
                 .map(party => getName(party))
