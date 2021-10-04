@@ -116,7 +116,7 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
       await ledger.exercise(choice, cid, {});
     };
 
-    if (!service) return <></>;
+    if (!service) return <>No clearing service found</>;
 
     const onAllocateToClearing = (targetDeposit: CreateEvent<AssetDeposit>) => {
       if (targetDeposit && service) {
