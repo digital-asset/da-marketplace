@@ -53,9 +53,6 @@ const ReviewPage = (props: { adminCredentials: Credentials }) => {
               <div className="review">
                 <ReviewItems />
               </div>
-              <div>
-                <ReviewItems />
-              </div>
             </OffersProvider>
           </RolesProvider>
         </ServicesProvider>
