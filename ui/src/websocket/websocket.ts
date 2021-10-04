@@ -3,7 +3,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { ArchiveEvent, CreateEvent } from '@daml/ledger';
 import * as jtv from '@mojotech/json-type-validation';
 
-import { deploymentMode, DeploymentMode, httpBaseUrl, ledgerId } from '../config';
+import { safeUrlPath } from '../util';
+import { wsBaseUrl } from '../config';
 import { Template, ContractId, List, Text, Party } from '@daml/types';
 
 // A custom code to indicate that the websocket should not be reopened.
@@ -21,13 +22,8 @@ const RETRY_TIME_INTERVAL = 5000;
 const TIME_UNTIL_INACTIVE = 10000;
 
 const newDamlWebsocket = (token: string): WebSocket => {
-  const url = new URL(httpBaseUrl || 'http://localhost:7575');
-
   const subprotocols = [`jwt.token.${token}`, 'daml.ws.auth'];
-  const apiUrl =
-    deploymentMode === DeploymentMode.DEV
-      ? `ws://${url.host}/v1/stream/query`
-      : `wss://${url.host}/data/${ledgerId}/v1/stream/query`;
+  const apiUrl = safeUrlPath(`${wsBaseUrl}/v1/stream/query`);
 
   return new WebSocket(apiUrl, subprotocols);
 };
@@ -80,22 +76,18 @@ function useDamlStreamQuery<T extends object, K, I extends string>(
   const [active, setActive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState<StreamErrors>();
-  const [timer, setTimer] = useState<ReturnType<typeof setInterval>>(
-    setInterval(() => {
-      clearInterval(timer);
-    }, 1000)
-  );
+  const [timer, setTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [retries, setRetries] = useState(0);
 
   const messageHandlerScoped = useCallback(
     (templateMap: Map<string, Template<T, K, I>>) => {
       return (message: { data: string }) => {
         if (timer !== null) {
-          clearInterval(timer);
+          clearTimeout(timer);
           setTimer(
-            setInterval(() => {
+            setTimeout(() => {
               setActive(false);
-              clearInterval(timer);
+              clearTimeout(timer);
             }, TIME_UNTIL_INACTIVE)
           );
         }
@@ -191,7 +183,7 @@ function useDamlStreamQuery<T extends object, K, I extends string>(
 
   useEffect(() => {
     if (websocket === null) {
-      clearInterval(timer);
+      timer && clearTimeout(timer);
     }
   }, [websocket, timer]);
 

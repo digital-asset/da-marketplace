@@ -2,20 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useEffect, useState } from 'react';
-import { useHistory, useLocation } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import { Button, Form, Icon } from 'semantic-ui-react';
 
-import { DablPartiesInput, PartyDetails } from '@daml/hub-react';
+import { PartyToken, DamlHubLogin } from '@daml/hub-react';
 
-import Credentials, { computeCredentials } from '../../Credentials';
-import { retrieveParties, storeParties } from '../../Parties';
-import {
-  dablHostname,
-  deploymentMode,
-  DeploymentMode,
-  ledgerId,
-  isHubDeployment,
-} from '../../config';
+import { computeLocalCreds } from '../../Credentials';
+import { getPartiesJSON, retrieveParties, storeParties } from '../../Parties';
+import { deploymentMode, DeploymentMode, isHubDeployment } from '../../config';
 
 import Tile from '../../components/Tile/Tile';
 import TilePage from '../../components/Tile/TilePage';
@@ -24,58 +18,18 @@ import { AppError } from '../error/errorTypes';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { loginUser, useUserDispatch } from '../../context/UserContext';
 import paths from '../../paths';
-
-function useQuery() {
-  return new URLSearchParams(useLocation().search);
-}
-
-function raiseParamsToHash(loginRoute: string) {
-  const url = new URL(window.location.href);
-
-  // When DABL login redirects back to app, hoist the query into the hash route.
-  // This allows react-router's HashRouter to see and parse the supplied params
-
-  // i.e., we want to turn
-  // ledgerid.projectdabl.com/?party=party&token=token/#/
-  // into
-  // ledgerid.projectdabl.com/#/?party=party&token=token
-  if (url.search !== '' && url.hash === `#/${loginRoute}`) {
-    window.location.href = `${url.origin}${url.pathname}#/${loginRoute}${url.search}`;
-  }
-}
-
-type Props = {
-  onLogin: (credentials: Credentials) => void;
-};
+import { usePublicParty } from '../common';
 
 /**
  * React component for the login screen of the `App`.
  */
-const LoginScreen: React.FC<Props> = ({ onLogin }) => {
-  const query = useQuery();
+const LoginScreen: React.FC = () => {
   const history = useHistory();
-  const location = useLocation();
-
   const userDispatch = useUserDispatch();
-
-  useEffect(() => {
-    raiseParamsToHash('login');
-  }, [location]);
-
-  useEffect(() => {
-    const party = query.get('party');
-    const token = query.get('token');
-
-    if (!token || !party) {
-      return;
-    }
-
-    loginUser(userDispatch, history, { token, party, ledgerId });
-  }, [onLogin, query, history, userDispatch]);
 
   const localTiles = [
     <Tile dark thinGap key="login" showLogoHeader>
-      <LocalLoginForm onLogin={onLogin} />
+      <LocalLoginForm />
     </Tile>,
     <Tile dark thinGap key="quick-setup">
       <QuickSetupButton />
@@ -84,20 +38,42 @@ const LoginScreen: React.FC<Props> = ({ onLogin }) => {
 
   const dablTiles = [
     <Tile dark thinGap key="login" showLogoHeader>
-      <DablLoginForm onLogin={onLogin} />
+      <Form size="large">
+        <DamlHubLogin
+          options={{
+            method: {
+              button: {
+                render: () => (
+                  <Button
+                    fluid
+                    icon="right arrow blue"
+                    labelPosition="right"
+                    className="dabl-login-button"
+                  />
+                ),
+              },
+            },
+          }}
+          onLogin={creds => {
+            if (creds) {
+              loginUser(userDispatch, history, creds);
+            }
+          }}
+        />
+      </Form>
     </Tile>,
     <Tile dark thinGap key="parties">
-      <PartiesLoginForm onLogin={onLogin} />
+      <PartiesLoginForm />
     </Tile>,
     <Tile dark thinGap key="quick-setup">
       <QuickSetupButton />
     </Tile>,
     <Tile dark thinGap key="jwt">
-      <JWTLoginForm onLogin={onLogin} />
+      <JWTLoginForm />
     </Tile>,
   ];
 
-  const tiles = deploymentMode === DeploymentMode.PROD_DABL ? dablTiles : localTiles;
+  const tiles = deploymentMode === DeploymentMode.PROD_DAML_HUB ? dablTiles : localTiles;
 
   return (
     <div className="login-screen">
@@ -121,14 +97,14 @@ const QuickSetupButton = () => {
   );
 };
 
-const LocalLoginForm: React.FC<Props> = ({ onLogin }) => {
+const LocalLoginForm: React.FC = () => {
   const [username, setUsername] = useState('');
   const history = useHistory();
   const userDispatch = useUserDispatch();
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
-    const credentials = computeCredentials(username);
+    const credentials = computeLocalCreds(username);
 
     loginUser(userDispatch, history, credentials);
   };
@@ -155,30 +131,20 @@ const LocalLoginForm: React.FC<Props> = ({ onLogin }) => {
   );
 };
 
-const JWTLoginForm: React.FC<Props> = ({ onLogin }) => {
-  const [partyId, setPartyId] = useState('');
+const JWTLoginForm: React.FC = () => {
   const [jwt, setJwt] = useState('');
 
   const history = useHistory();
   const userDispatch = useUserDispatch();
 
-  const handleDablTokenLogin = () => {
-    loginUser(userDispatch, history, { token: jwt, party: partyId, ledgerId });
+  const handleTokenLogin = () => {
+    loginUser(userDispatch, history, new PartyToken(jwt));
   };
 
   return (
     <>
-      <p className="login-details dark">or via DABL Console JWT Token:</p>
+      <p className="login-details dark">or via Daml Hub JWT Token:</p>
       <Form size="large" className="login-form">
-        <Form.Input
-          fluid
-          required
-          label={<p className="dark">Party</p>}
-          placeholder="Party ID"
-          value={partyId}
-          onChange={e => setPartyId(e.currentTarget.value)}
-        />
-
         <Form.Input
           fluid
           required
@@ -193,21 +159,22 @@ const JWTLoginForm: React.FC<Props> = ({ onLogin }) => {
           className="ghost dark"
           icon="right arrow"
           labelPosition="right"
-          disabled={!jwt || !partyId}
+          disabled={!jwt}
           content={<p className="dark bold">Submit</p>}
-          onClick={handleDablTokenLogin}
+          onClick={handleTokenLogin}
         />
       </Form>
     </>
   );
 };
 
-const PartiesLoginForm: React.FC<Props> = ({ onLogin }) => {
+const PartiesLoginForm: React.FC = () => {
   const [selectedPartyId, setSelectedPartyId] = useState('');
-  const [parties, setParties] = useState<PartyDetails[]>();
+  const [parties, setParties] = useState<PartyToken[]>();
 
   const history = useHistory();
   const userDispatch = useUserDispatch();
+  const publicParty = usePublicParty();
 
   const options =
     parties?.map(party => ({
@@ -217,12 +184,9 @@ const PartiesLoginForm: React.FC<Props> = ({ onLogin }) => {
     })) || [];
 
   useEffect(() => {
-    const parties = retrieveParties();
-    if (parties) {
-      setParties(parties);
-      setSelectedPartyId(parties[0]?.party || '');
-    }
-  }, []);
+    const parties = retrieveParties(publicParty);
+    handleParties(parties);
+  }, [publicParty]);
 
   const handleLogin = async () => {
     const partyDetails = parties?.find(p => p.party === selectedPartyId);
@@ -234,10 +198,12 @@ const PartiesLoginForm: React.FC<Props> = ({ onLogin }) => {
     }
   };
 
-  const handleLoad = async (parties: PartyDetails[]) => {
-    setParties(parties);
-    setSelectedPartyId(parties[0]?.party || '');
-    storeParties(parties);
+  const handleParties = async (parties: PartyToken[], store?: boolean) => {
+    if (parties.length > 0) {
+      setParties(parties);
+      setSelectedPartyId(parties[0].party);
+      store && storeParties(parties);
+    }
   };
 
   const handleError = (error: string): (() => Promise<void>) => {
@@ -250,8 +216,8 @@ const PartiesLoginForm: React.FC<Props> = ({ onLogin }) => {
     <>
       <p className="login-details dark">
         <span>
-          Alternatively, login with <code className="link">parties.json</code> located in the DABL
-          Console Users tab:{' '}
+          Alternatively, login with <code className="link">parties.json</code> located in the Daml
+          Hub Console Identities tab:
         </span>
       </p>
       <FormErrorHandled size="large" className="login-form" onSubmit={handleLogin}>
@@ -259,15 +225,29 @@ const PartiesLoginForm: React.FC<Props> = ({ onLogin }) => {
           <>
             <Form.Group widths="equal">
               <Form.Input className="upload-file-input">
-                <label className="custom-file-upload button ui">
-                  <DablPartiesInput
-                    ledgerId={ledgerId}
-                    onError={error => loadAndCatch(handleError(error))}
-                    onLoad={handleLoad}
-                  />
-                  <Icon name="file" className="white" />
-                  <p className="dark">Load Parties</p>
-                </label>
+                <DamlHubLogin
+                  options={{
+                    method: {
+                      file: {
+                        render: () => (
+                          <label className="custom-file-upload button ui">
+                            {' '}
+                            <Icon name="file" className="white" />
+                            <p className="dark">Load Parties</p>
+                          </label>
+                        ),
+                      },
+                    },
+                  }}
+                  partiesJson={getPartiesJSON()}
+                  onPartiesLoad={(creds, err) => {
+                    if (creds) {
+                      handleParties(creds, true);
+                    } else if (err) {
+                      loadAndCatch(handleError(err));
+                    }
+                  }}
+                />
               </Form.Input>
               <Form.Select
                 selection
@@ -292,25 +272,6 @@ const PartiesLoginForm: React.FC<Props> = ({ onLogin }) => {
         )}
       </FormErrorHandled>
     </>
-  );
-};
-
-const DablLoginForm: React.FC<Props> = () => {
-  const handleDablLogin = () => {
-    window.location.assign(`https://login.${dablHostname}/auth/login?ledgerId=${ledgerId}`);
-  };
-
-  return (
-    <Form size="large">
-      <Button
-        fluid
-        icon="right arrow blue"
-        labelPosition="right"
-        className="dabl-login-button"
-        content={<p className="bold">Log in with Daml Hub</p>}
-        onClick={handleDablLogin}
-      />
-    </Form>
   );
 };
 

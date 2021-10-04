@@ -1,29 +1,4 @@
 import React, { useState, useEffect } from 'react';
-
-import DamlLedger from '@daml/react';
-import { useWellKnownParties } from '@daml/hub-react/lib';
-
-import _ from 'lodash';
-
-import { PublishedInstance, getAutomationInstances } from '../../automation';
-import {
-  httpBaseUrl,
-  wsBaseUrl,
-  useVerifiedParties,
-  isHubDeployment,
-  publicParty,
-} from '../../config';
-import QueryStreamProvider from '../../websocket/queryStream';
-import Credentials from '../../Credentials';
-
-import { ServicesProvider, useServiceContext } from '../../context/ServicesContext';
-import { OffersProvider } from '../../context/OffersContext';
-import { retrieveParties } from '../../Parties';
-import { RolesProvider, useRolesContext } from '../../context/RolesContext';
-import { AutomationProvider } from '../../context/AutomationContext';
-
-import { formatTriggerName } from './ConfigureProvidersPage';
-
 import ReactFlow, {
   FlowElement,
   addEdge,
@@ -37,8 +12,22 @@ import ReactFlow, {
   Background,
   MiniMap,
 } from 'react-flow-renderer';
-import dagre from 'dagre';
 import { Loader } from 'semantic-ui-react';
+import dagre from 'dagre';
+import _ from 'lodash';
+
+import DamlLedger from '@daml/react';
+import { useAutomationInstances } from '@daml/hub-react';
+
+import { httpBaseUrl, wsBaseUrl, useVerifiedParties } from '../../config';
+import { ServicesProvider, useServiceContext } from '../../context/ServicesContext';
+import { RolesProvider, useRolesContext } from '../../context/RolesContext';
+import { OffersProvider } from '../../context/OffersContext';
+import QueryStreamProvider from '../../websocket/queryStream';
+import Credentials from '../../Credentials';
+
+import { formatTriggerName } from './ConfigureProvidersPage';
+import { useOperatorParty } from '../common';
 
 const NODE_WIDTH = 200;
 const NODE_HEIGHT = 130;
@@ -54,21 +43,22 @@ const ReviewPage = (props: { adminCredentials: Credentials }) => {
       wsBaseUrl={wsBaseUrl}
     >
       <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
-        <AutomationProvider publicParty={publicParty}>
-          <ServicesProvider>
-            <RolesProvider>
-              <OffersProvider>
-                <p className="dark info">
-                  Move nodes to organize your network and select nodes to highlight customer
-                  relationships.
-                </p>
-                <div className="review">
-                  <ReviewItems />
-                </div>
-              </OffersProvider>
-            </RolesProvider>
-          </ServicesProvider>
-        </AutomationProvider>
+        <ServicesProvider>
+          <RolesProvider>
+            <OffersProvider>
+              <p className="dark info">
+                Move nodes to organize your network and select nodes to highlight customer
+                relationships.
+              </p>
+              <div className="review">
+                <ReviewItems />
+              </div>
+              <div>
+                <ReviewItems />
+              </div>
+            </OffersProvider>
+          </RolesProvider>
+        </ServicesProvider>
       </QueryStreamProvider>
     </DamlLedger>
   );
@@ -104,7 +94,7 @@ const ReviewItems = () => {
     return [...acc.filter(i => i !== providerDetails), { provider, services, customer }];
   }, [] as GroupedCustomerServices);
 
-  const operator = useWellKnownParties().parties?.userAdminParty || 'Operator';
+  const operator = useOperatorParty();
 
   const serviceEdges = groupedServices
     .filter(s => s.provider !== s.customer && s.provider !== operator)
@@ -271,25 +261,10 @@ const Network = (props: { passedElements: any[] }) => {
 
 const RoleNode = (props: { data: { label: string; partyId: string } }) => {
   const { roles, loading: rolesLoading } = useRolesContext();
-  const parties = retrieveParties() || [];
-
-  const [deployedAutomations, setDeployedAutomations] = useState<PublishedInstance[]>([]);
+  const { instances } = useAutomationInstances();
 
   const { label, partyId } = props.data;
-
   const roleList = roles.filter(r => r.contract.payload.provider === partyId);
-  const token = parties.find(p => p.party === partyId)?.token;
-
-  useEffect(() => {
-    if (token && isHubDeployment) {
-      const timer = setInterval(() => {
-        getAutomationInstances(token).then(pd => {
-          setDeployedAutomations(pd || []);
-        });
-      }, 1000);
-      return () => clearInterval(timer);
-    }
-  }, [token]);
 
   if (rolesLoading) {
     return null;
@@ -302,8 +277,8 @@ const RoleNode = (props: { data: { label: string; partyId: string } }) => {
         {roleList.length > 0 && <b>Provides: </b>} {roleList.map(r => r.roleKind).join(', ')}
       </p>
       <p className="p2">
-        {deployedAutomations.length > 0 && <b>Automation: </b>}
-        {deployedAutomations.map(da => formatTriggerName(da.config.value.name)).join(', ')}
+        {instances && instances.length > 0 && <b>Automation: </b>}
+        {instances && instances.map(da => formatTriggerName(da.config.value.name || '')).join(', ')}
       </p>
       <Handle
         type="source"

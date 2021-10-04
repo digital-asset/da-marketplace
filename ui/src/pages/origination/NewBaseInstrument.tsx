@@ -12,11 +12,10 @@ import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { Button, Form, Header } from 'semantic-ui-react';
 import classNames from 'classnames';
 import { IconCircledCheck, LockIcon, PublicIcon, IconClose } from '../../icons/icons';
-import { publicParty } from '../../config';
 import BackButton from '../../components/Common/BackButton';
 import paths from '../../paths';
-import { createDropdownProp } from '../common';
-import {CreateEvent} from "@daml/ledger";
+import { createDropdownProp, usePublicParty } from '../common';
+import { CreateEvent } from "@daml/ledger";
 import _ from "lodash";
 
 enum AssetType {
@@ -45,6 +44,7 @@ const NewBaseInstrumentComponent: React.FC<RouteComponentProps & Props> =
 
     const ledger = useLedger();
     const party = useParty();
+    const publicParty = usePublicParty();
     const customerServices = issuanceServices.filter(s => s.payload.customer === party);
     const registrars = custodyServices
       .filter(s => !_.isEmpty(issuanceServices.find(i => i.payload.provider === s.payload.provider)))
@@ -53,12 +53,12 @@ const NewBaseInstrumentComponent: React.FC<RouteComponentProps & Props> =
     const zero: Claim<DamlDate, Decimal, Id> = { tag: 'Zero', value: {} };
 
     useEffect(() => {
-      if (isPublic) {
+    if (isPublic && publicParty) {
         setObservers(observers => [...observers, publicParty]);
       } else {
         setObservers(observers => observers.filter(o => o !== publicParty));
       }
-    }, [isPublic]);
+  }, [isPublic, publicParty]);
 
     useEffect(() => {
       if (!el.current) return;

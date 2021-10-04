@@ -2,13 +2,13 @@ import React, { createContext, PropsWithChildren, useEffect, useMemo, useState }
 import _ from 'lodash';
 
 import { Template } from '@daml/types';
+import { CreateEvent } from '@daml/ledger';
+import { fetchPublicToken } from '@daml/hub-react';
 
-import { computeCredentials, retrieveCredentials } from '../Credentials';
-import { DeploymentMode, deploymentMode, httpBaseUrl, ledgerId } from '../config';
+import { computeLocalCreds, retrieveCredentials } from '../Credentials';
+import { DeploymentMode, deploymentMode } from '../config';
 
 import useDamlStreamQuery, { StreamErrors } from './websocket';
-import { CreateEvent } from '@daml/ledger';
-import { useWellKnownParties } from '@daml/hub-react/lib';
 
 const AS_PUBLIC = true;
 
@@ -32,29 +32,10 @@ type QueryStream = {
 
 const QueryStreamContext = createContext<QueryStream | undefined>(undefined);
 
-type PublicTokenAPIResult =
-  | {
-      access_token: string;
-    }
-  | undefined;
-
-const getPublicToken = async (publicParty: string): Promise<string | undefined> => {
-  let publicToken = undefined;
-
-  if (deploymentMode === DeploymentMode.DEV) {
-    publicToken = computeCredentials(publicParty).token;
-  } else {
-    const url = new URL(httpBaseUrl || 'http://localhost:3000');
-
-    const result: PublicTokenAPIResult = await fetch(
-      `https://${url.hostname}/api/ledger/${ledgerId}/public/token`,
-      { method: 'POST' }
-    ).then(response => response.json());
-
-    publicToken = result?.access_token;
-  }
-
-  return publicToken;
+const getPublicToken = async (): Promise<string | undefined> => {
+  return deploymentMode === DeploymentMode.DEV
+    ? computeLocalCreds('Public').token
+    : (await fetchPublicToken()) || undefined;
 };
 
 const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken?: string }) => {
@@ -66,31 +47,31 @@ const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken
   const [partyToken, setPartyToken] = useState<string>();
   const [publicToken, setPublicToken] = useState<string>();
 
+  useEffect(() => {
+    getPublicToken().then(t => setPublicToken(t));
+  }, []);
+
   const [streamErrors, setStreamErrors] = useState<StreamErrors[]>();
+
   useEffect(() => {
     if (defaultPartyToken) {
       setPartyToken(defaultPartyToken);
     } else {
-      const token = retrieveCredentials()?.token;
-      if (token) {
-        setPartyToken(token);
+      const creds = retrieveCredentials();
+      if (creds?.token) {
+        setPartyToken(creds.token);
       }
     }
   }, [defaultPartyToken]);
 
-  const publicParty = useWellKnownParties()?.parties?.publicParty || 'Public';
-
   useEffect(() => {
-    getPublicToken(publicParty).then(token => {
-      if (token) {
-        setPublicToken(token);
-        setQueryStream(queryStream => ({
-          ...queryStream,
-          publicToken: token,
-        }));
-      }
-    });
-  }, [publicParty]);
+    if (publicToken) {
+      setQueryStream(queryStream => ({
+        ...queryStream,
+        publicToken,
+      }));
+    }
+  }, [publicToken]);
 
   const {
     contracts: partyContracts,
@@ -139,7 +120,6 @@ const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken
     subscribeTemplate,
     publicLoading,
     partyLoading,
-    publicToken,
     connectionActive,
     templateMap,
   });

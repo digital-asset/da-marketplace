@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useHistory } from 'react-router';
 
 import { useParty } from '@daml/react';
 
@@ -12,11 +13,10 @@ import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Tra
 import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
 import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 
-import { ServiceOfferDialog } from '../../components/InputDialog/ServiceDialog';
 import { ServiceKind, ServiceOffer, ServiceRoleOfferChoice } from '../../context/ServicesContext';
-import { useHistory } from 'react-router';
-import { useWellKnownParties } from '@daml/hub-react/lib';
+import { ServiceOfferDialog } from '../../components/InputDialog/ServiceDialog';
 import { useVerifiedParties } from '../../config';
+import { useOperatorParty } from '../common';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 
 interface RequestInterface {
@@ -30,7 +30,7 @@ interface RequestInterface {
 const Offer: React.FC<{ service: ServiceKind }> = ({ service }) => {
   const provider = useParty();
   const history = useHistory();
-  const operator = useWellKnownParties().parties?.userAdminParty || 'Operator';
+  const operator = useOperatorParty();
 
   const { identities, legalNames } = useVerifiedParties();
 
@@ -39,8 +39,8 @@ const Offer: React.FC<{ service: ServiceKind }> = ({ service }) => {
   const [openDialog, setOpenDialog] = useState(true);
   const [dialogState, setDialogState] = useState<any>({});
   const [params, setParams] = useState<RequestInterface>({
-    operator,
     provider,
+    operator: '',
     customer: '',
   });
 
@@ -86,20 +86,21 @@ const Offer: React.FC<{ service: ServiceKind }> = ({ service }) => {
       identities.find(i => i.payload.legalName === dialogState?.customer)?.payload.customer || '';
 
     if (dialogState?.tradingAccount && dialogState?.allocationAccount) {
-      const params = {
-        provider,
-        customer,
-        operator,
-        tradingAccount: dialogState.tradingAccount,
-        allocationAccount: dialogState.allocationAccount,
-      };
-      setParams(params);
+      operator &&
+        setParams({
+          provider,
+          customer,
+          operator,
+          tradingAccount: dialogState.tradingAccount,
+          allocationAccount: dialogState.allocationAccount,
+        });
     } else {
-      setParams({
-        provider,
-        customer,
-        operator,
-      });
+      operator &&
+        setParams({
+          provider,
+          customer,
+          operator,
+        });
     }
   }, [dialogState, identities, operator, provider]);
 

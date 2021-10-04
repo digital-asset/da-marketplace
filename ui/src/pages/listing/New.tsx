@@ -11,8 +11,8 @@ import {
   Service,
 } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
 import { Service as MarketClearingService } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
-import { publicParty, usePartyName } from '../../config';
-import { createDropdownProp, ServicePageProps } from '../common';
+import { usePartyName } from '../../config';
+import { createDropdownProp, ServicePageProps, usePublicParty } from '../common';
 import { Button, Form, Header, Icon } from 'semantic-ui-react';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { IconClose } from '../../icons/icons';
@@ -46,6 +46,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
 
   const ledger = useLedger();
   const party = useParty();
+  const publicParty = usePublicParty();
   const { getName } = usePartyName(party);
   const clearedMarketServices = useStreamQueries(MarketClearingService).contracts;
   const customerServices = services.filter(s => s.payload.customer === party);
@@ -84,7 +85,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
   if (!service) return <></>;
 
   const requestListing = async () => {
-    if (!tradedAsset || !quotedAsset) return;
+    if (!tradedAsset || !quotedAsset || !publicParty) return;
     const isCollateralized = clearedBy === COLLATERALIZED_VALUE;
     const listingType: ListingTypeRequest = isCollateralized
       ? { tag: 'CollateralizedRequest', value: {} }

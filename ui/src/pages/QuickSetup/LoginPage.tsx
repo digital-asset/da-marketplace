@@ -1,24 +1,19 @@
 import React from 'react';
-
 import { useHistory, Link } from 'react-router-dom';
 
 import DamlLedger from '@daml/react';
 
-import { ArrowRightIcon } from '../../icons/icons';
-
-import { loginUser, useUserDispatch } from '../../context/UserContext';
+import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
 import { RolesProvider, useRolesContext } from '../../context/RolesContext';
-
-import Credentials, { computeCredentials } from '../../Credentials';
-
+import { loginUser, useUserDispatch } from '../../context/UserContext';
+import Credentials, { computeLocalCreds } from '../../Credentials';
+import QueryStreamProvider from '../../websocket/queryStream';
+import { ArrowRightIcon } from '../../icons/icons';
 import { retrieveParties } from '../../Parties';
+import paths from '../../paths';
 
 import { LoadingWheel } from './QuickSetup';
-
-import QueryStreamProvider from '../../websocket/queryStream';
-
-import paths from '../../paths';
-import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
+import { usePublicParty } from '../common';
 
 const LoginPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
@@ -41,7 +36,8 @@ const LoginPage = (props: { adminCredentials: Credentials }) => {
 const LoginTileGrid = () => {
   const history = useHistory();
   const dispatch = useUserDispatch();
-  const parties = retrieveParties() || [];
+  const publicParty = usePublicParty();
+  const parties = retrieveParties(publicParty);
 
   const { identities, loading: identitiesLoading } = useVerifiedParties();
 
@@ -102,7 +98,7 @@ const LoginTileGrid = () => {
         loginUser(dispatch, history, partyDetails);
       }
     } else {
-      loginUser(dispatch, history, computeCredentials(party));
+      loginUser(dispatch, history, computeLocalCreds(party));
     }
   }
 };

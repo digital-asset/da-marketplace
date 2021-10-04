@@ -17,7 +17,7 @@ short_version=$(echo $app_version | sed -r "s/^$capture_regex/\1.\2.\3/")
 
 echo "Application version is $app_version, short version is $short_version."
 
-dabl_meta=$2
+dit_meta=$2
 daml_yaml=$3
 daml_yaml_triggers=$4
 daml_yaml_trigger_test=$5
@@ -30,11 +30,11 @@ docs_trigger_test=${11}
 
 echo "Retagging versions in all files..."
 
-echo "  Tagging dabl-meta.yaml"
+echo "  Tagging dit-meta.yaml"
 if echo "$app_version" | grep -q '-'; then
-    sed -ri "s/tags:.*/tags: [dabl-sample-app, application, experimental]/" $dabl_meta
+    sed -ri "s/tags:.*/tags: [dabl-sample-app, application, experimental]/" $dit_meta
 else
-    sed -ri "s/tags:.*/tags: [dabl-sample-app, application]/" $dabl_meta
+    sed -ri "s/tags:.*/tags: [dabl-sample-app, application]/" $dit_meta
 fi
 
 echo "  Tagging daml.yaml"
