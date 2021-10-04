@@ -19,8 +19,8 @@ import BackButton from '../../components/Common/BackButton';
 import { IconClose } from '../../icons/icons';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import _ from "lodash";
-import paths from "../../paths";
+import _ from 'lodash';
+import paths from '../../paths';
 
 const NewSimpleFutureComponent: React.FC<RouteComponentProps & ServicePageProps<CustodyService>> =
   ({ services, history }) => {
@@ -54,7 +54,9 @@ const NewSimpleFutureComponent: React.FC<RouteComponentProps & ServicePageProps<
     };
 
     const registrars = services
-      .filter(s => !_.isEmpty(customerServices.find(i => i.payload.provider === s.payload.provider)))
+      .filter(
+        s => !_.isEmpty(customerServices.find(i => i.payload.provider === s.payload.provider))
+      )
       .map(s => s.payload.provider);
 
     const ineqExpiry: Inequality<DamlDate, Id> = {

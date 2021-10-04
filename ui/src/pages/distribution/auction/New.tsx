@@ -21,7 +21,7 @@ import { isEmptySet } from '../../common';
 import BackButton from '../../../components/Common/BackButton';
 import paths from '../../../paths';
 import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import _ from "lodash";
+import _ from 'lodash';
 
 type Props = {
   auctionServices: Readonly<CreateEvent<AuctionService, any, any>[]>;
@@ -51,17 +51,15 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
   const allAssets = useStreamQueries(AssetDescription).contracts;
   const assets = allAssets
     .filter(a => a.payload.assetId.version === '0')
-    .filter(a => custodyServices
-      .map(a => a.payload.provider)
-      .includes(a.payload.registrar));
+    .filter(a => custodyServices.map(a => a.payload.provider).includes(a.payload.registrar));
   const auctionedAsset = assets.find(c => c.payload.assetId.label === auctionedAssetLabel); // TODO: This should compare the whole ID
   const quotedAsset = assets.find(c => c.payload.assetId.label === quotedAssetLabel); // TODO: This should compare the whole ID
   const deposits = useStreamQueries(AssetDeposit).contracts;
   const heldAssets = deposits
     .filter(c => c.payload.account.owner === party)
-    .filter(a => customerServices
-      .map(a => a.payload.provider)
-      .includes(a.payload.account.provider))
+    .filter(a =>
+      customerServices.map(a => a.payload.provider).includes(a.payload.account.provider)
+    );
   const heldAssetLabels = heldAssets
     .map(c => c.payload.asset.id.label)
     .filter((v, i, a) => a.indexOf(v) === i);
@@ -74,7 +72,7 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
     !!quotedAsset &&
     !!auctionId &&
     !!quantity &&
-    !!floorPrice
+    !!floorPrice;
 
   useEffect(() => {
     if (!el1.current || !auctionedAsset) return;
@@ -114,11 +112,13 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
       .filter(c => c.payload.asset.id.label === auctionedAssetLabel)
       .find(c => parseFloat(c.payload.asset.quantity) >= parseFloat(quantity)); //TODO: Facilitate merging deposits in order to reach the target quantity (check trading!)
     if (!auctionedAsset || !quotedAsset || !deposit) return;
-    const service = customerServices.find(a => a.payload.provider === auctionedAsset.payload.registrar)
+    const service = customerServices.find(
+      a => a.payload.provider === auctionedAsset.payload.registrar
+    );
     const account = custodyServices
       .filter(c => c.payload.account.owner === party)
       .find(c => c.payload.provider === quotedAsset.payload.registrar)?.payload.account;
-    if (!service || !account) return
+    if (!service || !account) return;
     const depositCid = await rightsizeAsset(deposit, quantity);
     const request: RequestCreateAuction = {
       auctionId,

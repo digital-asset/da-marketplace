@@ -20,9 +20,9 @@ const Assets: React.FC<ServicePageProps<CustodyService>> = ({
 
   const { contracts: allAssets } = useStreamQueries(AssetDescription);
   const clientServices = services.filter(s => s.payload.customer === party);
-  const assets = allAssets.filter(a => clientServices
-    .map(c => c.payload.provider)
-    .includes(a.payload.registrar));
+  const assets = allAssets.filter(a =>
+    clientServices.map(c => c.payload.provider).includes(a.payload.registrar)
+  );
   const displayErrorMessage = useDisplayErrorMessage();
 
   const [creditAsset, setCreditAsset] = useState<string>('');
@@ -32,9 +32,7 @@ const Assets: React.FC<ServicePageProps<CustodyService>> = ({
     const asset = assets.find(i => i.payload.description === creditAsset);
 
     if (!asset) return;
-    const service = clientServices.find(
-      s => s.payload.provider === asset.payload.registrar
-    );
+    const service = clientServices.find(s => s.payload.provider === asset.payload.registrar);
     if (!service)
       return displayErrorMessage({
         message: `${getName(
@@ -43,7 +41,7 @@ const Assets: React.FC<ServicePageProps<CustodyService>> = ({
       });
 
     await ledger.exercise(CustodyService.RequestDeposit, service.contractId, {
-      asset: { id: asset.payload.assetId, quantity: creditQuantity }
+      asset: { id: asset.payload.assetId, quantity: creditQuantity },
     });
     setCreditAsset('');
     setCreditQuantity('');

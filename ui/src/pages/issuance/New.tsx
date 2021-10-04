@@ -14,7 +14,7 @@ import Tile from '../../components/Tile/Tile';
 import BackButton from '../../components/Common/BackButton';
 import paths from '../../paths';
 import { EyeClosed, EyeOpen } from '../../icons/icons';
-import _ from "lodash";
+import _ from 'lodash';
 
 type Props = {
   issuanceServices: Readonly<CreateEvent<IssuanceService, any, any>[]>;
@@ -40,9 +40,11 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
     .filter(s => !_.isEmpty(customerServices.find(i => i.payload.provider === s.payload.provider)))
     .map(s => s.payload.provider);
   const allAssets = useStreamQueries(AssetDescription).contracts;
-  const assets = allAssets.filter(c => c.payload.issuer === party
-    && c.payload.assetId.version === '0'
-    && registrars.includes(c.payload.registrar)
+  const assets = allAssets.filter(
+    c =>
+      c.payload.issuer === party &&
+      c.payload.assetId.version === '0' &&
+      registrars.includes(c.payload.registrar)
   );
   const asset = assets.find(c => c.payload.assetId.label === assetLabel);
 
@@ -55,7 +57,7 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
     render(el.current, data);
   }, [el, asset, showAsset]);
 
-  if ((_.isEmpty(customerServices)))
+  if (_.isEmpty(customerServices))
     return (
       <div>
         <h2>Party "{party}" can not request new issuances.</h2>
@@ -65,7 +67,7 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
   const requestIssuance = async () => {
     if (!asset) return;
     const service = customerServices.find(i => i.payload.provider === asset.payload.registrar);
-    const custody = custodyServices.find(c => c.payload.provider === asset.payload.registrar)
+    const custody = custodyServices.find(c => c.payload.provider === asset.payload.registrar);
     if (!service || !custody) return;
 
     await ledger.exercise(IssuanceService.RequestCreateIssuance, service.contractId, {

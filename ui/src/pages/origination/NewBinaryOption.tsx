@@ -19,8 +19,8 @@ import BackButton from '../../components/Common/BackButton';
 import { IconCircledCheck, IconClose } from '../../icons/icons';
 import classNames from 'classnames';
 import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import _ from "lodash";
-import paths from "../../paths";
+import _ from 'lodash';
+import paths from '../../paths';
 
 const NewBinaryOptionComponent: React.FC<RouteComponentProps & ServicePageProps<CustodyService>> =
   ({ services, history }) => {
@@ -50,9 +50,10 @@ const NewBinaryOptionComponent: React.FC<RouteComponentProps & ServicePageProps<
       version: '0',
     };
     const registrars = services
-      .filter(s => !_.isEmpty(customerServices.find(i => i.payload.provider === s.payload.provider)))
+      .filter(
+        s => !_.isEmpty(customerServices.find(i => i.payload.provider === s.payload.provider))
+      )
       .map(s => s.payload.provider);
-
 
     const parseDate = (d: Date | null) =>
       (!!d &&
@@ -95,9 +96,7 @@ const NewBinaryOptionComponent: React.FC<RouteComponentProps & ServicePageProps<
     const requestOrigination = async () => {
       const service = customerServices.find(i => i.payload.provider === registrar);
       if (!service) {
-        console.log(
-          `Couldn't find issuance service for selected registrar ${registrar}`
-        );
+        console.log(`Couldn't find issuance service for selected registrar ${registrar}`);
         return;
       }
       await ledger.exercise(IssuanceService.RequestOrigination, service.contractId, {

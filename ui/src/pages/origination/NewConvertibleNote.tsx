@@ -18,8 +18,8 @@ import { makeDamlSet, ServicePageProps } from '../common';
 import BackButton from '../../components/Common/BackButton';
 import { IconClose } from '../../icons/icons';
 import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import _ from "lodash";
-import paths from "../../paths";
+import _ from 'lodash';
+import paths from '../../paths';
 
 const NewConvertibleNoteComponent: React.FC<
   RouteComponentProps & ServicePageProps<CustodyService>
@@ -127,9 +127,7 @@ const NewConvertibleNoteComponent: React.FC<
   const requestOrigination = async () => {
     const service = customerServices.find(i => i.payload.provider === registrar);
     if (!service) {
-      console.log(
-        `Couldn't find issuance service for selected registrar ${registrar}`
-      );
+      console.log(`Couldn't find issuance service for selected registrar ${registrar}`);
       return;
     }
     await ledger.exercise(IssuanceService.RequestOrigination, service.contractId, {

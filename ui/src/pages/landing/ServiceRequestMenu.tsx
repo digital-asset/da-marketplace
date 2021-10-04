@@ -22,7 +22,7 @@ import { Request as AuctionRequest } from '@daml.js/da-marketplace/lib/Marketpla
 import { Request as BiddingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
 
 import _ from 'lodash';
-import {Fields, FieldCallbacks, FieldCallback} from '../../components/InputDialog/Fields';
+import { Fields, FieldCallbacks, FieldCallback } from '../../components/InputDialog/Fields';
 import { RoleKind, useProvidersByRole } from '../../context/RolesContext';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { usePartyName, useVerifiedParties } from '../../config';
@@ -145,13 +145,13 @@ const ServiceRequestMenu: React.FC<ServicePageProps<Service>> = ({ services }) =
 
   const makeAccountFilterField =
     (label: string): FieldCallback<Party> =>
-      provider => {
-        return {
-          label,
-          type: 'selection',
-          items: accounts.map(a => a.id.label),
-        };
+    provider => {
+      return {
+        label,
+        type: 'selection',
+        items: accounts.map(a => a.id.label),
       };
+    };
 
   return (
     <OverflowMenu>
@@ -176,13 +176,9 @@ const ServiceRequestMenu: React.FC<ServicePageProps<Service>> = ({ services }) =
       <OverflowMenuEntry
         label="Request Clearing Service"
         onClick={() =>
-          requestService(
-            ClearingRequest,
-            ServiceKind.CLEARING,
-            RoleKind.CLEARING,
-            {
-              clearingAccount: makeAccountFilterField('Clearing Account')
-            })
+          requestService(ClearingRequest, ServiceKind.CLEARING, RoleKind.CLEARING, {
+            clearingAccount: makeAccountFilterField('Clearing Account'),
+          })
         }
       />
       <OverflowMenuEntry

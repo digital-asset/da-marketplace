@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Auction as BiddingAuctionContract,
   Bid,
@@ -24,7 +24,7 @@ import Tile from '../../../components/Tile/Tile';
 import FormErrorHandled from '../../../components/Form/FormErrorHandled';
 import BackButton from '../../../components/Common/BackButton';
 import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import _ from "lodash";
+import _ from 'lodash';
 
 type Props = {
   biddingServices: Readonly<CreateEvent<BiddingService, any, any>[]>;
@@ -56,13 +56,15 @@ export const BiddingAuction: React.FC<Props> = ({ biddingServices, custodyServic
   const [showQuotedAsset, setShowQuotedAsset] = useState<boolean>(false);
   const allAssets = useStreamQueries(AssetDescription).contracts;
   const assets = allAssets.filter(c => c.payload.assetId.version === '0');
-  const auctionedAsset = assets.find(a => _.isEqual(a.payload.assetId, biddingAuction?.payload.asset.id));
+  const auctionedAsset = assets.find(a =>
+    _.isEqual(a.payload.assetId, biddingAuction?.payload.asset.id)
+  );
   const receivableAccount = custodyServices
-      .filter(c => c.payload.customer === party)
-      .find(c => c.payload.provider === auctionedAsset?.payload.registrar)?.payload.account
+    .filter(c => c.payload.customer === party)
+    .find(c => c.payload.provider === auctionedAsset?.payload.registrar)?.payload.account;
   const service = biddingServices
     .filter(s => s.payload.customer === party)
-    .find(s => s.payload.provider === biddingAuction?.payload.provider)
+    .find(s => s.payload.provider === biddingAuction?.payload.provider);
 
   useEffect(() => {
     if (!el1.current || !biddingAuction) return;
