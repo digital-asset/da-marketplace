@@ -4,6 +4,7 @@ import Daml.Script
 import Common
 import DA.Assert ((===))
 import DA.List
+import DA.Set (empty)
 import DA.Foldable (forA_)
 import DA.Finance.Asset
 import Marketplace.Trading.Service qualified as Trading
@@ -14,11 +15,6 @@ import Marketplace.Settlement.Service qualified as Settlement
 import Marketplace.Settlement.Model qualified as Settlement
 
 import Utils
-
--- To run this test, in separate terminals
--- 1/ triggers/test/ clear && daml clean && daml start
--- 2/ triggers/ clear && daml clean && daml build &&  daml trigger --dar .daml/dist/da-marketplace-triggers-0.2.0.dar --trigger-name MatchingEngine:handleMatching --ledger-host localhost --ledger-port 6865 --ledger-party Exchange
--- 3/ triggers/test/ clear && daml script --dar .daml/dist/marketplace-matching-test-0.2.0.dar --script-name Tests.Matching:matchingTest --wall-clock-time --ledger-host localhost --ledger-port 6865
 
 checkOrderStatusMatches : Text -> Party -> Order.Status -> Script Bool
 checkOrderStatusMatches orderId party status = do
@@ -44,8 +40,8 @@ runMatchingTest parties@Parties{userAdmin = operator; ..} = do
   let
     shareAsset = tsla with quantity = 200.0
     cashAsset = usd with quantity = 30000.0
-  aliceDepositCid <- depositAsset providers alice shareAsset alice.mainAccount.id
-  bobDepositCid <- depositAsset providers bob cashAsset bob.mainAccount.id
+  aliceDepositCid <- depositAsset providers alice shareAsset alice.mainAccount.id empty
+  bobDepositCid <- depositAsset providers bob cashAsset bob.mainAccount.id empty
 
   listingTestNumber <- getRandom 1 5000
   let listingId = "TSLAUSDTEST" <> show listingTestNumber
@@ -66,7 +62,7 @@ runMatchingTest parties@Parties{userAdmin = operator; ..} = do
     observers = []
   createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
 
-debug "Waiting for listing to be accepted..."
+  debug "Waiting for listing to be accepted..."
   (listingCid, Listing.Listing{listingId}) <- waitQuery 10.0 $ queryContractKey @Listing.Listing exchange (operator, exchange, listingId)
   debug $ listingId
 
@@ -75,9 +71,8 @@ debug "Waiting for listing to be accepted..."
 
   debug "Testing resting Sell order"
   let aliceOrderId = show orderNumber
-  Right (aliceOrderCid, aliceCreateOrderRequestCid, aliceAssetDepositCid) <- alice.customer `submit` do
+  aliceOrderCid <- alice.customer `submit` do
     exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with
-        collateral = Order.Collateral aliceDepositCid
         details = Order.Details with
             id = aliceOrderId
             listingId
@@ -86,14 +81,14 @@ debug "Waiting for listing to be accepted..."
             timeInForce = Order.GTC
             optExchangeFee = None
             orderType = Order.Limit with price = 100.0
+            marketType = Order.Collateralized aliceDepositCid alice.mainAccount
 
   debug "Waiting for Alice's order to be accepted..."
   waitUntil 10.0 $ checkOrderStatusMatches aliceOrderId exchange Order.PendingExecution
 
   let bobOrderId = show $ orderNumber + 1
-  Right (bobOrderCid, bobCreateOrderRequestCid, bobAssetDepositCid) <- bob.customer `submit` do
+  bobOrderCid <- bob.customer `submit` do
     exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with
-        collateral = Order.Collateral bobDepositCid
         details = Order.Details with
             id = bobOrderId
             listingId
@@ -102,6 +97,7 @@ debug "Waiting for listing to be accepted..."
             optExchangeFee = None
             timeInForce = Order.GTC
             orderType = Order.Limit with price = 150.0
+            marketType = Order.Collateralized bobDepositCid bob.mainAccount
 
   debug "Waiting for orders to be executed..."
   waitUntil 10.0 $ checkOrderStatusMatches aliceOrderId exchange Order.FullyExecuted
@@ -120,9 +116,8 @@ debug "Waiting for listing to be accepted..."
 
   debug "Testing resting Buy order"
   let aliceOrderId = show $ orderNumber + 2
-  Right (aliceOrderCid, aliceCreateOrderRequestCid, aliceAssetDepositCid) <- alice.customer `submit` do
+  aliceOrderCid <- alice.customer `submit` do
     exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with
-        collateral = Order.Collateral aliceDepositCid
         details = Order.Details with
             id = aliceOrderId
             listingId
@@ -131,14 +126,14 @@ debug "Waiting for listing to be accepted..."
             timeInForce = Order.GTC
             optExchangeFee = None
             orderType = Order.Limit with price = 100.0
+            marketType = Order.Collateralized aliceDepositCid alice.mainAccount
 
   debug "Waiting for Alice's order to be accepted..."
   waitUntil 10.0 $ checkOrderStatusMatches aliceOrderId exchange Order.PendingExecution
 
   let bobOrderId = show $ orderNumber + 3
-  Right (bobOrderCid, bobCreateOrderRequestCid, bobAssetDepositCid) <- bob.customer `submit` do
+  bobOrderCid <- bob.customer `submit` do
     exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with
-        collateral = Order.Collateral bobDepositCid
         details = Order.Details with
             id = bobOrderId
             listingId
@@ -147,6 +142,7 @@ debug "Waiting for listing to be accepted..."
             optExchangeFee = None
             timeInForce = Order.GTC
             orderType = Order.Limit with price = 50.0
+            marketType = Order.Collateralized bobDepositCid bob.mainAccount
 
   debug "Waiting for orders to be executed..."
   waitUntil 10.0 $ checkOrderStatusMatches aliceOrderId exchange Order.FullyExecuted
@@ -167,9 +163,8 @@ debug "Waiting for listing to be accepted..."
   [ aliceDepositCid1, aliceDepositCid2, aliceDepositCid3, aliceDepositCid4 ] <- alice.customer `submit` exerciseCmd aliceDepositCid AssetDeposit_Split with quantities = [50.0, 50.0, 50.0]
 
   let aliceOrderId1 = show $ orderNumber + 4
-  Right (aliceOrderCid1, _, _) <- alice.customer `submit` do
+  aliceOrderCid1 <- alice.customer `submit` do
     exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with
-        collateral = Order.Collateral aliceDepositCid1
         details = Order.Details with
             id = aliceOrderId1
             listingId
@@ -178,14 +173,14 @@ debug "Waiting for listing to be accepted..."
             timeInForce = Order.GTC
             optExchangeFee = None
             orderType = Order.Limit with price = 100.0
+            marketType = Order.Collateralized aliceDepositCid1 alice.mainAccount
 
   debug "Waiting for Alice's first order to be accepted..."
   waitUntil 10.0 $ checkOrderStatusMatches aliceOrderId1 exchange Order.PendingExecution
 
   let aliceOrderId2 = show $ orderNumber + 5
-  Right (aliceOrderCid2, _, _) <- alice.customer `submit` do
+  aliceOrderCid2 <- alice.customer `submit` do
     exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with
-        collateral = Order.Collateral aliceDepositCid2
         details = Order.Details with
             id = aliceOrderId2
             listingId
@@ -194,14 +189,14 @@ debug "Waiting for listing to be accepted..."
             timeInForce = Order.GTC
             optExchangeFee = None
             orderType = Order.Limit with price = 110.0
+            marketType = Order.Collateralized aliceDepositCid2 alice.mainAccount
 
   debug "Waiting for Alice's second order to be accepted..."
   waitUntil 10.0 $ checkOrderStatusMatches aliceOrderId2 exchange Order.PendingExecution
 
   let aliceOrderId3 = show $ orderNumber + 6
-  Right (aliceOrderCid3, _, _) <- alice.customer `submit` do
+  aliceOrderCid3 <- alice.customer `submit` do
     exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with
-        collateral = Order.Collateral aliceDepositCid3
         details = Order.Details with
             id = aliceOrderId3
             listingId
@@ -210,14 +205,14 @@ debug "Waiting for listing to be accepted..."
             timeInForce = Order.GTC
             optExchangeFee = None
             orderType = Order.Limit with price = 120.0
+            marketType = Order.Collateralized aliceDepositCid3 alice.mainAccount
 
   debug "Waiting for Alice's third order to be accepted..."
   waitUntil 10.0 $ checkOrderStatusMatches aliceOrderId3 exchange Order.PendingExecution
 
   let aliceOrderId4 = show $ orderNumber + 7
-  Right (aliceOrderCid4, _, _) <- alice.customer `submit` do
+  aliceOrderCid4 <- alice.customer `submit` do
     exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with
-        collateral = Order.Collateral aliceDepositCid4
         details = Order.Details with
             id = aliceOrderId4
             listingId
@@ -226,15 +221,15 @@ debug "Waiting for listing to be accepted..."
             timeInForce = Order.GTC
             optExchangeFee = None
             orderType = Order.Limit with price = 130.0
+            marketType = Order.Collateralized aliceDepositCid4 alice.mainAccount
 
   debug "Waiting for Alice's forth order to be accepted..."
   waitUntil 10.0 $ checkOrderStatusMatches aliceOrderId4 exchange Order.PendingExecution
 
   let bobOrderId = show $ orderNumber + 8
   bobDepositCid <- bob.customer `submit` exerciseCmd bobDepositCid1 AssetDeposit_Merge with depositCids = [ bobDepositCid2 ]
-  Right (bobOrderCid, bobCreateOrderRequestCid, bobAssetDepositCid) <- bob.customer `submit` do
+  bobOrderCid <- bob.customer `submit` do
     exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with
-        collateral = Order.Collateral bobDepositCid
         details = Order.Details with
             id = bobOrderId
             listingId
@@ -243,6 +238,7 @@ debug "Waiting for listing to be accepted..."
             optExchangeFee = None
             timeInForce = Order.GTC
             orderType = Order.Limit with price = 150.0
+            marketType = Order.Collateralized bobDepositCid bob.mainAccount
 
   debug "Waiting for orders to be executed..."
   waitUntil 10.0 $ checkOrderStatusMatches aliceOrderId1 exchange Order.FullyExecuted
