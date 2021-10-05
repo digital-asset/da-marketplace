@@ -20,11 +20,6 @@ data CalculationResult a b
   = CalculationSuccess { successCid : ContractId a, deposits: Optional DepositWithRemaining}
   | CalculationFailure { failureCid : (ContractId b)}
 
-data DepositAction
-    = Allocate
-    | Deallocate
-  deriving (Eq, Show)
-
 template Service
   with
     operator : Party
