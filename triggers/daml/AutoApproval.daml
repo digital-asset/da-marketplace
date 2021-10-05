@@ -180,11 +180,11 @@ handleApprovalRule party = do
     generateRoleCommands RegulatorRole.ApproveRegulatorRequest regulatorServicesRequests regulatorRoles ++
     generateServiceCommands RegulatorService.VerifyIdentity idVerificationRequests regulatorServices
 
-  depositRequests         <- queryByParty @Custody.DepositRequest   (.provider)
-  withdrawalRequests       <- queryByParty @Custody.WithdrawalRequest (.provider)
-  custodyServices         <- queryByParty @CustodyService.Service   (.provider)
+  depositRequests         <- queryByParty @Custody.DepositRequest    (.provider)
+  withdrawalRequests      <- queryByParty @Custody.WithdrawalRequest (.provider)
+  custodyServices         <- queryByParty @CustodyService.Service    (.provider)
   submitCommands $
-    generateServiceCommands CustodyService.Deposit   depositRequests   custodyServices ++
+    generateServiceCommands CustodyService.Deposit    depositRequests    custodyServices ++
     generateServiceCommands CustodyService.Withdrawal withdrawalRequests custodyServices
 
   auctionRequests         <- queryByParty @AuctionService.CreateAuctionRequest (.provider)
