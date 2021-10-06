@@ -32,7 +32,6 @@ export enum MenuItems {
   REVIEW = 'review',
   LOG_IN = 'log-in-parties',
   PROVIDE_SERVICES = 'provide-services',
-  CREATE_ACCOUNTS = 'create-accounts',
 }
 
 const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {

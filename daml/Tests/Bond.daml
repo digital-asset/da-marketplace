@@ -1,5 +1,5 @@
 module Tests.Bond where
--- ^ This module tests the full lifecycle of a binary option
+-- ^ This module tests the full lifecycle of a bond
 
 import Common (allocateParties, Parties(..), Customer, Providers, onboardProviders, onboardCustomer, Assets(..), onboardAssets)
 import ContingentClaims.Claim (serialize)

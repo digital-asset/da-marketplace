@@ -88,7 +88,7 @@ export const BiddingAuction: React.FC<Props> = ({ biddingServices, custodyServic
     render(el2.current, data);
   }, [el2, assets, biddingAuction, showQuotedAsset]);
 
-  if (!biddingAuction || !service) return <></>;
+  if (!biddingAuction || !service) return null;
 
   const bid = bids.contracts.find(b => b.payload.auctionId === biddingAuction.payload.auctionId);
 

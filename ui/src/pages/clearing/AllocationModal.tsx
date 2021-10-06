@@ -9,7 +9,7 @@ import {
 import { Button, Form, Header, Modal } from 'semantic-ui-react';
 
 type MarginCallProps = {
-  deposit: CreateEvent<AssetDeposit> | undefined;
+  deposit?: CreateEvent<AssetDeposit>;
   title: string;
   open: boolean;
   onClose: (open: boolean) => void;
@@ -30,7 +30,7 @@ const AllocationModal: React.FC<MarginCallProps> = ({
     if (!!deposit) setAllocation(parseFloat(deposit.payload.asset.quantity));
   }, [open, deposit]);
 
-  if (!deposit) return <></>;
+  if (!deposit) return null;
 
   const requestAllocation = async () => {
     const depositQuantity = parseFloat(deposit.payload.asset.quantity);

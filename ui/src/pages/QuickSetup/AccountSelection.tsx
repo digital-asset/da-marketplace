@@ -93,7 +93,7 @@ const ProviderOption = (props: {
         label={<p className="input-label">{accountInfo.accountLabel}</p>}
         placeholder="Select..."
         required
-        options={[...accountNames]}
+        options={accountNames}
         value={accountsForServices[accountKey]?.id.label}
         onChange={(_, change) => select(change)}
       />

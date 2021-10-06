@@ -85,7 +85,7 @@ template Service
           let settleAllocations = (\allocation -> Auction.SettleAllocation with allocation; price = finalPrice; issuer = customer; issuerReceivableAccount = receivableAccount) <$> allocatedBids
           (remainingDepositCidOpt, siCids) <- foldlA generateSettlementInstruction (Some depositCid, []) settleAllocations
 
-          -- Transfer remaining deposit back to the Issuer's trading account
+          -- Return unallocated deposit back to the customer
           whenSome remainingDepositCidOpt \depositCid -> exercise depositCid AssetDeposit_Unlock >> pure ()
 
           -- Update Auction contract with the outcome of the auction processing

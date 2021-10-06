@@ -87,9 +87,9 @@ template Service
           CreateIssuanceRequest{issuanceId; assetId; account; quantity} <- fetchAndArchive createIssuanceRequestCid
           issuanceCid <- create Issuance with ..
 
-          (_, AssetDescription{registrar}) <- fetchByKey @AssetDescription assetId
+          (_, AssetDescription{issuer}) <- fetchByKey @AssetDescription assetId
           let asset = Asset with id = assetId; quantity
-          depositCid <- create AssetDeposit with account; asset; lockers = empty; observers = fromList [ registrar ]
+          depositCid <- create AssetDeposit with account; asset; lockers = empty; observers = fromList [ issuer ]
 
           pure (issuanceCid, depositCid)
 

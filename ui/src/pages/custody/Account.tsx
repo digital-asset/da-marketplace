@@ -102,7 +102,6 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
               {party === targetAccount.account.owner && isEmptySet(c.payload.lockers) && (
                 <OverflowMenu>
                   <OverflowMenuEntry label={'Withdraw'} onClick={() => requestWithdrawDeposit(c)} />
-                  {/*<OverflowMenuEntry label={'Transfer'} onClick={() => requestTransfer(c)} />*/}
                 </OverflowMenu>
               )}
             </Tile>

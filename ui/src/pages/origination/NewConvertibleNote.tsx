@@ -126,10 +126,8 @@ const NewConvertibleNoteComponent: React.FC<
 
   const requestOrigination = async () => {
     const service = customerServices.find(i => i.payload.provider === registrar);
-    if (!service) {
-      console.log(`Couldn't find issuance service for selected registrar ${registrar}`);
-      return;
-    }
+    if (!service) return;
+
     await ledger.exercise(IssuanceService.RequestOrigination, service.contractId, {
       assetLabel: label,
       description,

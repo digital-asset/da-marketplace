@@ -127,15 +127,6 @@ roleDependencies (OnboardBidding ah c)       = [(ah, OnboardDistributor), (c, On
 roleDependencies (OnboardMarketClearing p c) = [(p, OnboardClearinghouse c )]
 roleDependencies _                           = []
 
--- |List of observers necessary to be on accounts created for this 'OnboardingInstruction'
-accountObservers : OnboardingInstruction -> [Party]
-accountObservers (OnboardTrading p _)    = [p]
-accountObservers (OnboardClearing p _ )  = [p]
-accountObservers (OnboardAuction p _)    = [p]
-accountObservers (OnboardBidding p _)    = [p]
-accountObservers (OnboardIssuance p _)   = [p]
-accountObservers _                       = []
-
 getSignaturesNeeded : OnboardingInstruction -> [Party]
 getSignaturesNeeded (OnboardClearinghouse c)    = [c]
 getSignaturesNeeded (OnboardCustody c)          = [c]

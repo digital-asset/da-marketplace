@@ -169,18 +169,16 @@ const RequestForm = (props: {
         requestInfo?.services?.reduce<AccountInfos>((acc, svc) => {
           if (existing.includes(svc)) return acc;
 
-          switch (svc) {
-            case ServiceKind.CLEARING:
-              return {
-                ...acc,
-                clearingAccount: {
-                  accountType: AccountType.REGULAR,
-                  accountLabel: 'Clearing Account',
-                },
-              };
-            default:
-              return acc;
+          if (svc === ServiceKind.CLEARING) {
+            return {
+              ...acc,
+              clearingAccount: {
+                accountType: AccountType.REGULAR,
+                accountLabel: 'Clearing Account',
+              },
+            };
           }
+          return acc;
         }, {}) || {};
       setAccountSelectInfos(newAccountInfos);
     },
@@ -223,12 +221,10 @@ const RequestForm = (props: {
     if (existingServices.includes(svc)) return acc;
     const accounts = requestInfo?.accounts;
 
-    switch (svc) {
-      case ServiceKind.CLEARING:
-        return acc && !!accounts?.clearingAccount;
-      default:
-        return acc;
+    if (svc === ServiceKind.CLEARING) {
+      return acc && !!accounts?.clearingAccount;
     }
+    return acc;
   }, true);
 
   return (
@@ -390,7 +386,6 @@ const CreateServiceRequests = (props: {
             case ServiceKind.BIDDING:
               await doRequest(BiddingRequest, params);
               break;
-
             case ServiceKind.AUCTION:
               await doRequest(AuctionRequest, params);
               break;
