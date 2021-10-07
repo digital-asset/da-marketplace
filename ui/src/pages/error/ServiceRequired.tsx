@@ -1,6 +1,9 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Button, Modal } from 'semantic-ui-react';
-import { Request as CustodyRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import {
+  Request as CustodyRequest,
+  Service as CustodyService,
+} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { Request as ClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import { Request as ListingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
@@ -10,8 +13,6 @@ import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { useParty } from '@daml/react';
 import { ServiceRequestDialog } from '../../components/InputDialog/ServiceDialog';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
-import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
-import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import {
   ServiceKind,
   ServiceRequest,
@@ -23,6 +24,7 @@ import { Template } from '@daml/types';
 import { useHistory } from 'react-router-dom';
 import { useServiceRequestKinds } from '../../context/RequestsContext';
 import MissingServiceModal from '../../components/Common/MissingServiceModal';
+import { ServicePageProps } from '../common';
 
 import { useStreamQueries } from '../../Main';
 import { Fields } from '../../components/InputDialog/Fields';
@@ -35,38 +37,22 @@ type ServiceRequiredProps = {
 interface RequestInterface {
   customer: string;
   provider: string;
-  tradingAccount?: Account;
-  allocationAccount?: Account;
-  receivableAccount?: Account;
   clearingAccount?: Account;
-  marginAccount?: Account;
 }
 
-export const ServiceRequired: React.FC<ServiceRequiredProps> = ({ service, action, children }) => {
+export const ServiceRequired: React.FC<ServiceRequiredProps & ServicePageProps<CustodyService>> = ({
+  service,
+  action,
+  children,
+  services,
+}) => {
   const party = useParty();
   const identities = useStreamQueries(VerifiedIdentity).contracts;
   const legalNames = useMemo(() => identities.map(c => c.payload.legalName), [identities]);
 
-  const allocationAccountRules = useStreamQueries(AllocationAccountRule).contracts;
-  const allocationAccounts = useMemo(
-    () =>
-      allocationAccountRules
-        .filter(c => c.payload.account.owner === party)
-        .map(c => c.payload.account),
-    [party, allocationAccountRules]
-  );
-  const allocationAccountNames = useMemo(
-    () => allocationAccounts.map(a => a.id.label),
-    [allocationAccounts]
-  );
-
-  const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
   const accounts = useMemo(
-    () =>
-      assetSettlementRules
-        .filter(c => c.payload.account.owner === party)
-        .map(c => c.payload.account),
-    [party, assetSettlementRules]
+    () => services.filter(c => c.payload.account.owner === party).map(c => c.payload.account),
+    [party, services]
   );
   const accountNames = useMemo(() => accounts.map(a => a.id.label), [accounts]);
 
@@ -95,24 +81,6 @@ export const ServiceRequired: React.FC<ServiceRequiredProps> = ({ service, actio
       provider,
     };
 
-    if (dialogState?.tradingAccount) {
-      const tradingAccount = accounts.find(a => a.id.label === dialogState.tradingAccount);
-      params = {
-        ...params,
-        tradingAccount,
-      };
-    }
-
-    if (dialogState?.allocationAccount) {
-      const allocationAccount = allocationAccounts.find(
-        a => a.id.label === dialogState.allocationAccount
-      );
-      params = {
-        ...params,
-        allocationAccount,
-      };
-    }
-
     if (dialogState?.clearingAccount) {
       const clearingAccount = accounts.find(a => a.id.label === dialogState.clearingAccount);
       params = {
@@ -121,24 +89,8 @@ export const ServiceRequired: React.FC<ServiceRequiredProps> = ({ service, actio
       };
     }
 
-    if (dialogState?.marginAccount) {
-      const marginAccount = allocationAccounts.find(a => a.id.label === dialogState.marginAccount);
-      params = {
-        ...params,
-        marginAccount,
-      };
-    }
-
-    if (dialogState?.receivableAccount) {
-      const receivableAccount = accounts.find(a => a.id.label === dialogState.receivableAccount);
-      params = {
-        ...params,
-        receivableAccount,
-      };
-    }
-
     setRequestParams(params);
-  }, [dialogState, accounts, allocationAccounts, identities, party]);
+  }, [dialogState, accounts, identities, party]);
 
   useEffect(() => {
     const requestService = <T extends ServiceRequestTemplates>(
@@ -165,45 +117,13 @@ export const ServiceRequired: React.FC<ServiceRequiredProps> = ({ service, actio
             type: 'selection',
             items: accountNames,
           },
-          marginAccount: {
-            label: 'Margin Account',
-            type: 'selection',
-            items: allocationAccountNames,
-          },
         });
         break;
       case ServiceKind.TRADING:
-        requestService(TradingRequest, {
-          tradingAccount: {
-            label: 'Trading Account',
-            type: 'selection',
-            items: accountNames,
-          },
-          allocationAccount: {
-            label: 'Allocation Account',
-            type: 'selection',
-            items: allocationAccountNames,
-          },
-        });
+        requestService(TradingRequest);
         break;
       case ServiceKind.AUCTION:
-        requestService(AuctionRequest, {
-          tradingAccount: {
-            label: 'Trading Account',
-            type: 'selection',
-            items: accountNames,
-          },
-          allocationAccount: {
-            label: 'Allocation Account',
-            type: 'selection',
-            items: allocationAccountNames,
-          },
-          receivableAccount: {
-            label: 'Receivable Account',
-            type: 'selection',
-            items: accountNames,
-          },
-        });
+        requestService(AuctionRequest);
         break;
       case ServiceKind.CUSTODY:
         requestService(CustodyRequest);
@@ -215,7 +135,7 @@ export const ServiceRequired: React.FC<ServiceRequiredProps> = ({ service, actio
         requestService(ListingRequest);
         break;
     }
-  }, [service, legalNames, accountNames, allocationAccountNames]);
+  }, [service, legalNames, accountNames]);
 
   const history = useHistory();
   const onClose = (open: boolean) => {

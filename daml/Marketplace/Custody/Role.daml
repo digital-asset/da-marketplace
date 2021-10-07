@@ -71,6 +71,8 @@ template Offer
     controller provider can
       Accept : (ContractId Role, ContractId Issuance.Service, ContractId Custody.Service)
         do
+          let account = Custody.createAccount provider provider
+
           custodyCid  <- createOrLookup Custody.Service with customer = provider, ..
           issuanceCid <- createOrLookup Issuance.Service with customer = provider, ..
           roleCid     <- createOrLookup Role with ..
@@ -92,6 +94,8 @@ template Request
         with
           observers : Set Party
         do
+          let account = Custody.createAccount provider provider
+
           custodyCid  <- createOrLookup Custody.Service with customer = provider, ..
           issuanceCid <- createOrLookup Issuance.Service with customer = provider, ..
           roleCid     <- createOrLookup Role with ..

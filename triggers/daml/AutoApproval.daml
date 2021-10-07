@@ -36,10 +36,8 @@ autoApprovalTrigger = Trigger
     , registeredTemplate @CustodyService.Offer
     , registeredTemplate @CustodyService.Request
     , registeredTemplate @CustodyService.Service
-    , registeredTemplate @Custody.OpenAccountRequest
-    , registeredTemplate @Custody.OpenAllocationAccountRequest
-    , registeredTemplate @Custody.CreditAccountRequest
-    , registeredTemplate @Custody.TransferDepositRequest
+    , registeredTemplate @Custody.DepositRequest
+    , registeredTemplate @Custody.WithdrawalRequest
     , registeredTemplate @ClearingRole.Role
     , registeredTemplate @ClearingService.Request
     , registeredTemplate @MarketClearingService.Offer
@@ -82,7 +80,7 @@ handleApprovalRule : Party -> TriggerA () ()
 handleApprovalRule party = do
   debug "Running Auto Approval rule..."
 
-      -- | Facilitates querying a template by a specific field which matches a the party which this trigger is running as
+      -- | Facilitates querying a template by a specific field which matches the party which this trigger is running as
   let queryByParty : forall t m. (Template t, ActionTriggerAny m, Functor m) => (t -> Party) -> m [(ContractId t, t)]
       queryByParty getField = filter ((== party) . getField . snd) <$> query
       -- | Generates commands for role contracts with a filter on the provider
@@ -172,7 +170,7 @@ handleApprovalRule party = do
   issuanceServices        <- queryByParty @IssuanceService.Service               (.provider)
   submitCommands $
     generateServiceCommands IssuanceService.Originate      originationRequests issuanceServices ++
-    generateServiceCommands IssuanceService.CreateIssuance issuanceRequests issuanceServices
+    generateServiceCommands IssuanceService.CreateIssuance issuanceRequests    issuanceServices
 
   idVerificationRequests     <- queryByParty @RegulatorService.IdentityVerificationRequest (.provider)
   regulatorServicesRequests  <- queryByParty @RegulatorService.Request                     (.provider)
@@ -182,19 +180,15 @@ handleApprovalRule party = do
     generateRoleCommands RegulatorRole.ApproveRegulatorRequest regulatorServicesRequests regulatorRoles ++
     generateServiceCommands RegulatorService.VerifyIdentity idVerificationRequests regulatorServices
 
-  creditRequests          <- queryByParty @Custody.CreditAccountRequest         (.provider)
-  openRequests            <- queryByParty @Custody.OpenAccountRequest           (.provider)
-  openAllocationRequests  <- queryByParty @Custody.OpenAllocationAccountRequest (.provider)
-  transferDepositRequests <- queryByParty @Custody.TransferDepositRequest       (.provider)
-  custodyServices         <- queryByParty @CustodyService.Service               (.provider)
+  depositRequests         <- queryByParty @Custody.DepositRequest    (.provider)
+  withdrawalRequests      <- queryByParty @Custody.WithdrawalRequest (.provider)
+  custodyServices         <- queryByParty @CustodyService.Service    (.provider)
   submitCommands $
-    generateServiceCommands CustodyService.CreditAccount         creditRequests          custodyServices ++
-    generateServiceCommands CustodyService.OpenAccount           openRequests            custodyServices ++
-    generateServiceCommands CustodyService.OpenAllocationAccount openAllocationRequests  custodyServices ++
-    generateServiceCommands CustodyService.TransferDeposit       transferDepositRequests custodyServices
+    generateServiceCommands CustodyService.Deposit    depositRequests    custodyServices ++
+    generateServiceCommands CustodyService.Withdrawal withdrawalRequests custodyServices
 
   auctionRequests         <- queryByParty @AuctionService.CreateAuctionRequest (.provider)
-  auctionServices         <- queryByParty @AuctionService.Service       (.provider)
+  auctionServices         <- queryByParty @AuctionService.Service              (.provider)
   submitCommands $
     generateServiceCommands AuctionService.CreateAuction auctionRequests auctionServices
 

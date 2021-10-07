@@ -20,10 +20,11 @@ import {
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { usePartyName, useVerifiedParties } from '../../config';
 import { useParty } from '@daml/react';
-import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { RoleRequestDialog } from '../../components/InputDialog/RoleDialog';
 import { useRoleRequestKinds } from '../../context/RequestsContext';
 import { AddPlusIcon } from '../../icons/icons';
+import { ServicePageProps } from '../common';
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 
 import { useStreamQueries } from '../../Main';
 
@@ -33,7 +34,7 @@ interface RequestInterface {
   ccpAccount?: Account;
 }
 
-const RoleRequestMenu: React.FC = () => {
+const RoleRequestMenu: React.FC<ServicePageProps<CustodyService>> = ({ services }) => {
   const party = useParty();
   const { getName } = usePartyName(party);
   const operatorRoles = useStreamQueries(OperatorRole);
@@ -69,13 +70,9 @@ const RoleRequestMenu: React.FC = () => {
     provider: party,
   });
 
-  const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
   const accounts = useMemo(
-    () =>
-      assetSettlementRules
-        .filter(c => c.payload.account.owner === party)
-        .map(c => c.payload.account),
-    [party, assetSettlementRules]
+    () => services.filter(c => c.payload.account.owner === party).map(c => c.payload.account),
+    [party, services]
   );
 
   useEffect(() => {

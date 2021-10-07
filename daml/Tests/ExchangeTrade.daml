@@ -2,7 +2,10 @@ module Tests.ExchangeTrade where
 
 import Common
 import Daml.Script
+import DA.Assert ((===))
 import DA.Finance.Asset (AssetDeposit_Split(..), AssetDeposit)
+import DA.List
+import DA.Set
 import DA.Foldable (forA_)
 import qualified Marketplace.Settlement.Model as Settlement
 import qualified Marketplace.Trading.Matching.Service as Matching
@@ -10,9 +13,6 @@ import qualified Marketplace.Trading.Model as Order
 import qualified Marketplace.Trading.Service as TradingService
 import qualified Marketplace.Listing.Service as Listing
 import qualified Marketplace.Listing.Model as Listing
-
-import DA.Assert ((===))
-import DA.List
 
 fullExecutionTest : Script ()
 fullExecutionTest = do
@@ -31,8 +31,8 @@ fullExecutionTest = do
     cashAsset = usd with quantity = 20000.0
     priceAsset = usd with quantity = 100.0
 
-  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id
-  bobDepositCid <- depositAsset providers bob shareAsset bob.mainAccount.id
+  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id empty
+  bobDepositCid <- depositAsset providers bob shareAsset bob.mainAccount.id empty
 
   -- List a Security to trade
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
@@ -54,7 +54,7 @@ fullExecutionTest = do
   (Some Listing.Listing{listingId}) <- queryContractId @Listing.Listing exchange listingCid
 
   -- > Alice places a bid for shares
-  Right (aliceOrderCid, aliceCreateOrderRequestCid, _) <- submit alice.customer do
+  submit alice.customer do
     exerciseByKeyCmd @TradingService.T (operator, exchange, alice.customer) TradingService.RequestCreateOrder
       with
         details = Order.Details with
@@ -66,10 +66,10 @@ fullExecutionTest = do
             price = 100.0
           side = Order.Buy
           timeInForce = Order.GTC
-        collateral = Order.Collateral aliceDepositCid
+          marketType = Order.Collateralized aliceDepositCid alice.mainAccount
 
   -- > Bob places a new offer for shares
-  Right (bobOrderCid, bobCreateOrderRequestCid, _) <- submit bob.customer do
+  submit bob.customer do
     exerciseByKeyCmd @TradingService.T (operator, exchange, bob.customer) TradingService.RequestCreateOrder
       with
         details = Order.Details with
@@ -81,7 +81,7 @@ fullExecutionTest = do
             price = 100.0
           side = Order.Sell
           timeInForce = Order.GTC
-        collateral = Order.Collateral bobDepositCid
+          marketType = Order.Collateralized bobDepositCid bob.mainAccount
 
   -- Exchange matches the two orders
   Matching.Collateralized settlementInstructionCid <- submit exchange do
@@ -124,8 +124,8 @@ partialExecutionsTest = do
     cashAsset = usd with quantity = 20000.0
     priceAsset = usd with quantity = 100.0
 
-  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id
-  bobDepositCid <- depositAsset providers bob shareAsset bob.mainAccount.id
+  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id empty
+  bobDepositCid <- depositAsset providers bob shareAsset bob.mainAccount.id empty
 
   -- List a Security to trade
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
@@ -158,7 +158,7 @@ partialExecutionsTest = do
           side = Order.Buy
           timeInForce = Order.GTC
           optExchangeFee = None
-        collateral = Order.Collateral aliceDepositCid
+          marketType = Order.Collateralized aliceDepositCid alice.mainAccount
 
   -- > Bob places 4 offers for his shares
   ( bobDepositCid :: bobRemainingDepositCid :: _ ) <- bob.customer `submit` do exerciseCmd bobDepositCid AssetDeposit_Split with quantities = [50.0]
@@ -173,7 +173,7 @@ partialExecutionsTest = do
           side = Order.Sell
           timeInForce = Order.GTC
           optExchangeFee = None
-        collateral = Order.Collateral bobDepositCid
+          marketType = Order.Collateralized bobDepositCid bob.mainAccount
 
   ( bobDepositCid :: bobRemainingDepositCid :: _ ) <- bob.customer `submit` do exerciseCmd bobRemainingDepositCid AssetDeposit_Split with quantities = [50.0]
   submit bob.customer do
@@ -187,7 +187,7 @@ partialExecutionsTest = do
           side = Order.Sell
           timeInForce = Order.GTC
           optExchangeFee = None
-        collateral = Order.Collateral bobDepositCid
+          marketType = Order.Collateralized bobDepositCid bob.mainAccount
 
   ( bobDepositCid :: bobRemainingDepositCid :: _ ) <- bob.customer `submit` do exerciseCmd bobRemainingDepositCid AssetDeposit_Split with quantities = [50.0]
   submit bob.customer do
@@ -201,7 +201,7 @@ partialExecutionsTest = do
           side = Order.Sell
           timeInForce = Order.GTC
           optExchangeFee = None
-        collateral = Order.Collateral bobDepositCid
+          marketType = Order.Collateralized bobDepositCid bob.mainAccount
 
   ( bobDepositCid :: _ ) <- bob.customer `submit` do exerciseCmd bobRemainingDepositCid AssetDeposit_Split with quantities = [50.0]
   submit bob.customer do
@@ -215,7 +215,7 @@ partialExecutionsTest = do
           side = Order.Sell
           timeInForce = Order.GTC
           optExchangeFee = None
-        collateral = Order.Collateral bobDepositCid
+          marketType = Order.Collateralized bobDepositCid bob.mainAccount
 
   -- Exchange matches the the buy order to the 4 sell orders
   settlementInstructionCids <- forA ["100", "101", "102", "103"] (\orderId ->
@@ -261,8 +261,8 @@ overCollateralizedTest = do
     cashAsset = usd with quantity = 1000000.0
     priceAsset = usd with quantity = 100.0
 
-  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id
-  bobDepositCid <- depositAsset providers bob shareAsset bob.mainAccount.id
+  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id empty
+  bobDepositCid <- depositAsset providers bob shareAsset bob.mainAccount.id empty
 
   -- List a Security to trade
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
@@ -295,7 +295,7 @@ overCollateralizedTest = do
           side = Order.Sell
           timeInForce = Order.GTC
           optExchangeFee = None
-        collateral = Order.Collateral bobDepositCid
+          marketType = Order.Collateralized bobDepositCid bob.mainAccount
 
   -- > Alice places an order to buy shares, above Bobs price - thus over collateralizing the order
   ( aliceDepositCid ::  _ ) <- alice.customer `submit` do exerciseCmd aliceDepositCid AssetDeposit_Split with quantities = [30000.0]
@@ -310,7 +310,7 @@ overCollateralizedTest = do
           side = Order.Buy
           timeInForce = Order.GTC
           optExchangeFee = None
-        collateral = Order.Collateral aliceDepositCid
+          marketType = Order.Collateralized aliceDepositCid alice.mainAccount
 
   -- Exchange matches the two orders
   Matching.Collateralized settlementInstructionCid <- submit exchange do

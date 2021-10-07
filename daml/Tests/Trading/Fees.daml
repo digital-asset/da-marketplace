@@ -37,9 +37,6 @@ setup = do
   custodyServiceOfferCid <- submit bank do exerciseCmd custodianRoleCid Custodian.OfferCustodyService with customer = exchange, ..
   custodyServiceCid <- submit exchange do exerciseCmd custodyServiceOfferCid Custody.Accept
 
-  openAccountRequestCid <- submit exchange do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = feeAccountId; observers = [bank]; ctrls = [bank, exchange]
-  submit bank do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = openAccountRequestCid
-
   exchange `submit` createCmd Trading.FeeSchedule with currentFee = Trading.Fee 0.0 currency time; provider = exchange; pastFees = []; observers = Set.fromList [public]; ..
   exchange `submit` exerciseByKeyCmd @Trading.FeeSchedule (operator,exchange) Trading.UpdateFeeSchedule with amount = 2.0; currency = usd.id
 
@@ -49,11 +46,12 @@ setup = do
     cashAsset = usd with quantity = 20000.0
     priceAsset = usd with quantity = 100.0
     feeAsset = usd with quantity = 2.0
+    observers = Set.fromList [ ]
 
-  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id
-  aliceFeeDepositCid <- depositAsset providers alice feeAsset alice.mainAccount.id
-  bobDepositCid <- depositAsset providers bob  shareAsset bob.mainAccount.id
-  bobFeeDepositCid <- depositAsset providers bob feeAsset bob.mainAccount.id
+  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id observers
+  aliceFeeDepositCid <- depositAsset providers alice feeAsset alice.mainAccount.id observers
+  bobDepositCid <- depositAsset providers bob shareAsset bob.mainAccount.id observers
+  bobFeeDepositCid <- depositAsset providers bob feeAsset bob.mainAccount.id observers
 
   -- List a Security to trade
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
@@ -75,7 +73,7 @@ setup = do
   (Some Listing.Listing{listingId}) <- queryContractId @Listing.Listing exchange listingCid
 
   -- > Alice places a bid for shares
-  Right (aliceOrderCid, aliceCreateOrderRequestCid, _) <- submit alice.customer do
+  submit alice.customer do
     exerciseByKeyCmd @TradingService.T (operator, exchange, alice.customer) TradingService.RequestCreateOrder
       with
         details = Order.Details with
@@ -87,10 +85,10 @@ setup = do
             price = 100.0
           side = Order.Buy
           timeInForce = Order.GTC
-        collateral = Order.Collateral aliceDepositCid
+          marketType = Order.Collateralized aliceDepositCid alice.mainAccount
 
   -- > Bob places a new offer for shares
-  Right (bobOrderCid, bobCreateOrderRequestCid, _) <- submit bob.customer do
+  submit bob.customer do
     exerciseByKeyCmd @TradingService.T (operator, exchange, bob.customer) TradingService.RequestCreateOrder
       with
         details = Order.Details with
@@ -102,7 +100,7 @@ setup = do
             price = 100.0
           side = Order.Sell
           timeInForce = Order.GTC
-        collateral = Order.Collateral bobDepositCid
+          marketType = Order.Collateralized bobDepositCid bob.mainAccount
 
   -- Exchange matches the two orders
   Matching.Collateralized settlementInstructionCid <- submit exchange do

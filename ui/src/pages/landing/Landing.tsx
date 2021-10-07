@@ -27,7 +27,7 @@ import Tile from '../../components/Tile/Tile';
 import paths from '../../paths';
 
 import ServiceRequestMenu from './ServiceRequestMenu';
-import { useOperatorParty } from '../common';
+import { ServicePageProps, useOperatorParty } from '../common';
 
 type DamlHubParty = string;
 
@@ -146,7 +146,7 @@ const ProfileSection: React.FC<{ name: string }> = ({ name }) => {
   return <></>;
 };
 
-const Landing = () => {
+const Landing: React.FC<ServicePageProps<CustodyService>> = ({ services }) => {
   const party = useParty();
   const history = useHistory();
 
@@ -154,10 +154,10 @@ const Landing = () => {
   const providers = useProviderServices(party);
 
   const deposits = useStreamQueries(AssetDeposit).contracts;
-  const custodyService = useStreamQueries(CustodyService).contracts;
 
   const portfolio = formatCurrency(
     deposits
+      .filter(d => d.payload.account.owner === party)
       .filter(d => d.payload.asset.id.label === 'USD')
       .reduce((sum, deposit) => sum + +deposit.payload.asset.quantity, 0)
   );
@@ -188,7 +188,7 @@ const Landing = () => {
                 <h3>{portfolio}</h3>&nbsp;<span>USD</span>
               </span>
             </div>
-            {custodyService.length > 0 && (
+            {services.length > 0 && (
               <div className="link">
                 <NavLink to={paths.app.wallet.root}>View Wallet</NavLink>
               </div>
@@ -225,7 +225,7 @@ const Landing = () => {
                   )}
                 </OverflowMenu>
               )}
-              <RoleSetUp />
+              <RoleSetUp services={services} />
             </div>
           </div>
           <AutomationSetup />
@@ -237,7 +237,7 @@ const Landing = () => {
           <Header as="h2" className="header">
             Network
           </Header>
-          <ServiceRequestMenu />
+          <ServiceRequestMenu services={services} />
         </div>
         <div className="relationships">
           {providers.map(p => (

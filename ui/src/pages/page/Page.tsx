@@ -12,6 +12,7 @@ import { CogIcon } from '../../icons/icons';
 import { usePartyName } from '../../config';
 import { getBaseSegment } from '../../App';
 import paths from '../../paths';
+
 type Props = {
   className?: string;
   menuTitle?: React.ReactElement;

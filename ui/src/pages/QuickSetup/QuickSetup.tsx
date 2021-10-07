@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Button, Loader } from 'semantic-ui-react';
 import classNames from 'classnames';
 import {
-  useHistory,
-  Switch,
-  Route,
-  RouteComponentProps,
-  withRouter,
   NavLink,
   Redirect,
+  Route,
+  RouteComponentProps,
+  Switch,
+  useHistory,
+  withRouter,
 } from 'react-router-dom';
 
 import Widget from '../../components/Widget/Widget';
@@ -22,7 +22,6 @@ import ReviewPage from './ReviewPage';
 import LoginPage from './LoginPage';
 import AssignRolesPage from './AssignRolesPage';
 import ProvideServicesPage from './ProvideServicesPage';
-import CreateAccountPage from './CreateAccountPage';
 import ConfigureProvidersPage from './ConfigureProvidersPage';
 import { usePublicParty } from '../common';
 
@@ -33,7 +32,6 @@ export enum MenuItems {
   REVIEW = 'review',
   LOG_IN = 'log-in-parties',
   PROVIDE_SERVICES = 'provide-services',
-  CREATE_ACCOUNTS = 'create-accounts',
 }
 
 const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
@@ -131,12 +129,6 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
                     <ArrowRightIcon />
                   </Button>
                 </NavLink>
-                <NavLink to={`${matchUrl}/${MenuItems.CREATE_ACCOUNTS}`}>
-                  <Button className="main-button ghost dark">
-                    Create accounts
-                    <ArrowRightIcon />
-                  </Button>
-                </NavLink>
               </>
             )}
             <button
@@ -165,10 +157,6 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
               <Route
                 path={`${matchPath}/${MenuItems.PROVIDE_SERVICES}`}
                 component={() => <ProvideServicesPage adminCredentials={adminCredentials} />}
-              />
-              <Route
-                path={`${matchPath}/${MenuItems.CREATE_ACCOUNTS}`}
-                component={() => <CreateAccountPage adminCredentials={adminCredentials} />}
               />
               <Route
                 path={`${matchPath}/${MenuItems.REVIEW}`}

@@ -3,10 +3,10 @@ import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { render } from '../../components/Claims/render';
 import { transformClaim } from '../../components/Claims/util';
-import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
-import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
+import { Service as IssuanceService } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { CreateEvent } from '@daml/ledger';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { Button, Form, Header } from 'semantic-ui-react';
@@ -14,37 +14,41 @@ import Tile from '../../components/Tile/Tile';
 import BackButton from '../../components/Common/BackButton';
 import paths from '../../paths';
 import { EyeClosed, EyeOpen } from '../../icons/icons';
+import _ from 'lodash';
 
 type Props = {
-  services: Readonly<CreateEvent<Service, any, any>[]>;
+  issuanceServices: Readonly<CreateEvent<IssuanceService, any, any>[]>;
+  custodyServices: Readonly<CreateEvent<CustodyService, any, any>[]>;
 };
 
 const NewComponent: React.FC<RouteComponentProps & Props> = ({
   history,
-  services,
-}: RouteComponentProps & Props) => {
+  issuanceServices,
+  custodyServices,
+}) => {
   const el = useRef<HTMLDivElement>(null);
 
   const [showAsset, setShowAsset] = useState(false);
   const [assetLabel, setAssetLabel] = useState('');
-  const [accountLabel, setAccountLabel] = useState('');
   const [issuanceId, setIssuanceId] = useState('');
   const [quantity, setQuantity] = useState('');
 
   const ledger = useLedger();
   const party = useParty();
-  const customerServices = services.filter(s => s.payload.customer === party);
+  const customerServices = issuanceServices.filter(s => s.payload.customer === party);
+  const registrars = custodyServices
+    .filter(s => !_.isEmpty(customerServices.find(i => i.payload.provider === s.payload.provider)))
+    .map(s => s.payload.provider);
   const allAssets = useStreamQueries(AssetDescription).contracts;
   const assets = allAssets.filter(
-    c => c.payload.issuer === party && c.payload.assetId.version === '0'
+    c =>
+      c.payload.issuer === party &&
+      c.payload.assetId.version === '0' &&
+      registrars.includes(c.payload.registrar)
   );
   const asset = assets.find(c => c.payload.assetId.label === assetLabel);
-  const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
-  const accounts = assetSettlementRules.map(c => c.payload.account);
-  const account = accounts.find(a => a.id.label === accountLabel);
 
-  const canRequest =
-    !!assetLabel && !!asset && !!accountLabel && !!account && !!issuanceId && !!quantity;
+  const canRequest = !!assetLabel && !!asset && !!issuanceId && !!quantity;
 
   useEffect(() => {
     if (!el.current || !asset) return;
@@ -53,8 +57,7 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
     render(el.current, data);
   }, [el, asset, showAsset]);
 
-  const service = customerServices[0];
-  if (!service)
+  if (_.isEmpty(customerServices))
     return (
       <div>
         <h2>Party "{party}" can not request new issuances.</h2>
@@ -62,10 +65,14 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
     );
 
   const requestIssuance = async () => {
-    if (!asset || !account) return;
-    await ledger.exercise(Service.RequestCreateIssuance, service.contractId, {
+    if (!asset) return;
+    const service = customerServices.find(i => i.payload.provider === asset.payload.registrar);
+    const custody = custodyServices.find(c => c.payload.provider === asset.payload.registrar);
+    if (!service || !custody) return;
+
+    await ledger.exercise(IssuanceService.RequestCreateIssuance, service.contractId, {
       issuanceId,
-      accountId: account.id,
+      account: custody.payload.account,
       assetId: asset.payload.assetId,
       quantity,
     });
@@ -92,17 +99,6 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
             {showAsset ? <EyeClosed /> : <EyeOpen />}
           </Button>
         </div>
-
-        <Form.Select
-          selection
-          placeholder="Issuance Account"
-          options={accounts.map(c => ({
-            text: c.id.label,
-            value: c.id.label,
-          }))}
-          value={accountLabel}
-          onChange={(_, d) => setAccountLabel((d.value && (d.value as string)) || '')}
-        />
 
         <Form.Input
           required

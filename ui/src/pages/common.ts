@@ -1,6 +1,7 @@
 import { CreateEvent } from '@daml/ledger';
 import { DropdownItemProps, DropdownProps } from 'semantic-ui-react';
 import { Map, emptyMap } from '@daml/types';
+import _ from 'lodash';
 import React from 'react';
 import { useAdminParty, usePublicParty as useHubPublicParty } from '@daml/hub-react';
 import { deploymentMode, DeploymentMode } from '../config';
@@ -58,6 +59,8 @@ export function damlSetValues<T>(damlSet: DamlSet<T>): T[] {
   }
   return r;
 }
+
+export const isEmptySet = <T>(set: DamlSet<T>): boolean => _.isEmpty(set.map.entriesArray());
 
 const PUBLIC_PARTY_ID_KEY = 'default_parties/public_party_id';
 

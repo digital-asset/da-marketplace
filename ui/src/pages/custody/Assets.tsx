@@ -1,8 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useStreamQueries } from '../../Main';
-import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
-import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import Account from './Account';
 import Tile from '../../components/Tile/Tile';
@@ -12,62 +10,37 @@ import { ServicePageProps, createDropdownProp } from '../common';
 import { usePartyName } from '../../config';
 import { useLedger, useParty } from '@daml/react';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
-import TitleWithActions from '../../components/Common/TitleWithActions';
-import { NewAccount } from './New';
 
-const Assets: React.FC<ServicePageProps<Service>> = ({ services }: ServicePageProps<Service>) => {
-  const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
-  const { contracts: allocatedAccounts, loading: allocatedAccountsLoading } =
-    useStreamQueries(AllocationAccountRule);
-  const { contracts: assets } = useStreamQueries(AssetDescription);
+const Assets: React.FC<ServicePageProps<CustodyService>> = ({
+  services,
+}: ServicePageProps<CustodyService>) => {
+  const party = useParty();
+  const ledger = useLedger();
+  const { getName } = usePartyName(party);
+
+  const { contracts: allAssets } = useStreamQueries(AssetDescription);
+  const clientServices = services.filter(s => s.payload.customer === party);
+  const assets = allAssets.filter(a =>
+    clientServices.map(c => c.payload.provider).includes(a.payload.registrar)
+  );
   const displayErrorMessage = useDisplayErrorMessage();
 
   const [creditAsset, setCreditAsset] = useState<string>('');
   const [creditQuantity, setCreditQuantity] = useState<string>('');
-  const [selectedAccount, setSelectedAccount] = useState<string>('');
 
-  const party = useParty();
-  const ledger = useLedger();
-
-  const { getName } = usePartyName(party);
-
-  const allAccounts = useMemo(
-    () =>
-      accounts
-        .map(a => {
-          return { account: a.payload.account, contractId: a.contractId.replace('#', '_') };
-        })
-        .concat(
-          allocatedAccounts.map(a => {
-            return { account: a.payload.account, contractId: a.contractId.replace('#', '_') };
-          })
-        ),
-    [accounts, allocatedAccounts]
-  );
-
-  if (accountsLoading || allocatedAccountsLoading) {
-    return <div>Loading...</div>;
-  }
-
-  const clientServices = services.filter(s => s.payload.customer === party);
-
-  const onRequestCredit = async () => {
+  const onRequestDeposit = async () => {
     const asset = assets.find(i => i.payload.description === creditAsset);
-    const targetAccount = allAccounts.find(a => a.contractId === selectedAccount);
-    if (!asset || !targetAccount) return;
-    const service = clientServices.find(
-      s => s.payload.provider === targetAccount?.account.provider
-    );
 
+    if (!asset) return;
+    const service = clientServices.find(s => s.payload.provider === asset.payload.registrar);
     if (!service)
       return displayErrorMessage({
         message: `${getName(
-          targetAccount.account.provider
-        )} does not offer issuance services to ${getName(party)}`,
+          asset.payload.registrar
+        )} does not offer Custodial services to ${getName(party)}`,
       });
 
-    await ledger.exercise(Service.RequestCreditAccount, service.contractId, {
-      accountId: targetAccount.account.id,
+    await ledger.exercise(CustodyService.RequestDeposit, service.contractId, {
       asset: { id: asset.payload.assetId, quantity: creditQuantity },
     });
     setCreditAsset('');
@@ -76,32 +49,23 @@ const Assets: React.FC<ServicePageProps<Service>> = ({ services }: ServicePagePr
 
   return (
     <div className="assets">
-      <TitleWithActions title="Accounts">
-        <NewAccount party={party} modal addButton />
-      </TitleWithActions>
       <div className="page-section-row">
         <div>
-          {allAccounts.map(a => (
-            <Account key={a.contractId} targetAccount={a} services={services} />
+          {services.map(a => (
+            <Account
+              key={a.contractId}
+              targetAccount={{
+                account: a.payload.account,
+                contractId: a.contractId.replace('#', '_'),
+              }}
+              services={services}
+            />
           ))}
         </div>
 
         <Tile className="inline" header="Quick Deposit">
           <br />
-          <FormErrorHandled onSubmit={() => onRequestCredit()}>
-            <Form.Select
-              label="Account"
-              options={accounts
-                .filter(a => a.payload.account.owner === party)
-                .map(a => {
-                  return {
-                    text: a.payload.account.id.label,
-                    value: a.contractId.replace('#', '_'),
-                  };
-                })}
-              value={selectedAccount}
-              onChange={(_, data) => setSelectedAccount(data.value as string)}
-            />
+          <FormErrorHandled onSubmit={() => onRequestDeposit()}>
             <Form.Select
               label="Asset"
               options={assets.map(a => createDropdownProp(a.payload.description))}

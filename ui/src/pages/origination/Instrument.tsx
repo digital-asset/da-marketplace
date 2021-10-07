@@ -66,6 +66,7 @@ export const Instrument: React.FC<RouteComponentProps> = () => {
           title={instrument.payload.description}
           info={[
             { label: 'Issuer', data: getName(instrument.payload.issuer) },
+            { label: 'Registrar', data: getName(instrument.payload.registrar) },
             {
               label: 'Signatories',
               data: damlSetValues(instrument.payload.assetId.signatories)

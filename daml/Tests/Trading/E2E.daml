@@ -6,6 +6,7 @@ import DA.Assert ((===))
 import DA.List
 import DA.Foldable
 import DA.Finance.Asset (AssetDeposit)
+import DA.Set (fromList)
 import Marketplace.Settlement.Model qualified as Settlement
 import Marketplace.Trading.Service qualified as Trading
 import Marketplace.Trading.Model qualified as Order
@@ -32,8 +33,9 @@ tradingEndToEndTest = do
   let
     shareAsset = tsla with quantity = 200.0
     cashAsset = usd with quantity = 20000.0
-  aliceDepositCid <- depositAsset providers alice shareAsset alice.mainAccount.id
-  bobDepositCid <- depositAsset providers bob cashAsset bob.mainAccount.id
+    observers = fromList []
+  aliceDepositCid <- depositAsset providers alice shareAsset alice.mainAccount.id observers
+  bobDepositCid <- depositAsset providers bob cashAsset bob.mainAccount.id observers
 
   -- List a Security to trade
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
@@ -57,9 +59,8 @@ tradingEndToEndTest = do
 
   -- Create orders
   let aliceOrderId = "1"
-  Right (aliceOrderCid, aliceCreateOrderRequestCid, aliceAssetDepositCid) <- alice.customer `submit` do
+  aliceOrderCid <- submitMulti [alice.customer] [public] do
     exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with
-        collateral = Order.Collateral aliceDepositCid
         details = Order.Details with
             id = aliceOrderId
             listingId
@@ -68,12 +69,12 @@ tradingEndToEndTest = do
             timeInForce = Order.GTC
             optExchangeFee = None
             orderType = Order.Limit with price = 100.0
+            marketType = Order.Collateralized aliceDepositCid alice.mainAccount
   checkOrderStatusMatches aliceOrderCid alice.customer Order.New
 
   let bobOrderId = "2"
-  Right (bobOrderCid, bobCreateOrderRequestCid, bobAssetDepositCid) <- bob.customer `submit` do
+  bobOrderCid <- bob.customer `submit` do
     exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with
-        collateral = Order.Collateral bobDepositCid
         details = Order.Details with
             id = bobOrderId
             listingId
@@ -82,7 +83,10 @@ tradingEndToEndTest = do
             optExchangeFee = None
             timeInForce = Order.GTC
             orderType = Order.Limit with price = 100.0
+            marketType = Order.Collateralized bobDepositCid bob.mainAccount
   checkOrderStatusMatches bobOrderCid bob.customer Order.New
+
+  [(aliceCreateOrderRequestCid, _)] <- query @Trading.CreateOrderRequest alice.customer
 
   -- Acknowledge Orders
   aliceOrderCid <- exchange `submit` do
@@ -90,6 +94,8 @@ tradingEndToEndTest = do
         createOrderRequestCid = aliceCreateOrderRequestCid
         providerOrderId = "alice's exchange order id"
   checkOrderStatusMatches aliceOrderCid alice.customer Order.PendingExecution
+
+  [(bobCreateOrderRequestCid, _)] <- query @Trading.CreateOrderRequest bob.customer
 
   bobOrderCid <- exchange `submit` do
     exerciseCmd bob.tradingServiceCid Trading.AcknowledgeOrderRequest with

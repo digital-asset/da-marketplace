@@ -31,6 +31,14 @@ data TimeInForce
       -- ^ Fill Or Kill (All or nothing)
   deriving (Eq, Show)
 
+data MarketType
+    = Cleared with
+        clearinghouse : Party
+    | Collateralized with
+        depositCid : ContractId AssetDeposit
+        receivableAccount : Account
+  deriving (Show, Eq)
+
 data Details = Details with
     id : Text
     listingId : Text
@@ -38,6 +46,7 @@ data Details = Details with
     side : Side
     orderType : OrderType
     timeInForce : TimeInForce
+    marketType : MarketType
     optExchangeFee : Optional (ContractId AssetDeposit)
   deriving (Eq, Show)
 
@@ -65,16 +74,6 @@ data Execution = Execution with
 
 type T = Order
 
-data TradeCollateral
-    = Cleared with
-        clearinghouse: Party
-    | Collateral (ContractId AssetDeposit)
-  deriving (Show, Eq)
-
-isClearedOrder : Order -> Bool
-isClearedOrder Order{collateral = Cleared _} = True
-isClearedOrder _                             = False
-
 template Order
   with
     operator : Party
@@ -85,11 +84,10 @@ template Order
     providerOrderId : Optional Text
     executions : [Execution]
     remainingQuantity : Decimal
-    collateral : TradeCollateral
     createdAt : Time
   where
     signatory operator, provider, customer
-    observer case collateral of
+    observer case details.marketType of
       (Cleared ch) -> [ch]
       _            -> []
 
@@ -125,3 +123,8 @@ template FeeSchedule
           timeInEffect <- getTime
           let newFee = Fee with ..
           create this with currentFee = newFee; pastFees = currentFee :: pastFees
+
+isClearedOrder : Order -> Bool
+isClearedOrder order = case order.details.marketType of
+  Cleared _ -> True
+  _         -> False

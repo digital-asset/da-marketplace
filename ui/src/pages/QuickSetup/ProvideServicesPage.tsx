@@ -38,23 +38,13 @@ import { InformationIcon } from '../../icons/icons';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 
 import { CreateEvent } from '@daml/ledger';
-import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
-import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import AccountSelection, { AccountType, AccountInfos } from './AccountSelection';
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
 import QuickSetupPage from './QuickSetupPage';
 import { usePublicParty } from '../common';
 
 export type AccountsForServices = {
   clearingAccount?: Account;
-  marginAccount?: Account;
-  tradingAccount?: Account;
-  tradingAllocAccount?: Account;
-  biddingAccount?: Account;
-  biddingAllocAccount?: Account;
-  issuanceAccount?: Account;
-  auctionAccount?: Account;
-  auctionAllocAccount?: Account;
-  receivableAccount?: Account;
 };
 
 export interface IRequestServiceInfo {
@@ -133,29 +123,20 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
 };
 
 export interface IPartyAccounts {
-  accounts: CreateEvent<AssetSettlementRule>[];
-  allocAccounts: CreateEvent<AllocationAccountRule>[];
+  accounts: CreateEvent<CustodyService>[];
 }
 const AccountsForParty = (props: {
   party?: Party;
   setAccountsForParty: (accounts?: IPartyAccounts) => void;
 }) => {
   const { party, setAccountsForParty } = props;
-  const allAccounts = useStreamQueries(AssetSettlementRule);
+  const allAccounts = useStreamQueries(CustodyService);
   const accounts = useMemo(
     () => allAccounts.contracts.filter(c => c.payload.account.owner === party),
     [allAccounts, party]
   );
 
-  const allAllocationAccounts = useStreamQueries(AllocationAccountRule);
-  const allocAccounts = useMemo(
-    () => allAllocationAccounts.contracts.filter(c => c.payload.account.owner === party),
-    [allAllocationAccounts, party]
-  );
-  useEffect(
-    () => setAccountsForParty({ accounts, allocAccounts }),
-    [accounts, allocAccounts, setAccountsForParty]
-  );
+  useEffect(() => setAccountsForParty({ accounts }), [accounts, setAccountsForParty]);
   return null;
 };
 
@@ -188,70 +169,16 @@ const RequestForm = (props: {
         requestInfo?.services?.reduce<AccountInfos>((acc, svc) => {
           if (existing.includes(svc)) return acc;
 
-          switch (svc) {
-            case ServiceKind.CLEARING:
-              return {
-                ...acc,
-                clearingAccount: {
-                  accountType: AccountType.REGULAR,
-                  accountLabel: 'Clearing Account',
-                },
-                marginAccount: {
-                  accountType: AccountType.ALLOCATION,
-                  accountLabel: 'Margin Account',
-                },
-              };
-            case ServiceKind.ISSUANCE:
-              return {
-                ...acc,
-                issuanceAccount: {
-                  accountType: AccountType.REGULAR,
-                  accountLabel: 'Issuance Account',
-                },
-              };
-            case ServiceKind.TRADING:
-              return {
-                ...acc,
-                tradingAccount: {
-                  accountType: AccountType.REGULAR,
-                  accountLabel: 'Exchange Trading Account',
-                },
-                tradingAllocAccount: {
-                  accountType: AccountType.ALLOCATION,
-                  accountLabel: 'Exchange Locked Account',
-                },
-              };
-            case ServiceKind.BIDDING:
-              return {
-                ...acc,
-                biddingAccount: {
-                  accountType: AccountType.REGULAR,
-                  accountLabel: 'Bidding Account',
-                },
-                biddingAllocAccount: {
-                  accountType: AccountType.ALLOCATION,
-                  accountLabel: 'Bidding Locked Account',
-                },
-              };
-            case ServiceKind.AUCTION:
-              return {
-                ...acc,
-                auctionAccount: {
-                  accountType: AccountType.REGULAR,
-                  accountLabel: 'Main Auction Account',
-                },
-                auctionAllocAccount: {
-                  accountType: AccountType.ALLOCATION,
-                  accountLabel: 'Locked Auction Account',
-                },
-                receivableAccount: {
-                  accountType: AccountType.REGULAR,
-                  accountLabel: 'Receivables Account',
-                },
-              };
-            default:
-              return acc;
+          if (svc === ServiceKind.CLEARING) {
+            return {
+              ...acc,
+              clearingAccount: {
+                accountType: AccountType.REGULAR,
+                accountLabel: 'Clearing Account',
+              },
+            };
           }
+          return acc;
         }, {}) || {};
       setAccountSelectInfos(newAccountInfos);
     },
@@ -293,25 +220,11 @@ const RequestForm = (props: {
   const hasAccountsForServices = requestInfo?.services?.reduce((acc, svc) => {
     if (existingServices.includes(svc)) return acc;
     const accounts = requestInfo?.accounts;
-    switch (svc) {
-      case ServiceKind.CLEARING:
-        return acc && !!accounts?.clearingAccount && !!accounts?.marginAccount;
-      case ServiceKind.ISSUANCE:
-        return acc && !!accounts?.issuanceAccount;
-      case ServiceKind.TRADING:
-        return acc && !!accounts?.tradingAccount && !!accounts?.tradingAllocAccount;
-      case ServiceKind.BIDDING:
-        return acc && !!accounts?.biddingAccount && !!accounts?.biddingAllocAccount;
-      case ServiceKind.AUCTION:
-        return (
-          acc &&
-          !!accounts?.auctionAccount &&
-          !!accounts?.auctionAllocAccount &&
-          !!accounts?.receivableAccount
-        );
-      default:
-        return acc;
+
+    if (svc === ServiceKind.CLEARING) {
+      return acc && !!accounts?.clearingAccount;
     }
+    return acc;
   }, true);
 
   return (
@@ -458,57 +371,23 @@ const CreateServiceRequests = (props: {
               break;
             case ServiceKind.CLEARING:
               const clearingAccounts = requestInfo?.accounts;
-              if (!clearingAccounts?.clearingAccount || !clearingAccounts?.marginAccount) {
+              if (!clearingAccounts?.clearingAccount) {
                 return;
               }
               const clearingParams = {
                 ...params,
                 clearingAccount: clearingAccounts.clearingAccount,
-                marginAccount: clearingAccounts.marginAccount,
               };
               await ledger.create(ClearingRequest, clearingParams);
               break;
             case ServiceKind.TRADING:
-              const tradingAccounts = requestInfo?.accounts;
-              if (!tradingAccounts?.tradingAccount || !tradingAccounts?.tradingAllocAccount) {
-                return;
-              }
-              const tradingParams = {
-                ...params,
-                tradingAccount: tradingAccounts.tradingAccount,
-                allocationAccount: tradingAccounts.tradingAllocAccount,
-              };
-              await ledger.create(TradingRequest, tradingParams);
+              await doRequest(TradingRequest, params);
               break;
             case ServiceKind.BIDDING:
-              const biddingAccounts = requestInfo?.accounts;
-              if (!biddingAccounts?.biddingAccount || !biddingAccounts?.biddingAllocAccount) {
-                return;
-              }
-              const biddingParams = {
-                ...params,
-                tradingAccount: biddingAccounts.biddingAccount,
-                allocationAccount: biddingAccounts.biddingAllocAccount,
-              };
-              await ledger.create(BiddingRequest, biddingParams);
+              await doRequest(BiddingRequest, params);
               break;
-
             case ServiceKind.AUCTION:
-              const accounts = requestInfo?.accounts;
-              if (
-                !accounts?.auctionAccount ||
-                !accounts?.auctionAllocAccount ||
-                !accounts?.receivableAccount
-              ) {
-                return;
-              }
-              const auctionParams = {
-                ...params,
-                tradingAccount: accounts.auctionAccount,
-                allocationAccount: accounts.auctionAllocAccount,
-                receivableAccount: accounts.receivableAccount,
-              };
-              await ledger.create(AuctionRequest, auctionParams);
+              await doRequest(AuctionRequest, params);
               break;
             default:
               throw new Error(`Unsupported service: ${service}`);

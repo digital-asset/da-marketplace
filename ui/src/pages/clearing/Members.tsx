@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { useLedger, useParty } from '@daml/react';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { usePartyName } from '../../config';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import {
@@ -10,7 +9,7 @@ import {
   ClearedTradeSide,
   MemberStanding,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
-import { ServicePageProps, damlSetValues } from '../common';
+import { ServicePageProps, damlSetValues, makeDamlSet, isEmptySet } from '../common';
 import { Button } from 'semantic-ui-react';
 import StripedTable from '../../components/Table/StripedTable';
 import TitleWithActions from '../../components/Common/TitleWithActions';
@@ -30,13 +29,13 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
   const { getName } = usePartyName(party);
   const ledger = useLedger();
 
-  const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
   const { contracts: clearedTrades, loading: clearedTradesLoading } =
     useStreamQueries(ClearedTrade);
   const { contracts: clearedTradeSides, loading: clearedTradeSidesLoading } =
     useStreamQueries(ClearedTradeSide);
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
   const { contracts: standings, loading: standingsLoading } = useStreamQueries(MemberStanding);
+  const accounts = useMemo(() => services.map(c => c.payload.clearingAccount), [services]);
   const ccpDeposits = deposits.filter(
     d => d.payload.account.id.label === services[0]?.payload.ccpAccount.id.label
   );
@@ -55,16 +54,20 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
         title="Holdings"
         rowsClickable
         headings={['Member', 'Clearing Account', 'Margin Account', 'In Good Standing']}
-        loading={accountsLoading || depositsLoading || standingsLoading}
+        loading={depositsLoading || standingsLoading}
         rows={services.map(s => {
           const standing = standings.find(
             standing => standing.payload.customer === s.payload.customer
           );
           const clearingDeposits = deposits.filter(
-            d => d.payload.account.id.label === s.payload.clearingAccount.id.label
+            d =>
+              d.payload.account.id.label === s.payload.clearingAccount.id.label &&
+              isEmptySet(d.payload.lockers)
           );
           const marginDeposits = deposits.filter(
-            d => d.payload.account.id.label === s.payload.marginAccount.id.label
+            d =>
+              d.payload.account.id.label === s.payload.clearingAccount.id.label &&
+              d.payload.lockers === makeDamlSet([s.payload.provider]) //TODO BDW - Should it be a `contains`?
           );
           const clearingAmount = clearingDeposits.reduce(
             (acc, val) => acc + Number(val.payload.asset.quantity),
@@ -86,7 +89,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
               standingText,
             ],
             onClick: () =>
-              history.push(`${paths.app.clearing.member}/${s.contractId.replace('#', '_')}`),
+              history.push(`${paths.app.clearingMembers.member}/${s.contractId.replace('#', '_')}`),
           };
         })}
       />
@@ -106,17 +109,16 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
       />
       <StripedTable
         title="Accounts"
-        loading={accountsLoading}
-        headings={['Account', 'Provider', 'Owner', 'Role', 'Controllers']}
-        rows={accounts.map(c => {
+        headings={['Account', 'Provider', 'Owner', 'Role', 'Signatories']}
+        rows={accounts.map(a => {
           return {
             elements: [
-              c.payload.account.id.label,
-              getName(c.payload.account.provider),
-              getName(c.payload.account.owner),
-              party === c.payload.account.provider ? 'Provider' : 'Client',
-              damlSetValues(c.payload.ctrls)
-                .map(ctrl => getName(ctrl))
+              a.id.label,
+              getName(a.provider),
+              getName(a.owner),
+              party === a.provider ? 'Provider' : 'Client',
+              damlSetValues(a.id.signatories)
+                .map(sign => getName(sign))
                 .sort()
                 .join(', '),
             ],

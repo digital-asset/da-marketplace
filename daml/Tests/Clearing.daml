@@ -8,6 +8,7 @@ import Marketplace.Clearing.Service qualified as Clearing
 import Common
 import Tests.Utils
 import DA.Action (void)
+import DA.Set qualified as Set
 
 testClearingTransfers : Script ()
 testClearingTransfers = do
@@ -23,9 +24,10 @@ testClearingTransfers = do
   -- Assets
   let
     cashAsset = usd with quantity = 20000.0
+    observers = Set.fromList [ clearinghouse ]
 
-  aliceDepositCid <- depositAsset providers alice cashAsset alice.clearingAccount.id
-  bobDepositCid   <- depositAsset providers bob cashAsset bob.clearingAccount.id
+  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id observers
+  bobDepositCid   <- depositAsset providers bob cashAsset bob.mainAccount.id observers
 
   marginDepositWithRemaining <- submit clearinghouse $
     exerciseCmd alice.clearingServiceCid Clearing.TransferToMargin
@@ -34,7 +36,7 @@ testClearingTransfers = do
   clearingDepositCid <- submit clearinghouse $
     exerciseCmd alice.clearingServiceCid Clearing.TransferFromMargin
       with amount = 1000.0, marginDepositCids = [marginDepositWithRemaining.deposit]
-  assert =<< depositsQuantityEquals alice.customer alice.marginAccount 4000.0
+  assert =<< depositsQuantityEqualsByFilter alice.customer (\deposit -> deposit.account == alice.mainAccount && deposit.lockers == Set.fromList [ clearinghouse ]) 4000.0
 
   (DepositWithRemaining providerDepositCid _) <- submit clearinghouse $
     exerciseCmd bob.clearingServiceCid Clearing.TransferToProvider
@@ -42,7 +44,7 @@ testClearingTransfers = do
 
   submit clearinghouse $ exerciseCmd alice.clearingServiceCid Clearing.TransferFromProvider
       with amount = 1000.0; depositCids = [providerDepositCid]
-  assert =<< depositsQuantityEquals alice.customer alice.clearingAccount 17_000.0
+  assert =<< depositsQuantityEqualsByFilter alice.customer (\deposit -> deposit.account == alice.mainAccount && Set.null deposit.lockers) 17_000.0
 
   return ()
 
@@ -60,8 +62,9 @@ testMarginCalls = do
 
   -- Assets
   let cashAsset = usd with quantity = 20000.0
+      observers = Set.fromList [ clearinghouse ]
 
-  aliceDepositCid <- depositAsset providers alice cashAsset alice.clearingAccount.id
+  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id observers
   calculationCid <- submit clearinghouse $
     exerciseCmd alice.clearingServiceCid Clearing.CreateMarginCalculation with
       currency = usd.id; targetAmount = 4000.0; calculationId = "123456"; ..
@@ -69,7 +72,7 @@ testMarginCalls = do
   CalculationSuccess _ (Some marginWithRemaining) <- submit clearinghouse $
     exerciseCmd alice.clearingServiceCid Clearing.PerformMarginFill
       with depositCids = [aliceDepositCid]; marginDepositCids = []; ..
-  assert =<< depositsQuantityEquals alice.customer alice.marginAccount 4000.0
+  assert =<< depositsQuantityEqualsByFilter alice.customer (\deposit -> deposit.account == alice.mainAccount && deposit.lockers == Set.fromList [ clearinghouse ]) 4000.0
 
   calculationCid <- submit clearinghouse $
     exerciseCmd alice.clearingServiceCid Clearing.CreateMarginCalculation with
@@ -78,7 +81,7 @@ testMarginCalls = do
   CalculationSuccess _ (Some clearingWithRemaining) <- submit clearinghouse $
     exerciseByKeyCmd @Clearing.Service (operator, clearinghouse, alice.customer) Clearing.PerformMarginFill
       with depositCids = marginWithRemaining.remaining; marginDepositCids = [marginWithRemaining.deposit]; ..
-  assert =<< depositsQuantityEquals alice.customer alice.marginAccount 1000.0
+  assert =<< depositsQuantityEqualsByFilter alice.customer (\deposit -> deposit.account == alice.mainAccount && deposit.lockers == Set.fromList [ clearinghouse ]) 1000.0
 
   -- Fail margin calculation
   calculationCid <- submit clearinghouse $
@@ -88,7 +91,7 @@ testMarginCalls = do
   void $ submit clearinghouse $
     exerciseByKeyCmd @Clearing.Service (operator, clearinghouse, alice.customer) Clearing.PerformMarginFill
       with depositCids = [clearingWithRemaining.deposit]; marginDepositCids = clearingWithRemaining.remaining; ..
-  assert =<< depositsQuantityEquals alice.customer alice.marginAccount 1000.0
+  assert =<< depositsQuantityEqualsByFilter alice.customer (\deposit -> deposit.account == alice.mainAccount && deposit.lockers == Set.fromList [ clearinghouse ]) 1000.0
 
   (Some (_,aliceStanding)) <- queryContractKey @MemberStanding clearinghouse (clearinghouse, alice.customer)
   assert $ not aliceStanding.marginSatisfied
@@ -109,9 +112,10 @@ testMarkToMarket = do
 
   -- Assets
   let cashAsset = usd with quantity = 20000.0
+      observers = Set.fromList [ clearinghouse ]
 
-  aliceDepositCid <- depositAsset providers alice cashAsset alice.clearingAccount.id
-  bobDepositCid   <- depositAsset providers bob cashAsset bob.clearingAccount.id
+  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id observers
+  bobDepositCid   <- depositAsset providers bob cashAsset bob.mainAccount.id observers
 
   calculationCid <- submit clearinghouse $
     exerciseCmd alice.clearingServiceCid Clearing.CreateMarkToMarket with
@@ -129,8 +133,8 @@ testMarkToMarket = do
     exerciseCmd bob.clearingServiceCid Clearing.PerformMarkToMarket
       with customerDepositCids = []; providerDepositCids = [depositWithRemaining.deposit]; calculationCid = calculationCid2
 
-  assert =<< depositsQuantityEquals alice.customer alice.clearingAccount 15_000.0
-  assert =<< depositsQuantityEquals bob.customer bob.clearingAccount 25_000.0
+  assert =<< depositsQuantityEquals alice.customer alice.mainAccount 15_000.0
+  assert =<< depositsQuantityEquals bob.customer bob.mainAccount 25_000.0
 
   return ()
 

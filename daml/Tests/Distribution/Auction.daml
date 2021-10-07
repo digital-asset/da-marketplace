@@ -7,6 +7,7 @@ import DA.Date
 import DA.Finance.Asset
 import DA.Finance.Types
 import DA.Optional
+import DA.Set (empty)
 import Daml.Script
 import Common
 import Marketplace.Distribution.Role qualified as Distributor
@@ -50,10 +51,10 @@ setup = do
   Assets{usd} <- onboardAssets providers issuer
 
   -- Create our Investors/Bidders
-  aliceDepositCid    <- depositAsset providers alice     (usd with quantity = 10000.0) alice.mainAccount.id
-  bobDepositCid      <- depositAsset providers bob       (usd with quantity = 5000.0) bob.mainAccount.id
-  charlieDepositCid  <- depositAsset providers charlie   (usd with quantity = 2000.0) charlie.mainAccount.id
-  danaDepositCid     <- depositAsset providers dana      (usd with quantity = 1000.0) dana.mainAccount.id
+  aliceDepositCid    <- depositAsset providers alice     (usd with quantity = 10000.0) alice.mainAccount.id empty
+  bobDepositCid      <- depositAsset providers bob       (usd with quantity = 5000.0) bob.mainAccount.id empty
+  charlieDepositCid  <- depositAsset providers charlie   (usd with quantity = 2000.0) charlie.mainAccount.id empty
+  danaDepositCid     <- depositAsset providers dana      (usd with quantity = 1000.0) dana.mainAccount.id empty
 
   Some aliceDeposit   <- queryContractId alice.customer aliceDepositCid
   Some bobDeposit     <- queryContractId bob.customer bobDepositCid
@@ -66,9 +67,9 @@ setup = do
   let
     auctionAssetId = auctionAssetDesc.assetId
     auctionAsset = Asset with id = auctionAssetId; quantity = 1000.0
-  issuerAsset <- depositAsset providers issuer auctionAsset issuer.mainAccount.id
+  issuerAsset <- depositAsset providers issuer auctionAsset issuer.mainAccount.id empty
   auctionOfferCid <- bank `submit` exerciseCmd distributorRoleCid Distributor.OfferAuctionService with customer = issuer.customer; ..
-  auctionServiceCid <- issuer.customer `submit` exerciseCmd auctionOfferCid Auction.Accept with tradingAccount = issuer.mainAccount; allocationAccount = issuer.auctionLockedAccount; receivableAccount = issuer.mainAccount
+  auctionServiceCid <- issuer.customer `submit` exerciseCmd auctionOfferCid Auction.Accept
 
   -- Create an Auction request and approve it
   let
@@ -79,6 +80,7 @@ setup = do
       asset = auctionAsset
       depositCid = issuerAsset
       floorPrice = 5.0
+      receivableAccount = issuer.mainAccount
       ..
   auctionCid <- bank `submit` exerciseCmd auctionServiceCid Auction.CreateAuction with ..
 
@@ -93,6 +95,7 @@ setup = do
 submitBid : Customer -> ContractId Bidding.A -> ContractId AssetDeposit -> Decimal -> Decimal -> Script (ContractId Bidding.Bid)
 submitBid party auctionCid depositCid price quantity = do
   let allowPublishing = False
+      receivableAccount = party.mainAccount
   time <- getTime
   submit party.customer do exerciseCmd party.biddingServiceCid Bidding.SubmitBid with ..
 
@@ -230,7 +233,7 @@ auctionNoBidsAboveFloorPrice = do
   all ((\bid -> bid.status == Bidding.Invalid) . snd) bids === True
   F.forA_ [alice, bob, charlie, dana] (\party -> do
     let ((_, bid) :: _) = filter (\(_, bid) -> bid.customer == party.customer) bids
-    deposit <- queryFilter @AssetDeposit party.customer (\deposit -> deposit.account == bid.tradingAccount && deposit.asset.id.label == bid.quotedAssetId.label)
+    deposit <- queryFilter @AssetDeposit party.customer (\deposit -> deposit.lockers == empty && deposit.asset.id.label == bid.quotedAssetId.label)
     assertMsg ("Deposit not returned to Investor: " <> show party.customer) (not $ null deposit)
     pure ()
     )
@@ -241,24 +244,24 @@ depositsDontCoverBids = do
 
   let allowPublishing = False
   time <- getTime
-  submitMustFail alice.customer   do exerciseCmd alice.biddingServiceCid Bidding.SubmitBid with auctionCid = aliceAuctionCid; depositCid = aliceDepositCid; price = 10000.0; quantity = 500.0; ..
-  submitMustFail bob.customer     do exerciseCmd bob.biddingServiceCid Bidding.SubmitBid with auctionCid = bobAuctionCid; depositCid = bobDepositCid; price = 10000.0; quantity = 500.0; ..
-  submitMustFail charlie.customer do exerciseCmd charlie.biddingServiceCid Bidding.SubmitBid with auctionCid = charlieAuctionCid; depositCid = charlieDepositCid; price = 10000.0; quantity = 500.0; ..
-  submitMustFail dana.customer    do exerciseCmd dana.biddingServiceCid Bidding.SubmitBid with auctionCid = danaAuctionCid; depositCid = danaDepositCid; price = 10000.0; quantity = 500.0; ..
+  submitMustFail alice.customer   do exerciseCmd alice.biddingServiceCid Bidding.SubmitBid with auctionCid = aliceAuctionCid; depositCid = aliceDepositCid; price = 10000.0; quantity = 500.0; receivableAccount = alice.mainAccount; ..
+  submitMustFail bob.customer     do exerciseCmd bob.biddingServiceCid Bidding.SubmitBid with auctionCid = bobAuctionCid; depositCid = bobDepositCid; price = 10000.0; quantity = 500.0; receivableAccount = bob.mainAccount; ..
+  submitMustFail charlie.customer do exerciseCmd charlie.biddingServiceCid Bidding.SubmitBid with auctionCid = charlieAuctionCid; depositCid = charlieDepositCid; price = 10000.0; quantity = 500.0; receivableAccount = charlie.mainAccount; ..
+  submitMustFail dana.customer    do exerciseCmd dana.biddingServiceCid Bidding.SubmitBid with auctionCid = danaAuctionCid; depositCid = danaDepositCid; price = 10000.0; quantity = 500.0; receivableAccount = dana.mainAccount; ..
 
   pure ()
 
 assertAssetDeposits : Auction.Auction -> Customer -> [AssetDeposit] -> Decimal -> Decimal -> Bidding.Bid -> Script ()
 assertAssetDeposits auction issuer originalDeposits price quantity bid = do
   -- Correct Distribution of new asset check
-  deposit <- snd . head <$> queryFilter @AssetDeposit bid.customer (\deposit -> deposit.account == bid.tradingAccount && deposit.asset.id == bid.assetId)
+  deposit <- snd . head <$> queryFilter @AssetDeposit bid.customer (\deposit -> deposit.account == bid.receivableAccount && deposit.asset.id == bid.assetId)
   assertMsg "Distribution quantity incorrect" (deposit.asset.quantity == quantity)
   -- Correct Payment to issuer check
   issuerPayment <- queryFilter @AssetDeposit issuer.customer (\deposit ->
     deposit.account == issuer.mainAccount && deposit.asset.id.label == auction.quotedAssetId.label && deposit.asset.quantity == quantity * price)
   assertMsg "No valid payment to issuer" (not $ null issuerPayment)
   -- If Investor/Bidder original deposit is split -> Check deposit contains the correct remaining amount
-  quotedDeposit <- queryFilter @AssetDeposit bid.customer (\deposit -> deposit.account == bid.tradingAccount && deposit.asset.id == auction.quotedAssetId)
+  quotedDeposit <- queryFilter @AssetDeposit bid.customer (\deposit -> deposit.lockers == empty && deposit.asset.id == auction.quotedAssetId)
   case quotedDeposit of
     ([(_, x)]) -> do
       let originalDeposit = head $ filter (\deposit -> deposit.account.owner == x.account.owner) originalDeposits

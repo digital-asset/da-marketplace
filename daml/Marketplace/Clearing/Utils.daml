@@ -2,8 +2,6 @@ module Marketplace.Clearing.Utils where
 
 import DA.List
 import DA.Finance.Asset
-import DA.Finance.Asset.Settlement
-import DA.Finance.Types
 
 mergeAndSplit : [ContractId AssetDeposit] -> Decimal -> Update [ContractId AssetDeposit]
 mergeAndSplit depositCids amount = do
@@ -12,17 +10,3 @@ mergeAndSplit depositCids amount = do
 
 getDepositQuantities : [ContractId AssetDeposit] -> Update Decimal
 getDepositQuantities depositCids = sum <$> forA depositCids (fmap (.asset.quantity) . fetch)
-
-transferWithController : ContractId AssetDeposit -> Account -> Update (ContractId AssetDeposit)
-transferWithController depositCid to = do
-    deposit <- fetch depositCid
-    let addNominee = exerciseByKey @AssetSettlementRule to.id
-          AssetSettlement_AddController with ctrl = deposit.account.owner
-        removeNominee = exerciseByKey @AssetSettlementRule to.id
-          AssetSettlement_RemoveController with ctrl = deposit.account.owner
-
-    addNominee *>
-        exerciseByKey @AssetSettlementRule deposit.account.id
-          AssetSettlement_Transfer with receiverAccountId = to.id; ..
-      <* removeNominee
-

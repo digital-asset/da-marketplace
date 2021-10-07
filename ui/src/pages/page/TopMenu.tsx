@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useHistory, useLocation } from 'react-router-dom';
 import { Button, Header, Menu } from 'semantic-ui-react';
 
@@ -12,8 +12,6 @@ import { usePartyName } from '../../config';
 
 import { useParty } from '@daml/react';
 
-import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
-import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import { Auction } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Model';
 import { Auction as BiddingAuctionContract } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model';
@@ -41,24 +39,6 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle }) => {
 
   const [contractTitle, setContractTitle] = useState<string>();
 
-  const { contracts: accounts } = useStreamQueries(AssetSettlementRule);
-  const { contracts: allocatedAccounts } = useStreamQueries(AllocationAccountRule);
-
-  const allAccounts = useMemo(
-    () =>
-      accounts
-        .map(a => {
-          return { account: a.payload.account, contractId: a.contractId.replace('#', '_') };
-        })
-        .concat(
-          allocatedAccounts.map(a => {
-            return { account: a.payload.account, contractId: a.contractId.replace('#', '_') };
-          })
-        ),
-    [accounts, allocatedAccounts]
-  );
-
-  const accountLabel = allAccounts.find(c => c.contractId === contractId)?.account.id.label;
   const customerId = useStreamQueries(Service).contracts.find(c => c.contractId === contractId)
     ?.payload.customer;
   const customer = customerId && getName(customerId);
@@ -91,9 +71,7 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle }) => {
     if (path.includes('notifications')) {
       return setContractTitle('Notifications');
     }
-    if (hasContractId(path, paths.app.wallet.account)) {
-      return setContractTitle(accountLabel);
-    } else if (hasContractId(path, paths.app.clearing.member)) {
+    if (hasContractId(path, paths.app.clearing.member)) {
       return setContractTitle(customer);
     } else if (hasContractId(path, paths.app.auctions.root)) {
       return setContractTitle(auctionId);
@@ -106,16 +84,7 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle }) => {
     } else if (hasContractId(path, paths.app.listings.root)) {
       return setContractTitle(listingLabel);
     }
-  }, [
-    path,
-    accountLabel,
-    customer,
-    auctionId,
-    biddingId,
-    orderLabel,
-    instrumentLabel,
-    listingLabel,
-  ]);
+  }, [path, customer, auctionId, biddingId, orderLabel, instrumentLabel, listingLabel]);
 
   function hasContractId(path: string, matchPath: string) {
     return path.includes(matchPath) && path.split('/').length > 3;

@@ -1,16 +1,13 @@
 module Marketplace.Custody.Service where
 
 import DA.Finance.Asset
-import qualified DA.Finance.Asset as AssetDeposit
-import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 import DA.Finance.Utils (fetchAndArchive)
-import DA.Finance.Trade.SettlementInstruction
 import DA.Map (Map)
 import DA.Set
-import Marketplace.Issuance.AssetDescription (Claims)
-import Marketplace.Rule.AllocationAccount (AllocationAccountRule(..))
+import Marketplace.Issuance.AssetDescription (Claims, AssetDescription(..))
 import Marketplace.Custody.Model qualified as Custody
+import Marketplace.Settlement.Model (SettlementInstruction)
 import Marketplace.Utils
 
 template Service
@@ -18,6 +15,7 @@ template Service
     operator : Party
     provider : Party
     customer : Party
+    account : Account
   where
     signatory operator, provider, customer
 
@@ -25,49 +23,17 @@ template Service
     maintainer key._1
 
     controller customer can
-      nonconsuming RequestOpenAccount : ContractId Custody.OpenAccountRequest
+      nonconsuming RequestDeposit : ContractId Custody.DepositRequest
         with
-          accountId : Id
-          observers : [Party]
-          ctrls : [Party]
-        do
-          -- TODO: Check signatories in id - do we want to allow flexible trust models?
-          create Custody.OpenAccountRequest with observers = fromList observers; ctrls = fromList ctrls; ..
-
-      nonconsuming RequestOpenAllocationAccount : ContractId Custody.OpenAllocationAccountRequest
-        with
-          accountId : Id
-          observers : Set Party
-          nominee : Party
-        do
-          create Custody.OpenAllocationAccountRequest with ..
-
-      nonconsuming RequestCloseAccount : ContractId Custody.CloseAccountRequest
-        with
-          accountId : Id
-        do
-          create Custody.CloseAccountRequest with ..
-
-      nonconsuming RequestCreditAccount : ContractId Custody.CreditAccountRequest
-        with
-          accountId : Id
           asset : Asset
         do
-          create Custody.CreditAccountRequest with ..
+          create Custody.DepositRequest with ..
 
-      nonconsuming RequestDebitAccount : ContractId Custody.DebitAccountRequest
+      nonconsuming RequestWithdrawal : ContractId Custody.WithdrawalRequest
         with
-          accountId : Id
-          debit : AssetSettlement_Debit
+          depositCid : ContractId AssetDeposit
         do
-          create Custody.DebitAccountRequest with ..
-
-      nonconsuming RequestTransferDeposit : ContractId Custody.TransferDepositRequest
-        with
-          accountId : Id
-          transfer : AssetSettlement_Transfer
-        do
-          create Custody.TransferDepositRequest with ..
+          create Custody.WithdrawalRequest with ..
 
       nonconsuming RequestLifecycle: ContractId Custody.LifecycleRequest
         with
@@ -77,62 +43,25 @@ template Service
           create Custody.LifecycleRequest with ..
 
     controller provider can
-      nonconsuming OpenAccount : ContractId AssetSettlementRule
+
+      nonconsuming Deposit : ContractId AssetDeposit
         with
-          openAccountRequestCid : ContractId Custody.OpenAccountRequest
+          depositRequestCid : ContractId Custody.DepositRequest
         do
-          Custody.OpenAccountRequest{accountId; observers; ctrls} <- fetchAndArchive openAccountRequestCid
+          Custody.DepositRequest{asset} <- fetchAndArchive depositRequestCid
+          (_, AssetDescription{issuer}) <- fetchByKey @AssetDescription asset.id
 
-          let account = Account with provider; owner = customer; id = accountId
-          createOrLookup AssetSettlementRule with ..
+          create AssetDeposit with asset; account; lockers = empty; observers = fromList [ issuer ]
 
-      nonconsuming OpenAllocationAccount : ContractId AllocationAccountRule
+      nonconsuming Withdrawal : ()
         with
-          openAllocationAccountRequestCid : ContractId Custody.OpenAllocationAccountRequest
+          withdrawalRequestCid : ContractId Custody.WithdrawalRequest
         do
-          Custody.OpenAllocationAccountRequest{nominee; accountId; observers} <- fetchAndArchive openAllocationAccountRequestCid
-
-          let account = Account with provider; owner = customer; id = accountId
-          createOrLookup AllocationAccountRule with ..
-
-      nonconsuming CloseAccount : ()
-        with
-          closeAccountRequestCid : ContractId Custody.CloseAccountRequest
-        do
-          closeAccountRequest <- fetchAndArchive closeAccountRequestCid
-          (assetSettlementRuleCid, _) <- fetchByKey @AssetSettlementRule closeAccountRequest.accountId
-          archive assetSettlementRuleCid
-
-      nonconsuming CloseAllocationAccount : ()
-        with
-          closeAllocationAccountRequestCid : ContractId Custody.CloseAllocationAccountRequest
-        do
-          closeAccountRequest <- fetchAndArchive closeAllocationAccountRequestCid
-          (allocationAccountRuleCid, _) <- fetchByKey @AllocationAccountRule closeAccountRequest.accountId
-          archive allocationAccountRuleCid
-
-      nonconsuming CreditAccount : ContractId AssetDeposit
-        with
-          creditAccountRequestCid : ContractId Custody.CreditAccountRequest
-        do
-          Custody.CreditAccountRequest{accountId; asset} <- fetchAndArchive creditAccountRequestCid
-          depositCid <- exerciseByKey @AssetSettlementRule accountId AssetSettlement_Credit with ctrl = provider; ..
+          Custody.WithdrawalRequest{depositCid} <- fetchAndArchive withdrawalRequestCid
           deposit <- fetch depositCid
-          exercise depositCid AssetDeposit.AssetDeposit_SetObservers with newObservers = deposit.asset.id.signatories `union` deposit.observers
+          assertMsg "Deposit account provider and service provider do not match" $ deposit.account.provider == provider
 
-      nonconsuming DebitAccount : Asset
-        with
-          debitAccountRequestCid : ContractId Custody.DebitAccountRequest
-        do
-          Custody.DebitAccountRequest{accountId; debit} <- fetchAndArchive debitAccountRequestCid
-          exerciseByKey @AssetSettlementRule accountId debit
-
-      nonconsuming TransferDeposit : ContractId AssetDeposit
-        with
-          transferDepositRequestCid : ContractId Custody.TransferDepositRequest
-        do
-          Custody.TransferDepositRequest{accountId; transfer} <- fetchAndArchive transferDepositRequestCid
-          exerciseByKey @AssetSettlementRule accountId transfer
+          archive depositCid
 
       nonconsuming Lifecycle : (ContractId AssetDeposit, [ContractId SettlementInstruction])
         with
@@ -160,6 +89,7 @@ template Offer
     controller customer can
       Accept : ContractId Service
         do
+          let account = createAccount provider customer
           createOrLookup Service with ..
 
       Decline : ()
@@ -190,4 +120,11 @@ template Request
         operator : Party
       controller operator, provider
       do
+        let account = createAccount provider customer
         createOrLookup Service with ..
+
+createAccount : Party -> Party -> Account
+createAccount provider customer = do
+  let id = Id with signatories = fromList [customer, provider]; label = partyToText customer <> "@" <> partyToText provider; version = 0
+      owner = customer
+  Account with id; owner; provider

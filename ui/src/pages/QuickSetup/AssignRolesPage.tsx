@@ -14,7 +14,7 @@ import classNames from 'classnames';
 import _ from 'lodash';
 
 import { useLedger } from '@daml/react';
-import { Party, Optional } from '@daml/types';
+import { Party } from '@daml/types';
 
 import {
   OperatorOnboarding,
@@ -84,8 +84,6 @@ type CustodyInstructionFields = {
 
 type TradingInstructionFields = {
   provider?: string;
-  custodian?: string;
-  tradingAccount?: string;
 };
 
 type ClearingInstructionFields = {
@@ -101,21 +99,14 @@ type ClearingHouseInstructionFields = {
 
 type BiddingInstructionFields = {
   provider?: string;
-  custodian?: string;
-  tradingAccount?: string;
 };
 
 type IssuanceInstructionFields = {
   provider?: string;
-  custodian?: string;
-  safekeepingAccount?: string;
 };
 
 type AuctionInstructionFields = {
   provider?: string;
-  custodian?: string;
-  tradingAccount?: string;
-  receivableAccount?: string;
 };
 
 type MarketClearingInstructionFields = {
@@ -241,97 +232,46 @@ const makeMarketClearingInstruction = (
   return { tag: OnboardingTemplate.MARKETCLEARING, value: { provider, custodian } };
 };
 
-const makeClearingHouseInstruction = (
-  custodian: string,
-  optClearingAccount: Optional<string>
-): OnboardingInstruction => {
-  return { tag: OnboardingTemplate.CLEARINGHOUSE, value: { custodian, optClearingAccount } };
+const makeClearingHouseInstruction = (custodian: string): OnboardingInstruction => {
+  return { tag: OnboardingTemplate.CLEARINGHOUSE, value: { custodian } };
 };
 
-const makeClearingInstruction = (
-  provider: Party,
-  custodian: string,
-  optClearingAccount: Optional<string>
-): OnboardingInstruction => {
-  return { tag: OnboardingTemplate.CLEARING, value: { custodian, provider, optClearingAccount } };
+const makeClearingInstruction = (provider: Party, custodian: string): OnboardingInstruction => {
+  return { tag: OnboardingTemplate.CLEARING, value: { custodian, provider } };
 };
 
-const makeTradingInstruction = (
-  provider: Party,
-  custodian: Party,
-  optTradingAccount: Optional<string>
-): OnboardingInstruction => {
-  return { tag: OnboardingTemplate.TRADING, value: { custodian, provider, optTradingAccount } };
+const makeTradingInstruction = (provider: Party): OnboardingInstruction => {
+  return { tag: OnboardingTemplate.TRADING, value: { provider } };
 };
 
-const makeBiddingInstruction = (
-  provider: Party,
-  custodian: Party,
-  optTradingAccount: Optional<string>
-): OnboardingInstruction => {
-  return { tag: OnboardingTemplate.BIDDING, value: { custodian, provider, optTradingAccount } };
+const makeBiddingInstruction = (provider: Party): OnboardingInstruction => {
+  return { tag: OnboardingTemplate.BIDDING, value: { provider } };
 };
 
-const makeIssuanceInstruction = (
-  provider: Party,
-  custodian: Party,
-  optSafekeepingAccount: Optional<string>
-): OnboardingInstruction => {
-  return {
-    tag: OnboardingTemplate.ISSUANCE,
-    value: { custodian, provider, optSafekeepingAccount },
-  };
+const makeIssuanceInstruction = (provider: Party): OnboardingInstruction => {
+  return { tag: OnboardingTemplate.ISSUANCE, value: { provider } };
 };
 
-const makeAuctionInstruction = (
-  provider: Party,
-  custodian: Party,
-  optTradingAccount: Optional<string>,
-  optReceivableAccount: Optional<string>
-): OnboardingInstruction => {
-  return {
-    tag: OnboardingTemplate.AUCTION,
-    value: { custodian, provider, optTradingAccount, optReceivableAccount },
-  };
+const makeAuctionInstruction = (provider: Party): OnboardingInstruction => {
+  return { tag: OnboardingTemplate.AUCTION, value: { provider } };
 };
 
 const makeInstruction = (inst: InstFieldsWithType): OnboardingInstruction => {
   switch (inst.instructionType) {
     case InstructionType.TRADING: {
-      return makeTradingInstruction(
-        inst.fields?.provider || '',
-        inst.fields?.custodian || '',
-        inst.fields?.tradingAccount || null
-      );
+      return makeTradingInstruction(inst.fields?.provider || '');
     }
     case InstructionType.BIDDING: {
-      return makeBiddingInstruction(
-        inst.fields?.provider || '',
-        inst.fields?.custodian || '',
-        inst.fields?.tradingAccount || null
-      );
+      return makeBiddingInstruction(inst.fields?.provider || '');
     }
     case InstructionType.CLEARING: {
-      return makeClearingInstruction(
-        inst.fields?.provider || '',
-        inst.fields?.custodian || '',
-        inst.fields?.clearingAccount || null
-      );
+      return makeClearingInstruction(inst.fields?.provider || '', inst.fields?.custodian || '');
     }
     case InstructionType.AUCTION: {
-      return makeAuctionInstruction(
-        inst.fields?.provider || '',
-        inst.fields?.custodian || '',
-        inst.fields?.tradingAccount || null,
-        inst.fields?.receivableAccount || null
-      );
+      return makeAuctionInstruction(inst.fields?.provider || '');
     }
     case InstructionType.ISSUANCE: {
-      return makeIssuanceInstruction(
-        inst.fields?.provider || '',
-        inst.fields?.custodian || '',
-        inst.fields?.safekeepingAccount || null
-      );
+      return makeIssuanceInstruction(inst.fields?.provider || '');
     }
     case InstructionType.CUSTODY: {
       return makeCustodyInstruction(inst.fields?.provider || '');
@@ -343,10 +283,7 @@ const makeInstruction = (inst: InstFieldsWithType): OnboardingInstruction => {
       );
     }
     case InstructionType.CLEARINGHOUSE: {
-      return makeClearingHouseInstruction(
-        inst.fields?.custodian || '',
-        inst.fields?.optClearingAccount || null
-      );
+      return makeClearingHouseInstruction(inst.fields?.custodian || '');
     }
     case InstructionType.EXCHANGE: {
       return { tag: OnboardingTemplate.EXCHANGE, value: {} };
@@ -366,45 +303,32 @@ const makeInstruction = (inst: InstFieldsWithType): OnboardingInstruction => {
 const getFields = (inst: InstFieldsWithType) => {
   const provider = FieldType.PARTIES;
   const custodian = FieldType.PARTIES;
-  const tradingAccount = FieldType.TEXT;
   const clearingAccount = FieldType.TEXT;
-  const receivableAccount = FieldType.TEXT;
-  const safekeepingAccount = FieldType.TEXT;
 
   switch (inst.instructionType) {
     case InstructionType.TRADING: {
       return {
         provider,
-        custodian,
-        tradingAccount,
       };
     }
     case InstructionType.CLEARINGHOUSE: {
       return {
         custodian,
-        clearingAccount,
       };
     }
     case InstructionType.BIDDING: {
       return {
         provider,
-        custodian,
-        tradingAccount,
       };
     }
     case InstructionType.AUCTION: {
       return {
         provider,
-        custodian,
-        tradingAccount,
-        receivableAccount,
       };
     }
     case InstructionType.ISSUANCE: {
       return {
         provider,
-        custodian,
-        safekeepingAccount,
       };
     }
     case InstructionType.CUSTODY: {
@@ -434,11 +358,7 @@ const getFields = (inst: InstFieldsWithType) => {
 const newInstructionFields = (it: InstructionType, provider?: string, custodian?: string) => {
   switch (it) {
     case InstructionType.TRADING: {
-      return {
-        provider,
-        custodian,
-        tradingAccount: 'Exchange-TradingAccount',
-      } as TradingInstructionFields;
+      return { provider } as TradingInstructionFields;
     }
     case InstructionType.CUSTODY: {
       return { provider } as CustodyInstructionFields;
@@ -451,35 +371,19 @@ const newInstructionFields = (it: InstructionType, provider?: string, custodian?
       } as ClearingInstructionFields;
     }
     case InstructionType.AUCTION: {
-      return {
-        provider,
-        custodian,
-        tradingAccount: 'Auction-TradingAccount',
-        receivableAccount: 'Auction-ReceivableAccount',
-      } as AuctionInstructionFields;
+      return { provider } as AuctionInstructionFields;
     }
     case InstructionType.MARKETCLEARING: {
       return { provider, custodian } as MarketClearingInstructionFields;
     }
     case InstructionType.CLEARINGHOUSE: {
-      return {
-        custodian,
-        clearingAccount: 'Clearing-Bank',
-      } as ClearingHouseInstructionFields;
+      return { custodian } as ClearingHouseInstructionFields;
     }
     case InstructionType.BIDDING: {
-      return {
-        provider,
-        custodian,
-        tradingAccount: 'Bidding-TradingAccount',
-      } as BiddingInstructionFields;
+      return { provider } as BiddingInstructionFields;
     }
     case InstructionType.ISSUANCE: {
-      return {
-        provider,
-        custodian,
-        safekeepingAccount: 'Issuance-optSafekeepingAccount',
-      } as IssuanceInstructionFields;
+      return { provider } as IssuanceInstructionFields;
     }
     default:
       return undefined;

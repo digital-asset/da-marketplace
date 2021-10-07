@@ -8,18 +8,22 @@ import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { Observation } from '@daml.js/da-marketplace/lib/ContingentClaims/Observation';
 import { Claim, Inequality } from '@daml.js/da-marketplace/lib/ContingentClaims/Claim/Serializable';
 import { Date as DamlDate, Decimal } from '@daml/types';
-import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
-import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
+import { Service as IssuanceService } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import Tile from '../../components/Tile/Tile';
 import { Button, Form, Header } from 'semantic-ui-react';
 import CalendarInput from '../../components/Form/CalendarInput';
-import { makeDamlSet } from '../common';
+import { makeDamlSet, ServicePageProps } from '../common';
 import BackButton from '../../components/Common/BackButton';
 import { IconClose } from '../../icons/icons';
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import _ from 'lodash';
+import paths from '../../paths';
 
-const NewConvertibleNoteComponent = ({ history }: RouteComponentProps) => {
+const NewConvertibleNoteComponent: React.FC<
+  RouteComponentProps & ServicePageProps<CustodyService>
+> = ({ services, history }) => {
   const el = useRef<HTMLDivElement>(null);
 
   const [underlying, setUnderlying] = useState('');
@@ -31,18 +35,16 @@ const NewConvertibleNoteComponent = ({ history }: RouteComponentProps) => {
   const [maturity, setMaturity] = useState<Date | null>(null);
   const [label, setLabel] = useState('');
   const [description, setDescription] = useState('');
-  const [account, setAccount] = useState('');
+  const [registrar, setRegistrar] = useState('');
 
   const ledger = useLedger();
   const party = useParty();
-  const services = useStreamQueries(Service).contracts;
-  const customerServices = services.filter(s => s.payload.customer === party);
+  const issuanceServices = useStreamQueries(IssuanceService).contracts;
+  const customerServices = issuanceServices.filter(s => s.payload.customer === party);
   const allAssets = useStreamQueries(AssetDescription).contracts;
   const assets = allAssets.filter(
     c => c.payload.claims.tag === 'Zero' && c.payload.assetId.version === '0'
   );
-  const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
-  const accounts = assetSettlementRules.map(c => c.payload.account);
   const ccy = assets.find(c => c.payload.assetId.label === currency);
   const ccyId: Id = ccy?.payload.assetId || {
     signatories: makeDamlSet<string>([]),
@@ -55,6 +57,9 @@ const NewConvertibleNoteComponent = ({ history }: RouteComponentProps) => {
     label: '',
     version: '0',
   };
+  const registrars = services
+    .filter(s => !_.isEmpty(customerServices.find(i => i.payload.provider === s.payload.provider)))
+    .map(s => s.payload.provider);
 
   const parseDate = (d: Date | null) =>
     (!!d &&
@@ -117,27 +122,20 @@ const NewConvertibleNoteComponent = ({ history }: RouteComponentProps) => {
     render(el.current, data);
   }, [el, claims]);
 
-  const service = customerServices[0];
-  if (!service) return <></>;
+  if (_.isEmpty(customerServices)) return <></>;
 
   const requestOrigination = async () => {
-    const safekeepingAccount = accounts.find(
-      a => a.provider === service.payload.provider && a.id.label === account
-    );
-    if (!safekeepingAccount) {
-      console.log(
-        `Couldn't find account from provider ${service.payload.provider} with label ${account}`
-      );
-      return;
-    }
-    await ledger.exercise(Service.RequestOrigination, service.contractId, {
+    const service = customerServices.find(i => i.payload.provider === registrar);
+    if (!service) return;
+
+    await ledger.exercise(IssuanceService.RequestOrigination, service.contractId, {
       assetLabel: label,
       description,
       cfi: { code: 'ECXXXX' },
       claims,
-      safekeepingAccount,
       observers: [service.payload.provider, party],
     });
+    history.push(paths.app.instruments.root);
   };
 
   return (
@@ -239,14 +237,13 @@ const NewConvertibleNoteComponent = ({ history }: RouteComponentProps) => {
         />
 
         <Form.Select
+          label="Registrar"
           className="issue-asset-form-field select-account"
-          placeholder="Safekeeping Account"
-          label="Safekeeping Account"
-          options={accounts.map(c => ({ text: c.id.label, value: c.id.label }))}
-          onChange={(event: React.SyntheticEvent, result: any) => {
-            setAccount(result.value);
-          }}
+          placeholder="Select Registrar..."
+          options={registrars.map(r => ({ text: r, value: r }))}
+          onChange={(_, result: any) => setRegistrar(result.value)}
         />
+
         <div className="submit-form">
           <Button className="ghost" type="submit" content="Request Origination" />
           <Button className="a a2" onClick={() => history.goBack()}>

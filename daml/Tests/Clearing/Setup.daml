@@ -6,6 +6,7 @@ import ContingentClaims.Claim (Claim(Zero))
 import DA.Assert ((===))
 import DA.Finance.Types
 import DA.Date (date, Month(..))
+import DA.Set (fromList)
 import Marketplace.Trading.Service qualified as Trading
 import Marketplace.Trading.Model qualified as Order
 import Marketplace.Clearing.Role qualified as Clearing
@@ -30,16 +31,17 @@ setupClearingCustomer providers@Providers{clearinghouse} Assets{..} name party =
   customer <- onboardCustomer providers name party
   let
     cashAsset = usd with quantity = 2000000.0
+    observers = fromList [ clearinghouse ]
 
-  depositCid <- depositAsset providers customer cashAsset customer.clearingAccount.id
+  depositCid <- depositAsset providers customer cashAsset customer.mainAccount.id observers
 
   calculationCid <- submit clearinghouse $
     exerciseCmd customer.clearingServiceCid Clearing.CreateMarginCalculation with
-      currency = usd.id; targetAmount = 4000.0; calculationId = "123456"; ..
+      currency = usd.id; targetAmount = 4000.0; calculationId = "123456"
 
   Clearing.CalculationSuccess _ (Some marginWithRemaining) <- submit clearinghouse $
     exerciseCmd customer.clearingServiceCid Clearing.PerformMarginFill
-      with depositCids = [depositCid]; marginDepositCids = []; ..
+      with depositCids = [depositCid]; marginDepositCids = []; calculationCid
 
   return customer
 
@@ -124,9 +126,8 @@ makeTrade Providers{..} listingId buyer seller price qty currentId = do
   (Some (_,listing)) <- queryContractKey @Listing.T exchange (operator, exchange, listingId)
   -- Create orders
   let sellerOrderId = show currentId
-  Right (sellerOrderCid, sellerCreateOrderRequestCid, _) <- seller.customer `submit` do
+  sellerOrderCid <- seller.customer `submit` do
     exerciseCmd seller.tradingServiceCid Trading.RequestCreateOrder with
-        collateral = Order.Cleared clearinghouse
         details = Order.Details with
             id = sellerOrderId
             optExchangeFee = None
@@ -135,11 +136,11 @@ makeTrade Providers{..} listingId buyer seller price qty currentId = do
             side = Order.Sell
             timeInForce = Order.GTC
             orderType = Order.Limit with price
+            marketType = Order.Cleared clearinghouse
 
   let buyerOrderId = show (currentId + 1)
-  Right (buyerOrderCid, buyerCreateOrderRequestCid, _) <- submit buyer.customer $ do
+  buyerOrderCid <- submit buyer.customer $ do
     exerciseCmd buyer.tradingServiceCid Trading.RequestCreateOrder with
-        collateral = Order.Cleared clearinghouse
         details = Order.Details with
             id = buyerOrderId
             listingId
@@ -148,14 +149,17 @@ makeTrade Providers{..} listingId buyer seller price qty currentId = do
             side = Order.Buy
             timeInForce = Order.GTC
             orderType = Order.Limit with price
+            marketType = Order.Cleared clearinghouse
 
   -- Acknowledge Orders
+  [(sellerCreateOrderRequestCid, _)] <- query @Trading.CreateOrderRequest seller.customer
   sellerOrderCid <- exchange `submit` do
     exerciseCmd seller.tradingServiceCid Trading.AcknowledgeOrderRequest with
         createOrderRequestCid = sellerCreateOrderRequestCid
         providerOrderId = "seller's exchange order id"
   checkOrderStatusMatches sellerOrderCid seller.customer Order.PendingExecution
 
+  [(buyerCreateOrderRequestCid, _)] <- query @Trading.CreateOrderRequest buyer.customer
   buyerOrderCid <- exchange `submit` do
     exerciseCmd buyer.tradingServiceCid Trading.AcknowledgeOrderRequest with
         createOrderRequestCid = buyerCreateOrderRequestCid

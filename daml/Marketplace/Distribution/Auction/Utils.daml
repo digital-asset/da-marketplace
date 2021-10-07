@@ -6,17 +6,10 @@ import Marketplace.Distribution.Auction.Model qualified as Auction
 import Marketplace.Distribution.Bidding.Service qualified as Bidding
 import Marketplace.Distribution.Bidding.Model qualified as Bidding
 import Marketplace.Distribution.Bidding.Model (Bid(..))
-import Marketplace.Rule.AllocationAccount qualified as Allocation
-import Marketplace.Rule.AllocationAccount (AllocationAccountRule(..))
 
 -- | Takes a list and splits it based off a predicate.
 splitList : (a -> Bool) -> [a] -> [Either a a]
 splitList p xs = foldr (\x acc -> if p x then Right x :: acc else Left x :: acc) [] xs
-
--- | Returns a bidder's allocation to their trading account
-withdrawAllocation : Bidding.Bid -> Update (ContractId AssetDeposit)
-withdrawAllocation Bid{depositCid, tradingAccount, allocationAccount} = do
-    exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Withdraw with transferTo = tradingAccount; ..
 
 -- | Updates a bid's status
 updateBidStatus : Bidding.Status -> Bidding.Bid -> Update (ContractId Bidding.Bid)
@@ -59,9 +52,10 @@ generateSettlementInstruction (Some issuerDepositCid, settlementInstructionCids)
     -- | Process bid side
     (bidCid, _) <- fetchByKey @Bidding.Bid (bid.customer, bid.auctionId)
     (_, bidDepositCid) <- exerciseByKey @Bidding.Service serviceKey Bidding.ProcessAllocation with bidCid; quantity = allocatedQuantity; amount = allocatedAmount; price
+    bidDeposit <- fetch bidDepositCid
     let
       buyer = bid.customer
-      payment = Settlement.SettlementDetails with senderAccount = bid.allocationAccount; depositCid = bidDepositCid; receiverAccount = issuerReceivableAccount
+      payment = Settlement.SettlementDetails with senderAccount = bidDeposit.account; depositCid = bidDepositCid; receiverAccount = issuerReceivableAccount
 
     -- | Process issuer side
     -- 1/ Extract their deposit
@@ -77,7 +71,7 @@ generateSettlementInstruction (Some issuerDepositCid, settlementInstructionCids)
         [x]    -> (x, None)
         [x, y] -> (x, Some y)
         _ -> error "Auction:generateSettlementInstruction - Unexpected AssetDeposit split"
-      delivery = Settlement.SettlementDetails with senderAccount = issuerDeposit.account; depositCid = allocatedDepositCid; receiverAccount = bid.tradingAccount
+      delivery = Settlement.SettlementDetails with senderAccount = issuerDeposit.account; depositCid = allocatedDepositCid; receiverAccount = bid.receivableAccount
 
     -- | Create the Settlement Instruction to deliver the asset against the payment atomically
     settlementInstructionCid <- exerciseByKey @Bidding.Service serviceKey Bidding.GenerateSettlementInstruction with issuer; delivery; payment

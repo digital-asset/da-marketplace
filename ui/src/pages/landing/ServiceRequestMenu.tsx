@@ -9,7 +9,10 @@ import {
 import { ServiceRequestDialog } from '../../components/InputDialog/ServiceDialog';
 
 import { Template, Party } from '@daml/types';
-import { Request as CustodyRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import {
+  Request as CustodyRequest,
+  Service,
+} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { Request as MarketClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service/module';
 import { Request as ClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
@@ -24,22 +27,15 @@ import { RoleKind, useProvidersByRole } from '../../context/RolesContext';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { usePartyName, useVerifiedParties } from '../../config';
 import { useParty } from '@daml/react';
-import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
-import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
-
-import { useStreamQueries } from '../../Main';
+import { ServicePageProps } from '../common';
 
 interface RequestInterface {
   customer: string;
   provider: string;
-  tradingAccount?: Account;
-  allocationAccount?: Account;
-  receivableAccount?: Account;
   clearingAccount?: Account;
-  marginAccount?: Account;
 }
 
-const ServiceRequestMenu: React.FC = () => {
+const ServiceRequestMenu: React.FC<ServicePageProps<Service>> = ({ services }) => {
   const party = useParty();
   const { getName } = usePartyName(party);
   const providersByRole = useProvidersByRole();
@@ -63,22 +59,9 @@ const ServiceRequestMenu: React.FC = () => {
     customer: '',
   });
 
-  const allocationAccountRules = useStreamQueries(AllocationAccountRule).contracts;
-  const allocationAccounts = useMemo(
-    () =>
-      allocationAccountRules
-        .filter(c => c.payload.account.owner === party)
-        .map(c => c.payload.account),
-    [party, allocationAccountRules]
-  );
-
-  const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
   const accounts = useMemo(
-    () =>
-      assetSettlementRules
-        .filter(c => c.payload.account.owner === party)
-        .map(c => c.payload.account),
-    [party, assetSettlementRules]
+    () => services.filter(c => c.payload.account.owner === party).map(c => c.payload.account),
+    [party, services]
   );
 
   useEffect(() => {
@@ -90,24 +73,6 @@ const ServiceRequestMenu: React.FC = () => {
       provider,
     };
 
-    if (dialogState?.tradingAccount) {
-      const tradingAccount = accounts.find(a => a.id.label === dialogState.tradingAccount);
-      params = {
-        ...params,
-        tradingAccount,
-      };
-    }
-
-    if (dialogState?.allocationAccount) {
-      const allocationAccount = allocationAccounts.find(
-        a => a.id.label === dialogState.allocationAccount
-      );
-      params = {
-        ...params,
-        allocationAccount,
-      };
-    }
-
     if (dialogState?.clearingAccount) {
       const clearingAccount = accounts.find(a => a.id.label === dialogState.clearingAccount);
       params = {
@@ -116,24 +81,8 @@ const ServiceRequestMenu: React.FC = () => {
       };
     }
 
-    if (dialogState?.marginAccount) {
-      const marginAccount = allocationAccounts.find(a => a.id.label === dialogState.marginAccount);
-      params = {
-        ...params,
-        marginAccount,
-      };
-    }
-
-    if (dialogState?.receivableAccount) {
-      const receivableAccount = accounts.find(a => a.id.label === dialogState.receivableAccount);
-      params = {
-        ...params,
-        receivableAccount,
-      };
-    }
-
     setRequestParams(params);
-  }, [dialogState, accounts, allocationAccounts, identities, party]);
+  }, [dialogState, accounts, identities, party]);
 
   useEffect(() => {
     const provider =
@@ -193,30 +142,17 @@ const ServiceRequestMenu: React.FC = () => {
       />
     );
   }
+
   const makeAccountFilterField =
     (label: string): FieldCallback<Party> =>
     provider => {
       return {
         label,
         type: 'selection',
-        items: assetSettlementRules
-          .filter(
-            ar => ar.payload.observers.map.has(provider) || ar.payload.account.provider === provider
-          )
-          .map(ar => ar.payload.account.id.label),
+        items: accounts.map(a => a.id.label),
       };
     };
-  const makeAllocationAccountFilterField =
-    (label: string): FieldCallback<Party> =>
-    provider => {
-      return {
-        label,
-        type: 'selection',
-        items: allocationAccountRules
-          .filter(ar => ar.payload.nominee === provider)
-          .map(ar => ar.payload.account.id.label),
-      };
-    };
+
   return (
     <OverflowMenu>
       <OverflowMenuEntry
@@ -241,56 +177,21 @@ const ServiceRequestMenu: React.FC = () => {
         label="Request Clearing Service"
         onClick={() =>
           requestService(ClearingRequest, ServiceKind.CLEARING, RoleKind.CLEARING, {
-            clearingAccount: makeAccountFilterField(
-              'Clearing Account (requires provider to be observer on account'
-            ),
-            marginAccount: makeAllocationAccountFilterField(
-              'Margin Account (requires provider to be nominee of allocation account)'
-            ),
+            clearingAccount: makeAccountFilterField('Clearing Account'),
           })
         }
       />
       <OverflowMenuEntry
         label="Request Trading Service"
-        onClick={() =>
-          requestService(TradingRequest, ServiceKind.TRADING, RoleKind.TRADING, {
-            tradingAccount: makeAccountFilterField(
-              'Trading Account (requires provider to be provider or observer on account)'
-            ),
-            allocationAccount: makeAllocationAccountFilterField(
-              'Allocation Account (requires provider to be nominee on account)'
-            ),
-          })
-        }
+        onClick={() => requestService(TradingRequest, ServiceKind.TRADING, RoleKind.TRADING)}
       />
       <OverflowMenuEntry
         label="Request Auction Service"
-        onClick={() =>
-          requestService(AuctionRequest, ServiceKind.AUCTION, RoleKind.DISTRIBUTION, {
-            tradingAccount: makeAccountFilterField(
-              'Trading Account (requires provider to be provider or observer on account)'
-            ),
-            allocationAccount: makeAllocationAccountFilterField(
-              'Allocation Account (requires provider to be nominee on account)'
-            ),
-            receivableAccount: makeAccountFilterField(
-              'Receivable Account (requires provider to be provider or observer on account)'
-            ),
-          })
-        }
+        onClick={() => requestService(AuctionRequest, ServiceKind.AUCTION, RoleKind.DISTRIBUTION)}
       />
       <OverflowMenuEntry
         label="Request Bidding Service"
-        onClick={() =>
-          requestService(BiddingRequest, ServiceKind.BIDDING, RoleKind.DISTRIBUTION, {
-            tradingAccount: makeAccountFilterField(
-              'Trading Account (requires provider to be provider on account)'
-            ),
-            allocationAccount: makeAllocationAccountFilterField(
-              'Allocation Account (requires provider to be nominee on account)'
-            ),
-          })
-        }
+        onClick={() => requestService(BiddingRequest, ServiceKind.BIDDING, RoleKind.DISTRIBUTION)}
       />
     </OverflowMenu>
   );

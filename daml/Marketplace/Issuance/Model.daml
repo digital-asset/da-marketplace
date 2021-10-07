@@ -1,6 +1,6 @@
 module Marketplace.Issuance.Model where
 
-import DA.Finance.Types (Id)
+import DA.Finance.Types (Account, Id)
 
 type T = Issuance
 
@@ -11,7 +11,7 @@ template Issuance
     customer : Party
     issuanceId : Text
     assetId : Id
-    accountId : Id
+    account : Account
     quantity : Decimal
   where
     signatory operator, provider, customer

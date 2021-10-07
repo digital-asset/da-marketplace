@@ -152,7 +152,7 @@ export function RequestNotification<T extends Fields<{ operator: string }>>({
   const onApprove = async () => {
     if (lookupFields) {
       const args = lookupFields(approveArgs);
-      ledger.exercise(approveChoice, contract, args);
+      await ledger.exercise(approveChoice, contract, args);
     }
   };
 

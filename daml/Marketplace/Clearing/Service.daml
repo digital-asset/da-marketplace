@@ -5,13 +5,10 @@ module Marketplace.Clearing.Service where
 import DA.Set qualified as Set
 
 import DA.Finance.Asset
-import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 
-import qualified Marketplace.Rule.AllocationAccount as AllocationAccountRule (T, Deposit(..), Withdraw(..))
 import Marketplace.Clearing.Model
 import Marketplace.Clearing.Utils
-
 import Marketplace.Utils
 
 data DepositWithRemaining = DepositWithRemaining {
@@ -28,9 +25,8 @@ template Service
     operator : Party
     provider : Party
     customer : Party
-    ccpAccount : Account
     clearingAccount : Account
-    marginAccount : Account
+    ccpAccount : Account
   where
     signatory operator, provider, customer
 
@@ -38,12 +34,18 @@ template Service
     maintainer key._1
 
     let
-      transferToMarginAccount : ContractId AssetDeposit -> Update (ContractId AssetDeposit)
-      transferToMarginAccount = exerciseByKey @AllocationAccountRule.T marginAccount.id . AllocationAccountRule.Deposit
+      transferDeposit : ContractId AssetDeposit -> Account -> Update (ContractId AssetDeposit)
+      transferDeposit = \depositCid receiverAccount -> exercise depositCid AssetDeposit_Transfer with receiverAccount
 
-      transferFromMarginAccount : ContractId AssetDeposit -> Update (ContractId AssetDeposit)
-      transferFromMarginAccount = \depositCid -> exerciseByKey @AllocationAccountRule.T marginAccount.id
-          AllocationAccountRule.Withdraw with transferTo = clearingAccount; ..
+      lockDeposit : ContractId AssetDeposit -> Update (ContractId AssetDeposit)
+      lockDeposit = \depositCid -> exercise depositCid AssetDeposit_Lock with newLockers = Set.fromList [ provider ]
+
+      unlockDeposit : ContractId AssetDeposit -> Update (ContractId AssetDeposit)
+      unlockDeposit = flip exercise AssetDeposit_Unlock
+
+      allocateDeposit : ContractId AssetDeposit -> Update (ContractId AssetDeposit)
+      allocateDeposit = \depositCid -> (.observers) <$> fetch depositCid
+        >>= \observers -> exercise depositCid AssetDeposit_SetObservers with newObservers = provider `Set.insert` observers
 
       failMarginCalculation : ContractId MarginCalculation -> Update (ContractId RejectedMarginCalculation)
       failMarginCalculation = \calculationCid -> do
@@ -144,7 +146,7 @@ template Service
         do
           assertMsg "deposits are not enough to transfer from provider" =<< (amount <=) <$> getDepositQuantities depositCids
           (depositCid::remainingCids) <- mergeAndSplit depositCids amount
-          DepositWithRemaining <$> transferWithController depositCid clearingAccount <*> pure remainingCids
+          DepositWithRemaining <$> (transferDeposit depositCid clearingAccount >>= allocateDeposit) <*> pure remainingCids
 
       -- TODO: check that the deposit cid matches the clearing account?
       nonconsuming TransferToProvider : DepositWithRemaining
@@ -154,7 +156,7 @@ template Service
         do
           assertMsg "deposits are not enough to transfer to provider" =<< (amount <=) <$> getDepositQuantities depositCids
           (depositCid::remainingCids) <- mergeAndSplit depositCids amount
-          DepositWithRemaining <$> transferWithController depositCid ccpAccount <*> pure remainingCids
+          DepositWithRemaining <$> transferDeposit depositCid ccpAccount <*> pure remainingCids
 
       nonconsuming TransferFromMargin : DepositWithRemaining
         with
@@ -163,7 +165,7 @@ template Service
         do
           assertMsg "deposits are not enough to transfer from margin" =<< (amount <=) <$> getDepositQuantities marginDepositCids
           (depositCid::remainingCids) <- mergeAndSplit marginDepositCids amount
-          DepositWithRemaining <$> transferFromMarginAccount depositCid <*> pure remainingCids
+          DepositWithRemaining <$> unlockDeposit depositCid <*> pure remainingCids
 
       nonconsuming TransferToMargin : DepositWithRemaining
         with
@@ -172,7 +174,7 @@ template Service
         do
           assertMsg "deposits are not enough to transfer from provider" =<< (amount <=) <$> getDepositQuantities depositCids
           (depositCid::remainingCids) <- mergeAndSplit depositCids amount
-          DepositWithRemaining <$> transferToMarginAccount depositCid <*> pure remainingCids
+          DepositWithRemaining <$> lockDeposit depositCid <*> pure remainingCids
 
     choice Terminate : ()
       with
@@ -181,17 +183,6 @@ template Service
       do
         (standingCid,_) <- fetchByKey @MemberStanding (provider,customer)
         archive standingCid
-
-assertAccounts : Party -> Account -> Account -> Update ()
-assertAccounts provider clearingAccount marginAccount = do
-  (_,marginAccountRule) <- fetchByKey @AllocationAccountRule.T marginAccount.id
-  assertMsg "provider must be nominee on margin account" $ marginAccountRule.nominee == provider
-
-  (_,clearingAccountRule) <- fetchByKey @AssetSettlementRule clearingAccount.id
-  assertMsg "provider must be an observer, ctrl, or the provider on the clearing account"
-    $ Set.member provider clearingAccountRule.observers
-   || Set.member provider clearingAccountRule.ctrls
-   || clearingAccount.provider == provider
 
 template Offer
   with
@@ -206,9 +197,7 @@ template Offer
       Accept : ContractId Service
         with
           clearingAccount : Account
-          marginAccount : Account
         do
-          assertAccounts provider clearingAccount marginAccount
           createOrLookup MemberStanding with marginSatisfied = True, mtmSatisfied = True, observers = mempty; ..
           createOrLookup Service with ..
 
@@ -225,7 +214,6 @@ template Request
     customer : Party
     provider : Party
     clearingAccount : Account
-    marginAccount : Account
   where
     signatory customer
 
@@ -243,6 +231,5 @@ template Request
         ccpAccount : Account
       controller operator, provider
       do
-        assertAccounts provider clearingAccount marginAccount
         createOrLookup MemberStanding with marginSatisfied = True, mtmSatisfied = True, observers = mempty; ..
         createOrLookup Service with ..

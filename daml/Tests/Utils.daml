@@ -81,6 +81,14 @@ depositsQuantityEquals party account amount = do
 getDepositsForAccount : Party -> Account -> Script [ContractId AssetDeposit]
 getDepositsForAccount party account = map fst . filter (\(_,d) -> d.account == account) <$> query @AssetDeposit party
 
+depositsQuantityEqualsByFilter : Party -> (AssetDeposit -> Bool) -> Decimal -> Script Bool
+depositsQuantityEqualsByFilter party depositFilter amount = do
+  accountQuantity <- getDepositQuantities party =<< getDeposits party depositFilter
+  return $ amount == accountQuantity
+
+getDeposits : Party -> (AssetDeposit -> Bool) -> Script [ContractId AssetDeposit]
+getDeposits party depositFilter = map fst . filter (depositFilter . snd) <$> query @AssetDeposit party
+
 getDepositQuantities : Party -> [ContractId AssetDeposit] -> Script Decimal
 getDepositQuantities party depositCids = do
   foldl (+) 0.0 <$> forA depositCids (\dcid -> do
