@@ -10,7 +10,8 @@ import DA.Finance.Asset
 import DA.Finance.Types
 
 import DA.Action
-import DA.Next.Set
+import DA.Optional
+import DA.Next.Set hiding (null)
 
 
 template CustodianRelationship
@@ -150,6 +151,8 @@ template Custodian
           depositQuantity : Decimal
           beneficiary : Party
         do
+          optRelationships <- mapM (\s -> lookupByKey @CustodianRelationship (custodian, operator, s)) $ toList tokenId.signatories
+          assertMsg "Custodian must have a relationship with the issuer to deposit this token" $ not $ null (catOptionals optRelationships)
           (tokenCid, token) <- fetchByKey @Token tokenId
           account <- exercise self Custodian_GetAccount with investor = beneficiary
           let quantity = roundBankers token.quantityPrecision depositQuantity

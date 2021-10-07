@@ -34,7 +34,7 @@ doSetupTransfer lp@(LedgerParties operator public custodian exchange issuer _ al
   onboardInvestor lp alice "Alice the Investor"
   onboardInvestor lp bob "Bob the Investor"
 
-  let observers = [operator, public, custodian, exchange, issuer, alice, bob]
+  let observers = [operator, public, custodian, issuer, alice, bob]
 
   btcTokenId <- createToken operator issuer "BTC" "Bitcoin" 2 observers
   ethTokenId <- createToken operator issuer "ETH" "ETH Coin" 2 observers
