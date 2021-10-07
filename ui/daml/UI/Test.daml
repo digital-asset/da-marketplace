@@ -21,6 +21,9 @@ data Parties = Parties with
     bob : Party
   deriving (Show, Eq)
 
+requestFor : Party -> [OnboardingInstruction] -> (Party, [OnboardingInstruction])
+requestFor party is = (party, is)
+
 setupTest : Script ()
 setupTest = do
   Parties{..} <- setupParties
@@ -33,7 +36,7 @@ setupParty operator public name = do
   party <- allocatePartyWithHint name $ PartyIdHint name
   party `submit` createCmd PartyOnboarding with ..
 
-  (Some (regulatorRoleCid,_))     <- queryContractKey @Regulator.Role operator (operator, operator)
+  (Some (regulatorRoleCid, _))    <- queryContractKey @Regulator.Role operator (operator, operator)
   regulatorServiceOfferCid        <- submit operator  do exerciseCmd regulatorRoleCid Regulator.OfferRegulatorService with customer = party
   regulatorServiceCid             <- submit party  do exerciseCmd regulatorServiceOfferCid RegulatorService.Accept
   identityVerificationRequestCid  <- submit party  do exerciseCmd regulatorServiceCid RegulatorService.RequestIdentityVerification with legalName = show party; location = show party <> " Location"; observers = [public]
@@ -73,15 +76,15 @@ testListOnboarding = do
 
   let investorInstructions =
         [ OnboardCustody  with provider = bank
-        , OnboardTrading  with provider = exchange;     custodian = bank
-        , OnboardBidding  with provider = auctionhouse; custodian = bank
+        , OnboardTrading  with provider = exchange
+        , OnboardBidding  with provider = auctionhouse
         , OnboardClearing with provider = ccp;          custodian = bank
         ]
 
   let issuerInstructions =
         [ OnboardCustody  with provider = bank
-        , OnboardIssuance with provider = bank;         custodian = bank
-        , OnboardAuction  with provider = auctionhouse; custodian = bank
+        , OnboardIssuance with provider = bank
+        , OnboardAuction  with provider = auctionhouse
         ]
 
   let exchangeInstructions =
@@ -131,9 +134,9 @@ testOnboarding = do
 
   -- Onboard Investors
   let instructions = [ OnboardCustody  with provider = bank
-                     , OnboardTrading  with provider = exchange;     custodian = bank
-                     , OnboardBidding  with provider = auctionhouse; custodian = bank
-                     , OnboardClearing with provider = ccp;          custodian = bank
+                     , OnboardTrading  with provider = exchange
+                     , OnboardBidding  with provider = auctionhouse
+                     , OnboardClearing with provider = ccp; custodian = bank
                      ]
 
   operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = alice; ..
@@ -142,8 +145,8 @@ testOnboarding = do
 
   -- Onboard Issuer
   let instructions = [ OnboardCustody  with provider = bank
-                     , OnboardIssuance with provider = bank;         custodian = bank
-                     , OnboardAuction  with provider = auctionhouse; custodian = bank ]
+                     , OnboardIssuance with provider = bank
+                     , OnboardAuction  with provider = auctionhouse ]
   operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = issuer; ..
 
   return ()

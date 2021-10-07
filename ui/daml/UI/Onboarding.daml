@@ -13,7 +13,6 @@ import qualified Marketplace.Trading.Service as Trading
 import qualified Marketplace.Distribution.Auction.Service as Auction
 import qualified Marketplace.Distribution.Bidding.Service as Bidding
 
-
 import DA.Set (Set)
 import DA.Set qualified as Set
 import DA.Foldable (mapA_, forA_)
@@ -26,25 +25,22 @@ createOrLookup t = lookupByKey @t (key t) >>= \case
     (Some cid) -> return cid
     None       -> create t
 
-requestFor : Party -> [OnboardingInstruction] -> (Party, [OnboardingInstruction])
-requestFor party is = (party, is)
-
 handleOnboardingInstruction : Party -> Party -> OnboardingInstruction -> Update ()
-handleOnboardingInstruction operator customer ins = case ins of
+handleOnboardingInstruction operator customer = \case
 
-    OnboardExchange    -> do
+    OnboardExchange -> do
       offerCid <- exerciseByKey @Operator.Role operator Operator.OfferExchangeRole with provider = customer
       void $ exercise offerCid Exchange.Accept
 
-    OnboardDistributor    -> do
+    OnboardDistributor -> do
       offerCid <- exerciseByKey @Operator.Role operator Operator.OfferDistributorRole with provider = customer
       void $ exercise offerCid Distributor.Accept
 
-    OnboardCustodian    -> do
+    OnboardCustodian -> do
       offerCid <- exerciseByKey @Operator.Role operator Operator.OfferCustodianRole with provider = customer
       void $ exercise offerCid Custodian.Accept
 
-    o@OnboardClearinghouse{..} -> do
+    OnboardClearinghouse{..} -> do
       optClearingRole <- lookupByKey @Clearinghouse.Role (operator, customer)
       when (isNone optClearingRole) $ do
         let account = Custody.createAccount custodian customer
@@ -53,53 +49,44 @@ handleOnboardingInstruction operator customer ins = case ins of
         offerCid <- exerciseByKey @Operator.Role operator Operator.OfferClearingRole with provider = customer
         void $ exercise offerCid Clearinghouse.Accept with ccpAccount = account
 
-    o@OnboardCustody{..} -> do
+    OnboardCustody{..} -> do
       offerCid <- exerciseByKey @Custodian.Role (operator, provider) Custodian.OfferCustodyService with ..
       void $ exercise offerCid Custody.Accept
 
-    ot@OnboardTrading{..} -> do
-        let account = Custody.createAccount custodian customer
-        custodyCid <- createOrLookup Custody.Service with provider = custodian; ..
+    OnboardTrading{..} -> do
+      offerCid <- exerciseByKey @Exchange.Role (operator, provider) Exchange.OfferTradingService with ..
+      void $ exercise offerCid Trading.Accept
 
-        offerCid <- exerciseByKey @Exchange.Role (operator, provider) Exchange.OfferTradingService with ..
-        void $ exercise offerCid Trading.Accept
+    OnboardIssuance{..} -> do
+      offerCid <- exerciseByKey @Custodian.Role (operator, provider) Custodian.OfferIssuanceService with ..
+      void $ exercise offerCid Issuance.Accept
 
-    ot@OnboardIssuance{..} -> do
-        let account = Custody.createAccount custodian customer
-        custodyCid <- createOrLookup Custody.Service with provider = custodian; ..
+    OnboardClearing{..} -> do
+      let account = Custody.createAccount custodian customer
+      custodyCid <- createOrLookup Custody.Service with provider = custodian; ..
+      (clearingRoleCid,_) <- fetchByKey @Clearinghouse.Role (operator, provider)
 
-        offerCid <- exerciseByKey @Custodian.Role (operator, provider) Custodian.OfferIssuanceService with ..
-        void $ exercise offerCid Issuance.Accept
+      clearingOfferCid <- exercise clearingRoleCid Clearinghouse.OfferClearingService with ..
+      void $ exercise clearingOfferCid Clearing.Accept with clearingAccount = account
 
-    ot@OnboardClearing{..} -> do
-        let account = Custody.createAccount custodian customer
-        custodyCid <- createOrLookup Custody.Service with provider = custodian; ..
-        (clearingRoleCid,_) <- fetchByKey @Clearinghouse.Role (operator, provider)
+    OnboardMarketClearing{..} -> do
+      (clearingRoleCid,_) <- fetchByKey @Clearinghouse.Role (operator, provider)
 
-        clearingOfferCid <- exercise clearingRoleCid Clearinghouse.OfferClearingService with ..
-        void $ exercise clearingOfferCid Clearing.Accept with clearingAccount = account
+      clearingOfferCid <- exercise clearingRoleCid Clearinghouse.OfferMarketService with ..
+      void $ exercise clearingOfferCid Market.Accept
 
-    ot@OnboardMarketClearing{..} -> do
-        (clearingRoleCid,_) <- fetchByKey @Clearinghouse.Role (operator, provider)
+    OnboardAuction{..} -> do
+      offerCid <- exerciseByKey @Distributor.Role (operator, provider) Distributor.OfferAuctionService with ..
+      void $ exercise offerCid Auction.Accept
 
-        clearingOfferCid <- exercise clearingRoleCid Clearinghouse.OfferMarketService with ..
-        void $ exercise clearingOfferCid Market.Accept
+    OnboardBidding{..} -> do
+      offerCid <- exerciseByKey @Distributor.Role (operator, provider) Distributor.OfferBiddingService with ..
+      void $ exercise offerCid Bidding.Accept
 
-    ot@OnboardAuction{..} -> do
-        let account = Custody.createAccount custodian customer
-        custodyCid <- createOrLookup Custody.Service with provider = custodian; ..
-
-        offerCid <- exerciseByKey @Distributor.Role (operator, provider) Distributor.OfferAuctionService with ..
-        void $ exercise offerCid Auction.Accept
-
-    ot@OnboardBidding{..} -> do
-        let account = Custody.createAccount custodian customer
-        custodyCid <- createOrLookup Custody.Service with provider = custodian; ..
-
-        offerCid <- exerciseByKey @Distributor.Role (operator, provider) Distributor.OfferBiddingService with ..
-        void $ exercise offerCid Bidding.Accept
-
-data OnboardingAccount = OnboardingAccount with custodian: Party, name: Text deriving (Show, Eq, Ord)
+data OnboardingAccount = OnboardingAccount with
+    custodian: Party
+    name: Text
+  deriving (Show, Eq, Ord)
 
 data OnboardingInstruction
   = OnboardExchange
@@ -109,33 +96,33 @@ data OnboardingInstruction
   | OnboardMarketClearing with provider : Party, custodian : Party
 
   | OnboardCustody  with provider : Party
-  | OnboardTrading  with provider : Party, custodian : Party
+  | OnboardTrading  with provider : Party
   | OnboardClearing with provider : Party, custodian : Party
-  | OnboardIssuance with provider : Party, custodian : Party
-  | OnboardAuction  with provider : Party, custodian : Party
-  | OnboardBidding  with provider : Party, custodian : Party
+  | OnboardIssuance with provider : Party
+  | OnboardAuction  with provider : Party
+  | OnboardBidding  with provider : Party
   deriving (Show, Eq, Ord)
 
 -- |List of provider roles needed for this instruction
 roleDependencies : OnboardingInstruction -> [(Party, OnboardingInstruction)]
-roleDependencies (OnboardCustody c)          = [(c, OnboardCustodian)]
-roleDependencies (OnboardIssuance p c)       = [(p, OnboardCustodian),    (c, OnboardCustodian)]
-roleDependencies (OnboardTrading e c)        = [(e, OnboardExchange),     (c, OnboardCustodian)]
-roleDependencies (OnboardClearing ch c )     = [(c, OnboardCustodian),    (ch, OnboardClearinghouse c)]
-roleDependencies (OnboardAuction ah c)       = [(ah, OnboardDistributor), (c, OnboardCustodian)]
-roleDependencies (OnboardBidding ah c)       = [(ah, OnboardDistributor), (c, OnboardCustodian)]
-roleDependencies (OnboardMarketClearing p c) = [(p, OnboardClearinghouse c )]
+roleDependencies (OnboardCustody c)          = [(c,  OnboardCustodian)]
+roleDependencies (OnboardIssuance p)         = [(p,  OnboardCustodian)]
+roleDependencies (OnboardTrading e)          = [(e,  OnboardExchange)]
+roleDependencies (OnboardClearing ch c )     = [(c,  OnboardCustodian), (ch, OnboardClearinghouse c)]
+roleDependencies (OnboardAuction ah)         = [(ah, OnboardDistributor)]
+roleDependencies (OnboardBidding ah)         = [(ah, OnboardDistributor)]
+roleDependencies (OnboardMarketClearing p c) = [(p,  OnboardClearinghouse c )]
 roleDependencies _                           = []
 
 getSignaturesNeeded : OnboardingInstruction -> [Party]
 getSignaturesNeeded (OnboardClearinghouse c)    = [c]
 getSignaturesNeeded (OnboardCustody c)          = [c]
-getSignaturesNeeded (OnboardTrading e c)        = [e, c]
-getSignaturesNeeded (OnboardClearing ccp c )    = [ccp, c]
+getSignaturesNeeded (OnboardTrading e)          = [e]
+getSignaturesNeeded (OnboardClearing ccp c)     = [ccp, c]
 getSignaturesNeeded (OnboardMarketClearing p c) = [p, c]
-getSignaturesNeeded (OnboardIssuance p c)       = [p, c]
-getSignaturesNeeded (OnboardAuction d c)        = [d, c]
-getSignaturesNeeded (OnboardBidding d c)        = [d, c]
+getSignaturesNeeded (OnboardIssuance p)         = [p]
+getSignaturesNeeded (OnboardAuction d)          = [d]
+getSignaturesNeeded (OnboardBidding d)          = [d]
 getSignaturesNeeded _                           = []
 
 collectPartySignatures : Party -> [Party] -> ContractId OnboardCustomer -> Update (ContractId OnboardCustomer)
