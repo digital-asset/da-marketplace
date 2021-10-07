@@ -277,7 +277,10 @@ const makeInstruction = (inst: InstFieldsWithType): OnboardingInstruction => {
       return makeCustodyInstruction(inst.fields?.provider || '');
     }
     case InstructionType.MARKETCLEARING: {
-      return makeMarketClearingInstruction(inst.fields?.provider || '',inst.fields?.custodian || '');
+      return makeMarketClearingInstruction(
+        inst.fields?.provider || '',
+        inst.fields?.custodian || ''
+      );
     }
     case InstructionType.CLEARINGHOUSE: {
       return makeClearingHouseInstruction(inst.fields?.custodian || '');
