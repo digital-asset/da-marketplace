@@ -143,6 +143,7 @@ template ExchangeParticipant
           isBid : Bool
         do
           deposit <- fetch depositCid
+          assertMsg "Deposit must be signed by Exchange operator!" $ Set.member operator deposit.account.id.signatories
 
           assertMsg "deposit is not allocated to the exchange"
             $ deposit.account.id.label == getAccountLabel exchParticipant exchange

@@ -236,6 +236,7 @@ assetSplit asset quantities = map (\q -> asset with quantity = q) quantitiesAll
 
 template BrokerOrderRequest
   with
+    operator : Party
     brokerCustomer : Party
     broker : Party
     depositCid : ContractId AssetDeposit
@@ -261,6 +262,7 @@ template BrokerOrderRequest
 
 template BrokerOrder
   with
+    operator : Party
     brokerCustomer : Party
     broker : Party
     pair : IdPair

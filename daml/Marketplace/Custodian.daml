@@ -12,6 +12,7 @@ import DA.Finance.Types
 import DA.Action
 import DA.Optional
 import DA.Next.Set hiding (null)
+import DA.List (head)
 
 
 template CustodianRelationship
@@ -20,7 +21,7 @@ template CustodianRelationship
     custodian : Party
     party : Party
   where
-    signatory custodian, party
+    signatory operator, custodian, party
     key (custodian, operator, party) : (Party, Party, Party)
     maintainer key._1
 
@@ -142,7 +143,7 @@ template Custodian
         with
           investor : Party
         do
-          let accountId = getAccountId investor custodian [custodian]
+          let accountId = getAccountId investor custodian [custodian, operator]
           return Account with id = accountId, provider = custodian, owner = investor
 
       nonconsuming Custodian_CreateDeposit : ContractId AssetDeposit

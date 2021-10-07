@@ -8,12 +8,6 @@ import Marketplace.Transfer
 
 import Utils
 
-template TestTemplate
-  with
-    test : Party
-  where
-   ignatory test
-
 handleCustodian : Trigger ()
 handleCustodian = Trigger
   { initialize = return ()
