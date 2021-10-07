@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Form, Header, Loader } from 'semantic-ui-react';
 import classNames from 'classnames';
+import React, { useEffect, useState } from 'react';
+import { useHistory } from 'react-router';
+import { Button, Form, Header, Loader } from 'semantic-ui-react';
 
 import { useLedger, useParty } from '@daml/react';
-import { useHistory } from 'react-router';
 
-import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
+import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 
+import { useStreamQueries } from '../../Main';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { IconCircledCheck, LockIcon, PublicIcon } from '../../icons/icons';
-import { useStreamQueries } from '../../Main';
 import { usePublicParty } from '../common';
 
 const Request = () => {

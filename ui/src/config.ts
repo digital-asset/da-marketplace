@@ -1,10 +1,8 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
-
-import { useCallback, useMemo, useState, useEffect } from 'react';
 import _ from 'lodash';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 
-import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import {
   isRunningOnHub,
   damlHubEnvironment,
@@ -12,6 +10,8 @@ import {
   DefaultParties,
   PartyToken,
 } from '@daml/hub-react';
+
+import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 
 import { retrieveCredentials } from './Credentials';
 import { useStreamQueries } from './Main';

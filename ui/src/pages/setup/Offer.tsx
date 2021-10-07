@@ -3,21 +3,20 @@ import { useHistory } from 'react-router';
 
 import { useParty } from '@daml/react';
 
+import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { Offer as MarketClearingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
+import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
+import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
 import { Offer as CustodyOffer } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import { Offer as TradingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
 import { Offer as IssuanceOffer } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import { Offer as ListingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
-
 import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
-import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
-import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
+import { Offer as TradingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
 
-import { ServiceKind, ServiceOffer, ServiceRoleOfferChoice } from '../../context/ServicesContext';
 import { ServiceOfferDialog } from '../../components/InputDialog/ServiceDialog';
 import { useVerifiedParties } from '../../config';
+import { ServiceKind, ServiceOffer, ServiceRoleOfferChoice } from '../../context/ServicesContext';
 import { useOperatorParty } from '../common';
-import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 
 interface RequestInterface {
   operator: string;

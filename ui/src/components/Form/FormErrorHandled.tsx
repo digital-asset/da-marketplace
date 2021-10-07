@@ -1,8 +1,8 @@
+import classNames from 'classnames';
 import React, { useState } from 'react';
 import { Form, Button } from 'semantic-ui-react';
-import classNames from 'classnames';
-import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
+import { useDisplayErrorMessage } from '../../context/MessagesContext';
 import { parseError } from '../../pages/error/errorTypes';
 
 type Renderable = number | string | React.ReactElement | React.ReactNode | Renderable[];

@@ -1,14 +1,17 @@
 import React from 'react';
 import { Button } from 'semantic-ui-react';
+
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
-import { useStreamQueries } from '../../Main';
+
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { Role as ExchangeRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import { Service as TradingService } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
-import { getTemplateId, usePartyName } from '../../config';
+
+import { useStreamQueries } from '../../Main';
 import StripedTable from '../../components/Table/StripedTable';
+import { getTemplateId, usePartyName } from '../../config';
 import ManageFees from './Fees';
-import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 
 type Props = {
   tradingServices: Readonly<CreateEvent<TradingService, any, any>[]>;

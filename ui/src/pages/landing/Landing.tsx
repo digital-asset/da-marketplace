@@ -6,28 +6,27 @@ import { Button, Header } from 'semantic-ui-react';
 import { useLedger, useParty } from '@daml/react';
 
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
-import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
 import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
+import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import {
   Request as RegulatorRequest,
   Service as RegulatorService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service/';
-import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/';
+import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 
-import { ServiceKind, useProviderServices } from '../../context/ServicesContext';
-import RoleSetUp, { AutomationSetup } from '../../pages/setup/SetUp';
-import OverflowMenu, { OverflowMenuEntry } from '../../pages/page/OverflowMenu';
-import { getAbbreviation } from '../page/utils';
 import { useStreamQueries } from '../../Main';
-import { usePartyName } from '../../config';
-import { formatCurrency } from '../../util';
 import Tile from '../../components/Tile/Tile';
+import { usePartyName } from '../../config';
+import { ServiceKind, useProviderServices } from '../../context/ServicesContext';
+import OverflowMenu, { OverflowMenuEntry } from '../../pages/page/OverflowMenu';
+import RoleSetUp, { AutomationSetup } from '../../pages/setup/SetUp';
 import paths from '../../paths';
-
-import ServiceRequestMenu from './ServiceRequestMenu';
+import { formatCurrency } from '../../util';
 import { ServicePageProps, useOperatorParty } from '../common';
+import { getAbbreviation } from '../page/utils';
+import ServiceRequestMenu from './ServiceRequestMenu';
 
 type DamlHubParty = string;
 

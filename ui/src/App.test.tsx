@@ -2,16 +2,15 @@
 // Copyright (c) 2021, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 //
-
-import { Stream } from '@daml/ledger';
 import React from 'react';
 import ReactDOM from 'react-dom';
+import 'semantic-ui-css/semantic.min.css';
+
+import { Stream } from '@daml/ledger';
 
 import Main from './Main';
 import { LayoutProvider } from './context/LayoutContext';
 import { UserProvider } from './context/UserContext';
-
-import 'semantic-ui-css/semantic.min.css';
 import './index.scss';
 
 const mockLedgerFunction = jest.fn();

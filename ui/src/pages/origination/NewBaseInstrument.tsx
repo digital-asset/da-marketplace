@@ -1,22 +1,25 @@
+import classNames from 'classnames';
+import _ from 'lodash';
 import React, { useEffect, useRef, useState } from 'react';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
+import { Button, Form, Header } from 'semantic-ui-react';
+
+import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
+import { Date as DamlDate, Decimal } from '@daml/types';
+
+import { Claim } from '@daml.js/da-marketplace/lib/ContingentClaims/Claim/Serializable';
+import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import { Service as IssuanceService } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
+
 import { render } from '../../components/Claims/render';
 import { transformClaim } from '../../components/Claims/util';
-import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
-import { Claim } from '@daml.js/da-marketplace/lib/ContingentClaims/Claim/Serializable';
-import { Date as DamlDate, Decimal } from '@daml/types';
-import { Service as IssuanceService } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
-import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
-import FormErrorHandled from '../../components/Form/FormErrorHandled';
-import { Button, Form, Header } from 'semantic-ui-react';
-import classNames from 'classnames';
-import { IconCircledCheck, LockIcon, PublicIcon, IconClose } from '../../icons/icons';
 import BackButton from '../../components/Common/BackButton';
+import FormErrorHandled from '../../components/Form/FormErrorHandled';
+import { IconCircledCheck, LockIcon, PublicIcon, IconClose } from '../../icons/icons';
 import paths from '../../paths';
 import { createDropdownProp, usePublicParty } from '../common';
-import { CreateEvent } from '@daml/ledger';
-import _ from 'lodash';
 
 enum AssetType {
   CURRENCY = 'TCXXXX',

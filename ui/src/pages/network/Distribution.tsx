@@ -1,10 +1,13 @@
 import React from 'react';
+
 import { useParty } from '@daml/react';
-import { useStreamQueries } from '../../Main';
+
 import { Service as AuctionService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
 import { Service as BiddingService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
-import { getTemplateId, usePartyName } from '../../config';
+
+import { useStreamQueries } from '../../Main';
 import StripedTable from '../../components/Table/StripedTable';
+import { getTemplateId, usePartyName } from '../../config';
 
 export const DistributionServiceTable = () => {
   const party = useParty();

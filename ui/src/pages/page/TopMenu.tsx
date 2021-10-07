@@ -1,25 +1,24 @@
+import classNames from 'classnames';
+import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { Link, useHistory, useLocation } from 'react-router-dom';
 import { Button, Header, Menu } from 'semantic-ui-react';
-
-import { LogoutIcon, NotificationIcon } from '../../icons/icons';
-import { useStreamQueries } from '../../Main';
-
-import classNames from 'classnames';
-import { signOut, useUserDispatch } from '../../context/UserContext';
-import paths from '../../paths';
-import { usePartyName } from '../../config';
 
 import { useParty } from '@daml/react';
 
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import { Auction } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Model';
 import { Auction as BiddingAuctionContract } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model';
-import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
+import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
+
+import { useStreamQueries } from '../../Main';
+import { usePartyName } from '../../config';
+import { signOut, useUserDispatch } from '../../context/UserContext';
+import { LogoutIcon, NotificationIcon } from '../../icons/icons';
 import { useAllNotifications } from '../../pages/notifications/Notifications';
-import _ from 'lodash';
+import paths from '../../paths';
 
 type Props = {
   title?: React.ReactElement;

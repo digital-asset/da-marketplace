@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Loader } from 'semantic-ui-react';
 import classNames from 'classnames';
+import React, { useEffect, useState } from 'react';
 import {
   NavLink,
   Redirect,
@@ -10,20 +9,20 @@ import {
   useHistory,
   withRouter,
 } from 'react-router-dom';
+import { Button, Loader } from 'semantic-ui-react';
 
-import Widget from '../../components/Widget/Widget';
-import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
 import Credentials, { computeLocalCreds } from '../../Credentials';
-import { isHubDeployment } from '../../config';
 import { retrieveParties } from '../../Parties';
-
-import AddPartiesPage from './AddPartiesPage';
-import ReviewPage from './ReviewPage';
-import LoginPage from './LoginPage';
-import AssignRolesPage from './AssignRolesPage';
-import ProvideServicesPage from './ProvideServicesPage';
-import ConfigureProvidersPage from './ConfigureProvidersPage';
+import Widget from '../../components/Widget/Widget';
+import { isHubDeployment } from '../../config';
+import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
 import { usePublicParty } from '../common';
+import AddPartiesPage from './AddPartiesPage';
+import AssignRolesPage from './AssignRolesPage';
+import ConfigureProvidersPage from './ConfigureProvidersPage';
+import LoginPage from './LoginPage';
+import ProvideServicesPage from './ProvideServicesPage';
+import ReviewPage from './ReviewPage';
 
 export enum MenuItems {
   ADD_PARTIES = 'add-parties',

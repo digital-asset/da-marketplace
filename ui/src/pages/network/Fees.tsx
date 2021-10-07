@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import AccountComponent from '../custody/Account';
-import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import { useLedger, useParty } from '@daml/react';
-import { useStreamQueries } from '../../Main';
-import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
-import { Role as ExchangeRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
-import { CreateEvent } from '@daml/ledger';
-import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { Button, Form } from 'semantic-ui-react';
-import Tile from '../../components/Tile/Tile';
+
+import { CreateEvent } from '@daml/ledger';
+import { useLedger, useParty } from '@daml/react';
+
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { FeeSchedule } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
+import { Role as ExchangeRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
+
+import { useStreamQueries } from '../../Main';
+import FormErrorHandled from '../../components/Form/FormErrorHandled';
+import Tile from '../../components/Tile/Tile';
+import AccountComponent from '../custody/Account';
 
 type Props = {
   role: Readonly<CreateEvent<ExchangeRole, any, any>>;

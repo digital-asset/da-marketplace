@@ -1,3 +1,5 @@
+import classNames from 'classnames';
+import _ from 'lodash';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useHistory } from 'react-router-dom';
 import {
@@ -10,9 +12,8 @@ import {
   InputOnChangeData,
   DropdownItemProps,
 } from 'semantic-ui-react';
-import classNames from 'classnames';
-import _ from 'lodash';
 
+import { useAutomationInstances, useAutomations } from '@daml/hub-react';
 import { useLedger } from '@daml/react';
 import { Party } from '@daml/types';
 
@@ -21,17 +22,15 @@ import {
   OnboardingInstruction,
 } from '@daml-ui.js/da-marketplace-ui/lib/UI/Onboarding';
 
-import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
-import { useVerifiedParties, MarketplaceTrigger, isHubDeployment } from '../../config';
-import { useStreamQueries } from '../../Main';
-import { createDropdownProp, usePublicParty } from '../common';
 import Credentials, { computeLocalToken } from '../../Credentials';
-
+import { useStreamQueries } from '../../Main';
+import { retrieveParties } from '../../Parties';
+import { useVerifiedParties, MarketplaceTrigger, isHubDeployment } from '../../config';
+import { useDisplayErrorMessage } from '../../context/MessagesContext';
+import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
+import { createDropdownProp, usePublicParty } from '../common';
 import { LoadingWheel } from './QuickSetup';
 import QuickSetupPage from './QuickSetupPage';
-import { useDisplayErrorMessage } from '../../context/MessagesContext';
-import { useAutomationInstances, useAutomations } from '@daml/hub-react';
-import { retrieveParties } from '../../Parties';
 
 interface InstFieldsWithTitle {
   title: string;

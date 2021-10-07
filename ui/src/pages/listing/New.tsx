@@ -1,25 +1,28 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useLedger, useParty } from '@daml/react';
-import { useStreamQueries } from '../../Main';
-import { render } from '../../components/Claims/render';
-import { transformClaim } from '../../components/Claims/util';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
+import { Button, Form, Header, Icon } from 'semantic-ui-react';
+
+import { useLedger, useParty } from '@daml/react';
+
+import { Service as MarketClearingService } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import {
   ListingTypeRequest,
   RequestCreateListing,
   Service,
 } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
-import { Service as MarketClearingService } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
-import { usePartyName } from '../../config';
-import { createDropdownProp, ServicePageProps, usePublicParty } from '../common';
-import { Button, Form, Header, Icon } from 'semantic-ui-react';
-import FormErrorHandled from '../../components/Form/FormErrorHandled';
-import { IconClose } from '../../icons/icons';
-import Tile from '../../components/Tile/Tile';
-import { preciseInputSteps } from '../../util';
+
+import { useStreamQueries } from '../../Main';
+import { render } from '../../components/Claims/render';
+import { transformClaim } from '../../components/Claims/util';
 import BackButton from '../../components/Common/BackButton';
+import FormErrorHandled from '../../components/Form/FormErrorHandled';
+import Tile from '../../components/Tile/Tile';
+import { usePartyName } from '../../config';
+import { IconClose } from '../../icons/icons';
 import paths from '../../paths';
+import { preciseInputSteps } from '../../util';
+import { createDropdownProp, ServicePageProps, usePublicParty } from '../common';
 
 const COLLATERALIZED_VALUE = 'COLLATERALIZED_MARKET';
 

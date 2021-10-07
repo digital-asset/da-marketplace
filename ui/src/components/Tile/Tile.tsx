@@ -1,6 +1,7 @@
-import React from 'react';
 import classNames from 'classnames';
+import React from 'react';
 import { Header, Loader } from 'semantic-ui-react';
+
 import { OpenMarketplaceLogo } from '../../icons/icons';
 
 const logoHeader = (

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 import Ledger, { CreateEvent } from '@daml/ledger';
+import { Template, Party, ContractId } from '@daml/types';
 
 import {
   Role as ClearingRole,
@@ -15,23 +16,21 @@ import {
   Role as DistributorRole,
   Request as DistributorRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Role';
+import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
 import {
   Service as SettlementService,
   Request as SettlementRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Settlement/Service';
 import {
-  Role as ExchangeRole,
-  Request as ExchangeRequest,
-} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
-import {
   Service as MatchingService,
   Request as MatchingRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Matching/Service';
-
-import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
+import {
+  Role as ExchangeRole,
+  Request as ExchangeRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 
 import { useStreamQueries } from '../Main';
-import { Template, Party, ContractId } from '@daml/types';
 
 export enum RoleKind {
   CLEARING = 'Clearing',

@@ -1,3 +1,5 @@
+import dagre from 'dagre';
+import _ from 'lodash';
 import React, { useState, useEffect } from 'react';
 import ReactFlow, {
   FlowElement,
@@ -13,21 +15,18 @@ import ReactFlow, {
   MiniMap,
 } from 'react-flow-renderer';
 import { Loader } from 'semantic-ui-react';
-import dagre from 'dagre';
-import _ from 'lodash';
 
-import DamlLedger from '@daml/react';
 import { useAutomationInstances } from '@daml/hub-react';
+import DamlLedger from '@daml/react';
 
-import { httpBaseUrl, wsBaseUrl, useVerifiedParties } from '../../config';
-import { ServicesProvider, useServiceContext } from '../../context/ServicesContext';
-import { RolesProvider, useRolesContext } from '../../context/RolesContext';
-import { OffersProvider } from '../../context/OffersContext';
-import QueryStreamProvider from '../../websocket/queryStream';
 import Credentials from '../../Credentials';
-
-import { formatTriggerName } from './ConfigureProvidersPage';
+import { httpBaseUrl, wsBaseUrl, useVerifiedParties } from '../../config';
+import { OffersProvider } from '../../context/OffersContext';
+import { RolesProvider, useRolesContext } from '../../context/RolesContext';
+import { ServicesProvider, useServiceContext } from '../../context/ServicesContext';
+import QueryStreamProvider from '../../websocket/queryStream';
 import { useOperatorParty } from '../common';
+import { formatTriggerName } from './ConfigureProvidersPage';
 
 const NODE_WIDTH = 200;
 const NODE_HEIGHT = 130;

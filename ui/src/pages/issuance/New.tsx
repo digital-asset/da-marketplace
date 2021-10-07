@@ -1,20 +1,23 @@
+import _ from 'lodash';
 import React, { useEffect, useRef, useState } from 'react';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
+import { Button, Form, Header } from 'semantic-ui-react';
+
+import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
+
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
+import { Service as IssuanceService } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
+
 import { useStreamQueries } from '../../Main';
 import { render } from '../../components/Claims/render';
 import { transformClaim } from '../../components/Claims/util';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
-import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
-import { Service as IssuanceService } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
-import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import { CreateEvent } from '@daml/ledger';
-import FormErrorHandled from '../../components/Form/FormErrorHandled';
-import { Button, Form, Header } from 'semantic-ui-react';
-import Tile from '../../components/Tile/Tile';
 import BackButton from '../../components/Common/BackButton';
-import paths from '../../paths';
+import FormErrorHandled from '../../components/Form/FormErrorHandled';
+import Tile from '../../components/Tile/Tile';
 import { EyeClosed, EyeOpen } from '../../icons/icons';
-import _ from 'lodash';
+import paths from '../../paths';
 
 type Props = {
   issuanceServices: Readonly<CreateEvent<IssuanceService, any, any>[]>;
