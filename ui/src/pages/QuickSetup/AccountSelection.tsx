@@ -1,12 +1,15 @@
-import React from 'react';
-import { createDropdownProp } from '../common';
-import { useStreamQueries } from '../../Main';
-import { DropdownItemProps, Form, DropdownProps } from 'semantic-ui-react';
-import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/';
-import { IPartyAccounts, AccountsForServices } from './ProvideServicesPage';
-import { Party } from '@daml/types';
 import _ from 'lodash';
+import React from 'react';
+import { DropdownItemProps, Form, DropdownProps } from 'semantic-ui-react';
+
+import { Party } from '@daml/types';
+
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/';
+
+import { useStreamQueries } from '../../Main';
+import { createDropdownProp } from '../common';
+import { IPartyAccounts, AccountsForServices } from './ProvideServicesPage';
 
 export enum AccountType {
   REGULAR = 'Regular',

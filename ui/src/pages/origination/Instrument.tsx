@@ -1,17 +1,18 @@
 import React, { useEffect, useRef } from 'react';
-import { useStreamQueries } from '../../Main';
-
 import { RouteComponentProps, useParams } from 'react-router-dom';
-import { usePartyName } from '../../config';
+import { PieChart, Pie, Cell } from 'recharts';
+
+import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
+import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
+
+import { useStreamQueries } from '../../Main';
 import { render } from '../../components/Claims/render';
 import { transformClaim } from '../../components/Claims/util';
-import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import { PieChart, Pie, Cell } from 'recharts';
-import Tile from '../../components/Tile/Tile';
-import StripedTable from '../../components/Table/StripedTable';
 import BackButton from '../../components/Common/BackButton';
 import InfoCard from '../../components/Common/InfoCard';
+import StripedTable from '../../components/Table/StripedTable';
+import Tile from '../../components/Tile/Tile';
+import { usePartyName } from '../../config';
 import { damlSetValues } from '../common';
 
 export const Instrument: React.FC<RouteComponentProps> = () => {

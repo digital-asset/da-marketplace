@@ -1,9 +1,11 @@
-import { CreateEvent } from '@daml/ledger';
-import { DropdownItemProps, DropdownProps } from 'semantic-ui-react';
-import { Map, emptyMap } from '@daml/types';
 import _ from 'lodash';
 import React from 'react';
+import { DropdownItemProps, DropdownProps } from 'semantic-ui-react';
+
 import { useAdminParty, usePublicParty as useHubPublicParty } from '@daml/hub-react';
+import { CreateEvent } from '@daml/ledger';
+import { Map, emptyMap } from '@daml/types';
+
 import { deploymentMode, DeploymentMode } from '../config';
 import { cache } from '../util';
 

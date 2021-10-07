@@ -1,11 +1,19 @@
+import { DateTime } from 'luxon';
 import React from 'react';
-import { useStreamQueries } from '../../Main';
+import { useParams, useHistory } from 'react-router-dom';
+import { Table, Button, Header } from 'semantic-ui-react';
+
+import { CreateEvent } from '@daml/ledger';
+import { useLedger } from '@daml/react';
+
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
-import { CreateEvent } from '@daml/ledger';
-import { Table, Button, Header } from 'semantic-ui-react';
+import { Service as TradingService } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
+
+import { useStreamQueries } from '../../Main';
+import BackButton from '../../components/Common/BackButton';
+import StripedTable from '../../components/Table/StripedTable';
 import Tile from '../../components/Tile/Tile';
-import { DateTime } from 'luxon';
 import {
   displayStatus,
   getFillPercentage,
@@ -17,11 +25,6 @@ import {
   getTimeInForceText,
   getVolume,
 } from './Utils';
-import { Service as TradingService } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
-import { useParams, useHistory } from 'react-router-dom';
-import StripedTable from '../../components/Table/StripedTable';
-import BackButton from '../../components/Common/BackButton';
-import { useLedger } from '@daml/react';
 
 type Props = {
   listings: Readonly<CreateEvent<Listing, any, any>[]>;

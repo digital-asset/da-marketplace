@@ -1,26 +1,28 @@
 import React from 'react';
 import { useHistory, useParams } from 'react-router-dom';
+
 import { CreateEvent } from '@daml/ledger';
 import { useParty } from '@daml/react';
-import { usePartyName, getTemplateId } from '../../config';
+
+import {
+  FairValue,
+  ManualFairValueCalculation,
+} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Model/module';
+import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import {
   Service,
   CreateListingRequest,
   FailedListingCreation,
 } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
-import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
-import Tile from '../../components/Tile/Tile';
-import { Listing as ListingComponent } from './Listing';
-import StripedTable from '../../components/Table/StripedTable';
-import {
-  FairValue,
-  ManualFairValueCalculation,
-} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Model/module';
-import { FairValueCalculationRequests } from './ManualCalculationRequests';
-import TitleWithActions from '../../components/Common/TitleWithActions';
-import paths from '../../paths';
 
 import { useStreamQueries } from '../../Main';
+import TitleWithActions from '../../components/Common/TitleWithActions';
+import StripedTable from '../../components/Table/StripedTable';
+import Tile from '../../components/Tile/Tile';
+import { usePartyName, getTemplateId } from '../../config';
+import paths from '../../paths';
+import { Listing as ListingComponent } from './Listing';
+import { FairValueCalculationRequests } from './ManualCalculationRequests';
 
 const LISTING_REQUEST_TEMPLATE = 'Marketplace.Listing.Service.CreateListingRequest';
 

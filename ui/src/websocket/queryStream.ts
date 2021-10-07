@@ -1,13 +1,12 @@
-import React, { createContext, PropsWithChildren, useEffect, useMemo, useState } from 'react';
 import _ from 'lodash';
+import React, { createContext, PropsWithChildren, useEffect, useMemo, useState } from 'react';
 
-import { Template } from '@daml/types';
-import { CreateEvent } from '@daml/ledger';
 import { fetchPublicToken } from '@daml/hub-react';
+import { CreateEvent } from '@daml/ledger';
+import { Template } from '@daml/types';
 
 import { computeLocalCreds, retrieveCredentials } from '../Credentials';
 import { DeploymentMode, deploymentMode } from '../config';
-
 import useDamlStreamQuery, { StreamErrors } from './websocket';
 
 const AS_PUBLIC = true;

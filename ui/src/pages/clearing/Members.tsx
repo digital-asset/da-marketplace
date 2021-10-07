@@ -1,25 +1,27 @@
 import React, { useMemo } from 'react';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
+import { Button } from 'semantic-ui-react';
+
+import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
+
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import { usePartyName } from '../../config';
-import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import {
   ClearedTrade,
   ClearedTradeSide,
   MemberStanding,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
-import { ServicePageProps, damlSetValues, makeDamlSet, isEmptySet } from '../common';
-import { Button } from 'semantic-ui-react';
-import StripedTable from '../../components/Table/StripedTable';
-import TitleWithActions from '../../components/Common/TitleWithActions';
-import MarginCallModal from './MarginCallModal';
-import MTMCalculationModal from './MTMCalculationModal';
-import { CreateEvent } from '@daml/ledger';
-import { formatCurrency } from '../../util';
-import paths from '../../paths';
+import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 
 import { useStreamQueries } from '../../Main';
+import TitleWithActions from '../../components/Common/TitleWithActions';
+import StripedTable from '../../components/Table/StripedTable';
+import { usePartyName } from '../../config';
+import paths from '../../paths';
+import { formatCurrency } from '../../util';
+import { ServicePageProps, damlSetValues, makeDamlSet, isEmptySet } from '../common';
+import MTMCalculationModal from './MTMCalculationModal';
+import MarginCallModal from './MarginCallModal';
 
 const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,

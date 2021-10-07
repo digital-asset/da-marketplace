@@ -2,15 +2,14 @@ import React from 'react';
 
 import { useParty } from '@daml/react';
 
-import { SetupAutomation } from './SetupAutomation';
-import RoleRequestMenu from '../landing/RoleRequestMenu';
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 
 import { isHubDeployment } from '../../config';
-
-import { useRolesContext } from '../../context/RolesContext';
 import { useRoleRequestKinds } from '../../context/RequestsContext';
+import { useRolesContext } from '../../context/RolesContext';
 import { ServicePageProps } from '../common';
-import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import RoleRequestMenu from '../landing/RoleRequestMenu';
+import { SetupAutomation } from './SetupAutomation';
 
 const RoleSetUp: React.FC<ServicePageProps<CustodyService>> = ({ services }) => {
   const party = useParty();

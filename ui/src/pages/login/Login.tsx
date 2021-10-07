@@ -1,6 +1,5 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
-
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { Button, Form, Icon } from 'semantic-ui-react';
@@ -9,16 +8,14 @@ import { PartyToken, DamlHubLogin } from '@daml/hub-react';
 
 import { computeLocalCreds } from '../../Credentials';
 import { getPartiesJSON, retrieveParties, storeParties } from '../../Parties';
-import { deploymentMode, DeploymentMode, isHubDeployment } from '../../config';
-
+import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import Tile from '../../components/Tile/Tile';
 import TilePage from '../../components/Tile/TilePage';
-
-import { AppError } from '../error/errorTypes';
-import FormErrorHandled from '../../components/Form/FormErrorHandled';
+import { deploymentMode, DeploymentMode, isHubDeployment } from '../../config';
 import { loginUser, useUserDispatch } from '../../context/UserContext';
 import paths from '../../paths';
 import { usePublicParty } from '../common';
+import { AppError } from '../error/errorTypes';
 
 /**
  * React component for the login screen of the `App`.

@@ -1,11 +1,11 @@
+import * as jtv from '@mojotech/json-type-validation';
 import { useCallback, useEffect, useState } from 'react';
 
 import { ArchiveEvent, CreateEvent } from '@daml/ledger';
-import * as jtv from '@mojotech/json-type-validation';
-
-import { safeUrlPath } from '../util';
-import { wsBaseUrl } from '../config';
 import { Template, ContractId, List, Text, Party } from '@daml/types';
+
+import { wsBaseUrl } from '../config';
+import { safeUrlPath } from '../util';
 
 // A custom code to indicate that the websocket should not be reopened.
 // 4001 was picked arbitrarily from the range 4000-4999, which are codes that the official

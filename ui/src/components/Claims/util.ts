@@ -1,10 +1,11 @@
+import { Date, Decimal } from '@daml/types';
+
 import {
   Claim,
   Inequality,
 } from '@daml.js/da-marketplace/lib/ContingentClaims/Claim/Serializable/module';
 import { Observation } from '@daml.js/da-marketplace/lib/ContingentClaims/Observation/module';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module';
-import { Date, Decimal } from '@daml/types';
 
 const transformObservation = (obs: Observation<Date, Decimal>, linkText: string): any => {
   console.log(obs);

@@ -6,18 +6,22 @@ import { DamlHubLogin, PartyToken, useAutomationInstances } from '@daml/hub-reac
 import { useLedger } from '@daml/react';
 
 import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
+import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
 import {
   IdentityVerificationRequest,
   Service as RegulatorService,
   Offer as RegulatorOffer,
 } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
-import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
+
 import {
   OperatorOnboarding,
   PartyOnboarding,
 } from '@daml-ui.js/da-marketplace-ui/lib/UI/Onboarding';
 
+import Credentials from '../../Credentials';
+import { UnifiedDamlProvider, useStreamQueries } from '../../Main';
+import { storeParties, retrieveParties, retrieveUserParties } from '../../Parties';
 import {
   httpBaseUrl,
   wsBaseUrl,
@@ -25,14 +29,9 @@ import {
   MarketplaceTrigger,
   TRIGGER_HASH,
 } from '../../config';
-import { storeParties, retrieveParties, retrieveUserParties } from '../../Parties';
-import { UnifiedDamlProvider, useStreamQueries } from '../../Main';
-import Credentials from '../../Credentials';
 import { ArrowRightIcon } from '../../icons/icons';
-
-import { halfSecondPromise } from '../page/utils';
 import { makeDamlSet, useOperatorParty, usePublicParty } from '../common';
-
+import { halfSecondPromise } from '../page/utils';
 import { LoadingWheel } from './QuickSetup';
 
 enum LoadingStatus {

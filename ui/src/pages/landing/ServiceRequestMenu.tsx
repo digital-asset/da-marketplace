@@ -1,33 +1,33 @@
+import _ from 'lodash';
 import React, { useEffect, useState, useMemo } from 'react';
-import OverflowMenu, { OverflowMenuEntry } from '../page/OverflowMenu';
+
+import { useParty } from '@daml/react';
+import { Template, Party } from '@daml/types';
+
+import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
+import { Request as MarketClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service/module';
+import { Request as ClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
+import {
+  Request as CustodyRequest,
+  Service,
+} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import { Request as AuctionRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
+import { Request as BiddingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
+import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
+import { Request as ListingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
+import { Request as TradingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
+
+import { Fields, FieldCallbacks, FieldCallback } from '../../components/InputDialog/Fields';
+import { ServiceRequestDialog } from '../../components/InputDialog/ServiceDialog';
+import { usePartyName, useVerifiedParties } from '../../config';
+import { RoleKind, useProvidersByRole } from '../../context/RolesContext';
 import {
   ServiceKind,
   ServiceRequestTemplates,
   ServiceRequest,
 } from '../../context/ServicesContext';
-
-import { ServiceRequestDialog } from '../../components/InputDialog/ServiceDialog';
-
-import { Template, Party } from '@daml/types';
-import {
-  Request as CustodyRequest,
-  Service,
-} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import { Request as MarketClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service/module';
-import { Request as ClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
-import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
-import { Request as ListingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
-import { Request as TradingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
-import { Request as AuctionRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
-import { Request as BiddingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
-
-import _ from 'lodash';
-import { Fields, FieldCallbacks, FieldCallback } from '../../components/InputDialog/Fields';
-import { RoleKind, useProvidersByRole } from '../../context/RolesContext';
-import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
-import { usePartyName, useVerifiedParties } from '../../config';
-import { useParty } from '@daml/react';
 import { ServicePageProps } from '../common';
+import OverflowMenu, { OverflowMenuEntry } from '../page/OverflowMenu';
 
 interface RequestInterface {
   customer: string;

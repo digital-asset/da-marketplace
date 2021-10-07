@@ -1,8 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Header } from 'semantic-ui-react';
-import paths from '../../paths';
+
 import Widget from '../../components/Widget/Widget';
+import paths from '../../paths';
 
 export default function Error() {
   return (

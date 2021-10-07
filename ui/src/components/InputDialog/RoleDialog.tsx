@@ -1,12 +1,11 @@
 import React from 'react';
 
 import { useLedger } from '@daml/react';
-
-import { InputDialog } from './InputDialog';
-
 import { Template } from '@daml/types';
+
 import { RoleRequestTemplates, RoleKind } from '../../context/RolesContext';
 import { Fields } from './Fields';
+import { InputDialog } from './InputDialog';
 
 interface RequestProps<T extends RoleRequestTemplates> {
   fields: Fields<{ operator: string }>;

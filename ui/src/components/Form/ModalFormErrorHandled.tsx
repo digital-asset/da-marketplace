@@ -2,8 +2,8 @@ import classNames from 'classnames';
 import React, { useState } from 'react';
 import { Button, Form, Message, Modal } from 'semantic-ui-react';
 
-import { ErrorMessage, parseError } from '../../pages/error/errorTypes';
 import { AddPlusIcon } from '../../icons/icons';
+import { ErrorMessage, parseError } from '../../pages/error/errorTypes';
 
 type Renderable = number | string | React.ReactElement | React.ReactNode | Renderable[];
 type Callable = (callback: (fn: () => Promise<void>) => void) => Renderable;

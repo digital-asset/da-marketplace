@@ -1,9 +1,12 @@
 import React from 'react';
-import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { Form } from 'semantic-ui-react';
-import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
-import { createDropdownProp } from '../common';
+
 import { CreateEvent } from '@daml/ledger';
+
+import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
+import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
+
+import { createDropdownProp } from '../common';
 
 export const CurrencySelect: React.FC<{
   setter: React.Dispatch<React.SetStateAction<Id | undefined>>;

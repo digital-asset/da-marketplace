@@ -1,17 +1,19 @@
 import React from 'react';
+import { Icon, Popup } from 'semantic-ui-react';
 
+import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
-import { useStreamQueries } from '../../Main';
+
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { Account as AccountContract } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
-import { CreateEvent } from '@daml/ledger';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import { usePartyName } from '../../config';
+
+import { useStreamQueries } from '../../Main';
 import Tile from '../../components/Tile/Tile';
-import { ServicePageProps, damlSetValues, isEmptySet } from '../common';
+import { usePartyName } from '../../config';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 import OverflowMenu, { OverflowMenuEntry } from '../../pages/page/OverflowMenu';
-import { Icon, Popup } from 'semantic-ui-react';
+import { ServicePageProps, damlSetValues, isEmptySet } from '../common';
 
 interface AccountProps {
   targetAccount: {

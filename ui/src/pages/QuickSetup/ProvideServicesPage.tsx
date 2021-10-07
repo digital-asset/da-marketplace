@@ -1,10 +1,24 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-
 import { Button, Form } from 'semantic-ui-react';
 
+import { CreateEvent } from '@daml/ledger';
 import DamlLedger, { useLedger } from '@daml/react';
 import { Template, Party } from '@daml/types';
 
+import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
+import { Request as MarketClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service/module';
+import { Request as ClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
+import { Request as CustodyRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
+import { Request as AuctionRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
+import { Request as BiddingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
+import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
+import { Request as ListingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
+import { Request as TradingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
+
+import Credentials, { computeLocalToken } from '../../Credentials';
+import { useStreamQueries } from '../../Main';
+import { retrieveUserParties } from '../../Parties';
 import {
   httpBaseUrl,
   wsBaseUrl,
@@ -12,36 +26,18 @@ import {
   isHubDeployment,
   usePartyName,
 } from '../../config';
-import { itemListAsText } from '../page/utils';
-import Credentials, { computeLocalToken } from '../../Credentials';
-import QueryStreamProvider from '../../websocket/queryStream';
-
-import { useStreamQueries } from '../../Main';
-
-import { Request as AuctionRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
-import { Request as BiddingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
-import { Request as TradingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
-import { Request as ClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
-import { Request as CustodyRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import { Request as MarketClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service/module';
-import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
-import { Request as ListingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
+import { RequestsProvider } from '../../context/RequestsContext';
 import {
   ServiceKind,
   ServiceRequestTemplates,
   useServiceContext,
 } from '../../context/ServicesContext';
-import { RequestsProvider } from '../../context/RequestsContext';
-
-import { retrieveUserParties } from '../../Parties';
 import { InformationIcon } from '../../icons/icons';
-import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
-
-import { CreateEvent } from '@daml/ledger';
-import AccountSelection, { AccountType, AccountInfos } from './AccountSelection';
-import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
-import QuickSetupPage from './QuickSetupPage';
+import QueryStreamProvider from '../../websocket/queryStream';
 import { usePublicParty } from '../common';
+import { itemListAsText } from '../page/utils';
+import AccountSelection, { AccountType, AccountInfos } from './AccountSelection';
+import QuickSetupPage from './QuickSetupPage';
 
 export type AccountsForServices = {
   clearingAccount?: Account;

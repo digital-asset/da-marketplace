@@ -1,5 +1,5 @@
-import React from 'react';
 import { History } from 'history';
+import React from 'react';
 
 import { damlHubLogout } from '@daml/hub-react';
 
@@ -8,7 +8,6 @@ import Credentials, {
   retrieveCredentials,
   storeCredentials,
 } from '../Credentials';
-
 import paths from '../paths';
 
 const UserStateContext = React.createContext<UserState>({

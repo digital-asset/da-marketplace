@@ -54,7 +54,14 @@
     "printWidth": 100,
     "singleQuote": true,
     "arrowParens": "avoid",
-    "endOfLine": "auto"
+    "endOfLine": "auto",
+    "importOrder": [
+      "^@daml/(.*)$",
+      "^@daml.js/(.*)$",
+      "^@daml-ui.js/(.*)$",
+      "^[./]"
+    ],
+    "importOrderSeparation": true
   },
   "browserslist": {
     "production": [
@@ -70,6 +77,7 @@
   },
   "proxy": "http://localhost:7575",
   "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^2.0.4",
     "@types/classnames": "^2.2.10",
     "@types/d3": "^6.3.0",
     "@types/jsonwebtoken": "^8.5.0",

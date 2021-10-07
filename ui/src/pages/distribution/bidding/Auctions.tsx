@@ -1,15 +1,16 @@
 import React from 'react';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
-import { useStreamQueries } from '../../../Main';
-import { usePartyName } from '../../../config';
 
 import {
   Auction as BiddingAuctionContract,
   Bid,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model';
-import { getBidAllocation, getBidStatus } from '../Utils';
+
+import { useStreamQueries } from '../../../Main';
 import StripedTable from '../../../components/Table/StripedTable';
+import { usePartyName } from '../../../config';
 import paths from '../../../paths';
+import { getBidAllocation, getBidStatus } from '../Utils';
 
 const BiddingAuctionsComponent: React.FC<RouteComponentProps> = ({
   history,

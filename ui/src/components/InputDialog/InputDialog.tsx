@@ -1,11 +1,10 @@
+import classNames from 'classnames';
 import React, { useEffect, useState } from 'react';
 import { Header, Button, Form, Modal } from 'semantic-ui-react';
 
-import { Field, FieldComponents } from './Fields';
-import { IconClose, InformationIcon } from '../../icons/icons';
-
 import BackButton from '../../components/Common/BackButton';
-import classNames from 'classnames';
+import { IconClose, InformationIcon } from '../../icons/icons';
+import { Field, FieldComponents } from './Fields';
 
 export interface InputDialogProps<T extends { [key: string]: any }> {
   open: boolean;

@@ -3,25 +3,14 @@ import { Button, Form } from 'semantic-ui-react';
 
 import DamlLedger, { useLedger } from '@daml/react';
 
-import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
-import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
 import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
+import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
+import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 
-import { httpBaseUrl, wsBaseUrl, useVerifiedParties, usePartyName } from '../../config';
 import Credentials, { computeLocalToken } from '../../Credentials';
-import QueryStreamProvider from '../../websocket/queryStream';
 import { useStreamQueries } from '../../Main';
-import { itemListAsText } from '../../pages/page/utils';
-
-import { InformationIcon } from '../../icons/icons';
-
-import {
-  ServicesProvider,
-  useServiceContext,
-  ServiceKind,
-  Service,
-} from '../../context/ServicesContext';
-
+import { retrieveUserParties } from '../../Parties';
+import { httpBaseUrl, wsBaseUrl, useVerifiedParties, usePartyName } from '../../config';
 import {
   OffersProvider,
   useOffers,
@@ -29,7 +18,15 @@ import {
   ServiceOffer,
 } from '../../context/OffersContext';
 import { RoleKind } from '../../context/RolesContext';
-import { retrieveUserParties } from '../../Parties';
+import {
+  ServicesProvider,
+  useServiceContext,
+  ServiceKind,
+  Service,
+} from '../../context/ServicesContext';
+import { InformationIcon } from '../../icons/icons';
+import { itemListAsText } from '../../pages/page/utils';
+import QueryStreamProvider from '../../websocket/queryStream';
 import { useOperatorParty, usePublicParty } from '../common';
 
 interface IOfferServiceInfo {
