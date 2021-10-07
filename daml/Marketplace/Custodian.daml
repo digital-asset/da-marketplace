@@ -4,6 +4,7 @@ import Marketplace.Notification
 import Marketplace.Registry
 import Marketplace.Token
 import Marketplace.Utils
+import Marketplace.Transfer
 
 import DA.Finance.Asset
 import DA.Finance.Types
@@ -21,6 +22,22 @@ template CustodianRelationship
     signatory custodian, party
     key (custodian, operator, party) : (Party, Party, Party)
     maintainer key._1
+
+    controller party can
+      CustodianRelationship_RequestCredit : ContractId DepositCreditRequest
+        with
+          request : DepositCreditRequest
+        do create request
+
+      CustodianRelationship_RequestDebit : ContractId DepositDebitRequest
+        with
+          request : DepositDebitRequest
+        do create request
+
+      CustodianRelationship_RequestTransfer : ContractId DepositTransferRequest
+        with
+          request : DepositTransferRequest
+        do create request
 
 
 template CustodianRelationshipRequest
@@ -138,4 +155,4 @@ template Custodian
           let quantity = roundBankers token.quantityPrecision depositQuantity
               asset = Asset with id = tokenId, ..
               depositObs = fromList $ account.provider :: beneficiary :: signatory token
-          create AssetDeposit with observers = depositObs, account = account, ..
+          create AssetDeposit with observers = depositObs, account = account, lockers = mempty; ..

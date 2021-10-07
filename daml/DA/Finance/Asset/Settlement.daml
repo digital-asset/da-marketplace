@@ -66,4 +66,4 @@ template AssetSettlementRule
       controller Set.delete account.owner account.id.signatories, ctrl
       do
         assertMsg "ctrl must be part of ctrls." $ ctrl `Set.member` ctrls
-        create AssetDeposit with account, asset, observers
+        create AssetDeposit with account, asset, observers, lockers = mempty

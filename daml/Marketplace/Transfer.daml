@@ -22,7 +22,7 @@ template DepositTransferRequest
         receiverSig = head $ toList receiverAccountId.signatories
         custodian = senderSig
     ensure senderSig == receiverSig && senderAccountId /= receiverAccountId
-    signatory sender
+    signatory custodian, sender
 
     controller custodian can
       DepositTransferRequest_Approve : ContractId AssetDeposit
@@ -72,7 +72,7 @@ template DepositDebitRequest
   where
     let senderSig = head $ toList ownerAccount.id.signatories
         custodian = senderSig
-    signatory owner
+    signatory custodian, owner
 
     controller custodian can
       DepositDebitRequest_Approve : Asset
@@ -101,7 +101,7 @@ template DepositCreditRequest
   where
     let senderSig = head $ toList account.id.signatories
         custodian = senderSig
-    signatory owner
+    signatory custodian, owner
 
     controller custodian can
       DepositCreditRequest_Approve : ContractId AssetDeposit

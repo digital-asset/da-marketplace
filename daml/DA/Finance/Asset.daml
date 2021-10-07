@@ -1,5 +1,5 @@
--- Copyright (c) 2020, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
--- SPDX-License-Identifier: 0BSD
+-- Copyright (c) 2019, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: Apache-2.0
 
 module DA.Finance.Asset where
 
@@ -25,21 +25,26 @@ template AssetDeposit
       -- ^ Specifies the id and the amount of assets deposited. The asset.id.signatories
       -- are the parties that publish reference data and hence the details for how to
       -- lifecycle the asset.
+    lockers : Set Party
+      -- ^ Specifies if this deposit has been locked and for what reason. A party in
+      -- lock.releasers has the authority to unlock the deposit.
     observers : Set Party
   where
-    signatory account.id.signatories
-    observer insert account.provider observers
+    signatory account.id.signatories, lockers
+    observer observers, account.provider
     ensure asset.quantity > 0.0
 
     let setQty (qty: Decimal) (ad: AssetDeposit) =
           ad with asset = ad.asset with quantity = qty
 
-    controller account.owner can
-      AssetDeposit_SetObservers : ContractId AssetDeposit
-        with newObservers : Set Party
-        do create this with observers = newObservers
+    controller account.owner, lockers can
 
-    controller account.owner can
+      AssetDeposit_SetObservers : ContractId AssetDeposit
+        with
+          newObservers : Set Party
+        do
+          create this with observers = newObservers
+
       AssetDeposit_Split : [ContractId AssetDeposit]
         -- ^ Splits an asset deposit according to the provided list of quantities.
         with
@@ -74,6 +79,27 @@ template AssetDeposit
             this
             depositCids
           create deposit
+
+      AssetDeposit_Unlock : ContractId AssetDeposit
+        -- ^ Unlock a locked asset deposit
+        do
+          create this with lockers = empty
+
+    choice AssetDeposit_Lock : ContractId AssetDeposit
+      -- ^ Lock an asset deposit
+      with
+        newLockers : Set Party
+      controller account.owner, newLockers
+      do
+        create this with lockers = newLockers
+
+    choice AssetDeposit_Transfer : ContractId AssetDeposit
+      -- ^ Transfers an asset from one owner to an owner with the same account provider
+      with
+        receiverAccount : Account
+      controller account.owner, receiverAccount.owner, lockers
+      do
+        create this with account = receiverAccount; lockers = empty
 
 template AssetCategorization
   with

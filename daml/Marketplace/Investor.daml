@@ -11,6 +11,7 @@ import DA.Finance.Asset
 import DA.Finance.Types
 
 import DA.List
+import DA.Next.Set qualified as Set
 
 template InvestorInvitation
   with
@@ -63,9 +64,11 @@ template Investor
           depositCid : ContractId AssetDeposit
           receiverAccountId : Id
         do
-           deposit <- fetch depositCid
-           assert $ deposit.account.owner == investor
-           create DepositTransferRequest with sender = investor, senderAccountId = deposit.account.id, ..
+          deposit <- fetch depositCid
+          assert $ deposit.account.owner == investor
+          let custodian = head $ Set.toList $ deposit.account.id.signatories
+          exerciseByKey @CustodianRelationship (custodian, operator, investor) CustodianRelationship_RequestTransfer
+            with request = DepositTransferRequest with sender = investor, senderAccountId = deposit.account.id, ..
 
       nonconsuming Investor_RequestDeposit : ContractId DepositCreditRequest
         with
@@ -79,7 +82,8 @@ template Investor
               account = Account with id = accountId, provider = custodian, owner = investor
               asset = Asset with id = tokenId, ..
 
-          create DepositCreditRequest with owner = investor, ..
+          exerciseByKey @CustodianRelationship (custodian, operator, investor)
+            CustodianRelationship_RequestCredit with request = DepositCreditRequest with owner = investor, ..
 
       nonconsuming Investor_RequestWithdrawl : ContractId DepositDebitRequest
         with
@@ -98,8 +102,12 @@ template Investor
             with quantities = [ withdrawalQuantity ]
 
           deposit <- fetch depositCid
-          create DepositDebitRequest with
-              owner = investor, ownerAccount = deposit.account, ..
+
+          let custodian = head $ Set.toList $ deposit.account.id.signatories
+
+          exerciseByKey @CustodianRelationship (custodian, operator, investor)
+            CustodianRelationship_RequestDebit with
+              request = DepositDebitRequest with owner = investor, ownerAccount = deposit.account, ..
 
       nonconsuming Investor_AllocateToProvider : ContractId DepositTransferRequest
         with
