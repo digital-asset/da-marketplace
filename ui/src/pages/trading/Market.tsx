@@ -1,6 +1,16 @@
+import _ from 'lodash';
+import { DateTime } from 'luxon';
 import React, { useMemo, useState } from 'react';
+import { useHistory } from 'react-router-dom';
+import { Button, Form, Header, Label, Popup, Table } from 'semantic-ui-react';
+
+import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
-import { useStreamQueries } from '../../Main';
+import { ContractId } from '@daml/types';
+
+import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import {
   Details,
@@ -11,14 +21,15 @@ import {
   MarketType,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
 import { Service as TradingService } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
-import { CreateEvent } from '@daml/ledger';
-import { ContractId } from '@daml/types';
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import { isEmptySet } from '../common';
-import { Button, Form, Header, Label, Popup, Table } from 'semantic-ui-react';
-import Tile from '../../components/Tile/Tile';
+
+import { useStreamQueries } from '../../Main';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
-import { DateTime } from 'luxon';
+import StripedTable from '../../components/Table/StripedTable';
+import Tile from '../../components/Tile/Tile';
+import { usePartyName } from '../../config';
+import paths from '../../paths';
+import { formatCurrency } from '../../util';
+import { isEmptySet } from '../common';
 import {
   displayStatus,
   getColor,
@@ -34,14 +45,6 @@ import {
   timeInForceOptions,
   TimeInForces,
 } from './Utils';
-import StripedTable from '../../components/Table/StripedTable';
-import { useHistory } from 'react-router-dom';
-import { usePartyName } from '../../config';
-import paths from '../../paths';
-import { formatCurrency } from '../../util';
-import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
-import _ from 'lodash';
 
 type Props = {
   cid: string;

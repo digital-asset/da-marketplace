@@ -1,5 +1,6 @@
 import React from 'react';
 import { Header, List } from 'semantic-ui-react';
+
 import Tile from '../../components/Tile/Tile';
 
 interface ICardInfo {

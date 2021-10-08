@@ -1,12 +1,14 @@
 import React from 'react';
 import { useHistory } from 'react-router-dom';
-import { useStreamQueries } from '../../Main';
-import { usePartyName } from '../../config';
+
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
-import StripedTable from '../../components/Table/StripedTable';
+
+import { useStreamQueries } from '../../Main';
 import TitleWithActions from '../../components/Common/TitleWithActions';
-import { damlSetValues } from '../common';
+import StripedTable from '../../components/Table/StripedTable';
+import { usePartyName } from '../../config';
 import paths from '../../paths';
+import { damlSetValues } from '../common';
 
 export const InstrumentsTable: React.FC = () => {
   const history = useHistory();

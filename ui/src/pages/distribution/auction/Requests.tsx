@@ -1,18 +1,21 @@
 import React from 'react';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
+import { Button } from 'semantic-ui-react';
+
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
-import { useStreamQueries } from '../../../Main';
+
 import {
   CreateAuctionRequest,
   Service,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
+
+import { useStreamQueries } from '../../../Main';
+import StripedTable from '../../../components/Table/StripedTable';
 import { usePartyName } from '../../../config';
-import { ServicePageProps } from '../../common';
 import { useDisplayErrorMessage } from '../../../context/MessagesContext';
 import paths from '../../../paths';
-import StripedTable from '../../../components/Table/StripedTable';
-import { Button } from 'semantic-ui-react';
+import { ServicePageProps } from '../../common';
 
 const RequestsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,

@@ -1,17 +1,16 @@
-import React from 'react';
 import classNames from 'classnames';
+import React from 'react';
 import { Header } from 'semantic-ui-react';
 
 import DamlLedger from '@daml/react';
 
+import Credentials from '../../Credentials';
 import { httpBaseUrl, wsBaseUrl } from '../../config';
-import QueryStreamProvider from '../../websocket/queryStream';
-
-import { ServicesProvider } from '../../context/ServicesContext';
+import { MessagesProvider } from '../../context/MessagesContext';
 import { OffersProvider } from '../../context/OffersContext';
 import { RolesProvider } from '../../context/RolesContext';
-import Credentials from '../../Credentials';
-import { MessagesProvider } from '../../context/MessagesContext';
+import { ServicesProvider } from '../../context/ServicesContext';
+import QueryStreamProvider from '../../websocket/queryStream';
 
 interface QuickSetupPageProps {
   adminCredentials: Credentials;

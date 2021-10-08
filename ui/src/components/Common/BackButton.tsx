@@ -1,10 +1,8 @@
 import React from 'react';
-
+import { useHistory } from 'react-router-dom';
 import { Button } from 'semantic-ui-react';
 
 import { ArrowLeftIcon } from '../../icons/icons';
-
-import { useHistory } from 'react-router-dom';
 
 const BackButton = (props: { prevPageLabel?: string; prevPagePath?: string }) => {
   const history = useHistory();

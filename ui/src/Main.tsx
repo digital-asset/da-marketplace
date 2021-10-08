@@ -1,22 +1,22 @@
 import React, { useMemo } from 'react';
 import { HashRouter, Redirect, Route, Switch } from 'react-router-dom';
 
-import DamlLedger, { QueryResult } from '@daml/react';
 import DamlHub from '@daml/hub-react';
+import DamlLedger, { QueryResult } from '@daml/react';
 import { Template } from '@daml/types';
 
-import ErrorComponent from './pages/error/Error';
-import { useUserState } from './context/UserContext';
-import Login from './pages/login/Login';
 import { App } from './App';
-import QuickSetup from './pages/QuickSetup/QuickSetup';
-import { ServicesProvider } from './context/ServicesContext';
-import { MessagesProvider } from './context/MessagesContext';
 import { httpBaseUrl, wsBaseUrl } from './config';
-import QueryStreamProvider, { useContractQuery } from './websocket/queryStream';
-import { RolesProvider } from './context/RolesContext';
+import { MessagesProvider } from './context/MessagesContext';
 import { RequestsProvider } from './context/RequestsContext';
+import { RolesProvider } from './context/RolesContext';
+import { ServicesProvider } from './context/ServicesContext';
+import { useUserState } from './context/UserContext';
+import QuickSetup from './pages/QuickSetup/QuickSetup';
+import ErrorComponent from './pages/error/Error';
+import Login from './pages/login/Login';
 import paths from './paths';
+import QueryStreamProvider, { useContractQuery } from './websocket/queryStream';
 
 type MainProps = {
   defaultPath: string;

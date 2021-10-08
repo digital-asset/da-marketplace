@@ -1,28 +1,30 @@
 import React, { useState } from 'react';
 import { RouteComponentProps, useParams, withRouter } from 'react-router-dom';
+import { Button, Form } from 'semantic-ui-react';
+
+import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
-import { usePartyName } from '../../config';
-import { Listing as ListingTemplate } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
-import { Service as ClearedMarketService } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
-import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
-import { createDropdownProp, ServicePageProps } from '../common';
+
 import {
   FairValue,
   ManualFairValueCalculation,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Model/module';
-import { Button, Form } from 'semantic-ui-react';
-import Tile from '../../components/Tile/Tile';
-import StripedTable from '../../components/Table/StripedTable';
-import { FairValueCalculationRequests } from './ManualCalculationRequests';
+import { Service as ClearedMarketService } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
-import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
-import { CreateEvent } from '@daml/ledger';
-import BackButton from '../../components/Common/BackButton';
-import { getMarketType } from './Listings';
-import { useDisplayErrorMessage } from '../../context/MessagesContext';
-import TitleWithActions from '../../components/Common/TitleWithActions';
+import { Listing as ListingTemplate } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
+import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
 
 import { useStreamQueries } from '../../Main';
+import BackButton from '../../components/Common/BackButton';
+import TitleWithActions from '../../components/Common/TitleWithActions';
+import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
+import StripedTable from '../../components/Table/StripedTable';
+import Tile from '../../components/Tile/Tile';
+import { usePartyName } from '../../config';
+import { useDisplayErrorMessage } from '../../context/MessagesContext';
+import { createDropdownProp, ServicePageProps } from '../common';
+import { getMarketType } from './Listings';
+import { FairValueCalculationRequests } from './ManualCalculationRequests';
 
 type FairValueRequestProps = {
   service?: Readonly<CreateEvent<ClearedMarketService, any, any>>;

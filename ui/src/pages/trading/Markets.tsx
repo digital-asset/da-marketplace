@@ -1,9 +1,12 @@
 import React from 'react';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
-import { usePartyName } from '../../config';
-import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
+
 import { CreateEvent } from '@daml/ledger';
+
+import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
+
 import StripedTable from '../../components/Table/StripedTable';
+import { usePartyName } from '../../config';
 import { ArrowRightIcon } from '../../icons/icons';
 import paths from '../../paths';
 

@@ -1,21 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
-import { useLedger, useParty } from '@daml/react';
-import { Party } from '@daml/types';
-import { ServicePageProps } from '../common';
 import { Form } from 'semantic-ui-react';
 import { DropdownItemProps } from 'semantic-ui-react/dist/commonjs/modules/Dropdown/DropdownItem';
+import { v4 as uuidv4 } from 'uuid';
+
+import { useLedger, useParty } from '@daml/react';
+import { Party } from '@daml/types';
+
+import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import {
   CreateMarginCalculation,
   Service,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
-import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
-import { usePartyName } from '../../config';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
-import { CurrencySelect } from './CurrencySelect';
-import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 
 import { useStreamQueries } from '../../Main';
+import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
+import { usePartyName } from '../../config';
+import { ServicePageProps } from '../common';
+import { CurrencySelect } from './CurrencySelect';
 
 type MarginCallProps = {
   member?: Party;

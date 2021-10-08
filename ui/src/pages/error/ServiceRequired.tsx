@@ -1,33 +1,34 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { useHistory } from 'react-router-dom';
 import { Button, Modal } from 'semantic-ui-react';
+
+import { useParty } from '@daml/react';
+import { Template } from '@daml/types';
+
+import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
+import { Request as ClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import {
   Request as CustodyRequest,
   Service as CustodyService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import { Request as ClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
+import { Request as AuctionRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
 import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import { Request as ListingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
-import { Request as TradingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
-import { Request as AuctionRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
-import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
-import { useParty } from '@daml/react';
-import { ServiceRequestDialog } from '../../components/InputDialog/ServiceDialog';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
+import { Request as TradingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
+
+import { useStreamQueries } from '../../Main';
+import MissingServiceModal from '../../components/Common/MissingServiceModal';
+import { Fields } from '../../components/InputDialog/Fields';
+import { ServiceRequestDialog } from '../../components/InputDialog/ServiceDialog';
+import { useServiceRequestKinds } from '../../context/RequestsContext';
 import {
   ServiceKind,
   ServiceRequest,
   ServiceRequestTemplates,
   useServiceKindsProvided,
 } from '../../context/ServicesContext';
-import { Template } from '@daml/types';
-
-import { useHistory } from 'react-router-dom';
-import { useServiceRequestKinds } from '../../context/RequestsContext';
-import MissingServiceModal from '../../components/Common/MissingServiceModal';
 import { ServicePageProps } from '../common';
-
-import { useStreamQueries } from '../../Main';
-import { Fields } from '../../components/InputDialog/Fields';
 
 type ServiceRequiredProps = {
   service: ServiceKind;

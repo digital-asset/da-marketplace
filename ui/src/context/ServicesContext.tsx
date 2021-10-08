@@ -1,21 +1,23 @@
-import React, { useEffect, useState } from 'react';
 import _ from 'lodash';
+import React, { useEffect, useState } from 'react';
 
 import { CreateEvent } from '@daml/ledger';
 import { Template } from '@daml/types';
 
 import {
-  Request as CustodyRequest,
-  Service as CustodyService,
-} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
+  Request as MarketClearingRequest,
+  Service as MarketClearingService,
+} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service/module';
+import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 import {
   Request as ClearingRequest,
   Service as ClearingService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service/module';
+import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
 import {
-  Request as MarketClearingRequest,
-  Service as MarketClearingService,
-} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service/module';
+  Request as CustodyRequest,
+  Service as CustodyService,
+} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
 import {
   Request as AuctionRequest,
   Service as AuctionService,
@@ -32,16 +34,13 @@ import {
   Request as ListingRequest,
   Service as ListingService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/module';
+import { Service as RegulatorService } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service/module';
+import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import {
   Offer as TradingOffer,
   Request as TradingRequest,
   Service as TradingService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
-import { Service as RegulatorService } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service/module';
-
-import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
-import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
-import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 
 import { useStreamQueries } from '../Main';
 

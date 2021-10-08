@@ -3,17 +3,16 @@ import { useHistory, Link } from 'react-router-dom';
 
 import DamlLedger from '@daml/react';
 
+import Credentials, { computeLocalCreds } from '../../Credentials';
+import { retrieveParties } from '../../Parties';
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
 import { RolesProvider, useRolesContext } from '../../context/RolesContext';
 import { loginUser, useUserDispatch } from '../../context/UserContext';
-import Credentials, { computeLocalCreds } from '../../Credentials';
-import QueryStreamProvider from '../../websocket/queryStream';
 import { ArrowRightIcon } from '../../icons/icons';
-import { retrieveParties } from '../../Parties';
 import paths from '../../paths';
-
-import { LoadingWheel } from './QuickSetup';
+import QueryStreamProvider from '../../websocket/queryStream';
 import { usePublicParty } from '../common';
+import { LoadingWheel } from './QuickSetup';
 
 const LoginPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;

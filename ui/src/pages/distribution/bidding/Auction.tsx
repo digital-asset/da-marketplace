@@ -1,30 +1,33 @@
+import _ from 'lodash';
 import React, { useEffect, useRef, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { Button, Form, Header, Icon, Table } from 'semantic-ui-react';
+
+import { CreateEvent } from '@daml/ledger';
+import { useLedger, useParty } from '@daml/react';
+import { ContractId } from '@daml/types';
+
+import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import {
   Auction as BiddingAuctionContract,
   Bid,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model';
-import { useParams } from 'react-router-dom';
-import { useLedger, useParty } from '@daml/react';
-import { useStreamQueries } from '../../../Main';
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import { CreateEvent } from '@daml/ledger';
-import { ContractId } from '@daml/types';
 import {
   Service as BiddingService,
   SubmitBid,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
-import { transformClaim } from '../../../components/Claims/util';
-import { render } from '../../../components/Claims/render';
-import { getBidAllocation, getBidStatus } from '../Utils';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
-import { Button, Form, Header, Icon, Table } from 'semantic-ui-react';
-import StripedTable from '../../../components/Table/StripedTable';
-import { usePartyName } from '../../../config';
-import Tile from '../../../components/Tile/Tile';
-import FormErrorHandled from '../../../components/Form/FormErrorHandled';
+
+import { useStreamQueries } from '../../../Main';
+import { render } from '../../../components/Claims/render';
+import { transformClaim } from '../../../components/Claims/util';
 import BackButton from '../../../components/Common/BackButton';
-import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import _ from 'lodash';
+import FormErrorHandled from '../../../components/Form/FormErrorHandled';
+import StripedTable from '../../../components/Table/StripedTable';
+import Tile from '../../../components/Tile/Tile';
+import { usePartyName } from '../../../config';
+import { getBidAllocation, getBidStatus } from '../Utils';
 
 type Props = {
   biddingServices: Readonly<CreateEvent<BiddingService, any, any>[]>;

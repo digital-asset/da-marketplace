@@ -1,8 +1,8 @@
 import classNames from 'classnames';
 import React, { useEffect, useState } from 'react';
 import { Loader, Table, Header } from 'semantic-ui-react';
-import { ArrowRightIcon } from '../../icons/icons';
 
+import { ArrowRightIcon } from '../../icons/icons';
 import PaginationControls from './PaginationControls';
 
 interface IStripedTableRow {
