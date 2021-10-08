@@ -48,6 +48,9 @@ yq w -i $daml_yaml_triggers 'data-dependencies[+]' "../.daml/dist/da-marketplace
 echo "  Tagging automation tests daml.yaml"
 yq w -i $daml_yaml_trigger_test 'version' "$short_version"
 yq w -i $daml_yaml_trigger_test 'dependencies' ""
+yq w -i $daml_yaml_trigger_test 'dependencies[+]' "daml-prim"
+yq w -i $daml_yaml_trigger_test 'dependencies[+]' "daml-stdlib"
+yq w -i $daml_yaml_trigger_test 'dependencies[+]' "daml-trigger"
 yq w -i $daml_yaml_trigger_test 'dependencies[+]' "../../.daml/dist/da-marketplace-$short_version.dar"
 
 echo "  Tagging ui daml.yaml"
