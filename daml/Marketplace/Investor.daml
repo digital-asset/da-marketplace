@@ -77,7 +77,7 @@ template Investor
           custodian : Party
         do
           (tokenCid, token) <- fetchByKey @Token tokenId
-          let accountId = getAccountId investor custodian [custodian]
+          let accountId = getAccountId investor custodian [custodian, operator]
               quantity = roundBankers token.quantityPrecision depositQuantity
               account = Account with id = accountId, provider = custodian, owner = investor
               asset = Asset with id = tokenId, ..

@@ -26,17 +26,17 @@ template CustodianRelationship
     maintainer key._1
 
     controller party can
-      CustodianRelationship_RequestCredit : ContractId DepositCreditRequest
+      nonconsuming CustodianRelationship_RequestCredit : ContractId DepositCreditRequest
         with
           request : DepositCreditRequest
         do create request
 
-      CustodianRelationship_RequestDebit : ContractId DepositDebitRequest
+      nonconsuming CustodianRelationship_RequestDebit : ContractId DepositDebitRequest
         with
           request : DepositDebitRequest
         do create request
 
-      CustodianRelationship_RequestTransfer : ContractId DepositTransferRequest
+      nonconsuming CustodianRelationship_RequestTransfer : ContractId DepositTransferRequest
         with
           request : DepositTransferRequest
         do create request
