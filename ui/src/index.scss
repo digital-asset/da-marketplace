@@ -217,10 +217,15 @@ html {
           font-weight: normal;
         }
 
-        .field > label {
-          font-family: 'Open sans';
-          line-height: 19px;
-          color: var(--textcolor);
+        .field {
+          > label {
+            font-family: 'Open sans';
+            line-height: 19px;
+            color: var(--textcolor);
+          }
+          > .ui.selection.dropdown {
+            line-height: inherit;
+          }
         }
 
         h4.ui.header {
