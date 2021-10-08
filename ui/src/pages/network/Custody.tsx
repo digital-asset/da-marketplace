@@ -1,11 +1,14 @@
 import React from 'react';
 import { Button } from 'semantic-ui-react';
+
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
-import { getTemplateId, usePartyName } from '../../config';
+
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import StripedTable from '../../components/Table/StripedTable';
+
 import TitleWithActions from '../../components/Common/TitleWithActions';
+import StripedTable from '../../components/Table/StripedTable';
+import { getTemplateId, usePartyName } from '../../config';
 import paths from '../../paths';
 
 type Props = {

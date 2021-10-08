@@ -1,55 +1,62 @@
+import _ from 'lodash';
 import React from 'react';
+
 import { CreateEvent } from '@daml/ledger';
 
-import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/';
+import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import {
-  Service as AuctionService,
-  CreateAuctionRequest,
-} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service/';
-import {
-  Offer as CustodyRoleOffer,
-  Request as CustodyRoleRequest,
-} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
-import {
-  Offer as TradingRoleOffer,
-  Request as TradingRoleRequest,
-} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
+  Offer as MarketServiceOffer,
+  Request as MarketServiceRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
 import {
   Offer as ClearingRoleOffer,
   Request as ClearingRoleRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 import {
-  Offer as RegulatorRoleOffer,
-  Request as RegulatorRoleRequest,
-} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
+  Offer as ClearingServiceOffer,
+  Request as ClearingServiceRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
+import {
+  DepositRequest,
+  WithdrawalRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
+import {
+  Offer as CustodyRoleOffer,
+  Request as CustodyRoleRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
+import {
+  Offer as CustodyServiceOffer,
+  Request as CustodyServiceRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/';
+import {
+  Offer as AuctionServiceOffer,
+  Request as AuctionServiceRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
+import {
+  Service as AuctionService,
+  CreateAuctionRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service/';
+import {
+  Offer as BiddingServiceOffer,
+  Request as BiddingServiceRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
 import {
   Offer as DistributionRoleOffer,
   Request as DistributionRoleRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Role';
 import {
-  Offer as CustodyServiceOffer,
-  Request as CustodyServiceRequest,
-} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+  Offer as IssuanceServiceOffer,
+  Request as IssuanceServiceRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import {
   Offer as ListingServiceOffer,
   Request as ListingServiceRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
 import {
-  Offer as TradingServiceOffer,
-  Request as TradingServiceRequest,
-} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
-import {
-  Offer as MatchingServiceOffer,
-  Request as MatchingServiceRequest,
-} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Matching/Service';
-import {
-  Offer as ClearingServiceOffer,
-  Request as ClearingServiceRequest,
-} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
-import {
-  Offer as IssuanceServiceOffer,
-  Request as IssuanceServiceRequest,
-} from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
+  Offer as RegulatorRoleOffer,
+  Request as RegulatorRoleRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
 import {
   Offer as RegulatorServiceOffer,
   Request as RegulatorServiceRequest,
@@ -59,29 +66,29 @@ import {
   Request as SettlementServiceRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Settlement/Service';
 import {
-  Offer as MarketServiceOffer,
-  Request as MarketServiceRequest,
-} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
+  Offer as MatchingServiceOffer,
+  Request as MatchingServiceRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Matching/Service';
 import {
-  Offer as AuctionServiceOffer,
-  Request as AuctionServiceRequest,
-} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
+  Offer as TradingRoleOffer,
+  Request as TradingRoleRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import {
-  Offer as BiddingServiceOffer,
-  Request as BiddingServiceRequest,
-} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
+  Offer as TradingServiceOffer,
+  Request as TradingServiceRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
 
-import {
-  DepositRequest,
-  WithdrawalRequest,
-} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
-
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-
-import { ServiceKind } from '../../context/ServicesContext';
-import BackButton from '../../components/Common/BackButton';
 import { useStreamQueries } from '../../Main';
-
+import BackButton from '../../components/Common/BackButton';
+import { useVerifiedParties, usePartyName } from '../../config';
+import { ServiceKind } from '../../context/ServicesContext';
+import { createDropdownProp } from '../common';
+import {
+  OfferNotification,
+  RequestNotification,
+  PendingRequestNotification,
+  ProcessRequestNotification,
+} from './NotificationComponents';
 import {
   NotificationSet,
   OfferAcceptChoice,
@@ -90,15 +97,6 @@ import {
   RequestRejectChoice,
   ProcessRequestChoice,
 } from './NotificationTypes';
-import {
-  OfferNotification,
-  RequestNotification,
-  PendingRequestNotification,
-  ProcessRequestNotification,
-} from './NotificationComponents';
-import { useVerifiedParties, usePartyName } from '../../config';
-import { createDropdownProp } from '../common';
-import _ from 'lodash';
 
 export const useAllNotifications = (party: string): NotificationSet[] => {
   const custodianRoleOffers = useStreamQueries(CustodyRoleOffer);

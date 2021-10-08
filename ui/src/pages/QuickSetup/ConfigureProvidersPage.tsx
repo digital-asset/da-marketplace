@@ -1,22 +1,20 @@
 import React, { useState } from 'react';
 import { Form, Button } from 'semantic-ui-react';
 
+import { useAutomationInstances, useAutomations } from '@daml/hub-react';
 import { useLedger } from '@daml/react';
 import { Choice, ContractId } from '@daml/types';
-import { useAutomationInstances, useAutomations } from '@daml/hub-react';
 
 import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
 
-import { useRolesContext, RoleKind, terminateRole } from '../../context/RolesContext';
-import { useOffers } from '../../context/OffersContext';
-
-import { MarketplaceTrigger, isHubDeployment, useVerifiedParties } from '../../config';
+import Credentials, { computeLocalToken } from '../../Credentials';
 import { useStreamQueries } from '../../Main';
 import { retrieveParties } from '../../Parties';
-import Credentials, { computeLocalToken } from '../../Credentials';
-
-import QuickSetupPage from './QuickSetupPage';
+import { MarketplaceTrigger, isHubDeployment, useVerifiedParties } from '../../config';
+import { useOffers } from '../../context/OffersContext';
+import { useRolesContext, RoleKind, terminateRole } from '../../context/RolesContext';
 import { usePublicParty } from '../common';
+import QuickSetupPage from './QuickSetupPage';
 
 const ConfigureProviders = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;

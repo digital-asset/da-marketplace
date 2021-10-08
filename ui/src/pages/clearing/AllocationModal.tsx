@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { useLedger } from '@daml/react';
+import { Button, Form, Header, Modal } from 'semantic-ui-react';
+
 import { CreateEvent } from '@daml/ledger';
+import { useLedger } from '@daml/react';
+
 import {
   AssetDeposit,
   AssetDeposit_SetObservers,
   AssetDeposit_Split,
 } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import { Button, Form, Header, Modal } from 'semantic-ui-react';
 
 type MarginCallProps = {
   deposit?: CreateEvent<AssetDeposit>;

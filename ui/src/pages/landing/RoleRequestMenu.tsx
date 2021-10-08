@@ -1,32 +1,31 @@
 import React, { useEffect, useState, useMemo } from 'react';
-
-import { Template } from '@daml/types';
 import { Button } from 'semantic-ui-react';
 
-import { Request as CustodianRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
-import { Request as ExchangeRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
-import { Request as ClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
-import { Request as DistributionRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Role';
-import { Request as SettlementRequest } from '@daml.js/da-marketplace/lib/Marketplace/Settlement/Service';
-import { Role as OperatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
+import { useParty } from '@daml/react';
+import { Template } from '@daml/types';
 
+import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
+import { Request as ClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
+import { Request as CustodianRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import { Request as DistributionRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Role';
+import { Role as OperatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
+import { Request as SettlementRequest } from '@daml.js/da-marketplace/lib/Marketplace/Settlement/Service';
+import { Request as ExchangeRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
+
+import { useStreamQueries } from '../../Main';
 import { Fields } from '../../components/InputDialog/Fields';
+import { RoleRequestDialog } from '../../components/InputDialog/RoleDialog';
+import { usePartyName, useVerifiedParties } from '../../config';
+import { useRoleRequestKinds } from '../../context/RequestsContext';
 import {
   RoleKind,
   RoleRequest,
   RoleRequestTemplates,
   usePartyRoleKinds,
 } from '../../context/RolesContext';
-import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
-import { usePartyName, useVerifiedParties } from '../../config';
-import { useParty } from '@daml/react';
-import { RoleRequestDialog } from '../../components/InputDialog/RoleDialog';
-import { useRoleRequestKinds } from '../../context/RequestsContext';
 import { AddPlusIcon } from '../../icons/icons';
 import { ServicePageProps } from '../common';
-import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-
-import { useStreamQueries } from '../../Main';
 
 interface RequestInterface {
   operator: string;

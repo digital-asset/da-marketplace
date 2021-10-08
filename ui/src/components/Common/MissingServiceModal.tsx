@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button, Modal } from 'semantic-ui-react';
+
 import { InformationIcon } from '../../icons/icons';
 
 const MissingServiceModal = (props: {

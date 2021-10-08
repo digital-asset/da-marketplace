@@ -1,9 +1,11 @@
 import React from 'react';
-import { useStreamQueries } from '../../Main';
-import { usePartyName } from '../../config';
+
 import { Issuance } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Model';
-import StripedTable from '../../components/Table/StripedTable';
+
+import { useStreamQueries } from '../../Main';
 import TitleWithActions from '../../components/Common/TitleWithActions';
+import StripedTable from '../../components/Table/StripedTable';
+import { usePartyName } from '../../config';
 import paths from '../../paths';
 
 export const IssuancesTable: React.FC = () => {

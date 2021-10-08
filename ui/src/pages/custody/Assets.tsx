@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
-import { useStreamQueries } from '../../Main';
+import { Button, Form } from 'semantic-ui-react';
+
+import { useLedger, useParty } from '@daml/react';
+
 import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
-import Account from './Account';
-import Tile from '../../components/Tile/Tile';
+
+import { useStreamQueries } from '../../Main';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
-import { Button, Form } from 'semantic-ui-react';
-import { ServicePageProps, createDropdownProp } from '../common';
+import Tile from '../../components/Tile/Tile';
 import { usePartyName } from '../../config';
-import { useLedger, useParty } from '@daml/react';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
+import { ServicePageProps, createDropdownProp } from '../common';
+import Account from './Account';
 
 const Assets: React.FC<ServicePageProps<CustodyService>> = ({
   services,

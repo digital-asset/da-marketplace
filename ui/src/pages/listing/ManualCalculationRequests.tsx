@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
+import { Button, Form } from 'semantic-ui-react';
+
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
+
 import { ManualFairValueCalculation } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Model/module';
-import { usePartyName } from '../../config';
-import StripedTable from '../../components/Table/StripedTable';
-import { Button, Form } from 'semantic-ui-react';
+
 import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
+import StripedTable from '../../components/Table/StripedTable';
+import { usePartyName } from '../../config';
 
 type Props = {
   requests: Readonly<CreateEvent<ManualFairValueCalculation, any, any>[]>;

@@ -1,5 +1,6 @@
-import React from 'react';
 import classNames from 'classnames';
+import React from 'react';
+
 import { OpenMarketplaceLogo } from '../../icons/icons';
 
 type Control = undefined | React.ReactElement | React.ReactElement[];

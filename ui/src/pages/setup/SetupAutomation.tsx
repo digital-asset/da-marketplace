@@ -3,8 +3,8 @@ import { Button, DropdownItemProps, Form, Modal, Header } from 'semantic-ui-reac
 
 import { Automation, Instance, useAutomationInstances, useAutomations } from '@daml/hub-react';
 
-import { handleSelectMultiple } from '../common';
 import StripedTable from '../../components/Table/StripedTable';
+import { handleSelectMultiple } from '../common';
 
 export const makeAutomationOptions = (automations?: Automation[]): DropdownItemProps[] => {
   return (

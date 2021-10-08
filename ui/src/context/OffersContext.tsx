@@ -2,21 +2,19 @@ import React, { useEffect, useState } from 'react';
 
 import { CreateEvent } from '@daml/ledger';
 
-import { Offer as ClearingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
-import { Offer as CustodianOffer } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
-import { Offer as DistributorOffer } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Role';
-import { Offer as SettlementOffer } from '@daml.js/da-marketplace/lib/Marketplace/Settlement/Service';
-import { Offer as ExchangeOffer } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
-import { Offer as MatchingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Matching/Service';
-
-import { Offer as RegulatorOffer } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
-
 import { Offer as MarketClearingServiceOffer } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
+import { Offer as ClearingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
+import { Offer as ClearingServiceOffer } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
+import { Offer as CustodianOffer } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
 import { Offer as CustodyServiceOffer } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import { Offer as TradingServiceOffer } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
+import { Offer as DistributorOffer } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Role';
 import { Offer as IssuanceServiceOffer } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import { Offer as ListingServiceOffer } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
-import { Offer as ClearingServiceOffer } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
+import { Offer as RegulatorOffer } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
+import { Offer as SettlementOffer } from '@daml.js/da-marketplace/lib/Marketplace/Settlement/Service';
+import { Offer as MatchingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Matching/Service';
+import { Offer as ExchangeOffer } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
+import { Offer as TradingServiceOffer } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
 
 import { useStreamQueries } from '../Main';
 import { RoleKind } from './RolesContext';
