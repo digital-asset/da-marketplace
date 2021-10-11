@@ -1,6 +1,7 @@
 module Marketplace.Trading where
 
 import Marketplace.BinaryOption
+import Marketplace.Custodian
 import Marketplace.Token
 import Marketplace.Transfer
 import Marketplace.Utils
@@ -241,7 +242,7 @@ template BrokerOrderRequest
     price : Decimal
     qty : Decimal
   where
-    signatory broker, brokerCustomer
+    signatory broker, brokerCustomer, operator
 
     controller broker can
       BrokerOrderRequest_Accept : (ContractId BrokerOrder, ContractId DepositTransferRequest)
@@ -252,6 +253,9 @@ template BrokerOrderRequest
           assertMsg "Deposit account does not belong to brokerCustomer" $ deposit.account.owner == brokerCustomer
           brokerOrderCid <- create BrokerOrder with ..
           let receiverAccountId = Id with signatories = deposit.account.id.signatories, label = getAccountLabel broker broker, version = 0
+          let custodian = getCustodian deposit.account.id operator
+          -- depositTransferReqCid <- exerciseByKey @CustodianRelationship (custodian, operator, brokerCustomer) CustodianRelationship_RequestTransfer with
+                -- request =
           depositTransferReqCid <- create DepositTransferRequest with sender = brokerCustomer, senderAccountId = deposit.account.id, ..
           return (brokerOrderCid, depositTransferReqCid)
 
@@ -267,7 +271,7 @@ template BrokerOrder
     qty : Decimal
     brokerOrderId : Int
   where
-    signatory broker, brokerCustomer
+    signatory broker, brokerCustomer, operator
 
     key (broker, brokerOrderId) : (Party, Int)
     maintainer key._1

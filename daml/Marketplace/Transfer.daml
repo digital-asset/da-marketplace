@@ -23,7 +23,8 @@ template DepositTransferRequest
         receiverSig = head $ toList receiverAccountId.signatories
         custodian = getCustodian senderAccountId operator -- senderSig
     ensure senderSig == receiverSig && senderAccountId /= receiverAccountId
-    signatory toList senderAccountId.signatories, sender
+    signatory operator, sender
+    -- custodian, operator, sender -- toList senderAccountId.signatories, sender
     -- toList senderAccountId.signatories <> toList receiverAccountId.signatories, sender
     -- operator, custodian, sender
 
@@ -120,5 +121,6 @@ template DepositCreditRequest
           newDepositCid <- exercise depositRuleCid AssetSettlement_Credit with asset, ctrl = custodian
           archive depositRuleCid
           return newDepositCid
+
       DepositCreditRequest_Reject : ()
         do return ()
