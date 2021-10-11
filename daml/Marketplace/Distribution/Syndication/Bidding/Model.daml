@@ -1,9 +1,7 @@
 module Marketplace.Distribution.Syndication.Bidding.Model where
 
-import DA.Assert ((===))
-import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Account, Asset, Id)
-import Marketplace.Settlement.Model as Settlement (SettlementDetails(..), SettlementInstruction(..))
+import Marketplace.Settlement.Model (DelayedSettlementInstruction(..), DelayedSettlementDetails(..))
 
 template BidRequest
   with
@@ -15,6 +13,8 @@ template BidRequest
     dealId : Text
     asset : Asset
     priceId : Id
+    providerPaymentAccount : Account
+    providerDeliveryAccount : Account
   where
     signatory operator, provider, customer
 
@@ -28,8 +28,8 @@ template Bid
     dealId : Text
     asset : Asset
     price : Asset
-    investorPaymentAccount : Account
-    investorDeliveryAccount : Account
+    providerPaymentAccount : Account
+    providerDeliveryAccount : Account
   where
     signatory operator, provider, customer
     observer issuer, bookRunner
@@ -43,12 +43,7 @@ template Bid
         with
           offeredPrice : Decimal
           offeredQuantity : Decimal
-          deliveryDepositCid : ContractId AssetDeposit
-          cptyPaymentAccount : Account
-          cptyDeliveryAccount : Account
         do
-          deliveryDeposit <- fetch deliveryDepositCid
-          deliveryDeposit.asset.quantity === offeredQuantity
           create Allocation with asset = (asset with quantity = offeredQuantity); price = (price with quantity = offeredPrice); ..
 
 template Allocation
@@ -61,11 +56,8 @@ template Allocation
     dealId : Text
     asset : Asset
     price : Asset
-    deliveryDepositCid : ContractId AssetDeposit
-    cptyPaymentAccount : Account
-    cptyDeliveryAccount : Account
-    investorPaymentAccount : Account
-    investorDeliveryAccount : Account
+    providerPaymentAccount : Account
+    providerDeliveryAccount : Account
   where
     signatory operator, provider, customer, bookRunner
     observer issuer
@@ -75,12 +67,40 @@ template Allocation
     maintainer key._1
 
     controller customer can
-      Instruct : ContractId SettlementInstruction
+      Confirm : ContractId Confirmation
         with
-          paymentDepositCid : ContractId AssetDeposit
+          customerPaymentAccount : Account
+          customerDeliveryAccount : Account
         do
-          paymentDeposit <- fetch paymentDepositCid
-          paymentDeposit.asset === price with quantity = price.quantity * asset.quantity
-          let delivery = SettlementDetails with senderAccount = cptyDeliveryAccount; receiverAccount = investorDeliveryAccount; depositCid = deliveryDepositCid
-          let payment = SettlementDetails with senderAccount = investorPaymentAccount; receiverAccount = cptyPaymentAccount; depositCid = paymentDepositCid
-          create SettlementInstruction with details = [delivery, payment]; provider = bookRunner; ..
+          create Confirmation with ..
+
+template Confirmation
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    issuer : Party
+    bookRunner : Party
+    dealId : Text
+    asset : Asset
+    price : Asset
+    customerPaymentAccount : Account
+    customerDeliveryAccount : Account
+    providerPaymentAccount : Account
+    providerDeliveryAccount : Account
+  where
+    signatory operator, provider, customer, bookRunner
+    observer issuer
+    ensure asset.quantity > 0.0 && price.quantity > 0.0
+
+    key (operator, provider, customer, dealId) : (Party, Party, Party, Text)
+    maintainer key._1
+
+    controller bookRunner can
+      Instruct : ContractId DelayedSettlementInstruction
+        do
+          let
+            delivery = DelayedSettlementDetails with senderAccount = providerDeliveryAccount; receiverAccount = customerDeliveryAccount; asset = asset; depositCid = None
+            payment = DelayedSettlementDetails with senderAccount = customerPaymentAccount; receiverAccount = providerPaymentAccount; asset = (price with quantity = price.quantity * asset.quantity); depositCid = None
+          create DelayedSettlementInstruction with operator; provider; details = [delivery, payment]; ..
+

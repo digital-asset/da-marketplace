@@ -1,6 +1,9 @@
 module Marketplace.Distribution.Syndication.Structuring.Model where
 
-import DA.Finance.Types (Asset, Id)
+import DA.Finance.Types (Id, Asset(..))
+import Marketplace.Distribution.Syndication.Bidding.Model qualified as Bidding
+import Marketplace.Distribution.Syndication.BookBuilding.Model qualified as BookBuilding
+import Marketplace.Settlement.Model (DelayedSettlementInstruction(..), DelayedSettlementDetails(..))
 
 template CreateDealRequest
   with
@@ -8,7 +11,7 @@ template CreateDealRequest
     provider : Party
     customer : Party
     dealId : Text
-    currencyId : Id
+    priceId : Id
   where
     signatory operator, provider, customer
 
@@ -22,16 +25,66 @@ template AddTrancheRequest
   where
     signatory operator, provider, customer
 
+instructConf : Party -> Party -> Bidding.Confirmation -> DelayedSettlementInstruction
+instructConf operator provider conf =
+  let
+    delivery = DelayedSettlementDetails with senderAccount = conf.providerDeliveryAccount; receiverAccount = conf.customerDeliveryAccount; asset = conf.asset; depositCid = None
+    payment = DelayedSettlementDetails with senderAccount = conf.customerPaymentAccount; receiverAccount = conf.providerPaymentAccount; asset = (conf.price with quantity = conf.price.quantity * conf.asset.quantity); depositCid = None
+  in DelayedSettlementInstruction with operator; provider; details = [delivery, payment]; ..
+
+instructBbr : Party -> Party -> BookBuilding.BuildRequest -> Decimal -> Decimal -> Update ()
+instructBbr operator provider bbr price quantity = do
+  let
+    delivery = DelayedSettlementDetails with senderAccount = bbr.providerDeliveryAccount; receiverAccount = bbr.customerDeliveryAccount; asset = (bbr.asset with quantity); depositCid = None
+    payment = DelayedSettlementDetails with senderAccount = bbr.customerPaymentAccount; receiverAccount = bbr.providerPaymentAccount; asset = (Asset with id = bbr.priceId; quantity = price * quantity); depositCid = None
+  create DelayedSettlementInstruction with details = [delivery, payment]; ..
+  pure ()
+
+processBook : Party -> Party -> [(ContractId BookBuilding.BuildRequest, BookBuilding.BuildRequest)] -> [(ContractId Bidding.Confirmation, Bidding.Confirmation)] -> Decimal -> Update ([ContractId DelayedSettlementInstruction], Decimal)
+processBook operator customer bbrs confs price =
+  let
+    childBbrs = filter (\(_, bbr) -> bbr.customer == customer) bbrs
+    parentBbrs = filter (\(_, bbr) -> bbr.provider == customer) bbrs
+  in
+    case childBbrs of
+    [] -> do
+      let
+        myConfs = filter (\(_, conf) -> conf.provider == customer) confs
+        myAggregateQuantity = sum $ map (\(_, conf) -> conf.asset.quantity) myConfs
+      confSiCids <- mapA (\(confCid, _) -> exercise confCid Bidding.Instruct) myConfs
+      parentSiCids <- mapA (\(parentBbrCid, _) -> exercise parentBbrCid BookBuilding.Instruct with quantity = myAggregateQuantity; price) parentBbrs
+      pure (parentSiCids ++ confSiCids, myAggregateQuantity)
+    _ -> do
+      myChildResults <- mapA (\(_, childBbr) -> processBook operator childBbr.provider bbrs confs price) childBbrs
+      let
+        myAggregateQuantity = sum $ map snd myChildResults
+        childSiCids = concatMap fst myChildResults
+      parentSiCids <- mapA (\(parentBbrCid, _) -> exercise parentBbrCid BookBuilding.Instruct with quantity = myAggregateQuantity; price) parentBbrs
+      pure (parentSiCids ++ childSiCids, myAggregateQuantity)
+
 template Deal
   with
     operator : Party
     provider : Party
     customer : Party
+    bookRunner : Party
     tranches : [Asset]
     dealId : Text
-    currencyId : Id
+    priceId : Id
   where
     signatory operator, provider, customer
+    observer bookRunner
 
     key (operator, provider, customer, dealId) : (Party, Party, Party, Text)
     maintainer key._1
+
+    controller bookRunner can
+      InstructConfirmations : [ContractId DelayedSettlementInstruction]
+        with
+          bookBuildingRequestCids : [ContractId BookBuilding.BuildRequest]
+          confirmationCids : [ContractId Bidding.Confirmation]
+          price : Decimal
+        do
+          bookBuildingRequests <- zip bookBuildingRequestCids <$> mapA fetch bookBuildingRequestCids
+          confirmations <- zip confirmationCids <$> mapA fetch confirmationCids
+          fst <$> processBook operator bookRunner bookBuildingRequests confirmations price

@@ -1,6 +1,7 @@
 module Marketplace.Distribution.Syndication.Distributor where
 
 import Marketplace.Distribution.Syndication.Bidding.Service qualified as Bidding
+import Marketplace.Distribution.Syndication.BookBuilding.Service qualified as BookBuilding
 import Marketplace.Utils
 import DA.Set (Set)
 
@@ -33,6 +34,24 @@ template Role
           biddingServiceCid : ContractId Bidding.Service
         do
           archive biddingServiceCid
+
+      nonconsuming OfferBookBuildingService : ContractId BookBuilding.Offer
+        with
+          customer : Party
+        do
+          create BookBuilding.Offer with ..
+
+      nonconsuming ApproveBookBuildingRequest : ContractId BookBuilding.Service
+        with
+          bookBuildingRequestCid : ContractId BookBuilding.Request
+        do
+          exercise bookBuildingRequestCid BookBuilding.Approve with ..
+
+      nonconsuming TerminateBookBuildingService : ()
+        with
+          bookBuildingServiceCid : ContractId BookBuilding.Service
+        do
+          archive bookBuildingServiceCid
 
     controller operator can
       TerminateRole: ()

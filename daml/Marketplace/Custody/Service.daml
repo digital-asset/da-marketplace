@@ -49,9 +49,9 @@ template Service
           depositRequestCid : ContractId Custody.DepositRequest
         do
           Custody.DepositRequest{asset} <- fetchAndArchive depositRequestCid
-          (_, AssetDescription{issuer}) <- fetchByKey @AssetDescription asset.id
+          -- (_, AssetDescription{issuer}) <- fetchByKey @AssetDescription asset.id
 
-          create AssetDeposit with asset; account; lockers = empty; observers = fromList [ issuer ]
+          create AssetDeposit with asset; account; lockers = empty; observers = empty --fromList [ issuer ]
 
       nonconsuming Withdrawal : ()
         with

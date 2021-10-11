@@ -1,6 +1,6 @@
 module Marketplace.Settlement.Model where
 
-import DA.Finance.Types (Account)
+import DA.Finance.Types (Account, Asset)
 import DA.Finance.Asset (AssetDeposit, AssetDeposit_Transfer(..))
 import DA.Set (fromList)
 
@@ -12,6 +12,17 @@ data SettlementDetails = SettlementDetails
     depositCid : ContractId AssetDeposit
     receiverAccount : Account
   deriving (Eq, Show)
+
+instance Show DelayedSettlementDetails where
+  show d = d.senderAccount.id.label <> " -> [" <> show d.asset.quantity <> " " <> d.asset.id.label <> "] -> " <> d.receiverAccount.id.label
+
+data DelayedSettlementDetails = DelayedSettlementDetails
+  with
+    senderAccount : Account
+    receiverAccount : Account
+    asset : Asset
+    depositCid : Optional (ContractId AssetDeposit)
+  deriving (Eq)
 
 template SettlementInstruction
   with
@@ -28,3 +39,23 @@ template SettlementInstruction
         do
           forA details (\settlementDetails -> exercise settlementDetails.depositCid $ AssetDeposit_Transfer settlementDetails.receiverAccount)
 
+template DelayedSettlementInstruction
+  with
+    operator : Party
+    provider : Party
+    details : [DelayedSettlementDetails]
+  where
+    -- let senders   = map (.senderAccount.owner) details
+    --     receivers = map (.receiverAccount.owner) details
+    -- signatory fromList $ [operator, provider] <> senders <> receivers
+    signatory operator, provider
+
+    controller provider can
+      SettleDelayed : [ContractId AssetDeposit]
+        do
+          let
+            settle (settlementDetails : DelayedSettlementDetails) = do
+              let
+                Some depositCid = settlementDetails.depositCid
+              exercise depositCid $ AssetDeposit_Transfer settlementDetails.receiverAccount
+          forA details settle

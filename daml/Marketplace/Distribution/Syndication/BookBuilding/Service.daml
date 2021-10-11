@@ -1,11 +1,9 @@
-module Marketplace.Distribution.Syndication.Bidding.Service where
+module Marketplace.Distribution.Syndication.BookBuilding.Service where
 
-import DA.Finance.Types (Asset(..), Account, Id)
-import DA.Finance.Utils (fetchAndArchive)
-import Marketplace.Distribution.Syndication.Bidding.Model qualified as Bidding
+import DA.Finance.Types (Account)
+import Marketplace.Distribution.Syndication.BookBuilding.Model qualified as BookBuilding
+import Marketplace.Distribution.Syndication.Structuring.Model qualified as Structuring
 import Marketplace.Utils
-
-type S = Service
 
 template Service
   with
@@ -19,27 +17,17 @@ template Service
     maintainer key._1
 
     controller customer can
-      nonconsuming SubmitBid : ContractId Bidding.Bid
+      nonconsuming RequestBookBuilding : [ContractId BookBuilding.BuildRequest]
         with
-          bidRequestCid : ContractId Bidding.BidRequest
-          price : Decimal
-          quantity : Decimal
-        do
-          Bidding.BidRequest{..} <- fetchAndArchive bidRequestCid
-          create Bidding.Bid with asset = (asset with quantity); price = (Asset with id = priceId; quantity = price); ..
-
-    controller provider can
-      nonconsuming RequestBid : ContractId Bidding.BidRequest
-        with
-          issuer : Party
-          bookRunner : Party
-          dealId : Text
-          asset : Asset
-          priceId : Id
+          dealCid : ContractId Structuring.Deal
           providerPaymentAccount : Account
           providerDeliveryAccount : Account
+          customerPaymentAccount : Account
+          customerDeliveryAccount : Account
         do
-          create Bidding.BidRequest with ..
+          deal@Structuring.Deal{bookRunner, dealId, priceId} <- fetch dealCid
+          mapA (\asset -> create BookBuilding.BuildRequest with issuer = deal.customer; ..) deal.tranches
+
 
 template Offer
   with

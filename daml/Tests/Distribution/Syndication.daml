@@ -6,8 +6,10 @@ import ContingentClaims.Observation (Observation)
 import Daml.Script
 import DA.Date (Month(..))
 import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..))
-import DA.Finance.Types (Asset(..), Id(..))
+import DA.Finance.Types (Account, Asset(..), Id(..))
+import DA.Foldable (forA_)
 import DA.List (head)
+import DA.Optional (catOptionals)
 import DA.Set
 import Marketplace.Operator.Role qualified as Operator
 import Marketplace.Custody.Role qualified as Custodian
@@ -17,6 +19,11 @@ import Marketplace.Issuance.CFI qualified as CFI
 import Marketplace.Issuance.Service qualified as Issuance
 import Marketplace.Distribution.Syndication.Bidding.Model qualified as Bidding
 import Marketplace.Distribution.Syndication.Bidding.Service qualified as Bidding
+import Marketplace.Distribution.Syndication.Structuring.Model qualified as Structuring
+import Marketplace.Distribution.Syndication.Structuring.Service qualified as Structuring
+import Marketplace.Distribution.Syndication.BookBuilding.Model qualified as BookBuilding
+import Marketplace.Distribution.Syndication.BookBuilding.Service qualified as BookBuilding
+import Marketplace.Distribution.Syndication.BookRunner qualified as BookRunner
 import Marketplace.Distribution.Syndication.Distributor qualified as Distributor
 import Marketplace.Settlement.Model as Settlement (SettlementInstruction, Settle(..))
 import Tests.Utils
@@ -27,20 +34,37 @@ createCustodianRole operator provider = do
   (custodianRoleCid, _, _)  <- submit provider do exerciseCmd custodianRoleOfferCid Custodian.Accept
   pure custodianRoleCid
 
-createCustodyService : Party -> Party -> Party -> Script (ContractId Custody.Service)
+createCustodyService : Party -> Party -> Party -> Script (ContractId Custody.Service, Account)
 createCustodyService operator provider customer = do
   custodyServiceOfferCid <- submit provider do exerciseByKeyCmd @Custodian.Role (operator, provider) Custodian.OfferCustodyService with ..
-  submit customer do exerciseCmd custodyServiceOfferCid Custody.Accept
+  serviceCid <- submit customer do exerciseCmd custodyServiceOfferCid Custody.Accept
+  Some service <- queryContractId customer serviceCid
+  pure (serviceCid, service.account)
 
 createIssuanceService : Party -> Party -> Party -> Script (ContractId Issuance.Service)
 createIssuanceService operator provider customer = do
   issuanceServiceOfferCid <- submit provider do exerciseByKeyCmd @Custodian.Role (operator, provider) Custodian.OfferIssuanceService with ..
   submit customer do exerciseCmd issuanceServiceOfferCid Issuance.Accept
 
+createBookRunnerRole : Party -> Party -> Script (ContractId BookRunner.Role)
+createBookRunnerRole operator provider = do
+  bookRunnerRoleOfferCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferSyndicationBookRunnerRole with provider
+  submit provider do exerciseCmd bookRunnerRoleOfferCid BookRunner.Accept
+
 createDistributorRole : Party -> Party -> Script (ContractId Distributor.Role)
 createDistributorRole operator provider = do
   distributorRoleOfferCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferSyndicationDistributorRole with provider
   submit provider do exerciseCmd distributorRoleOfferCid Distributor.Accept
+
+createStructuringService : Party -> Party -> Party -> Script (ContractId Structuring.Service)
+createStructuringService operator provider customer = do
+  structuringServiceOfferCid <- submit provider do exerciseByKeyCmd @BookRunner.Role (operator, provider) BookRunner.OfferStructuringService with ..
+  submit customer do exerciseCmd structuringServiceOfferCid Structuring.Accept
+
+createBookBuildingService : Party -> Party -> Party -> Script (ContractId BookBuilding.Service)
+createBookBuildingService operator provider customer = do
+  bookBuildingServiceOfferCid <- submit provider do exerciseByKeyCmd @Distributor.Role (operator, provider) Distributor.OfferBookBuildingService with ..
+  submit customer do exerciseCmd bookBuildingServiceOfferCid BookBuilding.Accept
 
 createBiddingService : Party -> Party -> Party -> Script (ContractId Bidding.Service)
 createBiddingService operator provider customer = do
@@ -68,40 +92,52 @@ deposit operator provider customer public quantity assetLabel = do
   depositRequestCid <- submitMulti [customer] [public] do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.RequestDeposit with asset
   submit provider do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.Deposit with depositRequestCid
 
-bid : Party -> Party -> Party -> Party -> Party -> Party -> Party -> Text -> Asset -> Id -> Decimal -> Decimal -> Script (ContractId Bidding.Bid)
-bid operator provider customer cashProvider bondRegistrar issuer bookRunner dealId asset priceId quantity price = do
-  (_, Custody.Service{account=investorPaymentAccount}) <- head <$> queryFilter @Custody.Service customer (\s -> s.provider == cashProvider)
-  (_, Custody.Service{account=investorDeliveryAccount}) <- head <$> queryFilter @Custody.Service customer (\s -> s.provider == bondRegistrar)
+createDeal : Party -> Party -> Party -> Text -> Id -> Script (ContractId Structuring.Deal)
+createDeal operator provider customer dealId priceId = do
+  createDealRequestCid <- submit customer do exerciseByKeyCmd @Structuring.Service (operator, provider, customer) Structuring.RequestCreateDeal with ..
+  submit provider do exerciseByKeyCmd @Structuring.Service (operator, provider, customer) Structuring.CreateDeal with ..
+
+addTranche : Party -> Party -> Party -> Text -> Asset -> Script (ContractId Structuring.Deal)
+addTranche operator provider customer dealId tranche = do
+  addTrancheRequestCid <- submit customer do exerciseByKeyCmd @Structuring.Service (operator, provider, customer) Structuring.RequestAddTranche with ..
+  submit provider do exerciseByKeyCmd @Structuring.Service (operator, provider, customer) Structuring.AddTranche with ..
+
+requestBookBuilding : Party -> Party -> Party -> ContractId Structuring.Deal -> Account -> Account -> Account -> Account -> Script [ContractId BookBuilding.BuildRequest]
+requestBookBuilding operator provider customer dealCid providerPaymentAccount providerDeliveryAccount customerPaymentAccount customerDeliveryAccount = do
+  submit customer do exerciseByKeyCmd @BookBuilding.Service (operator, provider, customer) BookBuilding.RequestBookBuilding with ..
+
+bid : Party -> Party -> Party -> ContractId BookBuilding.BuildRequest -> Account -> Account -> Decimal -> Decimal -> Script (ContractId Bidding.Bid)
+bid operator provider customer bookBuildingRequestCid providerPaymentAccount providerDeliveryAccount quantity price = do
+  Some BookBuilding.BuildRequest{issuer, bookRunner, dealId, asset, priceId} <- queryContractId provider bookBuildingRequestCid
+  -- (_, Custody.Service{account=investorPaymentAccount}) <- head <$> queryFilter @Custody.Service customer (\s -> s.provider == cashProvider)
+  -- (_, Custody.Service{account=investorDeliveryAccount}) <- head <$> queryFilter @Custody.Service customer (\s -> s.provider == bondRegistrar)
   bidRequestCid <- submit provider do exerciseByKeyCmd @Bidding.Service (operator, provider, customer) Bidding.RequestBid with ..
   submit customer do exerciseByKeyCmd @Bidding.Service (operator, provider, customer) Bidding.SubmitBid with ..
 
-allocate : Party -> Party -> Party -> Party -> ContractId Bidding.Bid -> Decimal -> Decimal -> ContractId AssetDeposit -> Script (ContractId Bidding.Allocation)
-allocate issuer bookRunner cashProvider bondRegistrar bidCid offeredQuantity offeredPrice deliveryDepositCid = do
-  (_, Custody.Service{account=cptyPaymentAccount}) <- head <$> queryFilter @Custody.Service issuer (\s -> s.provider == cashProvider)
-  (_, Custody.Service{account=cptyDeliveryAccount}) <- head <$> queryFilter @Custody.Service issuer (\s -> s.provider == bondRegistrar)
+allocate : Party -> ContractId Bidding.Bid -> Decimal -> Decimal -> Script (ContractId Bidding.Allocation)
+allocate bookRunner bidCid offeredQuantity offeredPrice = do
   submit bookRunner do exerciseCmd bidCid Bidding.Allocate with ..
 
-instruct : Party -> ContractId Bidding.Allocation -> ContractId AssetDeposit -> Script (ContractId SettlementInstruction)
-instruct investor allocationCid paymentDepositCid = do
-  submit investor do exerciseCmd allocationCid Bidding.Instruct with ..
+confirm : Party -> ContractId Bidding.Allocation -> Account -> Account -> Script (ContractId Bidding.Confirmation)
+confirm investor allocationCid customerPaymentAccount customerDeliveryAccount = do
+  submit investor do exerciseCmd allocationCid Bidding.Confirm with ..
 
-settle : Party -> ContractId Settlement.SettlementInstruction -> Script ([ContractId AssetDeposit])
-settle issuer siCid = do
-  submit issuer do exerciseCmd siCid Settlement.Settle
+-- settle : Party -> ContractId Settlement.SettlementInstruction -> Script ([ContractId AssetDeposit])
+-- settle issuer siCid = do
+--   submit issuer do exerciseCmd siCid Settlement.Settle
 
-
-directOwnership : Script ()
-directOwnership = do
+hierarchy : Script ()
+hierarchy = do
   --- Setup ---
   operator      <- allocatePartyWithHint "Operator" $ PartyIdHint "Operator"
   cashProvider  <- allocatePartyWithHint "CashProvider" $ PartyIdHint "CashProvider"
   bondRegistrar <- allocatePartyWithHint "BondRegistrar" $ PartyIdHint "BondRegistrar"
-  bank1  <- allocatePartyWithHint "JPM" $ PartyIdHint "JPM"
-  bank2  <- allocatePartyWithHint "CITI" $ PartyIdHint "CITI"
-  bank3  <- allocatePartyWithHint "UBS" $ PartyIdHint "UBS"
-  investor11 <- allocatePartyWithHint "Investor-JPM-1" $ PartyIdHint "Investor-JPM-1"
-  investor21 <- allocatePartyWithHint "Investor-CITI-1" $ PartyIdHint "Investor-CITI-1"
-  investor31 <- allocatePartyWithHint "Investor-UBS-1" $ PartyIdHint "Investor-UBS-1"
+  bank1  <- allocatePartyWithHint "Bank1" $ PartyIdHint "Bank1"
+  bank2  <- allocatePartyWithHint "Bank2" $ PartyIdHint "Bank2"
+  bank3  <- allocatePartyWithHint "Bank3" $ PartyIdHint "Bank3"
+  investor11 <- allocatePartyWithHint "Investor11" $ PartyIdHint "Investor11"
+  investor21 <- allocatePartyWithHint "Investor21" $ PartyIdHint "Investor21"
+  investor31 <- allocatePartyWithHint "Investor31" $ PartyIdHint "Investor31"
   issuer <- allocatePartyWithHint "Issuer" $ PartyIdHint "Issuer"
   public <- allocatePartyWithHint "Public" $ PartyIdHint "Public"
 
@@ -109,69 +145,102 @@ directOwnership = do
 
   createCustodianRole operator cashProvider
   createCustodianRole operator bondRegistrar
+  createCustodianRole operator bank1
+  createCustodianRole operator bank2
+  createCustodianRole operator bank3
 
-  createCustodyService operator cashProvider investor11
-  createCustodyService operator cashProvider investor21
-  createCustodyService operator cashProvider investor31
-  createCustodyService operator cashProvider issuer
+  -- 1st level
+  (_, bank1CashAccount) <- createCustodyService operator cashProvider bank1
+  (_, bank2CashAccount) <- createCustodyService operator cashProvider bank2
+  (_, bank3CashAccount) <- createCustodyService operator cashProvider bank3
+  (_, issuerCashAccount) <- createCustodyService operator cashProvider issuer
 
-  createCustodyService operator bondRegistrar investor11
-  createCustodyService operator bondRegistrar investor21
-  createCustodyService operator bondRegistrar investor31
-  createCustodyService operator bondRegistrar issuer
+  (_, bank1BondAccount) <- createCustodyService operator bondRegistrar bank1
+  (_, bank2BondAccount) <- createCustodyService operator bondRegistrar bank2
+  (_, bank3BondAccount) <- createCustodyService operator bondRegistrar bank3
+  (_, issuerBondAccount) <- createCustodyService operator bondRegistrar issuer
 
+  -- 2nd level
+  (_, bank1OwnAccount) <- createCustodyService operator bank1 bank1
+  (_, bank2OwnAccount) <- createCustodyService operator bank2 bank2
+  (_, bank3OwnAccount) <- createCustodyService operator bank3 bank3
+  (_, investor1CashAccount) <- createCustodyService operator bank1 investor11
+  (_, investor2CashAccount) <- createCustodyService operator bank2 investor21
+  (_, investor3CashAccount) <- createCustodyService operator cashProvider investor31
+  (_, investor3BondAccount) <- createCustodyService operator bank3 investor31
+  let
+    investor1BondAccount = investor1CashAccount
+    investor2BondAccount = investor2CashAccount
   createIssuanceService operator bondRegistrar issuer
 
   (_, usd)  <- originate operator cashProvider cashProvider public "USD" Zero
   (_, bond) <- originate operator bondRegistrar issuer public "BOND1" $ bond usd.assetId 100_000_000.0 0.02275 (unrollDates 2021 2023 [Jan,Jul] 15)
 
-  investorDeposit1Cid <- deposit operator cashProvider investor11 public 100_000_000.0 "USD"
-  investorDeposit2Cid <- deposit operator cashProvider investor21 public 100_000_000.0 "USD"
+  investorDeposit1Cid <- deposit operator cashProvider bank1 public 100_000_000.0 "USD"
+  investorDeposit2Cid <- deposit operator cashProvider bank2 public 100_000_000.0 "USD"
+  investorDeposit3Cid <- deposit operator cashProvider bank3 public 100_000_000.0 "USD"
+  investorDeposit1Cid <- deposit operator bank1 investor11 public 100_000_000.0 "USD"
+  investorDeposit2Cid <- deposit operator bank2 investor21 public 100_000_000.0 "USD"
   investorDeposit3Cid <- deposit operator cashProvider investor31 public 100_000_000.0 "USD"
 
   bondDepositCid <- issue operator bondRegistrar issuer "BondIssuance" 100_000_000.0 bond.assetId
   Some bondDeposit <- queryContractId @AssetDeposit issuer bondDepositCid
 
   --- Syndication ---
+  createBookRunnerRole operator bank1
+
   createDistributorRole operator issuer
   createDistributorRole operator bank1
   createDistributorRole operator bank2
   createDistributorRole operator bank3
 
-  createBiddingService operator issuer bank1
-  createBiddingService operator issuer bank2
-  createBiddingService operator issuer bank3
+  createStructuringService operator bank1 issuer
+
+  createBookBuildingService operator bank1 issuer
+  createBookBuildingService operator bank2 issuer
+  createBookBuildingService operator bank3 issuer
   createBiddingService operator bank1 investor11
   createBiddingService operator bank2 investor21
   createBiddingService operator bank3 investor31
 
   let
-    quantity1 = 20_000_000.0
-    quantity2 = 20_000_000.0
-    quantity3 = 20_000_000.0
-    price1 = 0.995
-    price2 = 0.997
-    price3 = 0.999
-    offeredPrice = 0.997
-  bid1Cid <- bid operator bank1 investor11 cashProvider bondRegistrar issuer issuer "DEAL1" bondDeposit.asset usd.assetId quantity1 price1
-  bid2Cid <- bid operator bank2 investor21 cashProvider bondRegistrar issuer issuer "DEAL1" bondDeposit.asset usd.assetId quantity2 price2
-  bid3Cid <- bid operator bank3 investor31 cashProvider bondRegistrar issuer issuer "DEAL1" bondDeposit.asset usd.assetId quantity3 price3
+    dealId = "DEAL1"
+    priceId = Id with signatories = fromList [cashProvider]; label = "USD"; version = 0
+    tranche = Asset with id = (Id with signatories = fromList [bondRegistrar, issuer]; label = "TRANCHE1"; version = 0); quantity = 100_000_000.0
+  dealCid <- createDeal operator bank1 issuer dealId priceId
+  dealCid <- addTranche operator bank1 issuer dealId tranche
 
-  [deposit1Cid, deposit2Cid, deposit3Cid, _] <- submit issuer do exerciseCmd bondDepositCid AssetDeposit_Split with quantities = [ quantity1, quantity2, quantity3 ]
-  allocation1Cid <- allocate issuer issuer cashProvider bondRegistrar bid1Cid quantity1 offeredPrice deposit1Cid
-  allocation2Cid <- allocate issuer issuer cashProvider bondRegistrar bid2Cid quantity2 offeredPrice deposit2Cid
-  allocation3Cid <- allocate issuer issuer cashProvider bondRegistrar bid3Cid quantity3 offeredPrice deposit3Cid
+  [bookBuildingRequest1Cid] <- requestBookBuilding operator bank1 issuer dealCid bank1CashAccount bank1BondAccount issuerCashAccount issuerBondAccount
+  [bookBuildingRequest2Cid] <- requestBookBuilding operator bank2 issuer dealCid bank2CashAccount bank2BondAccount issuerCashAccount issuerBondAccount
+  [bookBuildingRequest3Cid] <- requestBookBuilding operator bank3 issuer dealCid bank3CashAccount bank3BondAccount issuerCashAccount issuerBondAccount
 
-  investorDeposit1Cid <- head <$> submit investor11 do exerciseCmd investorDeposit1Cid AssetDeposit_Split with quantities = [ quantity1 * offeredPrice ]
-  investorDeposit2Cid <- head <$> submit investor21 do exerciseCmd investorDeposit2Cid AssetDeposit_Split with quantities = [ quantity2 * offeredPrice ]
-  investorDeposit3Cid <- head <$> submit investor31 do exerciseCmd investorDeposit3Cid AssetDeposit_Split with quantities = [ quantity3 * offeredPrice ]
+  bid1Cid <- bid operator bank1 investor11 bookBuildingRequest1Cid bank1OwnAccount bank1OwnAccount 20_000_000.0 0.995
+  bid2Cid <- bid operator bank2 investor21 bookBuildingRequest2Cid bank2OwnAccount bank2OwnAccount 30_000_000.0 0.997
+  bid3Cid <- bid operator bank3 investor31 bookBuildingRequest3Cid bank3CashAccount bank3OwnAccount 50_000_000.0 0.999
 
-  si1Cid <- instruct investor11 allocation1Cid investorDeposit1Cid
-  si2Cid <- instruct investor21 allocation2Cid investorDeposit2Cid
-  si3Cid <- instruct investor31 allocation3Cid investorDeposit3Cid
+  let offeredPrice = 0.998
+  allocation1Cid <- allocate issuer bid1Cid 20_000_000.0 offeredPrice
+  allocation2Cid <- allocate issuer bid2Cid 30_000_000.0 offeredPrice
+  allocation3Cid <- allocate issuer bid3Cid 50_000_000.0 offeredPrice
 
-  settle issuer si1Cid
-  settle issuer si2Cid
-  settle issuer si3Cid
+  -- investorDeposit1Cid <- head <$> submit investor11 do exerciseCmd investorDeposit1Cid AssetDeposit_Split with quantities = [ quantity1 * offeredPrice ]
+  -- investorDeposit2Cid <- head <$> submit investor21 do exerciseCmd investorDeposit2Cid AssetDeposit_Split with quantities = [ quantity2 * offeredPrice ]
+  -- investorDeposit3Cid <- head <$> submit investor31 do exerciseCmd investorDeposit3Cid AssetDeposit_Split with quantities = [ quantity3 * offeredPrice ]
+
+  confirmation1Cid <- confirm investor11 allocation1Cid investor1CashAccount investor1BondAccount
+  confirmation2Cid <- confirm investor21 allocation2Cid investor2CashAccount investor2BondAccount
+  confirmation3Cid <- confirm investor31 allocation3Cid investor3CashAccount investor3BondAccount
+
+  let
+    bookBuildingRequestCids = [ bookBuildingRequest1Cid, bookBuildingRequest2Cid, bookBuildingRequest3Cid ]
+    confirmationCids = [ confirmation1Cid, confirmation2Cid, confirmation3Cid ]
+    price = offeredPrice
+  siCids <- submit issuer do exerciseCmd dealCid Structuring.InstructConfirmations with ..
+  sisOpt <- mapA (queryContractId operator) siCids
+  let sis = catOptionals sisOpt
+  forA_ sis debug
+  -- settle issuer si1Cid
+  -- settle issuer si2Cid
+  -- settle issuer si3Cid
 
   pure ()

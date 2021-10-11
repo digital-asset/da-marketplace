@@ -5,6 +5,7 @@ import Marketplace.Custody.Role qualified as Custodian
 import Marketplace.Clearing.Role qualified as Clearing
 import Marketplace.Distribution.Auction.Distributor qualified as AuctionDistributor
 import Marketplace.Distribution.Syndication.Distributor qualified as SyndicationDistributor
+import Marketplace.Distribution.Syndication.BookRunner qualified as SyndicationBookRunner
 import Marketplace.Settlement.Service qualified as Settlement
 import Marketplace.Issuance.Service qualified as Issuance
 import Marketplace.Custody.Service qualified as Custody
@@ -110,6 +111,18 @@ template Role
           distributorRequestCid : ContractId SyndicationDistributor.Request
         do
           exercise distributorRequestCid SyndicationDistributor.Approve
+
+      nonconsuming OfferSyndicationBookRunnerRole : ContractId SyndicationBookRunner.Offer
+        with
+          provider : Party
+        do
+          create SyndicationBookRunner.Offer with ..
+
+      nonconsuming ApproveSyndicationBookRunnerRequest : ContractId SyndicationBookRunner.Role
+        with
+          bookRunnerRequestCid : ContractId SyndicationBookRunner.Request
+        do
+          exercise bookRunnerRequestCid SyndicationBookRunner.Approve
 
       nonconsuming OfferClearingRole : ContractId Clearing.Offer
         with
