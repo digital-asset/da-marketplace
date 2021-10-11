@@ -1,0 +1,37 @@
+module Marketplace.Distribution.Syndication.Structuring.Model where
+
+import DA.Finance.Types (Asset, Id)
+
+template CreateDealRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    dealId : Text
+    currencyId : Id
+  where
+    signatory operator, provider, customer
+
+template AddTrancheRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    dealId : Text
+    tranche : Asset
+  where
+    signatory operator, provider, customer
+
+template Deal
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    tranches : [Asset]
+    dealId : Text
+    currencyId : Id
+  where
+    signatory operator, provider, customer
+
+    key (operator, provider, customer, dealId) : (Party, Party, Party, Text)
+    maintainer key._1

@@ -1,0 +1,95 @@
+module Marketplace.Distribution.Syndication.Structuring.Service where
+
+import DA.Finance.Types (Id, Asset)
+import DA.Finance.Utils (fetchAndArchive)
+import Marketplace.Distribution.Syndication.Structuring.Model
+import Marketplace.Utils
+
+type S = Service
+
+template Service
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+  where
+    signatory operator, provider, customer
+
+    key (operator, provider, customer) : (Party, Party, Party)
+    maintainer key._1
+
+    controller customer can
+      nonconsuming RequestCreateDeal : ContractId CreateDealRequest
+        with
+          dealId : Text
+          currencyId : Id
+        do
+          create CreateDealRequest with ..
+
+      nonconsuming RequestAddTranche : ContractId AddTrancheRequest
+        with
+          dealId : Text
+          tranche : Asset
+        do
+          create AddTrancheRequest with ..
+
+    controller provider can
+      nonconsuming CreateDeal : ContractId Deal
+        with
+          createDealRequestCid : ContractId CreateDealRequest
+        do
+          CreateDealRequest{dealId, currencyId} <- fetchAndArchive createDealRequestCid
+          create Deal with tranches = []; ..
+
+      nonconsuming AddTranche : ContractId Deal
+        with
+          addTranchRequestCid : ContractId AddTrancheRequest
+        do
+          AddTrancheRequest{dealId, tranche} <- fetchAndArchive addTranchRequestCid
+          (dealCid, deal) <- fetchByKey @Deal (operator, provider, customer, dealId)
+          archive dealCid
+          create deal with tranches = tranche :: deal.tranches
+
+template Offer
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+  where
+    signatory operator, provider
+
+    controller customer can
+      Accept : ContractId Service
+        do
+          createOrLookup Service with ..
+
+      Decline : ()
+        do
+          return ()
+
+    controller provider can
+      Withdraw : ()
+        do pure ()
+
+template Request
+  with
+    provider : Party
+    customer : Party
+  where
+    signatory customer
+    observer provider
+
+    controller customer can
+      Cancel : ()
+        do pure ()
+
+    controller provider can
+      Reject : ()
+        do pure ()
+
+    choice Approve : ContractId Service
+      with
+        operator : Party
+      controller operator, provider
+      do
+        createOrLookup Service with ..

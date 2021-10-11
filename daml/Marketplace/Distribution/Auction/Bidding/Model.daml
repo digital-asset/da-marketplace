@@ -1,4 +1,4 @@
-module Marketplace.Distribution.Bidding.Model where
+module Marketplace.Distribution.Auction.Bidding.Model where
 
 import DA.Finance.Types (Account, Asset, Id)
 import DA.Finance.Asset (AssetDeposit)

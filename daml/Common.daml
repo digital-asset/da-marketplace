@@ -19,8 +19,8 @@ import qualified Marketplace.Trading.Matching.Service as Matching
 import qualified Marketplace.Trading.Service as Trading
 import qualified Marketplace.Listing.Service as Listing
 import qualified Marketplace.Settlement.Service as Settlement
-import qualified Marketplace.Distribution.Role as Distributor
-import qualified Marketplace.Distribution.Bidding.Service as Bidding
+import qualified Marketplace.Distribution.Auction.Distributor as Distributor
+import qualified Marketplace.Distribution.Auction.Bidding.Service as Bidding
 import qualified Marketplace.Regulator.Service as RegulatorService
 import qualified Marketplace.Regulator.Role as Regulator
 import Marketplace.Issuance.AssetDescription
@@ -110,7 +110,7 @@ onboardProviders Parties{userAdmin = operator; ..} = do
   exchangeRoleOfferCid  <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferExchangeRole with provider = exchange
   (exchangeRoleCid, matchingServiceCid, listingServiceCid, settlementServiceCid) <- submit exchange  do exerciseCmd exchangeRoleOfferCid Exchange.Accept
 
-  distributorRoleOfferCid   <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferDistributorRole with provider = bank
+  distributorRoleOfferCid   <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferAuctionDistributorRole with provider = bank
   distributorRoleCid        <- submit bank      do exerciseCmd distributorRoleOfferCid Distributor.Accept
 
   settlementServiceOfferCid <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferSettlementService with provider = bank

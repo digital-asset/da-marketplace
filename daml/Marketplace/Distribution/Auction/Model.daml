@@ -2,7 +2,7 @@ module Marketplace.Distribution.Auction.Model where
 
 import DA.Finance.Types (Account, Asset, Id)
 import DA.Finance.Asset (AssetDeposit)
-import Marketplace.Distribution.Bidding.Model qualified as Bidding
+import Marketplace.Distribution.Auction.Bidding.Model qualified as Bidding
 
 type T = Auction
 

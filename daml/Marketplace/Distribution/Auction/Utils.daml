@@ -3,9 +3,9 @@ module Marketplace.Distribution.Auction.Utils where
 import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..))
 import Marketplace.Settlement.Model qualified as Settlement
 import Marketplace.Distribution.Auction.Model qualified as Auction
-import Marketplace.Distribution.Bidding.Service qualified as Bidding
-import Marketplace.Distribution.Bidding.Model qualified as Bidding
-import Marketplace.Distribution.Bidding.Model (Bid(..))
+import Marketplace.Distribution.Auction.Bidding.Service qualified as Bidding
+import Marketplace.Distribution.Auction.Bidding.Model qualified as Bidding
+import Marketplace.Distribution.Auction.Bidding.Model (Bid(..))
 
 -- | Takes a list and splits it based off a predicate.
 splitList : (a -> Bool) -> [a] -> [Either a a]

@@ -1,7 +1,6 @@
-module Marketplace.Distribution.Role where
+module Marketplace.Distribution.Syndication.Distributor where
 
-import Marketplace.Distribution.Auction.Service qualified as Auction
-import Marketplace.Distribution.Bidding.Service qualified as Bidding
+import Marketplace.Distribution.Syndication.Bidding.Service qualified as Bidding
 import Marketplace.Utils
 import DA.Set (Set)
 
@@ -9,32 +8,13 @@ template Role
   with
     operator : Party
     provider : Party
-    observers : Set Party
   where
     signatory operator, provider
-    observer observers
 
     key (operator, provider) :  (Party, Party)
     maintainer key._1
 
     controller provider can
-      nonconsuming OfferAuctionService : ContractId Auction.Offer
-        with
-          customer : Party
-        do
-          create Auction.Offer with ..
-
-      nonconsuming ApproveAuctionServiceRequest : ContractId Auction.Service
-        with
-          auctionServiceRequestCid : ContractId Auction.Request
-        do
-          exercise auctionServiceRequestCid Auction.Approve with ..
-
-      nonconsuming TerminateAuctionService : ()
-        with
-          auctionServiceCid : ContractId Auction.Service
-        do
-          archive auctionServiceCid
 
       nonconsuming OfferBiddingService : ContractId Bidding.Offer
         with
@@ -42,11 +22,11 @@ template Role
         do
           create Bidding.Offer with ..
 
-      nonconsuming ApproveBiddingServiceRequest : ContractId Bidding.Service
+      nonconsuming ApproveBiddingRequest : ContractId Bidding.Service
         with
-          biddingServiceRequestCid : ContractId Bidding.Request
+          biddingRequestCid : ContractId Bidding.Request
         do
-          exercise biddingServiceRequestCid Bidding.Approve with ..
+          exercise biddingRequestCid Bidding.Approve with ..
 
       nonconsuming TerminateBiddingService : ()
         with
@@ -55,7 +35,7 @@ template Role
           archive biddingServiceCid
 
     controller operator can
-      TerminateRole : ()
+      TerminateRole: ()
         do
           return ()
 
@@ -85,8 +65,6 @@ template Request
 
     controller operator can
       Approve : ContractId Role
-        with
-          observers : Set Party
         do
           createOrLookup Role with ..
 

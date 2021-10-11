@@ -7,7 +7,7 @@ import Daml.Script
 import DA.Date (date, Month(..))
 import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..), AssetDeposit_Transfer(..))
 import DA.Set
-import Marketplace.Distribution.Role qualified as Distributor
+import Marketplace.Distribution.Auction.Distributor qualified as Distributor
 import Marketplace.Distribution.Auction.Service qualified as Auction
 import Marketplace.Issuance.Service qualified as Issuance
 import Marketplace.Issuance.CFI qualified as CFI

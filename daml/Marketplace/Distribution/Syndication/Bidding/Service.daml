@@ -1,0 +1,86 @@
+module Marketplace.Distribution.Syndication.Bidding.Service where
+
+import DA.Finance.Types (Asset(..), Account, Id)
+import DA.Finance.Utils (fetchAndArchive)
+import Marketplace.Distribution.Syndication.Bidding.Model qualified as Bidding
+import Marketplace.Utils
+
+type S = Service
+
+template Service
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+  where
+    signatory operator, provider, customer
+
+    key (operator, provider, customer) : (Party, Party, Party)
+    maintainer key._1
+
+    controller customer can
+      nonconsuming SubmitBid : ContractId Bidding.Bid
+        with
+          bidRequestCid : ContractId Bidding.BidRequest
+          price : Decimal
+          quantity : Decimal
+          investorPaymentAccount : Account
+          investorDeliveryAccount : Account
+        do
+          Bidding.BidRequest{asset, priceId, dealId, issuer, bookRunner} <- fetchAndArchive bidRequestCid
+          create Bidding.Bid with asset = (asset with quantity); price = (Asset with id = priceId; quantity = price); ..
+
+    controller provider can
+      nonconsuming RequestBid : ContractId Bidding.BidRequest
+        with
+          issuer : Party
+          bookRunner : Party
+          dealId : Text
+          asset : Asset
+          priceId : Id
+        do
+          create Bidding.BidRequest with ..
+
+template Offer
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+  where
+    signatory operator, provider
+
+    controller customer can
+      Accept : ContractId Service
+        do
+          createOrLookup Service with ..
+
+      Decline : ()
+        do
+          return ()
+
+    controller provider can
+      Withdraw : ()
+        do pure ()
+
+template Request
+  with
+    provider : Party
+    customer : Party
+  where
+    signatory customer
+    observer provider
+
+    controller customer can
+      Cancel : ()
+        do pure ()
+
+    controller provider can
+      Reject : ()
+        do pure ()
+
+    choice Approve : ContractId Service
+      with
+        operator : Party
+      controller operator, provider
+      do
+        createOrLookup Service with ..
