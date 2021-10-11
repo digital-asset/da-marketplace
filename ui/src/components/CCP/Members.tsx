@@ -2,7 +2,6 @@ import React, {useState} from 'react'
 import { useParty, useLedger } from '@daml/react'
 import { Header } from 'semantic-ui-react'
 
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { CCP } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
 import { CCPCustomer } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
 import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
@@ -10,7 +9,7 @@ import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Regi
 import { UserIcon, AddPlusIcon } from '../../icons/Icons'
 import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
 
-import { depositSummary } from '../common/utils'
+import { depositSummary, useAvailableDeposits } from '../common/utils'
 import StripedTable from '../common/StripedTable'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
@@ -34,7 +33,7 @@ type Props = {
 }
 
 const Members: React.FC<Props> = ({ members, sideNav, onLogout, showNotificationAlert, handleNotificationAlert }) => {
-    const allDeposits = useContractQuery(AssetDeposit);
+    const allDeposits = useAvailableDeposits();
     const ccp = useParty();
     const ledger = useLedger();
     const operator = useOperator();

@@ -2,12 +2,11 @@ import React from 'react'
 import { Header, Divider } from 'semantic-ui-react'
 import { useParams } from 'react-router-dom'
 
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { CCPCustomer } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
 
 import { useContractQuery } from '../../websocket/queryStream'
 
-import { depositSummary } from '../common/utils'
+import { depositSummary, useAvailableDeposits } from '../common/utils'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
 import StripedTable from '../common/StripedTable'
@@ -33,7 +32,7 @@ const MemberAccounts: React.FC<Props> = ({ sideNav, onLogout, members, showNotif
     const notifications = useCCPCustomerNotifications(investorId);
 
     const ccpCustomers = useContractQuery(CCPCustomer);
-    const allDeposits = useContractQuery(AssetDeposit);
+    const allDeposits = useAvailableDeposits();
 
     const currentCCPCustomers = ccpCustomers.filter(ccpCustomer => ccpCustomer.contractData.ccpCustomer === investorId)
     const marginDepositCids = currentCCPCustomers

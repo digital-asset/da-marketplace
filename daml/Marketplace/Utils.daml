@@ -4,7 +4,7 @@ import DA.Finance.Asset
 import DA.Finance.Types
 
 import DA.List (head)
-import DA.Next.Set hiding (null)
+import DA.Next.Set qualified as Set
 import DA.Optional
 import DA.Text
 
@@ -27,10 +27,13 @@ template ExberrySID
       ExberrySID_Ack : ()
         do return ()
 
+-- |Retrieve the Custodian who allocated this AssetDeposit
+getCustodian : Id -> Party -> Party
+getCustodian accountId operator = head $ Set.toList $ Set.delete operator $ accountId.signatories
 
 getAccountId : Party -> Party -> [Party] -> Id
 getAccountId owner provider signatories = Id with
-    signatories = fromList signatories
+    signatories = Set.fromList signatories
     label = getAccountLabel owner provider
     version = 0
 

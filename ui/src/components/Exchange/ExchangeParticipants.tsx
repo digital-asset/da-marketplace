@@ -17,7 +17,7 @@ import { useContractQuery } from '../../websocket/queryStream'
 import { wrapDamlTuple, ContractInfo } from '../common/damlTypes'
 import { useOperator } from '../common/common'
 import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
-import { depositSummary } from '../common/utils'
+import { depositSummary, useAvailableDeposits } from '../common/utils'
 import StripedTable from '../common/StripedTable'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
@@ -33,7 +33,7 @@ type Props = {
 const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout, registeredInvestors, showNotificationAlert, handleNotificationAlert }) => {
     const [ showAddRelationshipModal, setShowAddRelationshipModal ] = useState(false);
 
-    const allDeposits = useContractQuery(AssetDeposit);
+    const allDeposits = useAvailableDeposits();
     const exchangeParticipants = useContractQuery(ExchangeParticipant);
     const activeOrders = useContractQuery(Order);
 

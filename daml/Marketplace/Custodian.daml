@@ -12,7 +12,6 @@ import DA.Finance.Types
 import DA.Action
 import DA.Optional
 import DA.Next.Set hiding (null)
-import DA.List (head)
 
 
 template CustodianRelationship
@@ -153,7 +152,8 @@ template Custodian
           beneficiary : Party
         do
           optRelationships <- mapM (\s -> lookupByKey @CustodianRelationship (custodian, operator, s)) $ toList tokenId.signatories
-          assertMsg "Custodian must have a relationship with the issuer to deposit this token" $ not $ null (catOptionals optRelationships)
+          assertMsg "Custodian must have a relationship with the issuer to deposit this token"
+            $ not (null (catOptionals optRelationships)) || custodian `member` tokenId.signatories
           (tokenCid, token) <- fetchByKey @Token tokenId
           account <- exercise self Custodian_GetAccount with investor = beneficiary
           let quantity = roundBankers token.quantityPrecision depositQuantity

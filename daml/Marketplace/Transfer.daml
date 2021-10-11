@@ -21,7 +21,7 @@ template DepositTransferRequest
   where
     let senderSig = head $ toList senderAccountId.signatories
         receiverSig = head $ toList receiverAccountId.signatories
-        custodian = senderSig
+        custodian = getCustodian senderAccountId operator -- senderSig
     ensure senderSig == receiverSig && senderAccountId /= receiverAccountId
     signatory toList senderAccountId.signatories, sender
     -- toList senderAccountId.signatories <> toList receiverAccountId.signatories, sender
@@ -69,13 +69,13 @@ template DepositTransferRequest
 
 template DepositDebitRequest
   with
+    operator : Party
     owner : Party
     ownerAccount : Account
     depositCid : ContractId AssetDeposit
   where
-    let senderSig = head $ toList ownerAccount.id.signatories
-        custodian = senderSig
-    signatory custodian, owner
+    let custodian = getCustodian ownerAccount.id operator
+    signatory operator, custodian, owner
 
     controller custodian can
       DepositDebitRequest_Approve : Asset
@@ -98,13 +98,13 @@ template DepositDebitRequest
 
 template DepositCreditRequest
   with
+    operator : Party
     owner : Party
     account : Account
     asset : Asset
   where
-    let senderSig = head $ toList account.id.signatories
-        custodian = senderSig
-    signatory custodian, owner
+    let custodian = getCustodian account.id operator
+    signatory operator, custodian, owner
 
     controller custodian can
       DepositCreditRequest_Approve : ContractId AssetDeposit

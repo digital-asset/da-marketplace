@@ -214,11 +214,7 @@ template Order
 
       Order_Cancel : ContractId AssetDeposit
         do
-          return depositCid
-          -- create DepositCreditRequest with
-          --   owner = exchParticipant
-          --   account = account
-          --   asset = asset
+          exercise depositCid AssetDeposit_Unlock
 
     controller exchParticipant can
       nonconsuming Order_RequestCancel : ContractId OrderCancelRequest

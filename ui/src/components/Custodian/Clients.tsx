@@ -1,12 +1,9 @@
 import React from 'react'
 import { Header } from 'semantic-ui-react'
 
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
-
 import { UserIcon } from '../../icons/Icons'
-import { useContractQuery } from '../../websocket/queryStream'
 
-import { depositSummary } from '../common/utils'
+import { depositSummary, useAvailableDeposits } from '../common/utils'
 import StripedTable from '../common/StripedTable'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
@@ -25,7 +22,7 @@ type Props = {
 }
 
 const Clients: React.FC<Props> = ({ clients, sideNav, onLogout, showNotificationAlert, handleNotificationAlert }) => {
-    const allDeposits = useContractQuery(AssetDeposit);
+    const allDeposits = useAvailableDeposits();
 
     const tableHeadings = ['Name', 'Holdings']
 

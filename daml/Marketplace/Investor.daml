@@ -66,7 +66,7 @@ template Investor
         do
           deposit <- fetch depositCid
           assert $ deposit.account.owner == investor
-          let custodian = head $ Set.toList $ deposit.account.id.signatories
+          let custodian = getCustodian deposit.account.id operator
           exerciseByKey @CustodianRelationship (custodian, operator, investor) CustodianRelationship_RequestTransfer
             with request = DepositTransferRequest with sender = investor, senderAccountId = deposit.account.id, ..
 

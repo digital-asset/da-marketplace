@@ -4,7 +4,6 @@ import Marketplace.BinaryOption
 import Marketplace.CentralCounterpartyCustomer
 import Marketplace.Notification
 import Marketplace.Trading
-import Marketplace.Transfer
 import Marketplace.Token
 import Marketplace.Utils
 

@@ -4,7 +4,6 @@ import { Label, Menu } from 'semantic-ui-react'
 
 import { useLedger, useParty } from '@daml/react'
 
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import {
     Investor as InvestorTemplate,
@@ -35,6 +34,7 @@ import { useExchangeInviteNotifications } from './ExchangeInviteNotifications'
 import { useBrokerCustomerInviteNotifications } from './BrokerCustomerInviteNotifications'
 import InvestorTrade from './InvestorTrade'
 import InvestorOrders from './InvestorOrders'
+import { useAvailableDeposits } from '../common/utils'
 
 type Props = {
     onLogout: () => void;
@@ -57,7 +57,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const registeredInvestor = useContractQuery(RegisteredInvestor);
     const invitation = useContractQuery(InvestorInvitation);
     const allExchanges = useContractQuery(Exchange);
-    const allDeposits = useContractQuery(AssetDeposit);
+    const allDeposits = useAvailableDeposits();
     const allCustodianRelationships = useContractQuery(CustodianRelationship);
 
     const [ profile, setProfile ] = useState<Profile>({
