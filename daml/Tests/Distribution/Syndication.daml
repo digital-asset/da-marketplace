@@ -25,7 +25,6 @@ import Marketplace.Distribution.Syndication.BookBuilding.Model qualified as Book
 import Marketplace.Distribution.Syndication.BookBuilding.Service qualified as BookBuilding
 import Marketplace.Distribution.Syndication.BookRunner qualified as BookRunner
 import Marketplace.Distribution.Syndication.Distributor qualified as Distributor
-import Marketplace.Settlement.Model as Settlement (SettlementInstruction, Settle(..))
 import Tests.Utils
 
 createCustodianRole : Party -> Party -> Script (ContractId Custodian.Role)
@@ -132,12 +131,14 @@ hierarchy = do
   operator      <- allocatePartyWithHint "Operator" $ PartyIdHint "Operator"
   cashProvider  <- allocatePartyWithHint "CashProvider" $ PartyIdHint "CashProvider"
   bondRegistrar <- allocatePartyWithHint "BondRegistrar" $ PartyIdHint "BondRegistrar"
-  bank1  <- allocatePartyWithHint "Bank1" $ PartyIdHint "Bank1"
-  bank2  <- allocatePartyWithHint "Bank2" $ PartyIdHint "Bank2"
-  bank3  <- allocatePartyWithHint "Bank3" $ PartyIdHint "Bank3"
+  lm1  <- allocatePartyWithHint "LeadMgr1" $ PartyIdHint "LeadMgr1"
+  lm2  <- allocatePartyWithHint "LeadMgr2" $ PartyIdHint "LeadMgr2"
+  lm3  <- allocatePartyWithHint "LeadMgr3" $ PartyIdHint "LeadMgr3"
+  cm31  <- allocatePartyWithHint "CoMgr31" $ PartyIdHint "CoMgr31"
   investor11 <- allocatePartyWithHint "Investor11" $ PartyIdHint "Investor11"
   investor21 <- allocatePartyWithHint "Investor21" $ PartyIdHint "Investor21"
-  investor31 <- allocatePartyWithHint "Investor31" $ PartyIdHint "Investor31"
+  investor311 <- allocatePartyWithHint "Investor311" $ PartyIdHint "Investor311"
+  investor312 <- allocatePartyWithHint "Investor312" $ PartyIdHint "Investor312"
   issuer <- allocatePartyWithHint "Issuer" $ PartyIdHint "Issuer"
   public <- allocatePartyWithHint "Public" $ PartyIdHint "Public"
 
@@ -145,83 +146,101 @@ hierarchy = do
 
   createCustodianRole operator cashProvider
   createCustodianRole operator bondRegistrar
-  createCustodianRole operator bank1
-  createCustodianRole operator bank2
-  createCustodianRole operator bank3
+  createCustodianRole operator lm1
+  createCustodianRole operator lm2
+  createCustodianRole operator lm3
+  createCustodianRole operator cm31
 
   -- 1st level
-  (_, bank1CashAccount) <- createCustodyService operator cashProvider bank1
-  (_, bank2CashAccount) <- createCustodyService operator cashProvider bank2
-  (_, bank3CashAccount) <- createCustodyService operator cashProvider bank3
-  (_, issuerCashAccount) <- createCustodyService operator cashProvider issuer
-
-  (_, bank1BondAccount) <- createCustodyService operator bondRegistrar bank1
-  (_, bank2BondAccount) <- createCustodyService operator bondRegistrar bank2
-  (_, bank3BondAccount) <- createCustodyService operator bondRegistrar bank3
-  (_, issuerBondAccount) <- createCustodyService operator bondRegistrar issuer
+  (_, lm1CashAccount)     <- createCustodyService operator cashProvider lm1
+  (_, lm2CashAccount)     <- createCustodyService operator cashProvider lm2
+  (_, lm3CashAccount)     <- createCustodyService operator cashProvider lm3
+  (_, issuerCashAccount)  <- createCustodyService operator cashProvider issuer
+  (_, lm1BondAccount)     <- createCustodyService operator bondRegistrar lm1
+  (_, lm2BondAccount)     <- createCustodyService operator bondRegistrar lm2
+  (_, lm3BondAccount)     <- createCustodyService operator bondRegistrar lm3
+  (_, issuerBondAccount)  <- createCustodyService operator bondRegistrar issuer
 
   -- 2nd level
-  (_, bank1OwnAccount) <- createCustodyService operator bank1 bank1
-  (_, bank2OwnAccount) <- createCustodyService operator bank2 bank2
-  (_, bank3OwnAccount) <- createCustodyService operator bank3 bank3
-  (_, investor1CashAccount) <- createCustodyService operator bank1 investor11
-  (_, investor2CashAccount) <- createCustodyService operator bank2 investor21
-  (_, investor3CashAccount) <- createCustodyService operator cashProvider investor31
-  (_, investor3BondAccount) <- createCustodyService operator bank3 investor31
+  (_, lm1OwnAccount)        <- createCustodyService operator lm1 lm1
+  (_, lm2OwnAccount)        <- createCustodyService operator lm2 lm2
+  (_, lm3OwnAccount)        <- createCustodyService operator lm3 lm3
+  (_, cm31OwnAccount)       <- createCustodyService operator cm31 cm31
+  (_, investor1CashAccount) <- createCustodyService operator lm1 investor11
+  (_, investor2CashAccount) <- createCustodyService operator lm2 investor21
+  (_, cm31CashAccount)      <- createCustodyService operator lm3 cm31
   let
     investor1BondAccount = investor1CashAccount
     investor2BondAccount = investor2CashAccount
+    cm31BondAccount = cm31CashAccount
+
+  -- 3rd level
+  (_, investor311CashAccount) <- createCustodyService operator cm31 investor311
+  (_, investor312CashAccount) <- createCustodyService operator cm31 investor312
+  let
+    investor311BondAccount = investor311CashAccount
+    investor312BondAccount = investor312CashAccount
+  -- (_, investor312BondAccount) <- createCustodyService operator lm3 investor312
+
   createIssuanceService operator bondRegistrar issuer
 
   (_, usd)  <- originate operator cashProvider cashProvider public "USD" Zero
   (_, bond) <- originate operator bondRegistrar issuer public "BOND1" $ bond usd.assetId 100_000_000.0 0.02275 (unrollDates 2021 2023 [Jan,Jul] 15)
 
-  investorDeposit1Cid <- deposit operator cashProvider bank1 public 100_000_000.0 "USD"
-  investorDeposit2Cid <- deposit operator cashProvider bank2 public 100_000_000.0 "USD"
-  investorDeposit3Cid <- deposit operator cashProvider bank3 public 100_000_000.0 "USD"
-  investorDeposit1Cid <- deposit operator bank1 investor11 public 100_000_000.0 "USD"
-  investorDeposit2Cid <- deposit operator bank2 investor21 public 100_000_000.0 "USD"
-  investorDeposit3Cid <- deposit operator cashProvider investor31 public 100_000_000.0 "USD"
+  investorDeposit1Cid <- deposit operator cashProvider lm1 public 100_000_000.0 "USD"
+  investorDeposit2Cid <- deposit operator cashProvider lm2 public 100_000_000.0 "USD"
+  investorDeposit3Cid <- deposit operator cashProvider lm3 public 100_000_000.0 "USD"
+  investorDeposit1Cid <- deposit operator lm1 investor11 public 100_000_000.0 "USD"
+  investorDeposit2Cid <- deposit operator lm2 investor21 public 100_000_000.0 "USD"
+  investorDeposit2Cid <- deposit operator lm3 cm31 public 100_000_000.0 "USD"
+  investorDeposit2Cid <- deposit operator cm31 investor311 public 100_000_000.0 "USD"
+  investorDeposit3Cid <- deposit operator cm31 investor312 public 100_000_000.0 "USD"
 
   bondDepositCid <- issue operator bondRegistrar issuer "BondIssuance" 100_000_000.0 bond.assetId
   Some bondDeposit <- queryContractId @AssetDeposit issuer bondDepositCid
 
   --- Syndication ---
-  createBookRunnerRole operator bank1
+  createBookRunnerRole operator lm1
 
   createDistributorRole operator issuer
-  createDistributorRole operator bank1
-  createDistributorRole operator bank2
-  createDistributorRole operator bank3
+  createDistributorRole operator lm1
+  createDistributorRole operator lm2
+  createDistributorRole operator lm3
+  createDistributorRole operator cm31
 
-  createStructuringService operator bank1 issuer
+  createStructuringService operator lm1 issuer
 
-  createBookBuildingService operator bank1 issuer
-  createBookBuildingService operator bank2 issuer
-  createBookBuildingService operator bank3 issuer
-  createBiddingService operator bank1 investor11
-  createBiddingService operator bank2 investor21
-  createBiddingService operator bank3 investor31
+  createBookBuildingService operator lm1 issuer
+  createBookBuildingService operator lm2 issuer
+  createBookBuildingService operator lm3 issuer
+  createBookBuildingService operator cm31 lm3
+  createBiddingService operator lm1 investor11
+  createBiddingService operator lm2 investor21
+  createBiddingService operator cm31 investor311
+  createBiddingService operator cm31 investor312
 
   let
     dealId = "DEAL1"
     priceId = Id with signatories = fromList [cashProvider]; label = "USD"; version = 0
     tranche = Asset with id = (Id with signatories = fromList [bondRegistrar, issuer]; label = "TRANCHE1"; version = 0); quantity = 100_000_000.0
-  dealCid <- createDeal operator bank1 issuer dealId priceId
-  dealCid <- addTranche operator bank1 issuer dealId tranche
+  dealCid <- createDeal operator lm1 issuer dealId priceId
+  dealCid <- addTranche operator lm1 issuer dealId tranche
 
-  [bookBuildingRequest1Cid] <- requestBookBuilding operator bank1 issuer dealCid bank1CashAccount bank1BondAccount issuerCashAccount issuerBondAccount
-  [bookBuildingRequest2Cid] <- requestBookBuilding operator bank2 issuer dealCid bank2CashAccount bank2BondAccount issuerCashAccount issuerBondAccount
-  [bookBuildingRequest3Cid] <- requestBookBuilding operator bank3 issuer dealCid bank3CashAccount bank3BondAccount issuerCashAccount issuerBondAccount
+  [bookBuildingRequest1Cid] <- requestBookBuilding operator lm1 issuer dealCid lm1CashAccount lm1BondAccount issuerCashAccount issuerBondAccount
+  [bookBuildingRequest2Cid] <- requestBookBuilding operator lm2 issuer dealCid lm2CashAccount lm2BondAccount issuerCashAccount issuerBondAccount
+  [bookBuildingRequest3Cid] <- requestBookBuilding operator lm3 issuer dealCid lm3CashAccount lm3BondAccount issuerCashAccount issuerBondAccount
+  [bookBuildingRequest4Cid] <- requestBookBuilding operator cm31 lm3 dealCid cm31CashAccount cm31BondAccount lm3OwnAccount lm3OwnAccount
 
-  bid1Cid <- bid operator bank1 investor11 bookBuildingRequest1Cid bank1OwnAccount bank1OwnAccount 20_000_000.0 0.995
-  bid2Cid <- bid operator bank2 investor21 bookBuildingRequest2Cid bank2OwnAccount bank2OwnAccount 30_000_000.0 0.997
-  bid3Cid <- bid operator bank3 investor31 bookBuildingRequest3Cid bank3CashAccount bank3OwnAccount 50_000_000.0 0.999
+  bid1Cid <- bid operator lm1 investor11 bookBuildingRequest1Cid lm1OwnAccount lm1OwnAccount 10_000_000.0 1.001
+  bid2Cid <- bid operator lm2 investor21 bookBuildingRequest2Cid lm2OwnAccount lm2OwnAccount 20_000_000.0 0.999
+  bid3Cid <- bid operator cm31 investor311 bookBuildingRequest4Cid cm31OwnAccount cm31OwnAccount 30_000_000.0 0.997
+  bid4Cid <- bid operator cm31 investor312 bookBuildingRequest4Cid cm31OwnAccount cm31OwnAccount 40_000_000.0 0.995
 
   let offeredPrice = 0.998
-  allocation1Cid <- allocate issuer bid1Cid 20_000_000.0 offeredPrice
-  allocation2Cid <- allocate issuer bid2Cid 30_000_000.0 offeredPrice
-  allocation3Cid <- allocate issuer bid3Cid 50_000_000.0 offeredPrice
+  allocation1Cid <- allocate issuer bid1Cid 10_000_000.0 offeredPrice
+  allocation2Cid <- allocate issuer bid2Cid 20_000_000.0 offeredPrice
+  allocation3Cid <- allocate issuer bid3Cid 30_000_000.0 offeredPrice
+  allocation4Cid <- allocate issuer bid4Cid 40_000_000.0 offeredPrice
 
   -- investorDeposit1Cid <- head <$> submit investor11 do exerciseCmd investorDeposit1Cid AssetDeposit_Split with quantities = [ quantity1 * offeredPrice ]
   -- investorDeposit2Cid <- head <$> submit investor21 do exerciseCmd investorDeposit2Cid AssetDeposit_Split with quantities = [ quantity2 * offeredPrice ]
@@ -229,11 +248,12 @@ hierarchy = do
 
   confirmation1Cid <- confirm investor11 allocation1Cid investor1CashAccount investor1BondAccount
   confirmation2Cid <- confirm investor21 allocation2Cid investor2CashAccount investor2BondAccount
-  confirmation3Cid <- confirm investor31 allocation3Cid investor3CashAccount investor3BondAccount
+  confirmation3Cid <- confirm investor311 allocation3Cid investor311CashAccount investor311BondAccount
+  confirmation4Cid <- confirm investor312 allocation4Cid investor312CashAccount investor312BondAccount
 
   let
-    bookBuildingRequestCids = [ bookBuildingRequest1Cid, bookBuildingRequest2Cid, bookBuildingRequest3Cid ]
-    confirmationCids = [ confirmation1Cid, confirmation2Cid, confirmation3Cid ]
+    bookBuildingRequestCids = [ bookBuildingRequest1Cid, bookBuildingRequest2Cid, bookBuildingRequest3Cid, bookBuildingRequest4Cid ]
+    confirmationCids = [ confirmation1Cid, confirmation2Cid, confirmation3Cid, confirmation4Cid ]
     price = offeredPrice
   siCids <- submit issuer do exerciseCmd dealCid Structuring.InstructConfirmations with ..
   sisOpt <- mapA (queryContractId operator) siCids
