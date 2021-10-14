@@ -1,7 +1,6 @@
 module Marketplace.Distribution.Syndication.BookBuilding.Model where
 
 import DA.Finance.Types (Id, Account, Asset(..))
-import Marketplace.Settlement.Model (DelayedSettlementInstruction(..), DelayedSettlementDetails(..))
 
 template BuildRequest
   with
@@ -9,7 +8,6 @@ template BuildRequest
     provider : Party
     customer : Party
     issuer : Party
-    bookRunner : Party
     dealId : Text
     asset : Asset
     priceId : Id
@@ -22,15 +20,3 @@ template BuildRequest
 
     key (operator, provider, customer, dealId, asset.id.label) : (Party, Party, Party, Text, Text)
     maintainer key._1
-
-    controller bookRunner can
-      Instruct : ContractId DelayedSettlementInstruction
-        with
-          quantity : Decimal
-          price : Decimal
-        do
-          let
-            delivery = DelayedSettlementDetails with senderAccount = customerDeliveryAccount; receiverAccount = providerDeliveryAccount; asset = (asset with quantity); depositCid = None
-            payment = DelayedSettlementDetails with senderAccount = providerPaymentAccount; receiverAccount = customerPaymentAccount; asset = (Asset with id = priceId; quantity = price * quantity); depositCid = None
-          create DelayedSettlementInstruction with operator; provider; details = [delivery, payment]; ..
-

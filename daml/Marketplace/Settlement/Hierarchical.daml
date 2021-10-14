@@ -1,0 +1,70 @@
+module Marketplace.Settlement.Hierarchical where
+
+import DA.Assert ((===))
+import DA.Finance.Types (Account, Asset)
+import DA.Finance.Asset (AssetDeposit(..), AssetDeposit_Transfer(..))
+
+template Dvp
+  with
+    operator : Party
+    deliverer : Party
+    payer : Party
+    settlementId : Text
+    instructionIds : [Text]
+    payment : Asset
+    delivery : Asset
+  where
+    signatory operator --, deliverer, payer
+
+    key (operator, settlementId) : (Party, Text)
+    maintainer key._1
+
+    controller operator can
+      Settle : [ContractId AssetDeposit]
+        do
+          let
+            settle (instructionId : Text) = do
+              (siCid, _) <- fetchByKey @SettlementInstruction (operator, settlementId, instructionId)
+              exercise siCid SettleInstruction
+          mapA settle instructionIds
+
+template SettlementInstruction
+  with
+    operator : Party
+    sender : Party
+    receiver : Party
+    signed : [Party]
+    settlementId : Text
+    instructionId : Text
+    senderAccount : Account
+    receiverAccount : Account
+    asset : Asset
+    depositCid : Optional (ContractId AssetDeposit)
+  where
+    signatory operator, signed
+    observer sender, receiver
+
+    key (operator, settlementId, instructionId) : (Party, Text, Text)
+    maintainer key._1
+
+    controller sender can
+      Allocate : ContractId SettlementInstruction
+        with
+          settlementDepositCid : ContractId AssetDeposit
+        do
+          deposit <- fetch settlementDepositCid
+          deposit.asset === asset
+          deposit.account === senderAccount
+          create this with depositCid = Some settlementDepositCid; signed = sender :: signed
+
+    controller receiver can
+      Sign : ContractId SettlementInstruction
+        do
+          create this with signed = receiver :: signed
+
+    controller operator can
+      SettleInstruction : ContractId AssetDeposit
+        do
+          case depositCid of
+            Some cid -> exercise cid AssetDeposit_Transfer with receiverAccount
+            None -> fail $ "Instruction [" <> instructionId <> "] is not allocated"

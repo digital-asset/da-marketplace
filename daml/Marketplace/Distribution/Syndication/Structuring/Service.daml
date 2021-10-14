@@ -21,6 +21,10 @@ template Service
     controller customer can
       nonconsuming RequestCreateDeal : ContractId CreateDealRequest
         with
+          settlementBank : Party
+          bndBank : Party
+          cashProvider : Party
+          bondRegistrar : Party
           dealId : Text
           priceId : Id
         do
@@ -38,15 +42,15 @@ template Service
         with
           createDealRequestCid : ContractId CreateDealRequest
         do
-          CreateDealRequest{dealId, priceId} <- fetchAndArchive createDealRequestCid
-          create Deal with bookRunner = customer; tranches = []; ..
+          CreateDealRequest{..} <- fetchAndArchive createDealRequestCid
+          create Deal with structurer = provider; issuer = customer; tranches = []; ..
 
       nonconsuming AddTranche : ContractId Deal
         with
           addTrancheRequestCid : ContractId AddTrancheRequest
         do
           AddTrancheRequest{dealId, tranche} <- fetchAndArchive addTrancheRequestCid
-          (dealCid, deal) <- fetchByKey @Deal (operator, provider, customer, dealId)
+          (dealCid, deal) <- fetchByKey @Deal (operator, customer, dealId)
           archive dealCid
           create deal with tranches = tranche :: deal.tranches
 

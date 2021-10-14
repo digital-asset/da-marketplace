@@ -32,14 +32,13 @@ template Service
       nonconsuming RequestBid : ContractId Bidding.BidRequest
         with
           issuer : Party
-          bookRunner : Party
           dealId : Text
           asset : Asset
           priceId : Id
           providerPaymentAccount : Account
           providerDeliveryAccount : Account
         do
-          create Bidding.BidRequest with ..
+          create Bidding.BidRequest with investor = customer; ..
 
 template Offer
   with

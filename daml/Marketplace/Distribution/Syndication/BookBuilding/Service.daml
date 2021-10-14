@@ -25,8 +25,8 @@ template Service
           customerPaymentAccount : Account
           customerDeliveryAccount : Account
         do
-          deal@Structuring.Deal{bookRunner, dealId, priceId} <- fetch dealCid
-          mapA (\asset -> create BookBuilding.BuildRequest with issuer = deal.customer; ..) deal.tranches
+          deal@Structuring.Deal{dealId, priceId} <- fetch dealCid
+          mapA (\asset -> create BookBuilding.BuildRequest with issuer = deal.issuer; ..) deal.tranches
 
 
 template Offer

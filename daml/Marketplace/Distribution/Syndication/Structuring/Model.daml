@@ -1,15 +1,21 @@
 module Marketplace.Distribution.Syndication.Structuring.Model where
 
-import DA.Finance.Types (Id, Asset(..))
+import DA.Finance.Types (Id, Account, Asset(..))
+import DA.List (groupOn, singleton)
+import DA.Optional (fromSome)
+import DA.Set (fromList)
 import Marketplace.Distribution.Syndication.Bidding.Model qualified as Bidding
-import Marketplace.Distribution.Syndication.BookBuilding.Model qualified as BookBuilding
-import Marketplace.Settlement.Model (DelayedSettlementInstruction(..), DelayedSettlementDetails(..))
+import Marketplace.Settlement.Hierarchical (SettlementInstruction(..), Dvp(..))
 
 template CreateDealRequest
   with
     operator : Party
     provider : Party
     customer : Party
+    settlementBank : Party
+    bndBank : Party
+    cashProvider : Party
+    bondRegistrar : Party
     dealId : Text
     priceId : Id
   where
@@ -25,66 +31,137 @@ template AddTrancheRequest
   where
     signatory operator, provider, customer
 
-instructConf : Party -> Party -> Bidding.Confirmation -> DelayedSettlementInstruction
-instructConf operator provider conf =
-  let
-    delivery = DelayedSettlementDetails with senderAccount = conf.providerDeliveryAccount; receiverAccount = conf.customerDeliveryAccount; asset = conf.asset; depositCid = None
-    payment = DelayedSettlementDetails with senderAccount = conf.customerPaymentAccount; receiverAccount = conf.providerPaymentAccount; asset = (conf.price with quantity = conf.price.quantity * conf.asset.quantity); depositCid = None
-  in DelayedSettlementInstruction with operator; provider; details = [delivery, payment]; ..
+template AccountInfo
+  with
+    operator : Party
+    party : Party
+    ownAccount : Optional Account
+    cashAccount : Optional Account
+    securitiesAccount : Optional Account
+  where
+    signatory operator, party
 
-instructBbr : Party -> Party -> BookBuilding.BuildRequest -> Decimal -> Decimal -> Update ()
-instructBbr operator provider bbr price quantity = do
-  let
-    delivery = DelayedSettlementDetails with senderAccount = bbr.providerDeliveryAccount; receiverAccount = bbr.customerDeliveryAccount; asset = (bbr.asset with quantity); depositCid = None
-    payment = DelayedSettlementDetails with senderAccount = bbr.customerPaymentAccount; receiverAccount = bbr.providerPaymentAccount; asset = (Asset with id = bbr.priceId; quantity = price * quantity); depositCid = None
-  create DelayedSettlementInstruction with details = [delivery, payment]; ..
-  pure ()
+    key (operator, party) : (Party, Party)
+    maintainer key._1
 
-processBook : Party -> Party -> [(ContractId BookBuilding.BuildRequest, BookBuilding.BuildRequest)] -> [(ContractId Bidding.Confirmation, Bidding.Confirmation)] -> Decimal -> Update ([ContractId DelayedSettlementInstruction], Decimal)
-processBook operator customer bbrs confs price =
+
+createInstructions : Bool -> Party -> Party -> Text -> Int -> Asset -> Account -> Account -> Update [ContractId SettlementInstruction]
+createInstructions isCash operator rootProvider settlementId instructionIdx asset senderAccount receiverAccount = do
   let
-    childBbrs = filter (\(_, bbr) -> bbr.customer == customer) bbrs
-    parentBbrs = filter (\(_, bbr) -> bbr.provider == customer) bbrs
-  in
-    case childBbrs of
-    [] -> do
-      let
-        myConfs = filter (\(_, conf) -> conf.provider == customer) confs
-        myAggregateQuantity = sum $ map (\(_, conf) -> conf.asset.quantity) myConfs
-      confSiCids <- mapA (\(confCid, _) -> exercise confCid Bidding.Instruct) myConfs
-      parentSiCids <- mapA (\(parentBbrCid, _) -> exercise parentBbrCid BookBuilding.Instruct with quantity = myAggregateQuantity; price) parentBbrs
-      pure (parentSiCids ++ confSiCids, myAggregateQuantity)
-    _ -> do
-      myChildResults <- mapA (\(_, childBbr) -> processBook operator childBbr.provider bbrs confs price) childBbrs
-      let
-        myAggregateQuantity = sum $ map snd myChildResults
-        childSiCids = concatMap fst myChildResults
-      parentSiCids <- mapA (\(parentBbrCid, _) -> exercise parentBbrCid BookBuilding.Instruct with quantity = myAggregateQuantity; price) parentBbrs
-      pure (parentSiCids ++ childSiCids, myAggregateQuantity)
+    createInstruction sender receiver sAcc rAcc siAsset = do
+      let si = SettlementInstruction with senderAccount = sAcc; receiverAccount = rAcc; asset = siAsset; signed = []; depositCid = None; instructionId = show instructionIdx; ..
+      if sender == receiver then pure [] else singleton <$> create si
+  if senderAccount.provider == rootProvider && receiverAccount.provider == rootProvider then do -- TODO: Could shortcut this if common custodian is found earlier below in the hierarchy
+    createInstruction senderAccount.owner receiverAccount.owner senderAccount receiverAccount asset
+  else if senderAccount.provider == rootProvider then do
+    (_, providerAccountInfo) <- fetchByKey @AccountInfo (operator, receiverAccount.provider)
+    let providerAccount = if isCash then fromSome providerAccountInfo.cashAccount else fromSome providerAccountInfo.securitiesAccount
+    sis1 <- createInstruction receiverAccount.provider receiverAccount.owner (fromSome providerAccountInfo.ownAccount) receiverAccount (asset with id.signatories = fromList [providerAccountInfo.party])
+    sis2 <- createInstructions isCash operator rootProvider settlementId (instructionIdx + 1) asset senderAccount providerAccount
+    pure $ sis1 <> sis2
+  else if receiverAccount.provider == rootProvider then do
+    (_, providerAccountInfo) <- fetchByKey @AccountInfo (operator, senderAccount.provider)
+    let providerAccount = if isCash then fromSome providerAccountInfo.cashAccount else fromSome providerAccountInfo.securitiesAccount
+    sis1 <- createInstruction senderAccount.owner senderAccount.provider senderAccount (fromSome providerAccountInfo.ownAccount) (asset with id.signatories = fromList [providerAccountInfo.party])
+    sis2 <- createInstructions isCash operator rootProvider settlementId (instructionIdx + 1) asset providerAccount receiverAccount
+    pure $ sis1 <> sis2
+  else do
+    (_, senderProviderAccountInfo) <- fetchByKey @AccountInfo (operator, senderAccount.provider)
+    let senderProviderAccount = if isCash then fromSome senderProviderAccountInfo.cashAccount else fromSome senderProviderAccountInfo.securitiesAccount
+    sis1 <- createInstruction senderAccount.owner senderAccount.provider senderAccount (fromSome senderProviderAccountInfo.ownAccount) (asset with id.signatories = fromList [senderProviderAccountInfo.party])
+    (_, receiverProviderAccountInfo) <- fetchByKey @AccountInfo (operator, receiverAccount.provider)
+    let receiverProviderAccount = if isCash then fromSome receiverProviderAccountInfo.cashAccount else fromSome receiverProviderAccountInfo.securitiesAccount
+    sis2 <- createInstruction receiverAccount.provider receiverAccount.owner (fromSome receiverProviderAccountInfo.ownAccount) receiverAccount (asset with id.signatories = fromList [receiverProviderAccountInfo.party])
+    sis3 <- createInstructions isCash operator rootProvider settlementId (instructionIdx + 1) asset senderProviderAccount receiverProviderAccount
+    pure $ sis1 <> sis2 <> sis3
 
 template Deal
   with
     operator : Party
-    provider : Party
-    customer : Party
-    bookRunner : Party
+    structurer : Party
+    issuer : Party
+    settlementBank : Party
+    bndBank : Party
+    cashProvider : Party
+    bondRegistrar : Party
     tranches : [Asset]
     dealId : Text
     priceId : Id
   where
-    signatory operator, provider, customer
-    observer bookRunner
+    signatory operator, structurer, issuer
 
-    key (operator, provider, customer, dealId) : (Party, Party, Party, Text)
+    key (operator, issuer, dealId) : (Party, Party, Text)
     maintainer key._1
 
-    controller bookRunner can
-      InstructConfirmations : [ContractId DelayedSettlementInstruction]
+    controller operator can
+      nonconsuming InstructIssuerSettlement : [ContractId Dvp]
         with
-          bookBuildingRequestCids : [ContractId BookBuilding.BuildRequest]
           confirmationCids : [ContractId Bidding.Confirmation]
           price : Decimal
         do
-          bookBuildingRequests <- zip bookBuildingRequestCids <$> mapA fetch bookBuildingRequestCids
-          confirmations <- zip confirmationCids <$> mapA fetch confirmationCids
-          fst <$> processBook operator bookRunner bookBuildingRequests confirmations price
+          confirmations <- mapA fetch confirmationCids
+          let
+            grouped = groupOn (\c -> c.asset.id.label) confirmations
+            settleTranche confs asset = do
+              let
+                filtered = filter (\c -> c.asset.id.label == asset.id.label) confs
+                quantities = map (.asset.quantity) filtered
+                aggregate = sum quantities
+                aggregateAsset = asset with quantity = aggregate
+                aggregatePrice = Asset with id = priceId; quantity = aggregate * price
+                settlementId = asset.id.label <> "-" <> partyToText issuer <> "-" <> partyToText settlementBank
+              (_, issuerAccountInfo) <- fetchByKey @AccountInfo (operator, issuer)
+              (_, settlementBankAccountInfo) <- fetchByKey @AccountInfo (operator, settlementBank)
+              bondSis <- createInstructions False operator bondRegistrar settlementId 0 aggregateAsset (fromSome issuerAccountInfo.securitiesAccount) (fromSome settlementBankAccountInfo.securitiesAccount)
+              cashSis <- createInstructions True operator cashProvider settlementId (length bondSis) aggregatePrice (fromSome settlementBankAccountInfo.cashAccount) (fromSome issuerAccountInfo.cashAccount)
+              instructionIds <- map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
+              create Dvp with operator; deliverer = issuer; payer = settlementBank; settlementId; instructionIds; delivery = aggregateAsset; payment = aggregatePrice
+          mapA (settleTranche confirmations) tranches
+
+      nonconsuming InstructBndSettlement : [ContractId Dvp]
+        with
+          confirmationCids : [ContractId Bidding.Confirmation]
+          price : Decimal
+        do
+          confirmations <- mapA fetch confirmationCids
+          let
+            grouped = groupOn (\c -> c.asset.id.label) confirmations
+            settleTranche confs asset = do
+              let
+                filtered = filter (\c -> c.asset.id.label == asset.id.label) confs
+                quantities = map (.asset.quantity) filtered
+                aggregate = sum quantities
+                aggregateAsset = asset with quantity = aggregate
+                aggregatePrice = Asset with id = priceId; quantity = aggregate * price
+                settlementId = asset.id.label <> "-" <> partyToText settlementBank <> "-" <> partyToText bndBank
+              (_, settlementBankAccountInfo) <- fetchByKey @AccountInfo (operator, settlementBank)
+              (_, bndBankAccountInfo) <- fetchByKey @AccountInfo (operator, bndBank)
+              bondSis <- createInstructions False operator bondRegistrar settlementId 0 aggregateAsset (fromSome settlementBankAccountInfo.securitiesAccount) (fromSome bndBankAccountInfo.securitiesAccount)
+              cashSis <- createInstructions True operator cashProvider settlementId (length bondSis) aggregatePrice (fromSome bndBankAccountInfo.cashAccount) (fromSome settlementBankAccountInfo.cashAccount)
+              instructionIds <- map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
+              create Dvp with operator; deliverer = settlementBank; payer = bndBank; settlementId; instructionIds; delivery = aggregateAsset; payment = aggregatePrice
+          mapA (settleTranche confirmations) tranches
+
+      nonconsuming InstructInvestorSettlement : [ContractId Dvp]
+        with
+          confirmationCids : [ContractId Bidding.Confirmation]
+          price : Decimal
+        do
+          confirmations <- mapA fetch confirmationCids
+          let
+            grouped = groupOn (\c -> c.asset.id.label) confirmations
+            settleInvestor asset conf = do
+              let
+                aggregatePrice = conf.price with quantity = conf.price.quantity * conf.asset.quantity
+                settlementId = asset.id.label <> "-" <> partyToText bndBank <> "-" <> partyToText conf.investor
+              (_, bndBankAccountInfo) <- fetchByKey @AccountInfo (operator, bndBank)
+              (_, investorAccountInfo) <- fetchByKey @AccountInfo (operator, conf.investor)
+              bondSis <- createInstructions False operator bondRegistrar settlementId 0 conf.asset (fromSome bndBankAccountInfo.securitiesAccount) (fromSome investorAccountInfo.securitiesAccount)
+              cashSis <- createInstructions True operator cashProvider settlementId (length bondSis) aggregatePrice (fromSome investorAccountInfo.cashAccount) (fromSome bndBankAccountInfo.cashAccount)
+              instructionIds <- map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
+              create Dvp with operator; deliverer = settlementBank; payer = bndBank; settlementId; instructionIds; delivery = conf.asset; payment = aggregatePrice
+            settleTranche confs asset = do
+              let
+                filtered = filter (\c -> c.asset.id.label == asset.id.label) confs
+              mapA (settleInvestor asset) filtered
+          concat <$> mapA (settleTranche confirmations) tranches

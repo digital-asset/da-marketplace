@@ -1,44 +1,37 @@
 module Marketplace.Distribution.Syndication.Bidding.Model where
 
-import DA.Finance.Types (Account, Asset, Id)
-import Marketplace.Settlement.Model (DelayedSettlementInstruction(..), DelayedSettlementDetails(..))
+import DA.Finance.Types (Asset, Id)
 
 template BidRequest
   with
     operator : Party
     provider : Party
-    customer : Party
+    investor : Party
     issuer : Party
-    bookRunner : Party
     dealId : Text
     asset : Asset
     priceId : Id
-    providerPaymentAccount : Account
-    providerDeliveryAccount : Account
   where
-    signatory operator, provider, customer
+    signatory operator, provider, investor
 
 template Bid
   with
     operator : Party
     provider : Party
-    customer : Party
+    investor : Party
     issuer : Party
-    bookRunner : Party
     dealId : Text
     asset : Asset
     price : Asset
-    providerPaymentAccount : Account
-    providerDeliveryAccount : Account
   where
-    signatory operator, provider, customer
-    observer issuer, bookRunner
+    signatory operator, provider, investor
+    observer issuer
     ensure asset.quantity > 0.0 && price.quantity > 0.0
 
-    key (operator, provider, customer, dealId) : (Party, Party, Party, Text)
+    key (operator, provider, investor, dealId) : (Party, Party, Party, Text)
     maintainer key._1
 
-    controller bookRunner can
+    controller issuer can
       Allocate : ContractId Allocation
         with
           offeredPrice : Decimal
@@ -50,27 +43,21 @@ template Allocation
   with
     operator : Party
     provider : Party
-    customer : Party
+    investor : Party
     issuer : Party
-    bookRunner : Party
     dealId : Text
     asset : Asset
     price : Asset
-    providerPaymentAccount : Account
-    providerDeliveryAccount : Account
   where
-    signatory operator, provider, customer, bookRunner
+    signatory operator, provider, investor
     observer issuer
     ensure asset.quantity > 0.0 && price.quantity > 0.0
 
-    key (operator, provider, customer, dealId) : (Party, Party, Party, Text)
+    key (operator, provider, investor, dealId) : (Party, Party, Party, Text)
     maintainer key._1
 
-    controller customer can
+    controller investor can
       Confirm : ContractId Confirmation
-        with
-          customerPaymentAccount : Account
-          customerDeliveryAccount : Account
         do
           create Confirmation with ..
 
@@ -78,29 +65,15 @@ template Confirmation
   with
     operator : Party
     provider : Party
-    customer : Party
+    investor : Party
     issuer : Party
-    bookRunner : Party
     dealId : Text
     asset : Asset
     price : Asset
-    customerPaymentAccount : Account
-    customerDeliveryAccount : Account
-    providerPaymentAccount : Account
-    providerDeliveryAccount : Account
   where
-    signatory operator, provider, customer, bookRunner
+    signatory operator, provider, investor
     observer issuer
     ensure asset.quantity > 0.0 && price.quantity > 0.0
 
-    key (operator, provider, customer, dealId) : (Party, Party, Party, Text)
+    key (operator, provider, investor, dealId) : (Party, Party, Party, Text)
     maintainer key._1
-
-    controller bookRunner can
-      Instruct : ContractId DelayedSettlementInstruction
-        do
-          let
-            delivery = DelayedSettlementDetails with senderAccount = providerDeliveryAccount; receiverAccount = customerDeliveryAccount; asset = asset; depositCid = None
-            payment = DelayedSettlementDetails with senderAccount = customerPaymentAccount; receiverAccount = providerPaymentAccount; asset = (price with quantity = price.quantity * asset.quantity); depositCid = None
-          create DelayedSettlementInstruction with operator; provider; details = [delivery, payment]; ..
-
