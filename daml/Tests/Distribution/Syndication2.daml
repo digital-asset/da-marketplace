@@ -1,4 +1,4 @@
-module Tests.Distribution.Syndication where
+module Tests.Distribution.Syndication2 where
 
 import ContingentClaims.Claim (Claim(Zero), serialize)
 import ContingentClaims.FinancialClaim (unrollDates)
@@ -120,12 +120,8 @@ confirm : Party -> ContractId Bidding.Allocation -> Script (ContractId Bidding.C
 confirm investor allocationCid = do
   submit investor do exerciseCmd allocationCid Bidding.Confirm
 
--- settle : Party -> ContractId Settlement.SettlementInstruction -> Script ([ContractId AssetDeposit])
--- settle issuer siCid = do
---   submit issuer do exerciseCmd siCid Settlement.Settle
-
-test1 : Script ()
-test1 = do
+test2 : Script ()
+test2 = do
   --- Setup ---
   operator      <- allocatePartyWithHint "Operator" $ PartyIdHint "Operator"
   cashProvider  <- allocatePartyWithHint "CashProvider" $ PartyIdHint "CashProvider"
@@ -133,11 +129,16 @@ test1 = do
   lm1  <- allocatePartyWithHint "LeadMgr1" $ PartyIdHint "LeadMgr1"
   lm2  <- allocatePartyWithHint "LeadMgr2" $ PartyIdHint "LeadMgr2"
   lm3  <- allocatePartyWithHint "LeadMgr3" $ PartyIdHint "LeadMgr3"
-  cm31  <- allocatePartyWithHint "CoMgr31" $ PartyIdHint "CoMgr31"
-  investor11 <- allocatePartyWithHint "Investor11" $ PartyIdHint "Investor11"
-  investor21 <- allocatePartyWithHint "Investor21" $ PartyIdHint "Investor21"
-  investor311 <- allocatePartyWithHint "Investor311" $ PartyIdHint "Investor311"
-  investor312 <- allocatePartyWithHint "Investor312" $ PartyIdHint "Investor312"
+  cm1  <- allocatePartyWithHint "CoMgr31" $ PartyIdHint "CoMgr31"
+  investor1 <- allocatePartyWithHint "Investor1" $ PartyIdHint "Investor1"
+  investor2 <- allocatePartyWithHint "Investor2" $ PartyIdHint "Investor2"
+  investor3 <- allocatePartyWithHint "Investor3" $ PartyIdHint "Investor3"
+  investor4 <- allocatePartyWithHint "Investor4" $ PartyIdHint "Investor4"
+  custodian1 <- allocatePartyWithHint "Custodian1" $ PartyIdHint "Custodian1"
+  custodian2 <- allocatePartyWithHint "Custodian2" $ PartyIdHint "Custodian2"
+  custodian3 <- allocatePartyWithHint "Custodian3" $ PartyIdHint "Custodian3"
+  custodian4 <- allocatePartyWithHint "Custodian4" $ PartyIdHint "Custodian4"
+  custodian5 <- allocatePartyWithHint "Custodian5" $ PartyIdHint "Custodian5"
   issuer <- allocatePartyWithHint "Issuer" $ PartyIdHint "Issuer"
   public <- allocatePartyWithHint "Public" $ PartyIdHint "Public"
   let
@@ -152,62 +153,74 @@ test1 = do
   createCustodianRole operator lm1
   createCustodianRole operator lm2
   createCustodianRole operator lm3
-  createCustodianRole operator cm31
+  createCustodianRole operator custodian1
+  createCustodianRole operator custodian2
+  createCustodianRole operator custodian3
+  createCustodianRole operator custodian4
+  createCustodianRole operator custodian5
 
   -- 1st level
-  (_, lm1CashAccount)     <- createCustodyService operator cashProvider lm1
-  (_, lm2CashAccount)     <- createCustodyService operator cashProvider lm2
-  (_, lm3CashAccount)     <- createCustodyService operator cashProvider lm3
-  (_, issuerCashAccount)  <- createCustodyService operator cashProvider issuer
-  (_, lm1BondAccount)     <- createCustodyService operator bondRegistrar lm1
-  (_, lm2BondAccount)     <- createCustodyService operator bondRegistrar lm2
-  (_, lm3BondAccount)     <- createCustodyService operator bondRegistrar lm3
-  (_, issuerBondAccount)  <- createCustodyService operator bondRegistrar issuer
+  (_, lm1CashAccount)         <- createCustodyService operator cashProvider lm1
+  (_, lm2CashAccount)         <- createCustodyService operator cashProvider lm2
+  (_, lm3CashAccount)         <- createCustodyService operator cashProvider lm3
+  (_, issuerCashAccount)      <- createCustodyService operator cashProvider issuer
+  (_, custodian1BondAccount)  <- createCustodyService operator bondRegistrar custodian1
+  (_, custodian2BondAccount)  <- createCustodyService operator bondRegistrar custodian2
+  (_, custodian3BondAccount)  <- createCustodyService operator bondRegistrar custodian3
+  (_, custodian4BondAccount)  <- createCustodyService operator bondRegistrar custodian4
+  (_, issuerBondAccount)      <- createCustodyService operator bondRegistrar issuer
 
   -- 2nd level
-  (_, lm1OwnAccount)        <- createCustodyService operator lm1 lm1
-  (_, lm2OwnAccount)        <- createCustodyService operator lm2 lm2
-  (_, lm3OwnAccount)        <- createCustodyService operator lm3 lm3
-  (_, cm31OwnAccount)       <- createCustodyService operator cm31 cm31
-  (_, investor11CashAccount) <- createCustodyService operator lm1 investor11
-  (_, investor21CashAccount) <- createCustodyService operator lm2 investor21
-  (_, cm31CashAccount)      <- createCustodyService operator lm3 cm31
-  let
-    investor11BondAccount = investor11CashAccount
-    investor21BondAccount = investor21CashAccount
-    cm31BondAccount = cm31CashAccount
+  (_, lm1OwnAccount)          <- createCustodyService operator lm1 lm1
+  (_, lm2OwnAccount)          <- createCustodyService operator lm2 lm2
+  (_, lm3OwnAccount)          <- createCustodyService operator lm3 lm3
+  (_, custodian1OwnAccount)   <- createCustodyService operator custodian1 custodian1
+  (_, custodian2OwnAccount)   <- createCustodyService operator custodian2 custodian2
+  (_, custodian3OwnAccount)   <- createCustodyService operator custodian3 custodian3
+  (_, custodian4OwnAccount)   <- createCustodyService operator custodian4 custodian4
+  (_, custodian5OwnAccount)   <- createCustodyService operator custodian5 custodian5
+  (_, investor1CashAccount)   <- createCustodyService operator lm1 investor1
+  (_, investor2CashAccount)   <- createCustodyService operator lm2 investor2
+  (_, investor3CashAccount)   <- createCustodyService operator lm3 investor3
+  (_, investor4CashAccount)   <- createCustodyService operator lm3 investor4
+  (_, lm1BondAccount)         <- createCustodyService operator custodian1 lm1
+  (_, lm2BondAccount)         <- createCustodyService operator custodian2 lm2
+  (_, lm3BondAccount)         <- createCustodyService operator custodian3 lm3
+  (_, custodian5BondAccount)  <- createCustodyService operator custodian4 custodian5
+  (_, investor1BondAccount)   <- createCustodyService operator custodian1 investor1
+  (_, investor2BondAccount)   <- createCustodyService operator custodian2 investor2
 
   -- 3rd level
-  (_, investor311CashAccount) <- createCustodyService operator cm31 investor311
-  (_, investor312CashAccount) <- createCustodyService operator cm31 investor312
-  let
-    investor311BondAccount = investor311CashAccount
-    investor312BondAccount = investor312CashAccount
+  (_, investor3BondAccount)   <- createCustodyService operator custodian5 investor3
+  (_, investor4BondAccount)   <- createCustodyService operator custodian5 investor4
 
   -- Account info
-  submitMulti [operator, issuer] [] $ createCmd Structuring.AccountInfo with operator; party = issuer; ownAccount = None; cashAccount = Some issuerCashAccount; securitiesAccount = Some issuerBondAccount
-  submitMulti [operator, lm1] [] $ createCmd Structuring.AccountInfo with operator; party = lm1; ownAccount = Some lm1OwnAccount; cashAccount = Some lm1CashAccount; securitiesAccount = Some lm1BondAccount
-  submitMulti [operator, lm2] [] $ createCmd Structuring.AccountInfo with operator; party = lm2; ownAccount = Some lm2OwnAccount; cashAccount = Some lm2CashAccount; securitiesAccount = Some lm2BondAccount
-  submitMulti [operator, lm3] [] $ createCmd Structuring.AccountInfo with operator; party = lm3; ownAccount = Some lm3OwnAccount; cashAccount = Some lm3CashAccount; securitiesAccount = Some lm3BondAccount
-  submitMulti [operator, cm31] [] $ createCmd Structuring.AccountInfo with operator; party = cm31; ownAccount = Some cm31OwnAccount; cashAccount = Some cm31CashAccount; securitiesAccount = Some cm31BondAccount
-  submitMulti [operator, investor11] [] $ createCmd Structuring.AccountInfo with operator; party = investor11; ownAccount = None; cashAccount = Some investor11CashAccount; securitiesAccount = Some investor11BondAccount
-  submitMulti [operator, investor21] [] $ createCmd Structuring.AccountInfo with operator; party = investor21; ownAccount = None; cashAccount = Some investor21CashAccount; securitiesAccount = Some investor21BondAccount
-  submitMulti [operator, investor311] [] $ createCmd Structuring.AccountInfo with operator; party = investor311; ownAccount = None; cashAccount = Some investor311CashAccount; securitiesAccount = Some investor311BondAccount
-  submitMulti [operator, investor312] [] $ createCmd Structuring.AccountInfo with operator; party = investor312; ownAccount = None; cashAccount = Some investor312CashAccount; securitiesAccount = Some investor312BondAccount
+  submitMulti [operator, issuer] []     $ createCmd Structuring.AccountInfo with operator; party = issuer; ownAccount = None; cashAccount = Some issuerCashAccount; securitiesAccount = Some issuerBondAccount
+  submitMulti [operator, lm1] []        $ createCmd Structuring.AccountInfo with operator; party = lm1; ownAccount = Some lm1OwnAccount; cashAccount = Some lm1CashAccount; securitiesAccount = Some lm1BondAccount
+  submitMulti [operator, lm2] []        $ createCmd Structuring.AccountInfo with operator; party = lm2; ownAccount = Some lm2OwnAccount; cashAccount = Some lm2CashAccount; securitiesAccount = Some lm2BondAccount
+  submitMulti [operator, lm3] []        $ createCmd Structuring.AccountInfo with operator; party = lm3; ownAccount = Some lm3OwnAccount; cashAccount = Some lm3CashAccount; securitiesAccount = Some lm3BondAccount
+  submitMulti [operator, custodian1] [] $ createCmd Structuring.AccountInfo with operator; party = custodian1; ownAccount = Some custodian1OwnAccount; cashAccount = None; securitiesAccount = Some custodian1BondAccount
+  submitMulti [operator, custodian2] [] $ createCmd Structuring.AccountInfo with operator; party = custodian2; ownAccount = Some custodian2OwnAccount; cashAccount = None; securitiesAccount = Some custodian2BondAccount
+  submitMulti [operator, custodian3] [] $ createCmd Structuring.AccountInfo with operator; party = custodian3; ownAccount = Some custodian3OwnAccount; cashAccount = None; securitiesAccount = Some custodian3BondAccount
+  submitMulti [operator, custodian4] [] $ createCmd Structuring.AccountInfo with operator; party = custodian4; ownAccount = Some custodian4OwnAccount; cashAccount = None; securitiesAccount = Some custodian4BondAccount
+  submitMulti [operator, custodian5] [] $ createCmd Structuring.AccountInfo with operator; party = custodian5; ownAccount = Some custodian5OwnAccount; cashAccount = None; securitiesAccount = Some custodian5BondAccount
+  submitMulti [operator, investor1] []  $ createCmd Structuring.AccountInfo with operator; party = investor1; ownAccount = None; cashAccount = Some investor1CashAccount; securitiesAccount = Some investor1BondAccount
+  submitMulti [operator, investor2] []  $ createCmd Structuring.AccountInfo with operator; party = investor2; ownAccount = None; cashAccount = Some investor2CashAccount; securitiesAccount = Some investor2BondAccount
+  submitMulti [operator, investor3] []  $ createCmd Structuring.AccountInfo with operator; party = investor3; ownAccount = None; cashAccount = Some investor3CashAccount; securitiesAccount = Some investor3BondAccount
+  submitMulti [operator, investor4] []  $ createCmd Structuring.AccountInfo with operator; party = investor4; ownAccount = None; cashAccount = Some investor4CashAccount; securitiesAccount = Some investor4BondAccount
 
   createIssuanceService operator bondRegistrar issuer
 
   (_, usd)  <- originate operator cashProvider cashProvider public "USD" Zero
   (_, bond) <- originate operator bondRegistrar issuer public "BOND1" $ bond usd.assetId 100_000_000.0 0.02275 (unrollDates 2021 2023 [Jan,Jul] 15)
 
-  lm1Deposit1Cid        <- deposit operator cashProvider lm1 100_000_000.0 "USD"
-  lm2Deposit2Cid        <- deposit operator cashProvider lm2 100_000_000.0 "USD"
-  lm3Deposit3Cid        <- deposit operator cashProvider lm3 100_000_000.0 "USD"
-  investorDeposit11Cid  <- deposit operator lm1 investor11 100_000_000.0 "USD"
-  investorDeposit21Cid  <- deposit operator lm2 investor21 100_000_000.0 "USD"
-  cm31DepositCid        <- deposit operator lm3 cm31 100_000_000.0 "USD"
-  investorDeposit311Cid <- deposit operator cm31 investor311 100_000_000.0 "USD"
-  investorDeposit312Cid <- deposit operator cm31 investor312 100_000_000.0 "USD"
+  lm1DepositCid         <- deposit operator cashProvider lm1 10_000_000.0 "USD"
+  lm2DepositCid         <- deposit operator cashProvider lm2 100_000_000.0 "USD"
+  lm3DepositCid         <- deposit operator cashProvider lm3 100_000_000.0 "USD"
+  investor1DepositCid   <- deposit operator lm1 investor1 10_000_000.0 "USD"
+  investor2DepositCid   <- deposit operator lm2 investor2 20_000_000.0 "USD"
+  investor3DepositCid   <- deposit operator lm3 investor3 30_000_000.0 "USD"
+  investor4DepositCid   <- deposit operator lm3 investor4 40_000_000.0 "USD"
 
   bondDepositCid <- issue operator bondRegistrar issuer "BondIssuance" 100_000_000.0 bond.assetId
   Some bondDeposit <- queryContractId @AssetDeposit issuer bondDepositCid
@@ -219,18 +232,18 @@ test1 = do
   createDistributorRole operator lm1
   createDistributorRole operator lm2
   createDistributorRole operator lm3
-  createDistributorRole operator cm31
+  createDistributorRole operator cm1
 
   createStructuringService operator structurer issuer
 
   createBookBuildingService operator lm1 issuer
   createBookBuildingService operator lm2 issuer
   createBookBuildingService operator lm3 issuer
-  createBookBuildingService operator cm31 lm3
-  createBiddingService operator lm1 investor11
-  createBiddingService operator lm2 investor21
-  createBiddingService operator cm31 investor311
-  createBiddingService operator cm31 investor312
+  createBookBuildingService operator cm1 lm3
+  createBiddingService operator lm1 investor1
+  createBiddingService operator lm2 investor2
+  createBiddingService operator cm1 investor3
+  createBiddingService operator cm1 investor4
 
   let
     dealId = "DEAL1"
@@ -242,23 +255,23 @@ test1 = do
   [bookBuildingRequest1Cid] <- requestBookBuilding operator lm1 issuer dealCid
   [bookBuildingRequest2Cid] <- requestBookBuilding operator lm2 issuer dealCid
   [bookBuildingRequest3Cid] <- requestBookBuilding operator lm3 issuer dealCid
-  [bookBuildingRequest4Cid] <- requestBookBuilding operator cm31 lm3 dealCid
+  [bookBuildingRequest4Cid] <- requestBookBuilding operator cm1 lm3 dealCid
 
-  bid1Cid <- bid operator lm1 investor11 bookBuildingRequest1Cid 10_000_000.0 1.001
-  bid2Cid <- bid operator lm2 investor21 bookBuildingRequest2Cid 20_000_000.0 0.999
-  bid3Cid <- bid operator cm31 investor311 bookBuildingRequest4Cid 30_000_000.0 0.997
-  bid4Cid <- bid operator cm31 investor312 bookBuildingRequest4Cid 40_000_000.0 0.995
+  bid1Cid <- bid operator lm1 investor1 bookBuildingRequest1Cid 10_000_000.0 1.001
+  bid2Cid <- bid operator lm2 investor2 bookBuildingRequest2Cid 20_000_000.0 0.999
+  bid3Cid <- bid operator cm1 investor3 bookBuildingRequest4Cid 30_000_000.0 0.997
+  bid4Cid <- bid operator cm1 investor4 bookBuildingRequest4Cid 40_000_000.0 0.995
 
-  let offeredPrice = 0.998
+  let offeredPrice = 1.0
   allocation1Cid <- allocate issuer bid1Cid 10_000_000.0 offeredPrice
   allocation2Cid <- allocate issuer bid2Cid 20_000_000.0 offeredPrice
   allocation3Cid <- allocate issuer bid3Cid 30_000_000.0 offeredPrice
   allocation4Cid <- allocate issuer bid4Cid 40_000_000.0 offeredPrice
 
-  confirmation1Cid <- confirm investor11 allocation1Cid
-  confirmation2Cid <- confirm investor21 allocation2Cid
-  confirmation3Cid <- confirm investor311 allocation3Cid
-  confirmation4Cid <- confirm investor312 allocation4Cid
+  confirmation1Cid <- confirm investor1 allocation1Cid
+  confirmation2Cid <- confirm investor2 allocation2Cid
+  confirmation3Cid <- confirm investor3 allocation3Cid
+  confirmation4Cid <- confirm investor4 allocation4Cid
 
   let
     allocateSi party (siCid, si) = do
@@ -275,12 +288,9 @@ test1 = do
             pure ()
           else do
             adCids <- query @AssetDeposit party
-            -- debug si
-            -- debug adCids
-            pure () --fail $ "Cannot find deposit for asset " <> si.asset.id.label <> " in account " <> si.senderAccount.id.label
+            pure ()
         (adCid, ad) :: _ ->
           if ad.asset.quantity > si.asset.quantity then do
-            debug ("Split " <> show si.asset.quantity)
             adCid :: _ <- submit party do exerciseCmd adCid AssetDeposit_Split with quantities = [ si.asset.quantity ]
             submit party do exerciseCmd siCid Allocate with settlementDepositCid = adCid
             pure ()
@@ -303,16 +313,22 @@ test1 = do
   -- Step 1
   dvpCids1 <- submit operator do exerciseCmd dealCid Structuring.InstructIssuerSettlement with ..
   allocate issuer
+  allocate custodian2
   allocate settlementBank
   sign issuer
+  sign custodian2
   sign settlementBank
   adCids1 <- mapA (settle operator) dvpCids1
 
   -- Step 2
   dvpCids2 <- submit operator do exerciseCmd dealCid Structuring.InstructBndSettlement with ..
   allocate settlementBank
+  allocate custodian2
+  allocate custodian3
   allocate bndBank
   sign settlementBank
+  sign custodian2
+  sign custodian3
   sign bndBank
   adCids2 <- mapA (settle operator) dvpCids2
 
@@ -322,19 +338,28 @@ test1 = do
   allocate lm1
   allocate lm2
   allocate lm3
-  allocate cm31
-  allocate investor11
-  allocate investor21
-  allocate investor311
-  allocate investor312
+  allocate custodian1
+  allocate custodian2
+  allocate custodian3
+  allocate custodian4
+  allocate custodian5
+  allocate investor1
+  allocate investor2
+  allocate investor3
+  allocate investor4
+  sign bndBank
   sign lm1
   sign lm2
   sign lm3
-  sign cm31
-  sign investor11
-  sign investor21
-  sign investor311
-  sign investor312
+  sign custodian1
+  sign custodian2
+  sign custodian3
+  sign custodian4
+  sign custodian5
+  sign investor1
+  sign investor2
+  sign investor3
+  sign investor4
   adCids3 <- mapA (settle operator) dvpCids3
 
   pure ()

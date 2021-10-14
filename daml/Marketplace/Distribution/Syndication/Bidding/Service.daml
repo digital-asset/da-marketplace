@@ -1,6 +1,6 @@
 module Marketplace.Distribution.Syndication.Bidding.Service where
 
-import DA.Finance.Types (Asset(..), Account, Id)
+import DA.Finance.Types (Asset(..), Id)
 import DA.Finance.Utils (fetchAndArchive)
 import Marketplace.Distribution.Syndication.Bidding.Model qualified as Bidding
 import Marketplace.Utils
@@ -35,8 +35,6 @@ template Service
           dealId : Text
           asset : Asset
           priceId : Id
-          providerPaymentAccount : Account
-          providerDeliveryAccount : Account
         do
           create Bidding.BidRequest with investor = customer; ..
 

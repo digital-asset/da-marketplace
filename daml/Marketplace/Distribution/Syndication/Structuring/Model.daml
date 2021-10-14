@@ -48,31 +48,31 @@ template AccountInfo
 createInstructions : Bool -> Party -> Party -> Text -> Int -> Asset -> Account -> Account -> Update [ContractId SettlementInstruction]
 createInstructions isCash operator rootProvider settlementId instructionIdx asset senderAccount receiverAccount = do
   let
-    createInstruction sender receiver sAcc rAcc siAsset = do
-      let si = SettlementInstruction with senderAccount = sAcc; receiverAccount = rAcc; asset = siAsset; signed = []; depositCid = None; instructionId = show instructionIdx; ..
+    createInstruction sender receiver sAcc rAcc siAsset instIdx = do
+      let si = SettlementInstruction with senderAccount = sAcc; receiverAccount = rAcc; asset = siAsset; signed = []; depositCid = None; instructionId = show instIdx; ..
       if sender == receiver then pure [] else singleton <$> create si
   if senderAccount.provider == rootProvider && receiverAccount.provider == rootProvider then do -- TODO: Could shortcut this if common custodian is found earlier below in the hierarchy
-    createInstruction senderAccount.owner receiverAccount.owner senderAccount receiverAccount asset
+    createInstruction senderAccount.owner receiverAccount.owner senderAccount receiverAccount asset instructionIdx
   else if senderAccount.provider == rootProvider then do
     (_, providerAccountInfo) <- fetchByKey @AccountInfo (operator, receiverAccount.provider)
     let providerAccount = if isCash then fromSome providerAccountInfo.cashAccount else fromSome providerAccountInfo.securitiesAccount
-    sis1 <- createInstruction receiverAccount.provider receiverAccount.owner (fromSome providerAccountInfo.ownAccount) receiverAccount (asset with id.signatories = fromList [providerAccountInfo.party])
+    sis1 <- createInstruction receiverAccount.provider receiverAccount.owner (fromSome providerAccountInfo.ownAccount) receiverAccount (asset with id.signatories = fromList [providerAccountInfo.party]) instructionIdx
     sis2 <- createInstructions isCash operator rootProvider settlementId (instructionIdx + 1) asset senderAccount providerAccount
     pure $ sis1 <> sis2
   else if receiverAccount.provider == rootProvider then do
     (_, providerAccountInfo) <- fetchByKey @AccountInfo (operator, senderAccount.provider)
     let providerAccount = if isCash then fromSome providerAccountInfo.cashAccount else fromSome providerAccountInfo.securitiesAccount
-    sis1 <- createInstruction senderAccount.owner senderAccount.provider senderAccount (fromSome providerAccountInfo.ownAccount) (asset with id.signatories = fromList [providerAccountInfo.party])
+    sis1 <- createInstruction senderAccount.owner senderAccount.provider senderAccount (fromSome providerAccountInfo.ownAccount) (asset with id.signatories = fromList [providerAccountInfo.party]) instructionIdx
     sis2 <- createInstructions isCash operator rootProvider settlementId (instructionIdx + 1) asset providerAccount receiverAccount
     pure $ sis1 <> sis2
   else do
     (_, senderProviderAccountInfo) <- fetchByKey @AccountInfo (operator, senderAccount.provider)
     let senderProviderAccount = if isCash then fromSome senderProviderAccountInfo.cashAccount else fromSome senderProviderAccountInfo.securitiesAccount
-    sis1 <- createInstruction senderAccount.owner senderAccount.provider senderAccount (fromSome senderProviderAccountInfo.ownAccount) (asset with id.signatories = fromList [senderProviderAccountInfo.party])
+    sis1 <- createInstruction senderAccount.owner senderAccount.provider senderAccount (fromSome senderProviderAccountInfo.ownAccount) (asset with id.signatories = fromList [senderProviderAccountInfo.party]) instructionIdx
     (_, receiverProviderAccountInfo) <- fetchByKey @AccountInfo (operator, receiverAccount.provider)
     let receiverProviderAccount = if isCash then fromSome receiverProviderAccountInfo.cashAccount else fromSome receiverProviderAccountInfo.securitiesAccount
-    sis2 <- createInstruction receiverAccount.provider receiverAccount.owner (fromSome receiverProviderAccountInfo.ownAccount) receiverAccount (asset with id.signatories = fromList [receiverProviderAccountInfo.party])
-    sis3 <- createInstructions isCash operator rootProvider settlementId (instructionIdx + 1) asset senderProviderAccount receiverProviderAccount
+    sis2 <- createInstruction receiverAccount.provider receiverAccount.owner (fromSome receiverProviderAccountInfo.ownAccount) receiverAccount (asset with id.signatories = fromList [receiverProviderAccountInfo.party]) (instructionIdx + 1)
+    sis3 <- createInstructions isCash operator rootProvider settlementId (instructionIdx + 2) asset senderProviderAccount receiverProviderAccount
     pure $ sis1 <> sis2 <> sis3
 
 template Deal

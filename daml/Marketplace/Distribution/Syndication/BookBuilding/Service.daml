@@ -1,6 +1,5 @@
 module Marketplace.Distribution.Syndication.BookBuilding.Service where
 
-import DA.Finance.Types (Account)
 import Marketplace.Distribution.Syndication.BookBuilding.Model qualified as BookBuilding
 import Marketplace.Distribution.Syndication.Structuring.Model qualified as Structuring
 import Marketplace.Utils
@@ -20,10 +19,6 @@ template Service
       nonconsuming RequestBookBuilding : [ContractId BookBuilding.BuildRequest]
         with
           dealCid : ContractId Structuring.Deal
-          providerPaymentAccount : Account
-          providerDeliveryAccount : Account
-          customerPaymentAccount : Account
-          customerDeliveryAccount : Account
         do
           deal@Structuring.Deal{dealId, priceId} <- fetch dealCid
           mapA (\asset -> create BookBuilding.BuildRequest with issuer = deal.issuer; ..) deal.tranches
