@@ -69,14 +69,14 @@ template Offer
     signatory operator
 
     controller provider can
-      Accept : (ContractId Role, ContractId Issuance.Service, ContractId Custody.Service)
+      Accept : ContractId Role--, ContractId Issuance.Service, ContractId Custody.Service)
         do
           let account = Custody.createAccount provider provider
 
-          custodyCid  <- createOrLookup Custody.Service with customer = provider, ..
-          issuanceCid <- createOrLookup Issuance.Service with customer = provider, ..
+          -- custodyCid  <- createOrLookup Custody.Service with customer = provider, ..
+          -- issuanceCid <- createOrLookup Issuance.Service with customer = provider, ..
           roleCid     <- createOrLookup Role with ..
-          return (roleCid, issuanceCid, custodyCid)
+          return roleCid--, issuanceCid, custodyCid)
 
       Decline : ()
         do

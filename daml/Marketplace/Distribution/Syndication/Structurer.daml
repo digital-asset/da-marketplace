@@ -1,4 +1,4 @@
-module Marketplace.Distribution.Syndication.BookRunner where
+module Marketplace.Distribution.Syndication.Structurer where
 
 import Marketplace.Distribution.Syndication.Structuring.Service qualified as Structuring
 import Marketplace.Utils

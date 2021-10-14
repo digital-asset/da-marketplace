@@ -89,7 +89,7 @@ template Service
 
           (_, AssetDescription{issuer}) <- fetchByKey @AssetDescription assetId
           let asset = Asset with id = assetId; quantity
-          depositCid <- create AssetDeposit with account; asset; lockers = empty; observers = fromList [ issuer ]
+          depositCid <- create AssetDeposit with account; asset; lockers = empty; observers = empty--fromList [ issuer ]
 
           pure (issuanceCid, depositCid)
 
