@@ -6,6 +6,7 @@ import { CCPCustomer } from '@daml.js/da-marketplace/lib/Marketplace/CentralCoun
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
+import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { WalletIcon } from '../../icons/Icons'
@@ -18,7 +19,6 @@ import WalletTransaction from './WalletTransaction'
 import PageSection from './PageSection'
 import Holdings from './Holdings'
 import Page from './Page'
-import { useAvailableDeposits } from './utils'
 
 const Wallet = (props: {
     sideNav: React.ReactElement;
@@ -33,7 +33,7 @@ const Wallet = (props: {
 
     const { sideNav, onLogout, role, showNotificationAlert, handleNotificationAlert } = props
 
-    const allDeposits = useAvailableDeposits();
+    const allDeposits = useContractQuery(AssetDeposit);
 
     const ccpCustomers = useContractQuery(CCPCustomer);
     const marginDepositsCids = ccpCustomers

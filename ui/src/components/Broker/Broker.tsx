@@ -33,7 +33,6 @@ import Wallet from '../common/Wallet'
 import NotificationCenter, { useAllNotifications } from '../common/NotificationCenter'
 
 import BrokerOrders from './BrokerOrders'
-import { useAvailableDeposits } from '../common/utils'
 
 type Props = {
     onLogout: () => void;
@@ -49,7 +48,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
     const registeredBroker = useContractQuery(RegisteredBroker);
     const invitation = useContractQuery(BrokerInvitation);
     const allCustodianRelationships = useContractQuery(CustodianRelationship);
-  const allDeposits = useAvailableDeposits();
+    const allDeposits = useContractQuery(AssetDeposit);
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),

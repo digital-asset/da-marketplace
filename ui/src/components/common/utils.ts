@@ -1,8 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { useContractQuery } from '../../websocket/queryStream';
 
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
 import { DepositInfo } from './damlTypes'
 
@@ -38,10 +36,6 @@ export async function halfSecondPromise() {
       setTimeout(() => resolve(), 500);
     });
   }
-
-export const useAvailableDeposits = () => {
-    return useContractQuery(AssetDeposit).filter(ad => Object.keys(ad.contractData.lockers.textMap).length === 0);
-}
 
 export const groupDepositsByProvider = (deposits: DepositInfo[]): StringKeyedObject<DepositInfo[]> => {
     return groupDeposits(deposits, (deposit => deposit.contractData.account.provider))

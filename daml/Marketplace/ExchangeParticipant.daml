@@ -25,7 +25,7 @@ template ExchangeParticipantInvitation
           create DismissibleNotification with
             sender = exchParticipant, senderRole = None
             receiver = exchange, text = "Exchange invitation accepted."
-          createOrLookup SettlementAgreement with ..
+          -- createOrLookup SettlementAgreement with ..
           createOrLookup ExchangeParticipant with ..
 
       ExchangeParticipantInvitation_Reject : ()
@@ -151,7 +151,7 @@ template ExchangeParticipant
           assertMsg ("price should be rounded to at most " <> show quoteToken.quantityPrecision <> " decimal places")
             $ roundBankers quoteToken.quantityPrecision price == price
 
-          newDepositCid <- exercise depositCid AssetDeposit_Lock with newLockers = Set.fromList [exchange]
+          newDepositCid <- exercise depositCid AssetDeposit_Lock with locker = exchange
 
           createdAt <- getTime
           let order = Order with

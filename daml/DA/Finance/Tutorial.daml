@@ -30,7 +30,7 @@ scenario1 = do
 
     aliceAccountId  = Id with signatories = fromList [ acme ]; label = "Alice@Acme"; version = 0
     aliceAccount    = Account with id = aliceAccountId; provider = acme; owner = alice
-    aliceDeposit    = AssetDeposit with account = aliceAccount; asset = cbUsdAsset; observers = empty, lockers = mempty
+    aliceDeposit    = AssetDeposit with account = aliceAccount; asset = cbUsdAsset; observers = empty
 
   aliceDepositCid <- submit acme do create aliceDeposit
 
@@ -56,7 +56,7 @@ scenario2 = do
 
     aliceAccountId  = Id with signatories = fromList [ acme ]; label = "Alice@Acme"; version = 0
     aliceAccount    = Account with id = aliceAccountId; provider = acme; owner = alice
-    aliceDeposit    = AssetDeposit with account = aliceAccount; asset = cbUsdAsset; observers = empty, lockers = mempty
+    aliceDeposit    = AssetDeposit with account = aliceAccount; asset = cbUsdAsset; observers = empty
     aliceSettlement = AssetSettlementRule with account = aliceAccount; observers = empty; ctrls = empty
 
     bobAccountId  = Id with signatories = fromList [ acme ]; label = "Bob@Acme"; version = 0
@@ -94,7 +94,7 @@ scenario3 = do
 
     aliceAccountId  = Id with signatories = fromList [ acme ]; label = "Alice@Acme"; version = 0
     aliceAccount    = Account with id = aliceAccountId; provider = acme; owner = alice
-    aliceDeposit    = AssetDeposit with account = aliceAccount; asset = cbUsdAsset; observers = empty, lockers = mempty
+    aliceDeposit    = AssetDeposit with account = aliceAccount; asset = cbUsdAsset; observers = empty
     aliceSettlement = AssetSettlementRule with account = aliceAccount; observers = empty; ctrls = empty
 
     bobAccountId  = Id with signatories = fromList [ genco ]; label = "Bob@Genco"; version = 0
@@ -130,7 +130,7 @@ scenario4 = do
 
     aliceAccountId      = Id with signatories = fromList [ acme ]; label = "Alice@Acme"; version = 0
     aliceAccount        = Account with id = aliceAccountId; provider = acme; owner = alice
-    aliceDeposit        = AssetDeposit with account = aliceAccount; asset = cbUsdAsset; observers = empty; lockers = mempty
+    aliceDeposit        = AssetDeposit with account = aliceAccount; asset = cbUsdAsset; observers = empty
     aliceSettlement     = AssetSettlementRule with account = aliceAccount; observers = empty; ctrls = empty
 
     bobAccountId        = Id with signatories = fromList [ genco ]; label = "Bob@Genco"; version = 0
@@ -143,7 +143,7 @@ scenario4 = do
     gencoOwnAccountId   = Id with signatories = fromList [ genco ]; label = "Genco@Genco"; version = 0
     gencoOwnAccount     = Account with id = gencoOwnAccountId; provider = genco; owner = genco
     gencoOwnSettlement  = AssetSettlementRule with account = gencoOwnAccount; observers = empty; ctrls = empty
-    gencoDeposit        = AssetDeposit with account = gencoOwnAccount; asset = cbUsdAsset; observers = empty; lockers = mempty
+    gencoDeposit        = AssetDeposit with account = gencoOwnAccount; asset = cbUsdAsset; observers = empty
 
   aliceSettlementCid    <- submit acme do create aliceSettlement
   bobSettlementCid      <- submit genco do create bobSettlement
@@ -203,9 +203,9 @@ scneario5 = do
     gencoOwnAccount    = Account with id = gencoOwnAccountId; provider = genco; owner = genco
     gencoOwnSettlement = AssetSettlementRule with account = gencoOwnAccount; observers = empty; ctrls = empty
 
-    aliceDeposit    = AssetDeposit with account = aliceAccount; asset = cbUsdAsset; observers = empty; lockers = mempty
-    acmeDeposit     = AssetDeposit with account = acmeAccount; asset = cbUsdAsset; observers = empty; lockers = mempty
-    gencoDeposit    = AssetDeposit with account = gencoOwnAccount; asset = cbUsdAsset; observers = empty; lockers = mempty
+    aliceDeposit    = AssetDeposit with account = aliceAccount; asset = cbUsdAsset; observers = empty
+    acmeDeposit     = AssetDeposit with account = acmeAccount; asset = cbUsdAsset; observers = empty
+    gencoDeposit    = AssetDeposit with account = gencoOwnAccount; asset = cbUsdAsset; observers = empty
 
   aliceSettlementCid <- submit acme do create aliceSettlement
   bobSettlementCid <- submit genco do create bobSettlement
@@ -315,9 +315,9 @@ scenario6 = do
     gencoOwnAccount    = Account with id = gencoOwnAccountId; provider = genco; owner = genco
     gencoOwnSettlement = AssetSettlementRule with account = gencoOwnAccount; observers = empty; ctrls = fromList [ alice ]
 
-    aliceDeposit    = AssetDeposit with account = aliceAccount; asset = cbUsdAsset; observers = empty; lockers = mempty
-    acmeDeposit     = AssetDeposit with account = acmeAccount; asset = cbUsdAsset; observers = empty; lockers = mempty
-    gencoDeposit    = AssetDeposit with account = gencoOwnAccount; asset = cbUsdAsset; observers = empty; lockers = mempty
+    aliceDeposit    = AssetDeposit with account = aliceAccount; asset = cbUsdAsset; observers = empty
+    acmeDeposit     = AssetDeposit with account = acmeAccount; asset = cbUsdAsset; observers = empty
+    gencoDeposit    = AssetDeposit with account = gencoOwnAccount; asset = cbUsdAsset; observers = empty
 
     dvpProposal = DvpProposal with
       tradeId = Id with signatories = empty; label = "DvP between Alice and Bob"; version = 0
@@ -375,7 +375,7 @@ scenario7 = do
     aliceAccountId  = Id with signatories = fromList [ cb ]; label = "Alice@Acme"; version = 0
     aliceAccount    = Account with id = aliceAccountId; provider = acme; owner = alice
     aliceSettlement = AssetSettlementRule with account = aliceAccount; observers = empty; ctrls = empty
-    aliceDeposit    = AssetDeposit with account = aliceAccount; asset = cbUsdAsset; observers = empty, lockers = mempty
+    aliceDeposit    = AssetDeposit with account = aliceAccount; asset = cbUsdAsset; observers = empty
 
     bobAccountId  = Id with signatories = fromList [ cb ]; label = "Bob@Genco"; version = 0
     bobAccount    = Account with id = bobAccountId; provider = genco; owner = bob

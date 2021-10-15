@@ -2,7 +2,11 @@ import React from 'react'
 import { Header } from 'semantic-ui-react'
 import { useParams } from 'react-router-dom'
 
-import { depositSummary, useAvailableDeposits } from '../common/utils'
+import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
+
+import { useContractQuery } from '../../websocket/queryStream'
+
+import { depositSummary } from '../common/utils'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
 import StripedTable from '../common/StripedTable'
@@ -23,7 +27,7 @@ type Props = {
 const ClientHoldings: React.FC<Props> = ({ sideNav, onLogout, clients, showNotificationAlert, handleNotificationAlert }) => {
     const { investorId } = useParams<{investorId: string}>()
 
-    const allDeposits = useAvailableDeposits();
+    const allDeposits = useContractQuery(AssetDeposit);
 
     const deposits = allDeposits.filter(deposit => deposit.contractData.account.owner === investorId)
 

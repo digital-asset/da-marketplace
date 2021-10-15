@@ -5,9 +5,9 @@ import Daml.Script
 import Setup.Clearing (allocateParties, doTestClearingResolution, doSetupClearing)
 
 testClearingResolution : Script ()
-testClearingResolution = allocateParties >>= doTestClearingResolution True
+testClearingResolution = allocateParties >>= doTestClearingResolution False
 
 testSetupClearing : Script ()
-testSetupClearing = allocateParties >>= doSetupClearing True
+testSetupClearing = allocateParties >>= doSetupClearing False
 
 

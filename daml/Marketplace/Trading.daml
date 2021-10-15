@@ -1,7 +1,6 @@
 module Marketplace.Trading where
 
 import Marketplace.BinaryOption
-import Marketplace.Custodian
 import Marketplace.Token
 import Marketplace.Transfer
 import Marketplace.Utils
@@ -65,12 +64,12 @@ template OrderRequest
 
       OrderRequest_Reject : ContractId AssetDeposit
         do
-          exercise order.depositCid AssetDeposit_Unlock
+          exercise order.depositCid LockedAssetDeposit_Unlock
 
     controller order.exchParticipant can
       OrderRequest_Cancel : ContractId AssetDeposit
         do
-          exercise order.depositCid AssetDeposit_Unlock
+          exercise order.depositCid LockedAssetDeposit_Unlock
 
 
 template OrderCancelRequest
@@ -98,7 +97,7 @@ template Order
     isBid : Bool
     price : Decimal
     qty : Decimal
-    depositCid : ContractId AssetDeposit
+    depositCid : ContractId LockedAssetDeposit
     account : Account
     status : Text
     orderId : Int
@@ -141,7 +140,7 @@ template Order
             let depositFillQty = roundBankers quoteToken.quantityPrecision $
                                     if isBid then fillQty * fillPrice
                                     else fillQty * (binOption.maxPrice - fillPrice)
-            [filledDepositCid, restDepositCid] <- exercise depositCid AssetDeposit_Split with quantities = [depositFillQty]
+            [filledDepositCid, restDepositCid] <- exercise depositCid LockedAssetDeposit_Split with quantities = [depositFillQty]
             remainingCid <- create this
               with qty = qty - fillQty, status = "PartiallyFilled", depositCid = restDepositCid
             tradeCid <- create TradeSide with
@@ -187,7 +186,7 @@ template Order
                                      (deposit.asset.quantity - minFillQty)
             if (depositFillQty > 0.0 && depositFillQty < deposit.asset.quantity)
             then do
-              [filledDepositCid, restDepositCid] <- exercise depositCid AssetDeposit_Split with quantities = [depositFillQty]
+              [filledDepositCid, restDepositCid] <- exercise depositCid LockedAssetDeposit_Split with quantities = [depositFillQty]
 
               remainingCid <- create this
                 with qty = qty - fillQty, status = "PartiallyFilled"
@@ -215,7 +214,7 @@ template Order
 
       Order_Cancel : ContractId AssetDeposit
         do
-          exercise depositCid AssetDeposit_Unlock
+          exercise depositCid LockedAssetDeposit_Unlock
 
     controller exchParticipant can
       nonconsuming Order_RequestCancel : ContractId OrderCancelRequest
@@ -523,7 +522,7 @@ template TradeSide
     orderId : Int
     counterOrderId : Int
     timeMatched : Text
-    optDepositCid : Optional (ContractId AssetDeposit)
+    optDepositCid : Optional (ContractId LockedAssetDeposit)
     receiverAccountId : Id
     senderAccountId : Id
     isBinaryOption : Bool
@@ -541,7 +540,8 @@ template TradeSide
         do
           assertMsg "Binary option settlement must be done with the SettleBinaryOption choice." $ not isBinaryOption
           depositCids <- case optDepositCid of
-            Some depositCid -> do
+            Some lockedDepositCid -> do
+              depositCid <- exercise lockedDepositCid LockedAssetDeposit_Unlock
               deposit <- fetch depositCid
               (sendDepositCid, restDepositCids) <-
                 if isBuy && (deposit.asset.quantity > qty * price)
@@ -549,9 +549,9 @@ template TradeSide
                   -- let [sendAsset, restAsset] = assetSplit asset [qty * price]
                   [sendDepositCid, restDepositCid] <- exercise depositCid AssetDeposit_Split with quantities = [qty * price]
 
-                  restDepositCid' <- exercise restDepositCid AssetDeposit_Unlock
+                  -- restDepositCid' <- exercise restDepositCid AssetDeposit_Unlock
 
-                  return (sendDepositCid, [restDepositCid'])
+                  return (sendDepositCid, [restDepositCid])
                 else return (depositCid, [])
 
               let receiverAccount = getAccount receiverAccountId
@@ -574,7 +574,8 @@ template TradeSide
           settledBinOption <- fetch settledBinOptionCid
           let needsTransfer = settledBinOption.outcome /= isBuy
           optDepositCid <- case (optDepositCid, needsTransfer) of
-            (Some depositCid, True) -> do
+            (Some lockedDepositCid, True) -> do
+              depositCid <- exercise lockedDepositCid LockedAssetDeposit_Unlock
               let (receiver, receiverProvider) = getAccountOwnerProvider receiverAccountId.label
                   receiverAccount = Account with id = receiverAccountId, provider = receiverProvider, owner = receiver
               transferredDepositCid <- exercise depositCid AssetDeposit_Transfer with ..

@@ -159,4 +159,4 @@ template Custodian
           let quantity = roundBankers token.quantityPrecision depositQuantity
               asset = Asset with id = tokenId, ..
               depositObs = fromList $ account.provider :: beneficiary :: signatory token
-          create AssetDeposit with observers = depositObs, account = account, lockers = mempty; ..
+          create AssetDeposit with observers = depositObs, account = account, ..
