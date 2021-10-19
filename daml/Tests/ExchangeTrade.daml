@@ -109,8 +109,8 @@ handleTrade lp@LedgerParties{userAdmin = operator, exchange, bob, alice} btcToke
 
   assert $ aliceDeposit.asset.quantity == 1.0
   assert $ bobDeposit.asset.quantity == 40.0
-  --
-  return ()
+
+  -- return ()
 
 
 onboardInvestor : LedgerParties -> Party -> Text-> Script (ContractId Investor)

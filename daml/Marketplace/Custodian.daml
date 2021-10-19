@@ -158,5 +158,5 @@ template Custodian
           account <- exercise self Custodian_GetAccount with investor = beneficiary
           let quantity = roundBankers token.quantityPrecision depositQuantity
               asset = Asset with id = tokenId, ..
-              depositObs = fromList $ account.provider :: beneficiary :: signatory token
+              depositObs = fromList $ [] -- account.provider :: signatory token
           create AssetDeposit with observers = depositObs, account = account, ..

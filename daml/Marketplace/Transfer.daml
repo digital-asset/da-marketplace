@@ -44,11 +44,11 @@ template DepositTransferRequest
 
           senderRuleCid <- create AssetSettlementRule
             with account = senderAccount,
-                  observers = fromList [senderProvider],
+                  observers = mempty,
                   ctrls = empty
           receiverRuleCid <- create AssetSettlementRule
             with account = receiverAccount,
-                  observers = fromList [receiverProvider, receiver],
+                  observers = mempty,
                   ctrls = fromList [sender]
 
           newDepositCid <- exercise senderRuleCid AssetSettlement_Transfer
@@ -85,7 +85,7 @@ template DepositDebitRequest
 
           depositRuleCid <- create AssetSettlementRule
             with account = ownerAccount
-                 observers = fromList [provider]
+                 observers = mempty
                  ctrls = empty
 
           newAsset <- exercise depositRuleCid AssetSettlement_Debit
@@ -115,7 +115,7 @@ template DepositCreditRequest
 
           depositRuleCid <- create AssetSettlementRule
             with account = account
-                 observers = tokenSignatories <> fromList [provider, owner]
+                 observers = tokenSignatories
                  ctrls = fromList [custodian]
 
           newDepositCid <- exercise depositRuleCid AssetSettlement_Credit with asset, ctrl = custodian

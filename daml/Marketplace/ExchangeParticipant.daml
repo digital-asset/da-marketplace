@@ -25,7 +25,7 @@ template ExchangeParticipantInvitation
           create DismissibleNotification with
             sender = exchParticipant, senderRole = None
             receiver = exchange, text = "Exchange invitation accepted."
-          -- createOrLookup SettlementAgreement with ..
+          createOrLookup SettlementAgreement with ..
           createOrLookup ExchangeParticipant with ..
 
       ExchangeParticipantInvitation_Reject : ()
