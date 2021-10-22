@@ -109,7 +109,7 @@ template Investor
             CustodianRelationship_RequestDebit with
               request = DepositDebitRequest with owner = investor, ownerAccount = deposit.account, ..
 
-      nonconsuming Investor_AllocateToProvider : ContractId DepositTransferRequest
+      nonconsuming Investor_AllocateToProvider : ContractId AssetDeposit -- DepositTransferRequest
         with
           depositCids : [ContractId AssetDeposit]
           amount : Decimal
@@ -128,4 +128,28 @@ template Investor
                   signatories = deposit.account.id.signatories,
                     label = getAccountLabel investor provider,
                     version = 0
-          exercise self Investor_RequestDepositTransfer with ..
+          exercise depositCid AssetDeposit_Transfer
+            with receiverAccount = Account with id = receiverAccountId, owner = investor, ..
+          -- exercise self Investor_RequestDepositTransfer with ..
+
+      nonconsuming Investor_DirectAllocate : ContractId AssetDeposit
+        with
+          depositCids : [ContractId AssetDeposit]
+          amount : Decimal
+          provider : Party
+        do
+          aggregateQty <- getDepositQuantities depositCids
+
+          assertMsg ("amount should be less than or equal to total deposit amount") $ amount <= aggregateQty
+
+          mergedCid <- exercise (head depositCids) AssetDeposit_Merge with depositCids = tail depositCids
+          depositCid <- head <$> exercise mergedCid AssetDeposit_Split with quantities = [ amount ]
+
+          deposit <- fetch depositCid
+          let receiverAccountId = Id
+                with
+                  signatories = deposit.account.id.signatories,
+                    label = getAccountLabel investor provider,
+                    version = 0
+          exercise depositCid AssetDeposit_Transfer
+            with receiverAccount = Account with id = receiverAccountId, owner = investor, ..

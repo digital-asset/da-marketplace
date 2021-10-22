@@ -156,11 +156,13 @@ setupExchangeAccount da lp custodian tokenId depositQuantity investor = do
                 custodian `submit` exerciseCmd depositRequestCid DepositCreditRequest_Approve
 
   -- move to exchange account
-  transferRequestCid <- investor `submit` exerciseByKeyCmd @Investor (operator, investor) Investor_AllocateToProvider
+  investor `submit` exerciseByKeyCmd @Investor (operator, investor) Investor_AllocateToProvider
       with depositCids = [depositCid], amount = depositQuantity, provider = exchange
-
-  -- bank accepts transfer
-  custodian `submit` exerciseCmd transferRequestCid DepositTransferRequest_Approve
+  -- transferRequestCid <- investor `submit` exerciseByKeyCmd @Investor (operator, investor) Investor_DirectAllocate -- Investor_AllocateToProvider
+  --     with depositCids = [depositCid], amount = depositQuantity, provider = exchange
+  --
+  -- -- bank accepts transfer
+  -- custodian `submit` exerciseCmd transferRequestCid DepositTransferRequest_Approve
 
 
 createToken : Party -> Party -> Text -> Text -> Int -> [Party] -> Script Id

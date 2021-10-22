@@ -336,16 +336,17 @@ createClearingDeposit wt lp@LedgerParties{userAdmin = operator, custodian, ccp} 
       with tokenId = usdTokenId, depositQuantity = amount, beneficiary = investor
 
   -- > allocate deposit to CCP for Clearing Account
-  transferRequestCid <- investor `submit` exerciseByKeyCmd @Investor (operator, investor) Investor_AllocateToProvider
+  depositCid <- investor `submit` exerciseByKeyCmd @Investor (operator, investor) Investor_AllocateToProvider
       with depositCids = [depositCid], amount = amount, provider = ccp
+  return $ Some depositCid
 
-  if wt
-  then do
-    sleep (decToRelTime 0.25)
-    return None
-  else do
-    depositCid <- custodian `submit` exerciseCmd transferRequestCid DepositTransferRequest_Approve
-    return $ Some depositCid
+  -- if wt
+  -- then do
+  --   sleep (decToRelTime 0.25)
+  --   return None
+  -- else do
+  --   depositCid <- custodian `submit` exerciseCmd transferRequestCid DepositTransferRequest_Approve
+  --   return $ Some depositCid
 
 createToken : Party -> Party -> Text -> Text -> Int -> [Party] -> Script Id
 createToken operator issuer name description quantityPrecision observers = do
