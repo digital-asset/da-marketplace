@@ -20,7 +20,7 @@ import Marketplace.Distribution.Syndication.Bidding.Model qualified as Bidding
 import Marketplace.Distribution.Syndication.Bidding.Service qualified as Bidding
 import Marketplace.Distribution.Syndication.BookBuilding.Model qualified as BookBuilding
 import Marketplace.Distribution.Syndication.BookBuilding.Service qualified as BookBuilding
-import Marketplace.Distribution.Syndication.BookRunner qualified as BookRunner
+import Marketplace.Distribution.Syndication.Structurer qualified as Structurer
 import Marketplace.Distribution.Syndication.Distributor qualified as Distributor
 import Marketplace.Distribution.Syndication.Structuring.Model qualified as Structuring
 import Marketplace.Distribution.Syndication.Structuring.Service qualified as Structuring
@@ -31,8 +31,7 @@ import Tests.Utils
 createCustodianRole : Party -> Party -> Script (ContractId Custodian.Role)
 createCustodianRole operator provider = do
   custodianRoleOfferCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferCustodianRole with provider
-  (custodianRoleCid, _, _)  <- submit provider do exerciseCmd custodianRoleOfferCid Custodian.Accept
-  pure custodianRoleCid
+  submit provider do exerciseCmd custodianRoleOfferCid Custodian.Accept
 
 createCustodyService : Party -> Party -> Party -> Script (ContractId Custody.Service, Account)
 createCustodyService operator provider customer = do
@@ -46,10 +45,10 @@ createIssuanceService operator provider customer = do
   issuanceServiceOfferCid <- submit provider do exerciseByKeyCmd @Custodian.Role (operator, provider) Custodian.OfferIssuanceService with ..
   submit customer do exerciseCmd issuanceServiceOfferCid Issuance.Accept
 
-createBookRunnerRole : Party -> Party -> Script (ContractId BookRunner.Role)
-createBookRunnerRole operator provider = do
-  bookRunnerRoleOfferCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferSyndicationBookRunnerRole with provider
-  submit provider do exerciseCmd bookRunnerRoleOfferCid BookRunner.Accept
+createStructurerRole : Party -> Party -> Script (ContractId Structurer.Role)
+createStructurerRole operator provider = do
+  structurerRoleOfferCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferSyndicationStructurerRole with provider
+  submit provider do exerciseCmd structurerRoleOfferCid Structurer.Accept
 
 createDistributorRole : Party -> Party -> Script (ContractId Distributor.Role)
 createDistributorRole operator provider = do
@@ -58,7 +57,7 @@ createDistributorRole operator provider = do
 
 createStructuringService : Party -> Party -> Party -> Script (ContractId Structuring.Service)
 createStructuringService operator provider customer = do
-  structuringServiceOfferCid <- submit provider do exerciseByKeyCmd @BookRunner.Role (operator, provider) BookRunner.OfferStructuringService with ..
+  structuringServiceOfferCid <- submit provider do exerciseByKeyCmd @Structurer.Role (operator, provider) Structurer.OfferStructuringService with ..
   submit customer do exerciseCmd structuringServiceOfferCid Structuring.Accept
 
 createBookBuildingService : Party -> Party -> Party -> Script (ContractId BookBuilding.Service)
@@ -196,6 +195,7 @@ test1 = do
   submitMulti [operator, investor312] [] $ createCmd Structuring.AccountInfo with operator; party = investor312; ownAccount = None; cashAccount = Some investor312CashAccount; securitiesAccount = Some investor312BondAccount
 
   createIssuanceService operator bondRegistrar issuer
+  createIssuanceService operator cashProvider cashProvider
 
   (_, usd)  <- originate operator cashProvider cashProvider public "USD" Zero
   (_, bond) <- originate operator bondRegistrar issuer public "BOND1" $ bond usd.assetId 100_000_000.0 0.02275 (unrollDates 2021 2023 [Jan,Jul] 15)
@@ -213,7 +213,7 @@ test1 = do
   Some bondDeposit <- queryContractId @AssetDeposit issuer bondDepositCid
 
   --- Syndication ---
-  createBookRunnerRole operator lm1
+  createStructurerRole operator lm1
 
   createDistributorRole operator issuer
   createDistributorRole operator lm1

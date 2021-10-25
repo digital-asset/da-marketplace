@@ -5,7 +5,7 @@ import DA.Finance.Types
 import DA.Finance.Utils (fetchAndArchive)
 import DA.Map (Map)
 import DA.Set
-import Marketplace.Issuance.AssetDescription (Claims, AssetDescription(..))
+import Marketplace.Issuance.AssetDescription (Claims)
 import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Settlement.Model (SettlementInstruction)
 import Marketplace.Utils
