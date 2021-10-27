@@ -2337,7 +2337,7 @@
 												],
 												"body": {
 													"mode": "raw",
-													"raw": "{\n    \"templateId\": \"{{TemplateID}}:Marketplace.Operator.Role:Role\",\n    \"payload\": {\n        \"operator\": \"{{OperatorParty}}\",\n        \"observers\": {\n            \"map\": [\n                [\n                    \"{{PublicParty}}\",\n                    {}\n                ]\n            ]\n        }\n    }\n}",
+													"raw": "{\n    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Operator.Role:Role\",\n    \"payload\": {\n        \"operator\": \"Operator\",\n        \"observers\": {\n            \"map\": [\n                [\n                    \"Public\",\n                    {}\n                ]\n            ]\n        }\n    }\n}",
 													"options": {
 														"raw": {
 															"language": "json"
@@ -4840,7 +4840,7 @@
 									]
 								},
 								{
-									"name": "Open Account request",
+									"name": "Deposit request",
 									"event": [
 										{
 											"listen": "prerequest",
@@ -4876,349 +4876,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"templateId\": \"{{TemplateID}}:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"{{OperatorParty}}\",\n        \"_2\": \"{{ProviderParty}}\",\n        \"_3\": \"{{CustomerParty}}\"\n    },\n    \"choice\": \"RequestOpenAccount\",\n    \"argument\": {\n        \"accountId\": {\n            \"label\": \"{{AccountLabel}}\",\n            \"signatories\": {\n                \"map\": [\n                    [\n                        \"{{ProviderParty}}\",\n                        {}\n                    ],\n                    [\n                        \"{{CustomerParty}}\",\n                        {}\n                    ]\n                ]\n            },\n            \"version\": \"0\"\n        },\n        \"observers\": {{ObserversList}},\n        \"ctrls\": {{ControllersList}}\n    }\n}",
-											"options": {
-												"raw": {
-													"language": "json"
-												}
-											}
-										},
-										"url": {
-											"raw": "{{BaseURL}}/v1/exercise",
-											"host": [
-												"{{BaseURL}}"
-											],
-											"path": [
-												"v1",
-												"exercise"
-											]
-										},
-										"description": "Request to open an account. A customer makes this request and then the service provider can either approve to reject the request."
-									},
-									"response": [
-										{
-											"name": "Open Account request",
-											"originalRequest": {
-												"method": "POST",
-												"header": [
-													{
-														"key": "Authorization",
-														"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJodHRwczovL2RhbWwuY29tL2xlZGdlci1hcGkiOnsibGVkZ2VySWQiOiJkYS1tYXJrZXRwbGFjZS1zYW5kYm94IiwiYXBwbGljYXRpb25JZCI6ImRhLW1hcmtldHBsYWNlIiwiYWN0QXMiOlsiQWxpY2UiXSwicmVhZEFzIjpbIkFsaWNlIiwiUHVibGljIl19fQ.8-G8p3E-v1tcJ149u5c0ygMIidJurDFoAHEx_j2ojUs",
-														"type": "text"
-													}
-												],
-												"body": {
-													"mode": "raw",
-													"raw": "{\n    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"Operator\",\n        \"_2\": \"Bank\",\n        \"_3\": \"Alice\"\n    },\n    \"choice\": \"RequestOpenAccount\",\n    \"argument\": {\n        \"accountId\": {\n            \"label\": \"MainAccount-Alice\",\n            \"signatories\": {\n                \"map\": [\n                    [\n                        \"Bank\",\n                        {}\n                    ],\n                    [\n                        \"Alice\",\n                        {}\n                    ]\n                ]\n            },\n            \"version\": \"0\"\n        },\n        \"observers\": [\"Exchange\", \"Bank\"],\n        \"ctrls\": [\"Bank\", \"Alice\", \"Issuer\"]\n    }\n}",
-													"options": {
-														"raw": {
-															"language": "json"
-														}
-													}
-												},
-												"url": {
-													"raw": "{{BaseURL}}/v1/exercise",
-													"host": [
-														"{{BaseURL}}"
-													],
-													"path": [
-														"v1",
-														"exercise"
-													]
-												}
-											},
-											"status": "OK",
-											"code": 200,
-											"_postman_previewlanguage": "json",
-											"header": [
-												{
-													"key": "Server",
-													"value": "akka-http/10.2.1"
-												},
-												{
-													"key": "Date",
-													"value": "Wed, 28 Jul 2021 06:45:27 GMT"
-												},
-												{
-													"key": "Content-Type",
-													"value": "application/json"
-												},
-												{
-													"key": "Content-Length",
-													"value": "688"
-												}
-											],
-											"cookie": [],
-											"body": "{\n    \"result\": {\n        \"events\": [\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"0081705b88516d116ef7616b600433267c7f2acfdcf76888fc2cf855b593e592c4\",\n                    \"observers\": [],\n                    \"payload\": {\n                        \"observers\": {\n                            \"map\": [\n                                [\n                                    \"Bank\",\n                                    {}\n                                ],\n                                [\n                                    \"Exchange\",\n                                    {}\n                                ]\n                            ]\n                        },\n                        \"provider\": \"Bank\",\n                        \"accountId\": {\n                            \"signatories\": {\n                                \"map\": [\n                                    [\n                                        \"Alice\",\n                                        {}\n                                    ],\n                                    [\n                                        \"Bank\",\n                                        {}\n                                    ]\n                                ]\n                            },\n                            \"label\": \"MainAccount-Alice\",\n                            \"version\": \"0\"\n                        },\n                        \"operator\": \"Operator\",\n                        \"customer\": \"Alice\",\n                        \"ctrls\": {\n                            \"map\": [\n                                [\n                                    \"Alice\",\n                                    {}\n                                ],\n                                [\n                                    \"Bank\",\n                                    {}\n                                ],\n                                [\n                                    \"Issuer\",\n                                    {}\n                                ]\n                            ]\n                        }\n                    },\n                    \"signatories\": [\n                        \"Alice\",\n                        \"Bank\",\n                        \"Operator\"\n                    ],\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Custody.Model:OpenAccountRequest\"\n                }\n            }\n        ],\n        \"exerciseResult\": \"0081705b88516d116ef7616b600433267c7f2acfdcf76888fc2cf855b593e592c4\"\n    },\n    \"status\": 200\n}"
-										}
-									]
-								},
-								{
-									"name": "Open Allocation Account request",
-									"event": [
-										{
-											"listen": "prerequest",
-											"script": {
-												"exec": [
-													""
-												],
-												"type": "text/javascript"
-											}
-										},
-										{
-											"listen": "test",
-											"script": {
-												"exec": [
-													""
-												],
-												"type": "text/javascript"
-											}
-										}
-									],
-									"request": {
-										"auth": {
-											"type": "bearer",
-											"bearer": [
-												{
-													"key": "token",
-													"value": "{{CustomerToken}}",
-													"type": "string"
-												}
-											]
-										},
-										"method": "POST",
-										"header": [],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n    \"templateId\": \"{{TemplateID}}:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"{{OperatorParty}}\",\n        \"_2\": \"{{ProviderParty}}\",\n        \"_3\": \"{{CustomerParty}}\"\n    },\n    \"choice\": \"RequestOpenAllocationAccount\",\n    \"argument\": {\n        \"accountId\": {\n            \"label\": \"{{AllocationAccountLabel}}\",\n            \"signatories\": {\n                \"map\": [\n                    [\n                        \"{{ProviderParty}}\",\n                        {}\n                    ],\n                    [\n                        \"{{CustomerParty}}\",\n                        {}\n                    ]\n                ]\n            },\n            \"version\": \"0\"\n        },\n        \"nominee\": \"{{NomineeParty}}\",\n        \"observers\": {{ObserverMap}}\n    }\n}",
-											"options": {
-												"raw": {
-													"language": "json"
-												}
-											}
-										},
-										"url": {
-											"raw": "{{BaseURL}}/v1/exercise",
-											"host": [
-												"{{BaseURL}}"
-											],
-											"path": [
-												"v1",
-												"exercise"
-											]
-										},
-										"description": "Request to open an allocation account. \n\nAllocation accounts are required for certain services where collateral from the customer needs to be \"locked\". For example, to cover a trade in a collateralized market or a bid in a Primary Distribution of an asset."
-									},
-									"response": [
-										{
-											"name": "Open Allocation Account request",
-											"originalRequest": {
-												"method": "POST",
-												"header": [
-													{
-														"key": "Authorization",
-														"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJodHRwczovL2RhbWwuY29tL2xlZGdlci1hcGkiOnsibGVkZ2VySWQiOiJkYS1tYXJrZXRwbGFjZS1zYW5kYm94IiwiYXBwbGljYXRpb25JZCI6ImRhLW1hcmtldHBsYWNlIiwiYWN0QXMiOlsiQWxpY2UiXSwicmVhZEFzIjpbIkFsaWNlIiwiUHVibGljIl19fQ.8-G8p3E-v1tcJ149u5c0ygMIidJurDFoAHEx_j2ojUs",
-														"type": "text"
-													}
-												],
-												"body": {
-													"mode": "raw",
-													"raw": "{\n    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"Operator\",\n        \"_2\": \"Bank\",\n        \"_3\": \"Alice\"\n    },\n    \"choice\": \"RequestOpenAllocationAccount\",\n    \"argument\": {\n        \"accountId\": {\n            \"label\": \"AllocationAccount-Alice\",\n            \"signatories\": {\n                \"map\": [\n                    [\n                        \"Bank\",\n                        {}\n                    ],\n                    [\n                        \"Alice\",\n                        {}\n                    ]\n                ]\n            },\n            \"version\": \"0\"\n        },\n        \"nominee\": \"Bank\",\n        \"observers\": [[]]\n    }\n}",
-													"options": {
-														"raw": {
-															"language": "json"
-														}
-													}
-												},
-												"url": {
-													"raw": "{{BaseURL}}/v1/exercise",
-													"host": [
-														"{{BaseURL}}"
-													],
-													"path": [
-														"v1",
-														"exercise"
-													]
-												}
-											},
-											"status": "OK",
-											"code": 200,
-											"_postman_previewlanguage": "json",
-											"header": [
-												{
-													"key": "Server",
-													"value": "akka-http/10.2.1"
-												},
-												{
-													"key": "Date",
-													"value": "Wed, 28 Jul 2021 07:06:09 GMT"
-												},
-												{
-													"key": "Content-Type",
-													"value": "application/json"
-												},
-												{
-													"key": "Content-Length",
-													"value": "651"
-												}
-											],
-											"cookie": [],
-											"body": "{\n    \"result\": {\n        \"events\": [\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"00f8e165d581553ad7951ca43bf1ad56253c28990daca7bb64ca1487d2c85aab3d\",\n                    \"observers\": [],\n                    \"payload\": {\n                        \"observers\": {\n                            \"map\": []\n                        },\n                        \"provider\": \"Bank\",\n                        \"accountId\": {\n                            \"signatories\": {\n                                \"map\": [\n                                    [\n                                        \"Alice\",\n                                        {}\n                                    ],\n                                    [\n                                        \"Bank\",\n                                        {}\n                                    ]\n                                ]\n                            },\n                            \"label\": \"AllocationAccount-Alice\",\n                            \"version\": \"0\"\n                        },\n                        \"operator\": \"Operator\",\n                        \"customer\": \"Alice\",\n                        \"nominee\": \"Bank\"\n                    },\n                    \"signatories\": [\n                        \"Alice\",\n                        \"Bank\",\n                        \"Operator\"\n                    ],\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Custody.Model:OpenAllocationAccountRequest\"\n                }\n            }\n        ],\n        \"exerciseResult\": \"00f8e165d581553ad7951ca43bf1ad56253c28990daca7bb64ca1487d2c85aab3d\"\n    },\n    \"status\": 200\n}"
-										}
-									]
-								},
-								{
-									"name": "Close Account request",
-									"event": [
-										{
-											"listen": "prerequest",
-											"script": {
-												"exec": [
-													""
-												],
-												"type": "text/javascript"
-											}
-										},
-										{
-											"listen": "test",
-											"script": {
-												"exec": [
-													""
-												],
-												"type": "text/javascript"
-											}
-										}
-									],
-									"request": {
-										"auth": {
-											"type": "bearer",
-											"bearer": [
-												{
-													"key": "token",
-													"value": "{{CustomerToken}}",
-													"type": "string"
-												}
-											]
-										},
-										"method": "POST",
-										"header": [],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n    \"templateId\": \"{{TemplateID}}:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"{{OperatorParty}}\",\n        \"_2\": \"{{ProviderParty}}\",\n        \"_3\": \"{{CustomerParty}}\"\n    },\n    \"choice\": \"RequestCloseAccount\",\n    \"argument\": {\n        \"accountId\": {\n            \"label\": \"{{AccountLabel}}\",\n            \"signatories\": {\n                \"map\": [\n                    [\n                        \"{{ProviderParty}}\",\n                        {}\n                    ],\n                    [\n                        \"{{CustomerParty}}\",\n                        {}\n                    ]\n                ]\n            },\n            \"version\": \"0\"\n        }\n    }\n}",
-											"options": {
-												"raw": {
-													"language": "json"
-												}
-											}
-										},
-										"url": {
-											"raw": "{{BaseURL}}/v1/exercise",
-											"host": [
-												"{{BaseURL}}"
-											],
-											"path": [
-												"v1",
-												"exercise"
-											]
-										},
-										"description": "Request to close an account."
-									},
-									"response": [
-										{
-											"name": "Close Account request",
-											"originalRequest": {
-												"method": "POST",
-												"header": [
-													{
-														"key": "Authorization",
-														"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJodHRwczovL2RhbWwuY29tL2xlZGdlci1hcGkiOnsibGVkZ2VySWQiOiJkYS1tYXJrZXRwbGFjZS1zYW5kYm94IiwiYXBwbGljYXRpb25JZCI6ImRhLW1hcmtldHBsYWNlIiwiYWN0QXMiOlsiQWxpY2UiXSwicmVhZEFzIjpbIkFsaWNlIiwiUHVibGljIl19fQ.8-G8p3E-v1tcJ149u5c0ygMIidJurDFoAHEx_j2ojUs",
-														"type": "text"
-													}
-												],
-												"body": {
-													"mode": "raw",
-													"raw": "{\n    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"Operator\",\n        \"_2\": \"Bank\",\n        \"_3\": \"Alice\"\n    },\n    \"choice\": \"RequestCloseAccount\",\n    \"argument\": {\n        \"accountId\": {\n            \"label\": \"MainAccount-Alice\",\n            \"signatories\": {\n                \"map\": [\n                    [\n                        \"Bank\",\n                        {}\n                    ],\n                    [\n                        \"Alice\",\n                        {}\n                    ]\n                ]\n            },\n            \"version\": \"0\"\n        }\n    }\n}",
-													"options": {
-														"raw": {
-															"language": "json"
-														}
-													}
-												},
-												"url": {
-													"raw": "{{BaseURL}}/v1/exercise",
-													"host": [
-														"{{BaseURL}}"
-													],
-													"path": [
-														"v1",
-														"exercise"
-													]
-												}
-											},
-											"status": "OK",
-											"code": 200,
-											"_postman_previewlanguage": "json",
-											"header": [
-												{
-													"key": "Server",
-													"value": "akka-http/10.2.1"
-												},
-												{
-													"key": "Date",
-													"value": "Wed, 28 Jul 2021 07:12:42 GMT"
-												},
-												{
-													"key": "Content-Type",
-													"value": "application/json"
-												},
-												{
-													"key": "Content-Length",
-													"value": "596"
-												}
-											],
-											"cookie": [],
-											"body": "{\n    \"result\": {\n        \"events\": [\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"006ca64f1bdf0fd546abc442f5ae26abbdb9743f1c228eda5e4f2c054b6a4081a3\",\n                    \"observers\": [],\n                    \"payload\": {\n                        \"operator\": \"Operator\",\n                        \"provider\": \"Bank\",\n                        \"customer\": \"Alice\",\n                        \"accountId\": {\n                            \"signatories\": {\n                                \"map\": [\n                                    [\n                                        \"Alice\",\n                                        {}\n                                    ],\n                                    [\n                                        \"Bank\",\n                                        {}\n                                    ]\n                                ]\n                            },\n                            \"label\": \"MainAccount-Alice\",\n                            \"version\": \"0\"\n                        }\n                    },\n                    \"signatories\": [\n                        \"Alice\",\n                        \"Bank\",\n                        \"Operator\"\n                    ],\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Custody.Model:CloseAccountRequest\"\n                }\n            }\n        ],\n        \"exerciseResult\": \"006ca64f1bdf0fd546abc442f5ae26abbdb9743f1c228eda5e4f2c054b6a4081a3\"\n    },\n    \"status\": 200\n}"
-										}
-									]
-								},
-								{
-									"name": "Credit Account request",
-									"event": [
-										{
-											"listen": "prerequest",
-											"script": {
-												"exec": [
-													""
-												],
-												"type": "text/javascript"
-											}
-										},
-										{
-											"listen": "test",
-											"script": {
-												"exec": [
-													""
-												],
-												"type": "text/javascript"
-											}
-										}
-									],
-									"request": {
-										"auth": {
-											"type": "bearer",
-											"bearer": [
-												{
-													"key": "token",
-													"value": "{{CustomerToken}}",
-													"type": "string"
-												}
-											]
-										},
-										"method": "POST",
-										"header": [],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n    \"templateId\": \"{{TemplateID}}:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"{{OperatorParty}}\",\n        \"_2\": \"{{ProviderParty}}\",\n        \"_3\": \"{{CustomerParty}}\"\n    },\n    \"choice\": \"RequestCreditAccount\",\n    \"argument\": {\n        \"accountId\": {\n            \"label\": \"{{AccountLabel}}\",\n            \"signatories\": {\n                \"map\": [\n                    [\n                        \"{{ProviderParty}}\",\n                        {}\n                    ],\n                    [\n                        \"{{CustomerParty}}\",\n                        {}\n                    ]\n                ]\n            },\n            \"version\": \"0\"\n        },\n        \"asset\": {\n            \"id\": {\n                \"label\": \"{{AssetIdLabel}}\",\n                \"signatories\": {\n                    \"map\": [\n                        [\n                            \"{{ProviderParty}}\",\n                            {}\n                        ],\n                        [\n                            \"{{IssuerParty}}\",\n                            {}\n                        ]\n                    ]\n                },\n                \"version\": \"{{AssetVersion}}\"\n            },\n            \"quantity\": {{CreditQuantity}}\n        }\n    }\n}",
+											"raw": "{\n    \"templateId\": \"{{TemplateID}}:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"{{OperatorParty}}\",\n        \"_2\": \"{{ProviderParty}}\",\n        \"_3\": \"{{CustomerParty}}\"\n    },\n    \"choice\": \"RequestDeposit\",\n    \"argument\": {\n        \"asset\": {\n            \"id\": {\n                \"label\": \"{{AssetIdLabel}}\",\n                \"signatories\": {\n                    \"map\": [\n                        [\n                            \"{{ProviderParty}}\",\n                            {}\n                        ],\n                        [\n                            \"{{IssuerParty}}\",\n                            {}\n                        ]\n                    ]\n                },\n                \"version\": \"{{AssetVersion}}\"\n            },\n            \"quantity\": {{CreditQuantity}}\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5239,19 +4897,13 @@
 									},
 									"response": [
 										{
-											"name": "Credit Account request",
+											"name": "Deposit request",
 											"originalRequest": {
 												"method": "POST",
-												"header": [
-													{
-														"key": "Authorization",
-														"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJodHRwczovL2RhbWwuY29tL2xlZGdlci1hcGkiOnsibGVkZ2VySWQiOiJkYS1tYXJrZXRwbGFjZS1zYW5kYm94IiwiYXBwbGljYXRpb25JZCI6ImRhLW1hcmtldHBsYWNlIiwiYWN0QXMiOlsiQWxpY2UiXSwicmVhZEFzIjpbIkFsaWNlIiwiUHVibGljIl19fQ.8-G8p3E-v1tcJ149u5c0ygMIidJurDFoAHEx_j2ojUs",
-														"type": "text"
-													}
-												],
+												"header": [],
 												"body": {
 													"mode": "raw",
-													"raw": "{\n    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"Operator\",\n        \"_2\": \"Bank\",\n        \"_3\": \"Alice\"\n    },\n    \"choice\": \"RequestCreditAccount\",\n    \"argument\": {\n        \"accountId\": {\n            \"label\": \"MainAccount-Alice\",\n            \"signatories\": {\n                \"map\": [\n                    [\n                        \"Bank\",\n                        {}\n                    ],\n                    [\n                        \"Alice\",\n                        {}\n                    ]\n                ]\n            },\n            \"version\": \"0\"\n        },\n        \"asset\": {\n            \"id\": {\n                \"label\": \"USD\",\n                \"signatories\": {\n                    \"map\": [\n                        [\n                            \"Bank\",\n                            {}\n                        ],\n                        [\n                            \"Issuer\",\n                            {}\n                        ]\n                    ]\n                },\n                \"version\": \"0\"\n            },\n            \"quantity\": 50.0\n        }\n    }\n}",
+													"raw": "{\n    \"templateId\": \"3b93defed8dec45bfbe94268b0d1fd1aef5070d2f0cbe37a5585ae896ca7da35:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"Operator\",\n        \"_2\": \"Bank\",\n        \"_3\": \"Alice\"\n    },\n    \"choice\": \"RequestDeposit\",\n    \"argument\": {\n        \"asset\": {\n            \"id\": {\n                \"label\": \"BTC\",\n                \"signatories\": {\n                    \"map\": [\n                        [\n                            \"Bank\",\n                            {}\n                        ],\n                        [\n                            \"Issuer\",\n                            {}\n                        ]\n                    ]\n                },\n                \"version\": \"0\"\n            },\n            \"quantity\": 50.0\n        }\n    }\n}",
 													"options": {
 														"raw": {
 															"language": "json"
@@ -5279,7 +4931,7 @@
 												},
 												{
 													"key": "Date",
-													"value": "Wed, 28 Jul 2021 12:52:05 GMT"
+													"value": "Wed, 27 Oct 2021 07:06:12 GMT"
 												},
 												{
 													"key": "Content-Type",
@@ -5287,16 +4939,16 @@
 												},
 												{
 													"key": "Content-Length",
-													"value": "710"
+													"value": "599"
 												}
 											],
 											"cookie": [],
-											"body": "{\n    \"result\": {\n        \"events\": [\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"00f34c36f77f23500c5ed9a1d9fa12bffb12bfdf71b4ec9bc84b74814e11ed4174\",\n                    \"observers\": [],\n                    \"payload\": {\n                        \"provider\": \"Bank\",\n                        \"accountId\": {\n                            \"signatories\": {\n                                \"map\": [\n                                    [\n                                        \"Alice\",\n                                        {}\n                                    ],\n                                    [\n                                        \"Bank\",\n                                        {}\n                                    ]\n                                ]\n                            },\n                            \"label\": \"MainAccount-Alice\",\n                            \"version\": \"0\"\n                        },\n                        \"operator\": \"Operator\",\n                        \"customer\": \"Alice\",\n                        \"asset\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Issuer\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"USD\",\n                                \"version\": \"0\"\n                            },\n                            \"quantity\": \"50.0\"\n                        }\n                    },\n                    \"signatories\": [\n                        \"Alice\",\n                        \"Bank\",\n                        \"Operator\"\n                    ],\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Custody.Model:CreditAccountRequest\"\n                }\n            }\n        ],\n        \"exerciseResult\": \"00f34c36f77f23500c5ed9a1d9fa12bffb12bfdf71b4ec9bc84b74814e11ed4174\"\n    },\n    \"status\": 200\n}"
+											"body": "{\n    \"result\": {\n        \"events\": [\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"0079fd89264440f3b0cf3036e499e1907e60ae9d0603bde6201c445230cd665b22\",\n                    \"observers\": [],\n                    \"payload\": {\n                        \"operator\": \"Operator\",\n                        \"provider\": \"Bank\",\n                        \"customer\": \"Alice\",\n                        \"asset\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Issuer\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"USD\",\n                                \"version\": \"0\"\n                            },\n                            \"quantity\": \"50.0\"\n                        }\n                    },\n                    \"signatories\": [\n                        \"Alice\",\n                        \"Bank\",\n                        \"Operator\"\n                    ],\n                    \"templateId\": \"3b93defed8dec45bfbe94268b0d1fd1aef5070d2f0cbe37a5585ae896ca7da35:Marketplace.Custody.Model:DepositRequest\"\n                }\n            }\n        ],\n        \"exerciseResult\": \"0079fd89264440f3b0cf3036e499e1907e60ae9d0603bde6201c445230cd665b22\"\n    },\n    \"status\": 200\n}"
 										}
 									]
 								},
 								{
-									"name": "Debit Account request",
+									"name": "Withdrawal request",
 									"event": [
 										{
 											"listen": "prerequest",
@@ -5332,7 +4984,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"templateId\": \"{{TemplateID}}:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"{{OperatorParty}}\",\n        \"_2\": \"{{ProviderParty}}\",\n        \"_3\": \"{{CustomerParty}}\"\n    },\n    \"choice\": \"RequestDebitAccount\",\n    \"argument\": {\n        \"accountId\": {\n            \"label\": \"MainAccount-Alice\",\n            \"signatories\": {\n                \"map\": [\n                    [\n                        \"{{ProviderParty}}\",\n                        {}\n                    ],\n                    [\n                        \"{{CustomerParty}}\",\n                        {}\n                    ]\n                ]\n            },\n            \"version\": \"0\"\n        },\n        \"debit\": {\n            \"depositCid\": \"{{DepositContractId}}\"\n        }\n    }\n}",
+											"raw": "{\n    \"templateId\": \"{{TemplateID}}:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"{{OperatorParty}}\",\n        \"_2\": \"{{ProviderParty}}\",\n        \"_3\": \"{{CustomerParty}}\"\n    },\n    \"choice\": \"RequestWithdrawal\",\n    \"argument\": {\n        \"depositCid\": \"{{DepositContractId}}\"\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5349,23 +5001,17 @@
 												"exercise"
 											]
 										},
-										"description": "A client request to debit their account."
+										"description": "Request to open an allocation account. \n\nAllocation accounts are required for certain services where collateral from the customer needs to be \"locked\". For example, to cover a trade in a collateralized market or a bid in a Primary Distribution of an asset."
 									},
 									"response": [
 										{
-											"name": "Debit Account request",
+											"name": "Withdrawal request",
 											"originalRequest": {
 												"method": "POST",
-												"header": [
-													{
-														"key": "Authorization",
-														"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJodHRwczovL2RhbWwuY29tL2xlZGdlci1hcGkiOnsibGVkZ2VySWQiOiJkYS1tYXJrZXRwbGFjZS1zYW5kYm94IiwiYXBwbGljYXRpb25JZCI6ImRhLW1hcmtldHBsYWNlIiwiYWN0QXMiOlsiQWxpY2UiXSwicmVhZEFzIjpbIkFsaWNlIiwiUHVibGljIl19fQ.8-G8p3E-v1tcJ149u5c0ygMIidJurDFoAHEx_j2ojUs",
-														"type": "text"
-													}
-												],
+												"header": [],
 												"body": {
 													"mode": "raw",
-													"raw": "{\n    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"Operator\",\n        \"_2\": \"Bank\",\n        \"_3\": \"Alice\"\n    },\n    \"choice\": \"RequestDebitAccount\",\n    \"argument\": {\n        \"accountId\": {\n            \"label\": \"MainAccount-Alice\",\n            \"signatories\": {\n                \"map\": [\n                    [\n                        \"Bank\",\n                        {}\n                    ],\n                    [\n                        \"Alice\",\n                        {}\n                    ]\n                ]\n            },\n            \"version\": \"0\"\n        },\n        \"debit\": {\n            \"depositCid\": \"00262bc12679725335db96f784ef537d0b22f1cdf57503a5273f273816263d0568\"\n        }\n    }\n}",
+													"raw": "{\n    \"templateId\": \"3b93defed8dec45bfbe94268b0d1fd1aef5070d2f0cbe37a5585ae896ca7da35:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"Operator\",\n        \"_2\": \"Bank\",\n        \"_3\": \"Alice\"\n    },\n    \"choice\": \"RequestWithdrawal\",\n    \"argument\": {\n        \"depositCid\": \"00fa636cfe32a683b302cc93729898050b89da29e5178ea357a078504bef8f1b17\"\n    }\n}",
 													"options": {
 														"raw": {
 															"language": "json"
@@ -5393,7 +5039,7 @@
 												},
 												{
 													"key": "Date",
-													"value": "Wed, 28 Jul 2021 12:56:58 GMT"
+													"value": "Wed, 27 Oct 2021 07:16:25 GMT"
 												},
 												{
 													"key": "Content-Type",
@@ -5401,125 +5047,11 @@
 												},
 												{
 													"key": "Content-Length",
-													"value": "688"
+													"value": "571"
 												}
 											],
 											"cookie": [],
-											"body": "{\n    \"result\": {\n        \"events\": [\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"003f45b172df98224a5d6c3ef479568535232a5fb55591b6b8da47a731e0c21176\",\n                    \"observers\": [],\n                    \"payload\": {\n                        \"provider\": \"Bank\",\n                        \"debit\": {\n                            \"depositCid\": \"00262bc12679725335db96f784ef537d0b22f1cdf57503a5273f273816263d0568\"\n                        },\n                        \"accountId\": {\n                            \"signatories\": {\n                                \"map\": [\n                                    [\n                                        \"Alice\",\n                                        {}\n                                    ],\n                                    [\n                                        \"Bank\",\n                                        {}\n                                    ]\n                                ]\n                            },\n                            \"label\": \"MainAccount-Alice\",\n                            \"version\": \"0\"\n                        },\n                        \"operator\": \"Operator\",\n                        \"customer\": \"Alice\"\n                    },\n                    \"signatories\": [\n                        \"Alice\",\n                        \"Bank\",\n                        \"Operator\"\n                    ],\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Custody.Model:DebitAccountRequest\"\n                }\n            }\n        ],\n        \"exerciseResult\": \"003f45b172df98224a5d6c3ef479568535232a5fb55591b6b8da47a731e0c21176\"\n    },\n    \"status\": 200\n}"
-										}
-									]
-								},
-								{
-									"name": "Transfer request",
-									"event": [
-										{
-											"listen": "prerequest",
-											"script": {
-												"exec": [
-													""
-												],
-												"type": "text/javascript"
-											}
-										},
-										{
-											"listen": "test",
-											"script": {
-												"exec": [
-													""
-												],
-												"type": "text/javascript"
-											}
-										}
-									],
-									"request": {
-										"auth": {
-											"type": "bearer",
-											"bearer": [
-												{
-													"key": "token",
-													"value": "{{CustomerToken}}",
-													"type": "string"
-												}
-											]
-										},
-										"method": "POST",
-										"header": [],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n    \"templateId\": \"{{TemplateID}}:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"{{OperatorParty}}\",\n        \"_2\": \"{{ProviderParty}}\",\n        \"_3\": \"{{CustomerParty}}\"\n    },\n    \"choice\": \"RequestTransferDeposit\",\n    \"argument\": {\n        \"accountId\": {\n            \"label\": \"{{AccountLabel}}\",\n            \"signatories\": {\n                \"map\": [\n                    [\n                        \"{{ProviderParty}}\",\n                        {}\n                    ],\n                    [\n                        \"{{CustomerParty}}\",\n                        {}\n                    ]\n                ]\n            },\n            \"version\": \"0\"\n        },\n        \"transfer\": {\n            \"receiverAccountId\": {\n                \"label\": \"{{ReceiverAccountLabel}}\",\n                \"signatories\": {\n                    \"map\": [\n                        [\n                            \"{{ReceiverProviderParty}}\",\n                            {}\n                        ],\n                        [\n                            \"{{ReceiverCustomerParty}}\",\n                            {}\n                        ]\n                    ]\n                },\n                \"version\": \"0\"\n            },\n            \"depositCid\": \"{{DepositContractId}}\"\n        }\n    }\n}",
-											"options": {
-												"raw": {
-													"language": "json"
-												}
-											}
-										},
-										"url": {
-											"raw": "{{BaseURL}}/v1/exercise",
-											"host": [
-												"{{BaseURL}}"
-											],
-											"path": [
-												"v1",
-												"exercise"
-											]
-										},
-										"description": "A customer request to transfer assets to another party."
-									},
-									"response": [
-										{
-											"name": "Transfer request",
-											"originalRequest": {
-												"method": "POST",
-												"header": [
-													{
-														"key": "Authorization",
-														"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJodHRwczovL2RhbWwuY29tL2xlZGdlci1hcGkiOnsibGVkZ2VySWQiOiJkYS1tYXJrZXRwbGFjZS1zYW5kYm94IiwiYXBwbGljYXRpb25JZCI6ImRhLW1hcmtldHBsYWNlIiwiYWN0QXMiOlsiQWxpY2UiXSwicmVhZEFzIjpbIkFsaWNlIiwiUHVibGljIl19fQ.8-G8p3E-v1tcJ149u5c0ygMIidJurDFoAHEx_j2ojUs",
-														"type": "text"
-													}
-												],
-												"body": {
-													"mode": "raw",
-													"raw": "{\n    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"Operator\",\n        \"_2\": \"Bank\",\n        \"_3\": \"Issuer\"\n    },\n    \"choice\": \"RequestTransferDeposit\",\n    \"argument\": {\n        \"accountId\": {\n            \"label\": \"MainAccount-Issuer\",\n            \"signatories\": {\n                \"map\": [\n                    [\n                        \"Bank\",\n                        {}\n                    ],\n                    [\n                        \"Issuer\",\n                        {}\n                    ]\n                ]\n            },\n            \"version\": \"0\"\n        },\n        \"transfer\": {\n            \"receiverAccountId\": {\n                \"label\": \"MainAccount-Alice\",\n                \"signatories\": {\n                    \"map\": [\n                        [\n                            \"Bank\",\n                            {}\n                        ],\n                        [\n                            \"Alice\",\n                            {}\n                        ]\n                    ]\n                },\n                \"version\": \"0\"\n            },\n            \"depositCid\": \"00c910b2e702dc0a73555b67e3eca395339dacc1564d75408de247490a075e8427\"\n        }\n    }\n}",
-													"options": {
-														"raw": {
-															"language": "json"
-														}
-													}
-												},
-												"url": {
-													"raw": "{{BaseURL}}/v1/exercise",
-													"host": [
-														"{{BaseURL}}"
-													],
-													"path": [
-														"v1",
-														"exercise"
-													]
-												}
-											},
-											"status": "OK",
-											"code": 200,
-											"_postman_previewlanguage": "json",
-											"header": [
-												{
-													"key": "Server",
-													"value": "akka-http/10.2.1"
-												},
-												{
-													"key": "Date",
-													"value": "Wed, 28 Jul 2021 09:29:23 GMT"
-												},
-												{
-													"key": "Content-Type",
-													"value": "application/json"
-												},
-												{
-													"key": "Content-Length",
-													"value": "811"
-												}
-											],
-											"cookie": [],
-											"body": "{\n    \"result\": {\n        \"events\": [\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"00c591196d15e06d21acf298cfa6e2054c3cda9fe6c607fce72f0b44da9c93e69c\",\n                    \"observers\": [],\n                    \"payload\": {\n                        \"provider\": \"Bank\",\n                        \"accountId\": {\n                            \"signatories\": {\n                                \"map\": [\n                                    [\n                                        \"Bank\",\n                                        {}\n                                    ],\n                                    [\n                                        \"Issuer\",\n                                        {}\n                                    ]\n                                ]\n                            },\n                            \"label\": \"MainAccount-Issuer\",\n                            \"version\": \"0\"\n                        },\n                        \"transfer\": {\n                            \"receiverAccountId\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Alice\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"MainAccount-Alice\",\n                                \"version\": \"0\"\n                            },\n                            \"depositCid\": \"00c910b2e702dc0a73555b67e3eca395339dacc1564d75408de247490a075e8427\"\n                        },\n                        \"operator\": \"Operator\",\n                        \"customer\": \"Issuer\"\n                    },\n                    \"signatories\": [\n                        \"Bank\",\n                        \"Issuer\",\n                        \"Operator\"\n                    ],\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Custody.Model:TransferDepositRequest\"\n                }\n            }\n        ],\n        \"exerciseResult\": \"00c591196d15e06d21acf298cfa6e2054c3cda9fe6c607fce72f0b44da9c93e69c\"\n    },\n    \"status\": 200\n}"
+											"body": "{\n    \"result\": {\n        \"events\": [\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"0038bd08ea95bc3561c178ec3ea2fd63d00722c3ae7161a722d418b40be015267c\",\n                    \"observers\": [],\n                    \"payload\": {\n                        \"operator\": \"Operator\",\n                        \"provider\": \"Bank\",\n                        \"customer\": \"Alice\",\n                        \"depositCid\": \"00fa636cfe32a683b302cc93729898050b89da29e5178ea357a078504bef8f1b17\"\n                    },\n                    \"signatories\": [\n                        \"Alice\",\n                        \"Bank\",\n                        \"Operator\"\n                    ],\n                    \"templateId\": \"3b93defed8dec45bfbe94268b0d1fd1aef5070d2f0cbe37a5585ae896ca7da35:Marketplace.Custody.Model:WithdrawalRequest\"\n                }\n            }\n        ],\n        \"exerciseResult\": \"0038bd08ea95bc3561c178ec3ea2fd63d00722c3ae7161a722d418b40be015267c\"\n    },\n    \"status\": 200\n}"
 										}
 									]
 								},
@@ -5581,7 +5113,7 @@
 									"response": []
 								},
 								{
-									"name": "Approve Open Account request",
+									"name": "Approve Deposit request",
 									"event": [
 										{
 											"listen": "prerequest",
@@ -5617,7 +5149,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"templateId\": \"{{TemplateID}}:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"{{OperatorParty}}\",\n        \"_2\": \"{{ProviderParty}}\",\n        \"_3\": \"{{CustomerParty}}\"\n    },\n    \"choice\": \"OpenAccount\",\n    \"argument\": {\n        \"openAccountRequestCid\": \"{{RequestContractId}}\"\n    }\n}",
+											"raw": "{\n    \"templateId\": \"{{TemplateID}}:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"{{OperatorParty}}\",\n        \"_2\": \"{{ProviderParty}}\",\n        \"_3\": \"{{CustomerParty}}\"\n    },\n    \"choice\": \"Deposit\",\n    \"argument\": {\n        \"depositRequestCid\": \"{{DepositRequestCid}}\"\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5634,23 +5166,17 @@
 												"exercise"
 											]
 										},
-										"description": "Approve the request from a customer to open an account."
+										"description": "Approve a customer request to deposit an asset into their account."
 									},
 									"response": [
 										{
-											"name": "Approve Open Account request",
+											"name": "Approve Deposit request",
 											"originalRequest": {
 												"method": "POST",
-												"header": [
-													{
-														"key": "Authorization",
-														"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJodHRwczovL2RhbWwuY29tL2xlZGdlci1hcGkiOnsibGVkZ2VySWQiOiJkYS1tYXJrZXRwbGFjZS1zYW5kYm94IiwiYXBwbGljYXRpb25JZCI6ImRhLW1hcmtldHBsYWNlIiwiYWN0QXMiOlsiQmFuayJdLCJyZWFkQXMiOlsiQmFuayIsIlB1YmxpYyJdfX0.8_mQ3wFqwdQeUauwmcLseCuB-dpU6DVFFa8cug6W3L8",
-														"type": "text"
-													}
-												],
+												"header": [],
 												"body": {
 													"mode": "raw",
-													"raw": "{\n    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"Operator\",\n        \"_2\": \"Bank\",\n        \"_3\": \"Alice\"\n    },\n    \"choice\": \"OpenAccount\",\n    \"argument\": {\n        \"openAccountRequestCid\": \"0081705b88516d116ef7616b600433267c7f2acfdcf76888fc2cf855b593e592c4\"\n    }\n}",
+													"raw": "{\n    \"templateId\": \"3b93defed8dec45bfbe94268b0d1fd1aef5070d2f0cbe37a5585ae896ca7da35:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"Operator\",\n        \"_2\": \"Bank\",\n        \"_3\": \"Alice\"\n    },\n    \"choice\": \"Deposit\",\n    \"argument\": {\n        \"depositRequestCid\": \"0079fd89264440f3b0cf3036e499e1907e60ae9d0603bde6201c445230cd665b22\"\n    }\n}",
 													"options": {
 														"raw": {
 															"language": "json"
@@ -5678,7 +5204,7 @@
 												},
 												{
 													"key": "Date",
-													"value": "Wed, 28 Jul 2021 06:46:57 GMT"
+													"value": "Wed, 27 Oct 2021 07:12:30 GMT"
 												},
 												{
 													"key": "Content-Type",
@@ -5686,16 +5212,16 @@
 												},
 												{
 													"key": "Content-Length",
-													"value": "991"
+													"value": "938"
 												}
 											],
 											"cookie": [],
-											"body": "{\n    \"result\": {\n        \"events\": [\n            {\n                \"archived\": {\n                    \"contractId\": \"0081705b88516d116ef7616b600433267c7f2acfdcf76888fc2cf855b593e592c4\",\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Custody.Model:OpenAccountRequest\"\n                }\n            },\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"0096b5450a5bbdaf3ff22be356efcf85c5dbe42ed8662fafcf4be4f1cac19cda9d\",\n                    \"key\": {\n                        \"signatories\": {\n                            \"map\": [\n                                [\n                                    \"Alice\",\n                                    {}\n                                ],\n                                [\n                                    \"Bank\",\n                                    {}\n                                ]\n                            ]\n                        },\n                        \"label\": \"MainAccount-Alice\",\n                        \"version\": \"0\"\n                    },\n                    \"observers\": [\n                        \"Exchange\",\n                        \"Issuer\"\n                    ],\n                    \"payload\": {\n                        \"account\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Alice\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"MainAccount-Alice\",\n                                \"version\": \"0\"\n                            },\n                            \"provider\": \"Bank\",\n                            \"owner\": \"Alice\"\n                        },\n                        \"observers\": {\n                            \"map\": [\n                                [\n                                    \"Bank\",\n                                    {}\n                                ],\n                                [\n                                    \"Exchange\",\n                                    {}\n                                ]\n                            ]\n                        },\n                        \"ctrls\": {\n                            \"map\": [\n                                [\n                                    \"Alice\",\n                                    {}\n                                ],\n                                [\n                                    \"Bank\",\n                                    {}\n                                ],\n                                [\n                                    \"Issuer\",\n                                    {}\n                                ]\n                            ]\n                        }\n                    },\n                    \"signatories\": [\n                        \"Alice\",\n                        \"Bank\"\n                    ],\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:DA.Finance.Asset.Settlement:AssetSettlementRule\"\n                }\n            }\n        ],\n        \"exerciseResult\": \"0096b5450a5bbdaf3ff22be356efcf85c5dbe42ed8662fafcf4be4f1cac19cda9d\"\n    },\n    \"status\": 200\n}"
+											"body": "{\n    \"result\": {\n        \"events\": [\n            {\n                \"archived\": {\n                    \"contractId\": \"0079fd89264440f3b0cf3036e499e1907e60ae9d0603bde6201c445230cd665b22\",\n                    \"templateId\": \"3b93defed8dec45bfbe94268b0d1fd1aef5070d2f0cbe37a5585ae896ca7da35:Marketplace.Custody.Model:DepositRequest\"\n                }\n            },\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"00fa636cfe32a683b302cc93729898050b89da29e5178ea357a078504bef8f1b17\",\n                    \"observers\": [\n                        \"Issuer\"\n                    ],\n                    \"payload\": {\n                        \"account\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Alice\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"Alice@Bank\",\n                                \"version\": \"0\"\n                            },\n                            \"provider\": \"Bank\",\n                            \"owner\": \"Alice\"\n                        },\n                        \"asset\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Issuer\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"USD\",\n                                \"version\": \"0\"\n                            },\n                            \"quantity\": \"50.0\"\n                        },\n                        \"lockers\": {\n                            \"map\": []\n                        },\n                        \"observers\": {\n                            \"map\": [\n                                [\n                                    \"Issuer\",\n                                    {}\n                                ]\n                            ]\n                        }\n                    },\n                    \"signatories\": [\n                        \"Alice\",\n                        \"Bank\"\n                    ],\n                    \"templateId\": \"3b93defed8dec45bfbe94268b0d1fd1aef5070d2f0cbe37a5585ae896ca7da35:DA.Finance.Asset:AssetDeposit\"\n                }\n            }\n        ],\n        \"exerciseResult\": \"00fa636cfe32a683b302cc93729898050b89da29e5178ea357a078504bef8f1b17\"\n    },\n    \"status\": 200\n}"
 										}
 									]
 								},
 								{
-									"name": "Approve Open Allocation Account request",
+									"name": "Approve Withdrawal request",
 									"event": [
 										{
 											"listen": "prerequest",
@@ -5731,7 +5257,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"templateId\": \"{{TemplateID}}:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"{{OperatorParty}}\",\n        \"_2\": \"{{ProviderParty}}\",\n        \"_3\": \"{{CustomerParty}}\"\n    },\n    \"choice\": \"OpenAllocationAccount\",\n    \"argument\": {\n        \"openAllocationAccountRequestCid\": \"{{RequestContractId}}\"\n    }\n}",
+											"raw": "{\n    \"templateId\": \"{{TemplateID}}:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"{{OperatorParty}}\",\n        \"_2\": \"{{ProviderParty}}\",\n        \"_3\": \"{{CustomerParty}}\"\n    },\n    \"choice\": \"Withdrawal\",\n    \"argument\": {\n        \"withdrawalRequestCid\": \"{{RequestContractId}}\"\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5748,23 +5274,17 @@
 												"exercise"
 											]
 										},
-										"description": "Approve the request from a customer to open an allocation account."
+										"description": "Approve the request from a customer to withdraw a deposit from the custodian."
 									},
 									"response": [
 										{
-											"name": "Approve Open Allocation Account request",
+											"name": "Approve Withdrawl request",
 											"originalRequest": {
 												"method": "POST",
-												"header": [
-													{
-														"key": "Authorization",
-														"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJodHRwczovL2RhbWwuY29tL2xlZGdlci1hcGkiOnsibGVkZ2VySWQiOiJkYS1tYXJrZXRwbGFjZS1zYW5kYm94IiwiYXBwbGljYXRpb25JZCI6ImRhLW1hcmtldHBsYWNlIiwiYWN0QXMiOlsiQmFuayJdLCJyZWFkQXMiOlsiQmFuayIsIlB1YmxpYyJdfX0.8_mQ3wFqwdQeUauwmcLseCuB-dpU6DVFFa8cug6W3L8",
-														"type": "text"
-													}
-												],
+												"header": [],
 												"body": {
 													"mode": "raw",
-													"raw": "{\n    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"Operator\",\n        \"_2\": \"Bank\",\n        \"_3\": \"Alice\"\n    },\n    \"choice\": \"OpenAllocationAccount\",\n    \"argument\": {\n        \"openAllocationAccountRequestCid\": \"00f8e165d581553ad7951ca43bf1ad56253c28990daca7bb64ca1487d2c85aab3d\"\n    }\n}",
+													"raw": "{\n    \"templateId\": \"3b93defed8dec45bfbe94268b0d1fd1aef5070d2f0cbe37a5585ae896ca7da35:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"Operator\",\n        \"_2\": \"Bank\",\n        \"_3\": \"Alice\"\n    },\n    \"choice\": \"Withdrawal\",\n    \"argument\": {\n        \"withdrawalRequestCid\": \"0038bd08ea95bc3561c178ec3ea2fd63d00722c3ae7161a722d418b40be015267c\"\n    }\n}",
 													"options": {
 														"raw": {
 															"language": "json"
@@ -5792,7 +5312,7 @@
 												},
 												{
 													"key": "Date",
-													"value": "Wed, 28 Jul 2021 07:07:01 GMT"
+													"value": "Wed, 27 Oct 2021 07:18:25 GMT"
 												},
 												{
 													"key": "Content-Type",
@@ -5800,525 +5320,11 @@
 												},
 												{
 													"key": "Content-Length",
-													"value": "1010"
+													"value": "484"
 												}
 											],
 											"cookie": [],
-											"body": "{\n    \"result\": {\n        \"events\": [\n            {\n                \"archived\": {\n                    \"contractId\": \"00f8e165d581553ad7951ca43bf1ad56253c28990daca7bb64ca1487d2c85aab3d\",\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Custody.Model:OpenAllocationAccountRequest\"\n                }\n            },\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"0070283072dde16b2ace66820f3e6b413f29fc1cc467c484614c411ab3111fbe48\",\n                    \"key\": {\n                        \"signatories\": {\n                            \"map\": [\n                                [\n                                    \"Alice\",\n                                    {}\n                                ],\n                                [\n                                    \"Bank\",\n                                    {}\n                                ]\n                            ]\n                        },\n                        \"label\": \"AllocationAccount-Alice\",\n                        \"version\": \"0\"\n                    },\n                    \"observers\": [],\n                    \"payload\": {\n                        \"observers\": {\n                            \"map\": []\n                        },\n                        \"provider\": \"Bank\",\n                        \"operator\": \"Operator\",\n                        \"account\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Alice\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"AllocationAccount-Alice\",\n                                \"version\": \"0\"\n                            },\n                            \"provider\": \"Bank\",\n                            \"owner\": \"Alice\"\n                        },\n                        \"nominee\": \"Bank\"\n                    },\n                    \"signatories\": [\n                        \"Alice\",\n                        \"Bank\",\n                        \"Operator\"\n                    ],\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Rule.AllocationAccount:AllocationAccountRule\"\n                }\n            }\n        ],\n        \"exerciseResult\": \"0070283072dde16b2ace66820f3e6b413f29fc1cc467c484614c411ab3111fbe48\"\n    },\n    \"status\": 200\n}"
-										}
-									]
-								},
-								{
-									"name": "Approve Close Account request",
-									"event": [
-										{
-											"listen": "prerequest",
-											"script": {
-												"exec": [
-													""
-												],
-												"type": "text/javascript"
-											}
-										},
-										{
-											"listen": "test",
-											"script": {
-												"exec": [
-													""
-												],
-												"type": "text/javascript"
-											}
-										}
-									],
-									"request": {
-										"auth": {
-											"type": "bearer",
-											"bearer": [
-												{
-													"key": "token",
-													"value": "{{ProviderToken}}",
-													"type": "string"
-												}
-											]
-										},
-										"method": "POST",
-										"header": [],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n    \"templateId\": \"{{TemplateID}}:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"{{OperatorParty}}\",\n        \"_2\": \"{{ProviderParty}}\",\n        \"_3\": \"{{CustomerParty}}\"\n    },\n    \"choice\": \"CloseAccount\",\n    \"argument\": {\n        \"closeAccountRequestCid\": \"{{RequestContractId}}\"\n    }\n}",
-											"options": {
-												"raw": {
-													"language": "json"
-												}
-											}
-										},
-										"url": {
-											"raw": "{{BaseURL}}/v1/exercise",
-											"host": [
-												"{{BaseURL}}"
-											],
-											"path": [
-												"v1",
-												"exercise"
-											]
-										},
-										"description": "Approve the request from a customer to close an account."
-									},
-									"response": [
-										{
-											"name": "Approve Close Account request",
-											"originalRequest": {
-												"method": "POST",
-												"header": [
-													{
-														"key": "Authorization",
-														"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJodHRwczovL2RhbWwuY29tL2xlZGdlci1hcGkiOnsibGVkZ2VySWQiOiJkYS1tYXJrZXRwbGFjZS1zYW5kYm94IiwiYXBwbGljYXRpb25JZCI6ImRhLW1hcmtldHBsYWNlIiwiYWN0QXMiOlsiQmFuayJdLCJyZWFkQXMiOlsiQmFuayIsIlB1YmxpYyJdfX0.8_mQ3wFqwdQeUauwmcLseCuB-dpU6DVFFa8cug6W3L8",
-														"type": "text"
-													}
-												],
-												"body": {
-													"mode": "raw",
-													"raw": "{\n    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"Operator\",\n        \"_2\": \"Bank\",\n        \"_3\": \"Alice\"\n    },\n    \"choice\": \"CloseAccount\",\n    \"argument\": {\n        \"closeAccountRequestCid\": \"006ca64f1bdf0fd546abc442f5ae26abbdb9743f1c228eda5e4f2c054b6a4081a3\"\n    }\n}",
-													"options": {
-														"raw": {
-															"language": "json"
-														}
-													}
-												},
-												"url": {
-													"raw": "{{BaseURL}}/v1/exercise",
-													"host": [
-														"{{BaseURL}}"
-													],
-													"path": [
-														"v1",
-														"exercise"
-													]
-												}
-											},
-											"status": "OK",
-											"code": 200,
-											"_postman_previewlanguage": "json",
-											"header": [
-												{
-													"key": "Server",
-													"value": "akka-http/10.2.1"
-												},
-												{
-													"key": "Date",
-													"value": "Wed, 28 Jul 2021 07:13:45 GMT"
-												},
-												{
-													"key": "Content-Type",
-													"value": "application/json"
-												},
-												{
-													"key": "Content-Length",
-													"value": "504"
-												}
-											],
-											"cookie": [],
-											"body": "{\n    \"result\": {\n        \"events\": [\n            {\n                \"archived\": {\n                    \"contractId\": \"006ca64f1bdf0fd546abc442f5ae26abbdb9743f1c228eda5e4f2c054b6a4081a3\",\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Custody.Model:CloseAccountRequest\"\n                }\n            },\n            {\n                \"archived\": {\n                    \"contractId\": \"00a24b63591f105d0e413eef2279de6d51442abe58c99bd05e60f066b6ef3835a7\",\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:DA.Finance.Asset.Settlement:AssetSettlementRule\"\n                }\n            }\n        ],\n        \"exerciseResult\": {}\n    },\n    \"status\": 200\n}"
-										}
-									]
-								},
-								{
-									"name": "Approve Close Allocation Account request",
-									"event": [
-										{
-											"listen": "prerequest",
-											"script": {
-												"exec": [
-													""
-												],
-												"type": "text/javascript"
-											}
-										},
-										{
-											"listen": "test",
-											"script": {
-												"exec": [
-													""
-												],
-												"type": "text/javascript"
-											}
-										}
-									],
-									"request": {
-										"auth": {
-											"type": "bearer",
-											"bearer": [
-												{
-													"key": "token",
-													"value": "{{ProviderToken}}",
-													"type": "string"
-												}
-											]
-										},
-										"method": "POST",
-										"header": [],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n    \"templateId\": \"{{TemplateID}}:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"{{OperatorParty}}\",\n        \"_2\": \"{{ProviderParty}}\",\n        \"_3\": \"{{CustomerParty}}\"\n    },\n    \"choice\": \"CloseAllocationAccount\",\n    \"argument\": {\n        \"closeAllocationAccountRequestCid\": \"{{RequestContractId}}\"\n    }\n}",
-											"options": {
-												"raw": {
-													"language": "json"
-												}
-											}
-										},
-										"url": {
-											"raw": "{{BaseURL}}/v1/exercise",
-											"host": [
-												"{{BaseURL}}"
-											],
-											"path": [
-												"v1",
-												"exercise"
-											]
-										},
-										"description": "Approve the request from a customer to close an allocation account."
-									},
-									"response": []
-								},
-								{
-									"name": "Approve Credit Account request",
-									"event": [
-										{
-											"listen": "prerequest",
-											"script": {
-												"exec": [
-													""
-												],
-												"type": "text/javascript"
-											}
-										},
-										{
-											"listen": "test",
-											"script": {
-												"exec": [
-													""
-												],
-												"type": "text/javascript"
-											}
-										}
-									],
-									"request": {
-										"auth": {
-											"type": "bearer",
-											"bearer": [
-												{
-													"key": "token",
-													"value": "{{ProviderToken}}",
-													"type": "string"
-												}
-											]
-										},
-										"method": "POST",
-										"header": [],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n    \"templateId\": \"{{TemplateID}}:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"{{OperatorParty}}\",\n        \"_2\": \"{{ProviderParty}}\",\n        \"_3\": \"{{CustomerParty}}\"\n    },\n    \"choice\": \"CreditAccount\",\n    \"argument\": {\n        \"creditAccountRequestCid\": \"{{RequestContractId}}\"\n    }\n}",
-											"options": {
-												"raw": {
-													"language": "json"
-												}
-											}
-										},
-										"url": {
-											"raw": "{{BaseURL}}/v1/exercise",
-											"host": [
-												"{{BaseURL}}"
-											],
-											"path": [
-												"v1",
-												"exercise"
-											]
-										},
-										"description": "Approve a customer request to credit their account."
-									},
-									"response": [
-										{
-											"name": "Approve Credit Account request",
-											"originalRequest": {
-												"method": "POST",
-												"header": [
-													{
-														"key": "Authorization",
-														"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJodHRwczovL2RhbWwuY29tL2xlZGdlci1hcGkiOnsibGVkZ2VySWQiOiJkYS1tYXJrZXRwbGFjZS1zYW5kYm94IiwiYXBwbGljYXRpb25JZCI6ImRhLW1hcmtldHBsYWNlIiwiYWN0QXMiOlsiQmFuayJdLCJyZWFkQXMiOlsiQmFuayIsIlB1YmxpYyJdfX0.8_mQ3wFqwdQeUauwmcLseCuB-dpU6DVFFa8cug6W3L8",
-														"type": "text"
-													}
-												],
-												"body": {
-													"mode": "raw",
-													"raw": "{\n    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"Operator\",\n        \"_2\": \"Bank\",\n        \"_3\": \"Alice\"\n    },\n    \"choice\": \"CreditAccount\",\n    \"argument\": {\n        \"creditAccountRequestCid\": \"00f34c36f77f23500c5ed9a1d9fa12bffb12bfdf71b4ec9bc84b74814e11ed4174\"\n    }\n}",
-													"options": {
-														"raw": {
-															"language": "json"
-														}
-													}
-												},
-												"url": {
-													"raw": "{{BaseURL}}/v1/exercise",
-													"host": [
-														"{{BaseURL}}"
-													],
-													"path": [
-														"v1",
-														"exercise"
-													]
-												}
-											},
-											"status": "OK",
-											"code": 200,
-											"_postman_previewlanguage": "json",
-											"header": [
-												{
-													"key": "Server",
-													"value": "akka-http/10.2.1"
-												},
-												{
-													"key": "Date",
-													"value": "Wed, 28 Jul 2021 12:54:32 GMT"
-												},
-												{
-													"key": "Content-Type",
-													"value": "application/json"
-												},
-												{
-													"key": "Content-Length",
-													"value": "1776"
-												}
-											],
-											"cookie": [],
-											"body": "{\n    \"result\": {\n        \"events\": [\n            {\n                \"archived\": {\n                    \"contractId\": \"00f34c36f77f23500c5ed9a1d9fa12bffb12bfdf71b4ec9bc84b74814e11ed4174\",\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Custody.Model:CreditAccountRequest\"\n                }\n            },\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"000dbd572dfa3a165ac63545ff38fd0793a5f741dd91d04ef650beeadad5b14f1a\",\n                    \"observers\": [\n                        \"Exchange\"\n                    ],\n                    \"payload\": {\n                        \"account\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Alice\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"MainAccount-Alice\",\n                                \"version\": \"0\"\n                            },\n                            \"provider\": \"Bank\",\n                            \"owner\": \"Alice\"\n                        },\n                        \"asset\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Issuer\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"USD\",\n                                \"version\": \"0\"\n                            },\n                            \"quantity\": \"50.0\"\n                        },\n                        \"observers\": {\n                            \"map\": [\n                                [\n                                    \"Bank\",\n                                    {}\n                                ],\n                                [\n                                    \"Exchange\",\n                                    {}\n                                ]\n                            ]\n                        }\n                    },\n                    \"signatories\": [\n                        \"Alice\",\n                        \"Bank\"\n                    ],\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:DA.Finance.Asset:AssetDeposit\"\n                }\n            },\n            {\n                \"archived\": {\n                    \"contractId\": \"000dbd572dfa3a165ac63545ff38fd0793a5f741dd91d04ef650beeadad5b14f1a\",\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:DA.Finance.Asset:AssetDeposit\"\n                }\n            },\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"00262bc12679725335db96f784ef537d0b22f1cdf57503a5273f273816263d0568\",\n                    \"observers\": [\n                        \"Exchange\",\n                        \"Issuer\"\n                    ],\n                    \"payload\": {\n                        \"account\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Alice\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"MainAccount-Alice\",\n                                \"version\": \"0\"\n                            },\n                            \"provider\": \"Bank\",\n                            \"owner\": \"Alice\"\n                        },\n                        \"asset\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Issuer\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"USD\",\n                                \"version\": \"0\"\n                            },\n                            \"quantity\": \"50.0\"\n                        },\n                        \"observers\": {\n                            \"map\": [\n                                [\n                                    \"Bank\",\n                                    {}\n                                ],\n                                [\n                                    \"Exchange\",\n                                    {}\n                                ],\n                                [\n                                    \"Issuer\",\n                                    {}\n                                ]\n                            ]\n                        }\n                    },\n                    \"signatories\": [\n                        \"Alice\",\n                        \"Bank\"\n                    ],\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:DA.Finance.Asset:AssetDeposit\"\n                }\n            }\n        ],\n        \"exerciseResult\": \"00262bc12679725335db96f784ef537d0b22f1cdf57503a5273f273816263d0568\"\n    },\n    \"status\": 200\n}"
-										}
-									]
-								},
-								{
-									"name": "Approve Debit Account request",
-									"event": [
-										{
-											"listen": "prerequest",
-											"script": {
-												"exec": [
-													""
-												],
-												"type": "text/javascript"
-											}
-										},
-										{
-											"listen": "test",
-											"script": {
-												"exec": [
-													""
-												],
-												"type": "text/javascript"
-											}
-										}
-									],
-									"request": {
-										"auth": {
-											"type": "bearer",
-											"bearer": [
-												{
-													"key": "token",
-													"value": "{{ProviderToken}}",
-													"type": "string"
-												}
-											]
-										},
-										"method": "POST",
-										"header": [],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n    \"templateId\": \"{{TemplateID}}:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"{{OperatorParty}}\",\n        \"_2\": \"{{ProviderParty}}\",\n        \"_3\": \"{{CustomerParty}}\"\n    },\n    \"choice\": \"DebitAccount\",\n    \"argument\": {\n        \"debitAccountRequestCid\": \"{{RequestContractId}}\"\n    }\n}",
-											"options": {
-												"raw": {
-													"language": "json"
-												}
-											}
-										},
-										"url": {
-											"raw": "{{BaseURL}}/v1/exercise",
-											"host": [
-												"{{BaseURL}}"
-											],
-											"path": [
-												"v1",
-												"exercise"
-											]
-										},
-										"description": "Approve a customer request to debit their account."
-									},
-									"response": [
-										{
-											"name": "Approve Debit Account request",
-											"originalRequest": {
-												"method": "POST",
-												"header": [
-													{
-														"key": "Authorization",
-														"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJodHRwczovL2RhbWwuY29tL2xlZGdlci1hcGkiOnsibGVkZ2VySWQiOiJkYS1tYXJrZXRwbGFjZS1zYW5kYm94IiwiYXBwbGljYXRpb25JZCI6ImRhLW1hcmtldHBsYWNlIiwiYWN0QXMiOlsiQmFuayJdLCJyZWFkQXMiOlsiQmFuayIsIlB1YmxpYyJdfX0.8_mQ3wFqwdQeUauwmcLseCuB-dpU6DVFFa8cug6W3L8",
-														"type": "text"
-													}
-												],
-												"body": {
-													"mode": "raw",
-													"raw": "{\n    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"Operator\",\n        \"_2\": \"Bank\",\n        \"_3\": \"Alice\"\n    },\n    \"choice\": \"DebitAccount\",\n    \"argument\": {\n        \"debitAccountRequestCid\": \"003f45b172df98224a5d6c3ef479568535232a5fb55591b6b8da47a731e0c21176\"\n    }\n}",
-													"options": {
-														"raw": {
-															"language": "json"
-														}
-													}
-												},
-												"url": {
-													"raw": "{{BaseURL}}/v1/exercise",
-													"host": [
-														"{{BaseURL}}"
-													],
-													"path": [
-														"v1",
-														"exercise"
-													]
-												}
-											},
-											"status": "OK",
-											"code": 200,
-											"_postman_previewlanguage": "json",
-											"header": [
-												{
-													"key": "Server",
-													"value": "akka-http/10.2.1"
-												},
-												{
-													"key": "Date",
-													"value": "Wed, 28 Jul 2021 12:57:34 GMT"
-												},
-												{
-													"key": "Content-Type",
-													"value": "application/json"
-												},
-												{
-													"key": "Content-Length",
-													"value": "588"
-												}
-											],
-											"cookie": [],
-											"body": "{\n    \"result\": {\n        \"events\": [\n            {\n                \"archived\": {\n                    \"contractId\": \"003f45b172df98224a5d6c3ef479568535232a5fb55591b6b8da47a731e0c21176\",\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Custody.Model:DebitAccountRequest\"\n                }\n            },\n            {\n                \"archived\": {\n                    \"contractId\": \"00262bc12679725335db96f784ef537d0b22f1cdf57503a5273f273816263d0568\",\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:DA.Finance.Asset:AssetDeposit\"\n                }\n            }\n        ],\n        \"exerciseResult\": {\n            \"id\": {\n                \"signatories\": {\n                    \"map\": [\n                        [\n                            \"Bank\",\n                            {}\n                        ],\n                        [\n                            \"Issuer\",\n                            {}\n                        ]\n                    ]\n                },\n                \"label\": \"USD\",\n                \"version\": \"0\"\n            },\n            \"quantity\": \"50.0\"\n        }\n    },\n    \"status\": 200\n}"
-										}
-									]
-								},
-								{
-									"name": "Approve Transfer request",
-									"event": [
-										{
-											"listen": "prerequest",
-											"script": {
-												"exec": [
-													""
-												],
-												"type": "text/javascript"
-											}
-										},
-										{
-											"listen": "test",
-											"script": {
-												"exec": [
-													""
-												],
-												"type": "text/javascript"
-											}
-										}
-									],
-									"request": {
-										"auth": {
-											"type": "bearer",
-											"bearer": [
-												{
-													"key": "token",
-													"value": "{{ProviderToken}}",
-													"type": "string"
-												}
-											]
-										},
-										"method": "POST",
-										"header": [],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n    \"templateId\": \"{{TemplateID}}:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"{{OperatorParty}}\",\n        \"_2\": \"{{ProviderParty}}\",\n        \"_3\": \"{{CustomerParty}}\"\n    },\n    \"choice\": \"TransferDeposit\",\n    \"argument\": {\n        \"transferDepositRequestCid\": \"{{RequestContractId}}\"\n    }\n}",
-											"options": {
-												"raw": {
-													"language": "json"
-												}
-											}
-										},
-										"url": {
-											"raw": "{{BaseURL}}/v1/exercise",
-											"host": [
-												"{{BaseURL}}"
-											],
-											"path": [
-												"v1",
-												"exercise"
-											]
-										},
-										"description": "Approve a customer request to transfer an asset from their account to another account."
-									},
-									"response": [
-										{
-											"name": "Approve Transfer request",
-											"originalRequest": {
-												"method": "POST",
-												"header": [
-													{
-														"key": "Authorization",
-														"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJodHRwczovL2RhbWwuY29tL2xlZGdlci1hcGkiOnsibGVkZ2VySWQiOiJkYS1tYXJrZXRwbGFjZS1zYW5kYm94IiwiYXBwbGljYXRpb25JZCI6ImRhLW1hcmtldHBsYWNlIiwiYWN0QXMiOlsiQmFuayJdLCJyZWFkQXMiOlsiQmFuayIsIlB1YmxpYyJdfX0.8_mQ3wFqwdQeUauwmcLseCuB-dpU6DVFFa8cug6W3L8",
-														"type": "text"
-													}
-												],
-												"body": {
-													"mode": "raw",
-													"raw": "{\n    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Custody.Service:Service\",\n    \"key\": {\n        \"_1\": \"Operator\",\n        \"_2\": \"Bank\",\n        \"_3\": \"Issuer\"\n    },\n    \"choice\": \"TransferDeposit\",\n    \"argument\": {\n        \"transferDepositRequestCid\": \"00c591196d15e06d21acf298cfa6e2054c3cda9fe6c607fce72f0b44da9c93e69c\"\n    }\n}",
-													"options": {
-														"raw": {
-															"language": "json"
-														}
-													}
-												},
-												"url": {
-													"raw": "{{BaseURL}}/v1/exercise",
-													"host": [
-														"{{BaseURL}}"
-													],
-													"path": [
-														"v1",
-														"exercise"
-													]
-												}
-											},
-											"status": "OK",
-											"code": 200,
-											"_postman_previewlanguage": "json",
-											"header": [
-												{
-													"key": "Server",
-													"value": "akka-http/10.2.1"
-												},
-												{
-													"key": "Date",
-													"value": "Wed, 28 Jul 2021 12:47:15 GMT"
-												},
-												{
-													"key": "Content-Type",
-													"value": "application/json"
-												},
-												{
-													"key": "Content-Length",
-													"value": "1156"
-												}
-											],
-											"cookie": [],
-											"body": "{\n    \"result\": {\n        \"events\": [\n            {\n                \"archived\": {\n                    \"contractId\": \"00c591196d15e06d21acf298cfa6e2054c3cda9fe6c607fce72f0b44da9c93e69c\",\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Custody.Model:TransferDepositRequest\"\n                }\n            },\n            {\n                \"archived\": {\n                    \"contractId\": \"00c910b2e702dc0a73555b67e3eca395339dacc1564d75408de247490a075e8427\",\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:DA.Finance.Asset:AssetDeposit\"\n                }\n            },\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"009cb4bdd86a3a634c8cb8c1d825fa77982af5ab73f59aad8618db39537db2fef9\",\n                    \"observers\": [\n                        \"Exchange\"\n                    ],\n                    \"payload\": {\n                        \"account\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Alice\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"MainAccount-Alice\",\n                                \"version\": \"0\"\n                            },\n                            \"provider\": \"Bank\",\n                            \"owner\": \"Alice\"\n                        },\n                        \"asset\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Issuer\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"USD\",\n                                \"version\": \"0\"\n                            },\n                            \"quantity\": \"100.0\"\n                        },\n                        \"observers\": {\n                            \"map\": [\n                                [\n                                    \"Bank\",\n                                    {}\n                                ],\n                                [\n                                    \"Exchange\",\n                                    {}\n                                ]\n                            ]\n                        }\n                    },\n                    \"signatories\": [\n                        \"Alice\",\n                        \"Bank\"\n                    ],\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:DA.Finance.Asset:AssetDeposit\"\n                }\n            }\n        ],\n        \"exerciseResult\": \"009cb4bdd86a3a634c8cb8c1d825fa77982af5ab73f59aad8618db39537db2fef9\"\n    },\n    \"status\": 200\n}"
+											"body": "{\n    \"result\": {\n        \"events\": [\n            {\n                \"archived\": {\n                    \"contractId\": \"0038bd08ea95bc3561c178ec3ea2fd63d00722c3ae7161a722d418b40be015267c\",\n                    \"templateId\": \"3b93defed8dec45bfbe94268b0d1fd1aef5070d2f0cbe37a5585ae896ca7da35:Marketplace.Custody.Model:WithdrawalRequest\"\n                }\n            },\n            {\n                \"archived\": {\n                    \"contractId\": \"00fa636cfe32a683b302cc93729898050b89da29e5178ea357a078504bef8f1b17\",\n                    \"templateId\": \"3b93defed8dec45bfbe94268b0d1fd1aef5070d2f0cbe37a5585ae896ca7da35:DA.Finance.Asset:AssetDeposit\"\n                }\n            }\n        ],\n        \"exerciseResult\": {}\n    },\n    \"status\": 200\n}"
 										}
 									]
 								},
@@ -6663,7 +5669,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"templateId\": \"{{TemplateID}}:Marketplace.Issuance.Service:Service\",\n    \"key\": {\n        \"_1\": \"{{OperatorParty}}\",\n        \"_2\": \"{{ProviderParty}}\",\n        \"_3\": \"{{CustomerParty}}\"\n    },\n    \"choice\": \"RequestOrigination\",\n    \"argument\": {\n        \"assetLabel\": \"{{AssetLabel}}\",\n        \"description\": \"{{AssetDescription}}\",\n        \"claims\": {{Claims}},\n        \"safekeepingAccount\": {\n            \"id\": {\n                \"label\": \"{{AccountIdLabel}}\",\n                \"signatories\": {\n                    \"map\": [\n                        [\n                            \"{{ProviderParty}}\",\n                            {}\n                        ],\n                        [\n                            \"{{CustomerParty}}\",\n                            {}\n                        ]\n                    ]\n                },\n                \"version\": \"0\"\n            },\n            \"owner\": \"{{CustomerParty}}\",\n            \"provider\": \"{{ProviderParty}}\"\n        },\n        \"observers\": {{ObserversList}},\n        \"cfi\": {\n            \"code\": \"{{CfiCode}}\"\n        }\n    }\n}",
+									"raw": "{\n    \"templateId\": \"{{TemplateID}}:Marketplace.Issuance.Service:Service\",\n    \"key\": {\n        \"_1\": \"{{OperatorParty}}\",\n        \"_2\": \"{{ProviderParty}}\",\n        \"_3\": \"{{CustomerParty}}\"\n    },\n    \"choice\": \"RequestOrigination\",\n    \"argument\": {\n        \"assetLabel\": \"{{AssetLabel}}\",\n        \"description\": \"{{AssetDescription}}\",\n        \"claims\": {{Claims}},\n        \"observers\": {{ObserversList}},\n        \"cfi\": {\n            \"code\": \"{{CfiCode}}\"\n        }\n    }\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -6687,16 +5693,10 @@
 									"name": "Create Asset request",
 									"originalRequest": {
 										"method": "POST",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJodHRwczovL2RhbWwuY29tL2xlZGdlci1hcGkiOnsibGVkZ2VySWQiOiJkYS1tYXJrZXRwbGFjZS1zYW5kYm94IiwiYXBwbGljYXRpb25JZCI6ImRhLW1hcmtldHBsYWNlIiwiYWN0QXMiOlsiSXNzdWVyIl0sInJlYWRBcyI6WyJJc3N1ZXIiLCJQdWJsaWMiXX19.AELQfUECI7yjsb6o0GBS8gbdW8fHITkjrHVBqgZnDi8",
-												"type": "text"
-											}
-										],
+										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Issuance.Service:Service\",\n    \"key\": {\n        \"_1\": \"Operator\",\n        \"_2\": \"Bank\",\n        \"_3\": \"Issuer\"\n    },\n    \"choice\": \"RequestOrigination\",\n    \"argument\": {\n        \"assetLabel\": \"USD\",\n        \"description\": \"United States Dollar\",\n        \"claims\": {\n            \"tag\": \"Zero\",\n            \"value\": {}\n        },\n        \"safekeepingAccount\": {\n            \"id\": {\n                \"label\": \"MainAccount-Issuer\",\n                \"signatories\": {\n                    \"map\": [\n                        [\n                            \"Bank\",\n                            {}\n                        ],\n                        [\n                            \"Issuer\",\n                            {}\n                        ]\n                    ]\n                },\n                \"version\": \"0\"\n            },\n            \"owner\": \"Issuer\",\n            \"provider\": \"Bank\"\n        },\n        \"observers\": [],\n        \"cfi\": {\n            \"code\": \"TCXXXX\"\n        }\n    }\n}",
+											"raw": "{\n    \"templateId\": \"3b93defed8dec45bfbe94268b0d1fd1aef5070d2f0cbe37a5585ae896ca7da35:Marketplace.Issuance.Service:Service\",\n    \"key\": {\n        \"_1\": \"Operator\",\n        \"_2\": \"Bank\",\n        \"_3\": \"Alice\"\n    },\n    \"choice\": \"RequestOrigination\",\n    \"argument\": {\n        \"assetLabel\": \"USD\",\n        \"description\": \"United States Dollar\",\n        \"claims\": {\n            \"tag\": \"Zero\",\n            \"value\": {}\n        },\n        \"safekeepingAccount\": {\n            \"id\": {\n                \"label\": \"MainAccount-Issuer\",\n                \"signatories\": {\n                    \"map\": [\n                        [\n                            \"Bank\",\n                            {}\n                        ],\n                        [\n                            \"Issuer\",\n                            {}\n                        ]\n                    ]\n                },\n                \"version\": \"0\"\n            },\n            \"owner\": \"Issuer\",\n            \"provider\": \"Bank\"\n        },\n        \"observers\": [],\n        \"cfi\": {\n            \"code\": \"TCXXXX\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -6724,7 +5724,7 @@
 										},
 										{
 											"key": "Date",
-											"value": "Wed, 28 Jul 2021 07:48:49 GMT"
+											"value": "Wed, 27 Oct 2021 07:27:29 GMT"
 										},
 										{
 											"key": "Content-Type",
@@ -6732,11 +5732,11 @@
 										},
 										{
 											"key": "Content-Length",
-											"value": "791"
+											"value": "631"
 										}
 									],
 									"cookie": [],
-									"body": "{\n    \"result\": {\n        \"events\": [\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"00e9ab11d22dcc1be302559e7bac2b65fdbf73a58e900af05ef1576568755414b5\",\n                    \"observers\": [],\n                    \"payload\": {\n                        \"observers\": {\n                            \"map\": []\n                        },\n                        \"provider\": \"Bank\",\n                        \"cfi\": {\n                            \"code\": \"TCXXXX\"\n                        },\n                        \"description\": \"United States Dollar\",\n                        \"operator\": \"Operator\",\n                        \"customer\": \"Issuer\",\n                        \"claims\": {\n                            \"tag\": \"Zero\",\n                            \"value\": {}\n                        },\n                        \"safekeepingAccount\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Issuer\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"MainAccount-Issuer\",\n                                \"version\": \"0\"\n                            },\n                            \"provider\": \"Bank\",\n                            \"owner\": \"Issuer\"\n                        },\n                        \"assetLabel\": \"USD\"\n                    },\n                    \"signatories\": [\n                        \"Bank\",\n                        \"Issuer\",\n                        \"Operator\"\n                    ],\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Issuance.Service:OriginationRequest\"\n                }\n            }\n        ],\n        \"exerciseResult\": \"00e9ab11d22dcc1be302559e7bac2b65fdbf73a58e900af05ef1576568755414b5\"\n    },\n    \"status\": 200\n}"
+									"body": "{\n    \"result\": {\n        \"events\": [\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"00b8e5acf9841332fb961f71782e9075f9861025ddc839fbd1ab69039a213376b6\",\n                    \"observers\": [],\n                    \"payload\": {\n                        \"observers\": {\n                            \"map\": []\n                        },\n                        \"provider\": \"Bank\",\n                        \"cfi\": {\n                            \"code\": \"TCXXXX\"\n                        },\n                        \"description\": \"United States Dollar\",\n                        \"operator\": \"Operator\",\n                        \"customer\": \"Alice\",\n                        \"claims\": {\n                            \"tag\": \"Zero\",\n                            \"value\": {}\n                        },\n                        \"assetLabel\": \"USD\"\n                    },\n                    \"signatories\": [\n                        \"Alice\",\n                        \"Bank\",\n                        \"Operator\"\n                    ],\n                    \"templateId\": \"3b93defed8dec45bfbe94268b0d1fd1aef5070d2f0cbe37a5585ae896ca7da35:Marketplace.Issuance.Service:OriginationRequest\"\n                }\n            }\n        ],\n        \"exerciseResult\": \"00b8e5acf9841332fb961f71782e9075f9861025ddc839fbd1ab69039a213376b6\"\n    },\n    \"status\": 200\n}"
 								}
 							]
 						},
@@ -7038,7 +6038,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Issuance.Service:Service\",\n    \"key\": {\n        \"_1\": \"Operator\",\n        \"_2\": \"Bank\",\n        \"_3\": \"Issuer\"\n    },\n    \"choice\": \"Originate\",\n    \"argument\": {\n        \"createOriginationCid\": \"00e9ab11d22dcc1be302559e7bac2b65fdbf73a58e900af05ef1576568755414b5\"\n    }\n}",
+											"raw": "{\n    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Issuance.Service:Service\",\n    \"key\": {\n        \"_1\": \"Operator\",\n        \"_2\": \"Bank\",\n        \"_3\": \"Issuer\"\n    },\n    \"choice\": \"Originate\",\n    \"argument\": {\n        \"createOriginationCid\": \"00b8e5acf9841332fb961f71782e9075f9861025ddc839fbd1ab69039a213376b6\"\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -9638,7 +8638,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"templateId\": \"{{TemplateID}}:Marketplace.Distribution.Auction.Service:Service\",\n    \"contractId\": \"{{ServiceContractId}}\",\n    \"choice\": \"RequestCreateAuction\",\n    \"argument\": {\n        \"auctionId\": \"{{AuctionId}}\",\n        \"asset\": {\n            \"id\": {\n                \"label\": \"{{AuctionedAssetLabel}}\",\n                \"signatories\": {\n                    \"map\": [\n                        [\n                            \"{{ProviderParty}}\",\n                            {}\n                        ],\n                        [\n                            \"{{CustomerParty}}\",\n                            {}\n                        ]\n                    ]\n                },\n                \"version\": \"0\"\n            },\n            \"quantity\": {{AssetQuantity}}\n        },\n        \"quotedAssetId\": {\n                \"label\": \"{{QuotedAssetLabel}}\",\n                \"signatories\": {\n                    \"map\": [\n                        [\n                            \"{{ProviderParty}}\",\n                            {}\n                        ],\n                        [\n                            \"{{CustomerParty}}\",\n                            {}\n                        ]\n                    ]\n                },\n                \"version\": \"0\"\n        },\n        \"floorPrice\": {{FloorPrice}},\n        \"depositCid\": \"{{DepositContractId}}\"\n    }\n}",
+											"raw": "{\n    \"templateId\": \"{{TemplateID}}:Marketplace.Distribution.Auction.Service:Service\",\n    \"contractId\": \"{{ServiceContractId}}\",\n    \"choice\": \"RequestCreateAuction\",\n    \"argument\": {\n        \"auctionId\": \"{{AuctionId}}\",\n        \"asset\": {\n            \"id\": {\n                \"label\": \"{{AuctionedAssetLabel}}\",\n                \"signatories\": {\n                    \"map\": [\n                        [\n                            \"{{ProviderParty}}\",\n                            {}\n                        ],\n                        [\n                            \"{{CustomerParty}}\",\n                            {}\n                        ]\n                    ]\n                },\n                \"version\": \"0\"\n            },\n            \"quantity\": {{AssetQuantity}}\n        },\n        \"quotedAssetId\": {\n            \"label\": \"{{QuotedAssetLabel}}\",\n            \"signatories\": {\n                \"map\": [\n                    [\n                        \"{{ProviderParty}}\",\n                        {}\n                    ],\n                    [\n                        \"{{CustomerParty}}\",\n                        {}\n                    ]\n                ]\n            },\n            \"version\": \"0\"\n        },\n        \"floorPrice\": {{FloorPrice}},\n        \"depositCid\": \"{{DepositContractId}}\",\n        \"receivableAccount\": {\n            \"id\": {\n                \"signatories\": {\n                    \"map\": [\n                        [\n                            \"{{ProviderParty}}\",\n                            {}\n                        ],\n                        [\n                            \"{{CustomerParty}}\",\n                            {}\n                        ]\n                    ]\n                },\n                \"label\": \"{{AccountLabel}}\",\n                \"version\": \"0\"\n            },\n            \"provider\": \"{{ProviderParty}}\",\n            \"owner\": \"{{CustomerParty}}\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -9662,16 +8662,10 @@
 											"name": "Create Auction request",
 											"originalRequest": {
 												"method": "POST",
-												"header": [
-													{
-														"key": "Authorization",
-														"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJodHRwczovL2RhbWwuY29tL2xlZGdlci1hcGkiOnsibGVkZ2VySWQiOiJkYS1tYXJrZXRwbGFjZS1zYW5kYm94IiwiYXBwbGljYXRpb25JZCI6ImRhLW1hcmtldHBsYWNlIiwiYWN0QXMiOlsiSXNzdWVyIl0sInJlYWRBcyI6WyJJc3N1ZXIiLCJQdWJsaWMiXX19.AELQfUECI7yjsb6o0GBS8gbdW8fHITkjrHVBqgZnDi8",
-														"type": "text"
-													}
-												],
+												"header": [],
 												"body": {
 													"mode": "raw",
-													"raw": "{\n    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Distribution.Auction.Service:Service\",\n    \"contractId\": \"0059d58f22afb3d95aa601f964b3f12b45e24fbdde8a0f85fa9a38368b8278a3f2\",\n    \"choice\": \"RequestCreateAuction\",\n    \"argument\": {\n        \"auctionId\": \"Auction1\",\n        \"asset\": {\n            \"id\": {\n                \"label\": \"BTC\",\n                \"signatories\": {\n                    \"map\": [\n                        [\n                            \"Bank\",\n                            {}\n                        ],\n                        [\n                            \"Issuer\",\n                            {}\n                        ]\n                    ]\n                },\n                \"version\": \"0\"\n            },\n            \"quantity\": 10.0\n        },\n        \"quotedAssetId\": {\n            \"label\": \"USD\",\n            \"signatories\": {\n                \"map\": [\n                    [\n                        \"Bank\",\n                        {}\n                    ],\n                    [\n                        \"Issuer\",\n                        {}\n                    ]\n                ]\n            },\n            \"version\": \"0\"\n        },\n        \"floorPrice\": 50000.0,\n        \"depositCid\": \"00d3f15c62aed937031bc5f1445a418f3c12843cf8f78f71c8306450933e65973a\"\n    }\n}",
+													"raw": "{\n    \"templateId\": \"3b93defed8dec45bfbe94268b0d1fd1aef5070d2f0cbe37a5585ae896ca7da35:Marketplace.Distribution.Auction.Service:Service\",\n    \"contractId\": \"002c1c5c769ee2d9a831a554a467a4583b41ad9169cd4f6fb14a8d7c9aefcd2e1c\",\n    \"choice\": \"RequestCreateAuction\",\n    \"argument\": {\n        \"auctionId\": \"Auction1\",\n        \"asset\": {\n            \"id\": {\n                \"label\": \"BTC\",\n                \"signatories\": {\n                    \"map\": [\n                        [\n                            \"Bank\",\n                            {}\n                        ],\n                        [\n                            \"Issuer\",\n                            {}\n                        ]\n                    ]\n                },\n                \"version\": \"0\"\n            },\n            \"quantity\": 50.0\n        },\n        \"quotedAssetId\": {\n            \"label\": \"USD\",\n            \"signatories\": {\n                \"map\": [\n                    [\n                        \"Bank\",\n                        {}\n                    ],\n                    [\n                        \"Issuer\",\n                        {}\n                    ]\n                ]\n            },\n            \"version\": \"0\"\n        },\n        \"floorPrice\": 50000.0,\n        \"depositCid\": \"0049ad9cd5fdf546d31117c60c288c6ee3ceb03aec9acb279b7425e44d5e61c6af\",\n        \"receivableAccount\": {\n            \"id\": {\n                \"signatories\": {\n                    \"map\": [\n                        [\n                            \"Issuer\",\n                            {}\n                        ],\n                        [\n                            \"Bank\",\n                            {}\n                        ]\n                    ]\n                },\n                \"label\": \"Issuer@Bank\",\n                \"version\": \"0\"\n            },\n            \"provider\": \"Bank\",\n            \"owner\": \"Issuer\"\n        }\n    }\n}",
 													"options": {
 														"raw": {
 															"language": "json"
@@ -9699,7 +8693,7 @@
 												},
 												{
 													"key": "Date",
-													"value": "Thu, 29 Jul 2021 07:13:57 GMT"
+													"value": "Wed, 27 Oct 2021 08:09:05 GMT"
 												},
 												{
 													"key": "Content-Type",
@@ -9707,11 +8701,11 @@
 												},
 												{
 													"key": "Content-Length",
-													"value": "846"
+													"value": "996"
 												}
 											],
 											"cookie": [],
-											"body": "{\n    \"result\": {\n        \"events\": [\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"00fb5ef68bc3f21149dd8a9c1ff5939feeb314f5fe1b12cd490e09f5109aade244\",\n                    \"observers\": [],\n                    \"payload\": {\n                        \"quotedAssetId\": {\n                            \"signatories\": {\n                                \"map\": [\n                                    [\n                                        \"Bank\",\n                                        {}\n                                    ],\n                                    [\n                                        \"Issuer\",\n                                        {}\n                                    ]\n                                ]\n                            },\n                            \"label\": \"USD\",\n                            \"version\": \"0\"\n                        },\n                        \"provider\": \"Bank\",\n                        \"floorPrice\": \"50000.0\",\n                        \"auctionId\": \"Auction1\",\n                        \"operator\": \"Operator\",\n                        \"customer\": \"Issuer\",\n                        \"asset\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Issuer\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"BTC\",\n                                \"version\": \"0\"\n                            },\n                            \"quantity\": \"10.0\"\n                        },\n                        \"depositCid\": \"00d3f15c62aed937031bc5f1445a418f3c12843cf8f78f71c8306450933e65973a\"\n                    },\n                    \"signatories\": [\n                        \"Bank\",\n                        \"Issuer\",\n                        \"Operator\"\n                    ],\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Distribution.Auction.Service:CreateAuctionRequest\"\n                }\n            }\n        ],\n        \"exerciseResult\": \"00fb5ef68bc3f21149dd8a9c1ff5939feeb314f5fe1b12cd490e09f5109aade244\"\n    },\n    \"status\": 200\n}"
+											"body": "{\n    \"result\": {\n        \"events\": [\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"00b05e4510fa1d1d0131a9de36bd8e802d219d501f058bd00b0a9b4ab5243ece53\",\n                    \"observers\": [],\n                    \"payload\": {\n                        \"quotedAssetId\": {\n                            \"signatories\": {\n                                \"map\": [\n                                    [\n                                        \"Bank\",\n                                        {}\n                                    ],\n                                    [\n                                        \"Issuer\",\n                                        {}\n                                    ]\n                                ]\n                            },\n                            \"label\": \"USD\",\n                            \"version\": \"0\"\n                        },\n                        \"provider\": \"Bank\",\n                        \"floorPrice\": \"50000.0\",\n                        \"auctionId\": \"Auction1\",\n                        \"operator\": \"Operator\",\n                        \"customer\": \"Issuer\",\n                        \"asset\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Issuer\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"BTC\",\n                                \"version\": \"0\"\n                            },\n                            \"quantity\": \"50.0\"\n                        },\n                        \"depositCid\": \"0049ad9cd5fdf546d31117c60c288c6ee3ceb03aec9acb279b7425e44d5e61c6af\",\n                        \"receivableAccount\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Issuer\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"Issuer@Bank\",\n                                \"version\": \"0\"\n                            },\n                            \"provider\": \"Bank\",\n                            \"owner\": \"Issuer\"\n                        }\n                    },\n                    \"signatories\": [\n                        \"Bank\",\n                        \"Issuer\",\n                        \"Operator\"\n                    ],\n                    \"templateId\": \"3b93defed8dec45bfbe94268b0d1fd1aef5070d2f0cbe37a5585ae896ca7da35:Marketplace.Distribution.Auction.Service:CreateAuctionRequest\"\n                }\n            }\n        ],\n        \"exerciseResult\": \"00b05e4510fa1d1d0131a9de36bd8e802d219d501f058bd00b0a9b4ab5243ece53\"\n    },\n    \"status\": 200\n}"
 										}
 									]
 								},
@@ -9939,7 +8933,7 @@
 												}
 											],
 											"cookie": [],
-											"body": "{\n    \"result\": {\n        \"events\": [\n            {\n                \"archived\": {\n                    \"contractId\": \"00fb5ef68bc3f21149dd8a9c1ff5939feeb314f5fe1b12cd490e09f5109aade244\",\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Distribution.Auction.Service:CreateAuctionRequest\"\n                }\n            },\n            {\n                \"archived\": {\n                    \"contractId\": \"00d3f15c62aed937031bc5f1445a418f3c12843cf8f78f71c8306450933e65973a\",\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:DA.Finance.Asset:AssetDeposit\"\n                }\n            },\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"005384261179827978e6b01fa59634115db1e5657e88e5fe50eba3411be6de56f1\",\n                    \"observers\": [],\n                    \"payload\": {\n                        \"account\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Issuer\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"AuctionAllocationAccount-Issuer\",\n                                \"version\": \"0\"\n                            },\n                            \"provider\": \"Bank\",\n                            \"owner\": \"Issuer\"\n                        },\n                        \"asset\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Issuer\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"BTC\",\n                                \"version\": \"0\"\n                            },\n                            \"quantity\": \"10.0\"\n                        },\n                        \"observers\": {\n                            \"map\": [\n                                [\n                                    \"Bank\",\n                                    {}\n                                ]\n                            ]\n                        }\n                    },\n                    \"signatories\": [\n                        \"Bank\",\n                        \"Issuer\"\n                    ],\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:DA.Finance.Asset:AssetDeposit\"\n                }\n            },\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"0087bf85475887a498307863ceecdde87a5051a5045942b6b51b7b0aa5cfcfdccc\",\n                    \"key\": {\n                        \"_1\": \"Bank\",\n                        \"_2\": \"Auction1\"\n                    },\n                    \"observers\": [],\n                    \"payload\": {\n                        \"quotedAssetId\": {\n                            \"signatories\": {\n                                \"map\": [\n                                    [\n                                        \"Bank\",\n                                        {}\n                                    ],\n                                    [\n                                        \"Issuer\",\n                                        {}\n                                    ]\n                                ]\n                            },\n                            \"label\": \"USD\",\n                            \"version\": \"0\"\n                        },\n                        \"provider\": \"Bank\",\n                        \"floorPrice\": \"50000.0\",\n                        \"auctionId\": \"Auction1\",\n                        \"operator\": \"Operator\",\n                        \"status\": {\n                            \"tag\": \"Open\",\n                            \"value\": {}\n                        },\n                        \"customer\": \"Issuer\",\n                        \"asset\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Issuer\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"BTC\",\n                                \"version\": \"0\"\n                            },\n                            \"quantity\": \"10.0\"\n                        },\n                        \"depositCid\": \"005384261179827978e6b01fa59634115db1e5657e88e5fe50eba3411be6de56f1\",\n                        \"receivableAccount\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Issuer\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"MainAccount-Issuer\",\n                                \"version\": \"0\"\n                            },\n                            \"provider\": \"Bank\",\n                            \"owner\": \"Issuer\"\n                        }\n                    },\n                    \"signatories\": [\n                        \"Bank\",\n                        \"Issuer\",\n                        \"Operator\"\n                    ],\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Distribution.Auction.Model:Auction\"\n                }\n            }\n        ],\n        \"exerciseResult\": \"0087bf85475887a498307863ceecdde87a5051a5045942b6b51b7b0aa5cfcfdccc\"\n    },\n    \"status\": 200\n}"
+											"body": "{\n    \"result\": {\n        \"events\": [\n            {\n                \"archived\": {\n                    \"contractId\": \"00fb5ef68bc3f21149dd8a9c1ff5939feeb314f5fe1b12cd490e09f5109aade244\",\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Distribution.Auction.Service:CreateAuctionRequest\"\n                }\n            },\n            {\n                \"archived\": {\n                    \"contractId\": \"00d3f15c62aed937031bc5f1445a418f3c12843cf8f78f71c8306450933e65973a\",\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:DA.Finance.Asset:AssetDeposit\"\n                }\n            },\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"005384261179827978e6b01fa59634115db1e5657e88e5fe50eba3411be6de56f1\",\n                    \"observers\": [],\n                    \"payload\": {\n                        \"account\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Issuer\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"AuctionAllocationAccount-Issuer\",\n                                \"version\": \"0\"\n                            },\n                            \"provider\": \"Bank\",\n                            \"owner\": \"Issuer\"\n                        },\n                        \"asset\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Issuer\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"BTC\",\n                                \"version\": \"0\"\n                            },\n                            \"quantity\": \"10.0\"\n                        },\n                        \"observers\": {\n                            \"map\": [\n                                [\n                                    \"Bank\",\n                                    {}\n                                ]\n                            ]\n                        }\n                    },\n                    \"signatories\": [\n                        \"Bank\",\n                        \"Issuer\"\n                    ],\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:DA.Finance.Asset:AssetDeposit\"\n                }\n            },\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"0087bf85475887a498307863ceecdde87a5051a5045942b6b51b7b0aa5cfcfdccc\",\n                    \"key\": {\n                        \"_1\": \"Bank\",\n                        \"_2\": \"Auction1\"\n                    },\n                    \"observers\": [],\n                    \"payload\": {\n                        \"quotedAssetId\": {\n                            \"signatories\": {\n                                \"map\": [\n                                    [\n                                        \"Bank\",\n                                        {}\n                                    ],\n                                    [\n                                        \"Issuer\",\n                                        {}\n                                    ]\n                                ]\n                            },\n                            \"label\": \"USD\",\n                            \"version\": \"0\"\n                        },\n                        \"provider\": \"Bank\",\n                        \"floorPrice\": \"50000.0\",\n                        \"auctionId\": \"Auction1\",\n                        \"operator\": \"Operator\",\n                        \"status\": {\n                            \"tag\": \"Open\",\n                            \"value\": {}\n                        },\n                        \"customer\": \"Issuer\",\n                        \"asset\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Issuer\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"BTC\",\n                                \"version\": \"0\"\n                            },\n                            \"quantity\": \"10.0\"\n                        },\n                        \"depositCid\": \"005384261179827978e6b01fa59634115db1e5657e88e5fe50eba3411be6de56f1\",\n                        \"receivableAccount\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Issuer\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"Issuer@Bank\",\n                                \"version\": \"0\"\n                            },\n                            \"provider\": \"Bank\",\n                            \"owner\": \"Issuer\"\n                        }\n                    },\n                    \"signatories\": [\n                        \"Bank\",\n                        \"Issuer\",\n                        \"Operator\"\n                    ],\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Distribution.Auction.Model:Auction\"\n                }\n            }\n        ],\n        \"exerciseResult\": \"0087bf85475887a498307863ceecdde87a5051a5045942b6b51b7b0aa5cfcfdccc\"\n    },\n    \"status\": 200\n}"
 										}
 									]
 								},
@@ -10451,7 +9445,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"templateId\": \"{{TemplateID}}:Marketplace.Distribution.Bidding.Service:Service\",\n    \"key\": {\n        \"_1\": \"{{OperatorParty}}\",\n        \"_2\": \"{{ProviderParty}}\",\n        \"_3\": \"{{CustomerParty}}\"\n    },\n    \"choice\": \"SubmitBid\",\n    \"argument\": {\n        \"auctionCid\": \"{{AuctionContractId}}\",\n        \"price\": {{BidPrice}},\n        \"quantity\": {{BidQuantity}},\n        \"depositCid\": \"{{DepositContractId}}\",\n        \"allowPublishing\": {{AllowPublishing}}\n    }\n}",
+											"raw": "{\n    \"templateId\": \"{{TemplateID}}:Marketplace.Distribution.Bidding.Service:Service\",\n    \"key\": {\n        \"_1\": \"{{OperatorParty}}\",\n        \"_2\": \"{{ProviderParty}}\",\n        \"_3\": \"{{CustomerParty}}\"\n    },\n    \"choice\": \"SubmitBid\",\n    \"argument\": {\n        \"auctionCid\": \"{{AuctionContractId}}\",\n        \"price\": {{BidPrice}},\n        \"quantity\": {{BidQuantity}},\n        \"depositCid\": \"{{DepositContractId}}\",\n        \"allowPublishing\": {{AllowPublishing}},\n        \"receivableAccount\": {\n            \"id\": {\n                \"signatories\": {\n                    \"map\": [\n                        [\n                            \"{{ProviderParty}}\",\n                            {}\n                        ],\n                        [\n                            \"{{CustomerParty}}\",\n                            {}\n                        ]\n                    ]\n                },\n                \"label\": \"{{AccountLabel}}\",\n                \"version\": \"0\"\n            },\n            \"provider\": \"{{ProviderParty}}\",\n            \"owner\": \"{{CustomerParty}}\"\n        }\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -10484,7 +9478,7 @@
 												],
 												"body": {
 													"mode": "raw",
-													"raw": "{\n    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Distribution.Bidding.Service:Service\",\n    \"key\": {\n        \"_1\": \"Operator\",\n        \"_2\": \"Bank\",\n        \"_3\": \"Alice\"\n    },\n    \"choice\": \"SubmitBid\",\n    \"argument\": {\n        \"auctionCid\": \"003c2ad2ea2b4018d2a1e58d365545c432c0a7d5ad32055fd0f74ec2bfb99908bf\",\n        \"price\": 60000.0,\n        \"quantity\": 10.0,\n        \"depositCid\": \"005114c569431185bfa3e5183b6c36028a7baa77dd0bda4c8f22bb94252ecf7b50\",\n        \"allowPublishing\": true\n    }\n}",
+													"raw": "{\n    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Distribution.Bidding.Service:Service\",\n    \"key\": {\n        \"_1\": \"Operator\",\n        \"_2\": \"Bank\",\n        \"_3\": \"Alice\"\n    },\n    \"choice\": \"SubmitBid\",\n    \"argument\": {\n        \"auctionCid\": \"003c2ad2ea2b4018d2a1e58d365545c432c0a7d5ad32055fd0f74ec2bfb99908bf\",\n        \"price\": 60000.0,\n        \"quantity\": 10.0,\n        \"depositCid\": \"005114c569431185bfa3e5183b6c36028a7baa77dd0bda4c8f22bb94252ecf7b50\",\n        \"allowPublishing\": true,\n        \"receivableAccount\": {\n            \"id\": {\n                \"signatories\": {\n                    \"map\": [\n                        [\n                            \"Alice\",\n                            {}\n                        ],\n                        [\n                            \"Bank\",\n                            {}\n                        ]\n                    ]\n                },\n                \"label\": \"Alice@Bank\",\n                \"version\": \"0\"\n            },\n            \"provider\": \"Bank\",\n            \"owner\": \"Alice\"\n        }\n    }\n}",
 													"options": {
 														"raw": {
 															"language": "json"
@@ -10539,7 +9533,7 @@
 												],
 												"body": {
 													"mode": "raw",
-													"raw": "{\n    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Distribution.Bidding.Service:Service\",\n    \"key\": {\n        \"_1\": \"Operator\",\n        \"_2\": \"Bank\",\n        \"_3\": \"Alice\"\n    },\n    \"choice\": \"SubmitBid\",\n    \"argument\": {\n        \"auctionCid\": \"003c2ad2ea2b4018d2a1e58d365545c432c0a7d5ad32055fd0f74ec2bfb99908bf\",\n        \"price\": 60000.0,\n        \"quantity\": 10.0,\n        \"depositCid\": \"004b8d3643e7065197603b0c9277987921bf8b5218d1c970b260c20206be687e45\",\n        \"allowPublishing\": true\n    }\n}",
+													"raw": "{\n    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Distribution.Bidding.Service:Service\",\n    \"key\": {\n        \"_1\": \"Operator\",\n        \"_2\": \"Bank\",\n        \"_3\": \"Alice\"\n    },\n    \"choice\": \"SubmitBid\",\n    \"argument\": {\n        \"auctionCid\": \"003c2ad2ea2b4018d2a1e58d365545c432c0a7d5ad32055fd0f74ec2bfb99908bf\",\n        \"price\": 60000.0,\n        \"quantity\": 10.0,\n        \"depositCid\": \"004b8d3643e7065197603b0c9277987921bf8b5218d1c970b260c20206be687e45\",\n        \"allowPublishing\": true,\n        \"receivableAccount\": {\n            \"id\": {\n                \"signatories\": {\n                    \"map\": [\n                        [\n                            \"Alice\",\n                            {}\n                        ],\n                        [\n                            \"Bank\",\n                            {}\n                        ]\n                    ]\n                },\n                \"label\": \"Alice@Bank\",\n                \"version\": \"0\"\n            },\n            \"provider\": \"Bank\",\n            \"owner\": \"Alice\"\n        }\n    }\n}",
 													"options": {
 														"raw": {
 															"language": "json"
@@ -12226,7 +11220,7 @@
 												],
 												"body": {
 													"mode": "raw",
-													"raw": "{\n    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Trading.Service:Service\",\n    \"key\": {\n        \"_1\": \"Operator\",\n        \"_2\": \"Exchange\",\n        \"_3\": \"Alice\"\n    },\n    \"choice\": \"RequestCreateOrder\",\n    \"argument\": {\n        \"collateral\": {\n            \"tag\": \"Collateral\",\n            \"value\": \"00f015d3293d46b2d2fd974b32c725bb85778cf1ddc706ce1c2a8e1b80d1f4c7f3\"\n        },\n        \"details\": {\n            \"asset\": {\n                \"id\": {\n                    \"label\": \"USD\",\n                    \"signatories\": {\n                        \"map\": [\n                            [\n                                \"Issuer\",\n                                {}\n                            ],\n                            [\n                                \"Bank\",\n                                {}\n                            ]\n                        ]\n                    },\n                    \"version\": \"0\"\n                },\n                \"quantity\": \"500000.0\"\n            },\n            \"id\": \"AliceOrder1\",\n            \"listingId\": \"BTCUSD\",\n            \"orderType\": {\n                \"tag\": \"Limit\",\n                \"value\": {\n                    \"price\": \"40000.0\"\n                }\n            },\n            \"side\": \"Buy\",\n            \"timeInForce\": {\n                \"tag\": \"GTC\",\n                \"value\": {}\n            }\n        }\n    }\n}",
+													"raw": "{\n    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Trading.Service:Service\",\n    \"key\": {\n        \"_1\": \"Operator\",\n        \"_2\": \"Exchange\",\n        \"_3\": \"Alice\"\n    },\n    \"choice\": \"RequestCreateOrder\",\n    \"argument\": {\n        \"details\": {\n            \"id\": \"163532732872838990\",\n            \"listingId\": \"BTCUSD\",\n            \"asset\": {\n                \"id\": {\n                    \"signatories\": {\n                        \"map\": [\n                            [\n                                \"Bank\",\n                                {}\n                            ],\n                            [\n                                \"Issuer\",\n                                {}\n                            ]\n                        ]\n                    },\n                    \"label\": \"BTC\",\n                    \"version\": \"0\"\n                },\n                \"quantity\": \"10\"\n            },\n            \"side\": \"Buy\",\n            \"orderType\": {\n                \"tag\": \"Limit\",\n                \"value\": {\n                    \"price\": \"1000\"\n                }\n            },\n            \"timeInForce\": {\n                \"tag\": \"GTC\",\n                \"value\": {}\n            },\n            \"marketType\": {\n                \"tag\": \"Collateralized\",\n                \"value\": {\n                    \"depositCid\": \"00be60d3584b04736179be2eff5e81d9d86513f765e0c4cf002ca67263f2aa74fc\",\n                    \"receivableAccount\": {\n                        \"id\": {\n                            \"signatories\": {\n                                \"map\": [\n                                    [\n                                        \"Bank\",\n                                        {}\n                                    ],\n                                    [\n                                        \"Bob\",\n                                        {}\n                                    ]\n                                ]\n                            },\n                            \"label\": \"Bob@Bank\",\n                            \"version\": \"0\"\n                        },\n                        \"provider\": \"Bank\",\n                        \"owner\": \"Bob\"\n                    }\n                }\n            },\n            \"optExchangeFee\": null\n        }\n    }\n}",
 													"options": {
 														"raw": {
 															"language": "json"
@@ -12266,7 +11260,7 @@
 												}
 											],
 											"cookie": [],
-											"body": "{\n    \"result\": {\n        \"events\": [\n            {\n                \"archived\": {\n                    \"contractId\": \"00f015d3293d46b2d2fd974b32c725bb85778cf1ddc706ce1c2a8e1b80d1f4c7f3\",\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:DA.Finance.Asset:AssetDeposit\"\n                }\n            },\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"001781d33a7cdc3370fc04b5433c8af7527576cc489c05c6360fc465e153561c24\",\n                    \"observers\": [\n                        \"Exchange\"\n                    ],\n                    \"payload\": {\n                        \"account\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Alice\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"ExchangeAllocationAccount-Alice\",\n                                \"version\": \"0\"\n                            },\n                            \"provider\": \"Bank\",\n                            \"owner\": \"Alice\"\n                        },\n                        \"asset\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Issuer\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"USD\",\n                                \"version\": \"0\"\n                            },\n                            \"quantity\": \"400000.0\"\n                        },\n                        \"observers\": {\n                            \"map\": [\n                                [\n                                    \"Exchange\",\n                                    {}\n                                ]\n                            ]\n                        }\n                    },\n                    \"signatories\": [\n                        \"Alice\",\n                        \"Bank\"\n                    ],\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:DA.Finance.Asset:AssetDeposit\"\n                }\n            },\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"001533b8771e2117f2dec6689ffaaa956b3c26c91d6142006e328fa2fe9a463c0c\",\n                    \"key\": {\n                        \"_1\": \"Exchange\",\n                        \"_2\": \"AliceOrder1\"\n                    },\n                    \"observers\": [],\n                    \"payload\": {\n                        \"provider\": \"Exchange\",\n                        \"collateral\": {\n                            \"tag\": \"Collateral\",\n                            \"value\": \"001781d33a7cdc3370fc04b5433c8af7527576cc489c05c6360fc465e153561c24\"\n                        },\n                        \"operator\": \"Operator\",\n                        \"customer\": \"Alice\",\n                        \"details\": {\n                            \"side\": \"Buy\",\n                            \"listingId\": \"BTCUSD\",\n                            \"timeInForce\": {\n                                \"tag\": \"GTC\",\n                                \"value\": {}\n                            },\n                            \"optExchangeFee\": null,\n                            \"id\": \"AliceOrder1\",\n                            \"orderType\": {\n                                \"tag\": \"Limit\",\n                                \"value\": {\n                                    \"price\": \"40000.0\"\n                                }\n                            },\n                            \"asset\": {\n                                \"id\": {\n                                    \"signatories\": {\n                                        \"map\": [\n                                            [\n                                                \"Bank\",\n                                                {}\n                                            ],\n                                            [\n                                                \"Issuer\",\n                                                {}\n                                            ]\n                                        ]\n                                    },\n                                    \"label\": \"USD\",\n                                    \"version\": \"0\"\n                                },\n                                \"quantity\": \"500000.0\"\n                            }\n                        }\n                    },\n                    \"signatories\": [\n                        \"Alice\",\n                        \"Exchange\"\n                    ],\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Trading.Service:CreateOrderRequest\"\n                }\n            },\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"00c49195a410cadd7ac944e0c3d6dc3e5e83943784081795472e9f8117e72305e8\",\n                    \"key\": {\n                        \"_1\": \"Exchange\",\n                        \"_2\": \"AliceOrder1\"\n                    },\n                    \"observers\": [],\n                    \"payload\": {\n                        \"executions\": [],\n                        \"provider\": \"Exchange\",\n                        \"providerOrderId\": null,\n                        \"collateral\": {\n                            \"tag\": \"Collateral\",\n                            \"value\": \"001781d33a7cdc3370fc04b5433c8af7527576cc489c05c6360fc465e153561c24\"\n                        },\n                        \"remainingQuantity\": \"500000.0\",\n                        \"operator\": \"Operator\",\n                        \"status\": {\n                            \"tag\": \"New\",\n                            \"value\": {}\n                        },\n                        \"customer\": \"Alice\",\n                        \"details\": {\n                            \"side\": \"Buy\",\n                            \"listingId\": \"BTCUSD\",\n                            \"timeInForce\": {\n                                \"tag\": \"GTC\",\n                                \"value\": {}\n                            },\n                            \"optExchangeFee\": null,\n                            \"id\": \"AliceOrder1\",\n                            \"orderType\": {\n                                \"tag\": \"Limit\",\n                                \"value\": {\n                                    \"price\": \"40000.0\"\n                                }\n                            },\n                            \"asset\": {\n                                \"id\": {\n                                    \"signatories\": {\n                                        \"map\": [\n                                            [\n                                                \"Bank\",\n                                                {}\n                                            ],\n                                            [\n                                                \"Issuer\",\n                                                {}\n                                            ]\n                                        ]\n                                    },\n                                    \"label\": \"USD\",\n                                    \"version\": \"0\"\n                                },\n                                \"quantity\": \"500000.0\"\n                            }\n                        }\n                    },\n                    \"signatories\": [\n                        \"Alice\",\n                        \"Exchange\",\n                        \"Operator\"\n                    ],\n                    \"templateId\": \"ed3cdcd75bbdbfdaba05d2e82b5d900f8664cf492997072f61da469af33258d5:Marketplace.Trading.Model:Order\"\n                }\n            }\n        ],\n        \"exerciseResult\": {\n            \"tag\": \"Right\",\n            \"value\": {\n                \"_1\": \"00c49195a410cadd7ac944e0c3d6dc3e5e83943784081795472e9f8117e72305e8\",\n                \"_2\": \"001533b8771e2117f2dec6689ffaaa956b3c26c91d6142006e328fa2fe9a463c0c\",\n                \"_3\": {\n                    \"tag\": \"Collateral\",\n                    \"value\": \"001781d33a7cdc3370fc04b5433c8af7527576cc489c05c6360fc465e153561c24\"\n                }\n            }\n        }\n    },\n    \"status\": 200\n}"
+											"body": "{\n    \"result\": {\n        \"events\": [\n            {\n                \"archived\": {\n                    \"contractId\": \"00be60d3584b04736179be2eff5e81d9d86513f765e0c4cf002ca67263f2aa74fc\",\n                    \"templateId\": \"3b93defed8dec45bfbe94268b0d1fd1aef5070d2f0cbe37a5585ae896ca7da35:DA.Finance.Asset:AssetDeposit\"\n                }\n            },\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"007dbc4bbee23ec07a77d1cbd41360cfc975484fe07cdc08f8b0a9cde72f925112\",\n                    \"observers\": [\n                        \"Issuer\"\n                    ],\n                    \"payload\": {\n                        \"account\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Alice\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"Alice@Bank\",\n                                \"version\": \"0\"\n                            },\n                            \"provider\": \"Bank\",\n                            \"owner\": \"Alice\"\n                        },\n                        \"asset\": {\n                            \"id\": {\n                                \"signatories\": {\n                                    \"map\": [\n                                        [\n                                            \"Bank\",\n                                            {}\n                                        ],\n                                        [\n                                            \"Issuer\",\n                                            {}\n                                        ]\n                                    ]\n                                },\n                                \"label\": \"USD\",\n                                \"version\": \"0\"\n                            },\n                            \"quantity\": \"10000.0\"\n                        },\n                        \"lockers\": {\n                            \"map\": [\n                                [\n                                    \"Exchange\",\n                                    {}\n                                ]\n                            ]\n                        },\n                        \"observers\": {\n                            \"map\": [\n                                [\n                                    \"Issuer\",\n                                    {}\n                                ]\n                            ]\n                        }\n                    },\n                    \"signatories\": [\n                        \"Bank\",\n                        \"Bob\",\n                        \"Exchange\"\n                    ],\n                    \"templateId\": \"3b93defed8dec45bfbe94268b0d1fd1aef5070d2f0cbe37a5585ae896ca7da35:DA.Finance.Asset:AssetDeposit\"\n                }\n            },\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"00c5ed7339554326e4bc61204c1d25eae75a3c5a58a91af1657ca4717386cdfa22\",\n                    \"key\": {\n                        \"_1\": \"Exchange\",\n                        \"_2\": \"163532732872838990\"\n                    },\n                    \"observers\": [],\n                    \"payload\": {\n                        \"provider\": \"Exchange\",\n                        \"customer\": \"Alice\",\n                        \"operator\": \"Operator\",\n                        \"details\": {\n                            \"side\": \"Buy\",\n                            \"listingId\": \"BTCUSD\",\n                            \"timeInForce\": {\n                                \"tag\": \"GTC\",\n                                \"value\": {}\n                            },\n                            \"optExchangeFee\": null,\n                            \"id\": \"163532732872838990\",\n                            \"orderType\": {\n                                \"tag\": \"Limit\",\n                                \"value\": {\n                                    \"price\": \"1000.0\"\n                                }\n                            },\n                            \"asset\": {\n                                \"id\": {\n                                    \"signatories\": {\n                                        \"map\": [\n                                            [\n                                                \"Bank\",\n                                                {}\n                                            ],\n                                            [\n                                                \"Issuer\",\n                                                {}\n                                            ]\n                                        ]\n                                    },\n                                    \"label\": \"BTC\",\n                                    \"version\": \"0\"\n                                },\n                                \"quantity\": \"10.0\"\n                            },\n                            \"marketType\": {\n                                \"tag\": \"Collateralized\",\n                                \"value\": {\n                                    \"depositCid\": \"007dbc4bbee23ec07a77d1cbd41360cfc975484fe07cdc08f8b0a9cde72f925112\",\n                                    \"receivableAccount\": {\n                                        \"id\": {\n                                            \"signatories\": {\n                                                \"map\": [\n                                                    [\n                                                        \"Bank\",\n                                                        {}\n                                                    ],\n                                                    [\n                                                        \"Alice\",\n                                                        {}\n                                                    ]\n                                                ]\n                                            },\n                                            \"label\": \"Alice@Bank\",\n                                            \"version\": \"0\"\n                                        },\n                                        \"provider\": \"Bank\",\n                                        \"owner\": \"Alice\"\n                                    }\n                                }\n                            }\n                        }\n                    },\n                    \"signatories\": [\n                        \"Alice\",\n                        \"Exchange\"\n                    ],\n                    \"templateId\": \"3b93defed8dec45bfbe94268b0d1fd1aef5070d2f0cbe37a5585ae896ca7da35:Marketplace.Trading.Service:CreateOrderRequest\"\n                }\n            },\n            {\n                \"created\": {\n                    \"agreementText\": \"\",\n                    \"contractId\": \"00352e5d4bb84b65c27ac2c6c1143f8753cae51f6a16c08cc88ec7bb82051b6465\",\n                    \"key\": {\n                        \"_1\": \"Exchange\",\n                        \"_2\": \"163532732872838990\"\n                    },\n                    \"observers\": [],\n                    \"payload\": {\n                        \"executions\": [],\n                        \"provider\": \"Exchange\",\n                        \"providerOrderId\": null,\n                        \"remainingQuantity\": \"10.0\",\n                        \"customer\": \"Alice\",\n                        \"createdAt\": \"2021-10-27T09:35:28.988Z\",\n                        \"details\": {\n                            \"side\": \"Buy\",\n                            \"listingId\": \"BTCUSD\",\n                            \"timeInForce\": {\n                                \"tag\": \"GTC\",\n                                \"value\": {}\n                            },\n                            \"optExchangeFee\": null,\n                            \"id\": \"163532732872838990\",\n                            \"orderType\": {\n                                \"tag\": \"Limit\",\n                                \"value\": {\n                                    \"price\": \"1000.0\"\n                                }\n                            },\n                            \"asset\": {\n                                \"id\": {\n                                    \"signatories\": {\n                                        \"map\": [\n                                            [\n                                                \"Bank\",\n                                                {}\n                                            ],\n                                            [\n                                                \"Issuer\",\n                                                {}\n                                            ]\n                                        ]\n                                    },\n                                    \"label\": \"BTC\",\n                                    \"version\": \"0\"\n                                },\n                                \"quantity\": \"10.0\"\n                            },\n                            \"marketType\": {\n                                \"tag\": \"Collateralized\",\n                                \"value\": {\n                                    \"depositCid\": \"007dbc4bbee23ec07a77d1cbd41360cfc975484fe07cdc08f8b0a9cde72f925112\",\n                                    \"receivableAccount\": {\n                                        \"id\": {\n                                            \"signatories\": {\n                                                \"map\": [\n                                                    [\n                                                        \"Bank\",\n                                                        {}\n                                                    ],\n                                                    [\n                                                        \"Alice\",\n                                                        {}\n                                                    ]\n                                                ]\n                                            },\n                                            \"label\": \"Alice@Bank\",\n                                            \"version\": \"0\"\n                                        },\n                                        \"provider\": \"Bank\",\n                                        \"owner\": \"Alice\"\n                                    }\n                                }\n                            }\n                        },\n                        \"operator\": \"Operator\",\n                        \"status\": {\n                            \"tag\": \"New\",\n                            \"value\": {}\n                        }\n                    },\n                    \"signatories\": [\n                        \"Alice\",\n                        \"Exchange\",\n                        \"Operator\"\n                    ],\n                    \"templateId\": \"3b93defed8dec45bfbe94268b0d1fd1aef5070d2f0cbe37a5585ae896ca7da35:Marketplace.Trading.Model:Order\"\n                }\n            }\n        ],\n        \"exerciseResult\": \"00352e5d4bb84b65c27ac2c6c1143f8753cae51f6a16c08cc88ec7bb82051b6465\"\n    },\n    \"status\": 200\n}"
 										}
 									]
 								},
