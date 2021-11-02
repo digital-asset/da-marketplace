@@ -62,10 +62,10 @@ template LifecycleRequest
           (_, description) <- fetchByKey @AssetDescription assetDeposit.asset.id
           (AssetDeposit{account = safekeepingAccount}) <- fetch safekeepingDepositCid
           (versionsCid, versions) <- fetchByKey @AssetDescription.Index (fromList . signatory $ description, assetDeposit.asset.id.label)
-          let spot : Text -> Date -> Update Decimal
-              spot label dt = pure $ fromSomeNote
-                ("Lifecycle: Underlying data '" <> label <> "' missing on " <> show dt)
-                (Map.lookup label fixings >>= Map.lookup dt)
+          let spot : Id -> Date -> Update Decimal
+              spot id dt = pure $ fromSomeNote
+                ("Lifecycle: Underlying data '" <> id.label <> "' missing on " <> show dt)
+                (Map.lookup id.label fixings >>= Map.lookup dt)
               election = (True, deserialize choice)
           remaining <- if election._2 /= Zero
             then Lifecycle.exercise spot election (deserialize description.claims) t

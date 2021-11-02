@@ -16,8 +16,8 @@ type T = AssetDescription
 type Claims = Claim Date Decimal Id
 type Version = Int
 
-deriving instance Ord x => Ord (Observation Date x)
-deriving instance Ord (Inequality Date Decimal)
+deriving instance Ord (Observation Date Decimal Id)
+deriving instance Ord (Inequality Date Decimal Id)
 deriving instance Ord (Claim Date Decimal Id)
 
 template AssetDescription
@@ -71,7 +71,7 @@ template AssetDescription
         party : Party
       controller party
         do
-          let getConst : (Observation Date Decimal, b) -> [Decimal]
+          let getConst : (Observation Date Decimal a, b) -> [Decimal]
               getConst (Const x, _) = [x]
               getConst _            = []
           return $ concatMap getConst $ payoffs (C.deserialize claims)

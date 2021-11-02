@@ -28,8 +28,13 @@ const NewConvertibleNoteComponent: React.FC<
   RouteComponentProps & ServicePageProps<CustodyService>
 > = ({ services, history }) => {
   const el = useRef<HTMLDivElement>(null);
+  const emptyId = {
+    signatories: makeDamlSet<string>([]),
+    label: '',
+    version: '0',
+  };
 
-  const [underlying, setUnderlying] = useState('');
+  const [underlying, setUnderlying] = useState<Id>(emptyId);
   const [principal, setPrincipal] = useState('');
   const [currency, setCurrency] = useState('');
   const [interest, setInterest] = useState('');
@@ -49,17 +54,9 @@ const NewConvertibleNoteComponent: React.FC<
     c => c.payload.claims.tag === 'Zero' && c.payload.assetId.version === '0'
   );
   const ccy = assets.find(c => c.payload.assetId.label === currency);
-  const ccyId: Id = ccy?.payload.assetId || {
-    signatories: makeDamlSet<string>([]),
-    label: '',
-    version: '0',
-  };
-  const asset = assets.find(c => c.payload.assetId.label === underlying);
-  const assetId: Id = asset?.payload.assetId || {
-    signatories: makeDamlSet<string>([]),
-    label: '',
-    version: '0',
-  };
+  const ccyId: Id = ccy?.payload.assetId || emptyId;
+  const asset = assets.find(c => c.payload.assetId === underlying);
+  const assetId: Id = asset?.payload.assetId || emptyId;
   const registrars = services
     .filter(s => !_.isEmpty(customerServices.find(i => i.payload.provider === s.payload.provider)))
     .map(s => s.payload.provider);
@@ -70,31 +67,31 @@ const NewConvertibleNoteComponent: React.FC<
       new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)) ||
     '';
 
-  const ineqEuropean: Inequality<DamlDate, Decimal> = {
+  const ineqEuropean: Inequality<DamlDate, Decimal, Id> = {
     tag: 'TimeGte',
     value: parseDate(maturity),
   };
-  const obsPrincipal: Observation<DamlDate, Decimal> = {
+  const obsPrincipal: Observation<DamlDate, Decimal, Id> = {
     tag: 'Const',
     value: {
       value: (parseFloat(principal || '0') * (1.0 + parseFloat(interest || '0'))).toString(),
     },
   };
-  const obsCap: Observation<DamlDate, Decimal> = { tag: 'Const', value: { value: cap } };
-  const obsDiscount: Observation<DamlDate, Decimal> = {
+  const obsCap: Observation<DamlDate, Decimal, Id> = { tag: 'Const', value: { value: cap } };
+  const obsDiscount: Observation<DamlDate, Decimal, Id> = {
     tag: 'Const',
     value: { value: (1.0 - parseFloat(discount || '0')).toFixed(2) },
   };
-  const obsSpot: Observation<DamlDate, Decimal> = { tag: 'Observe', value: { key: underlying } };
-  const ineqPayoff: Inequality<DamlDate, Decimal> = {
+  const obsSpot: Observation<DamlDate, Decimal, Id> = { tag: 'Observe', value: { key: underlying } };
+  const ineqPayoff: Inequality<DamlDate, Decimal, Id> = {
     tag: 'Lte',
     value: { _1: obsSpot, _2: obsCap },
   };
-  const obsDiscounted: Observation<DamlDate, Decimal> = {
+  const obsDiscounted: Observation<DamlDate, Decimal, Id> = {
     tag: 'Mul',
     value: { _1: obsSpot, _2: obsDiscount },
   };
-  const obsConversion: Observation<DamlDate, Decimal> = {
+  const obsConversion: Observation<DamlDate, Decimal, Id> = {
     tag: 'Div',
     value: { _1: obsPrincipal, _2: obsDiscounted },
   };
@@ -150,13 +147,14 @@ const NewConvertibleNoteComponent: React.FC<
           className="issue-asset-form-field select-account"
           placeholder="Underlying"
           label="Underlying"
-          value={underlying}
+          value={underlying.label}
           options={assets.map(c => ({
             text: c.payload.assetId.label,
             value: c.payload.assetId.label,
           }))}
           onChange={(event: React.SyntheticEvent, result: any) => {
-            setUnderlying(result.value);
+            const asset = assets.find(a => a.payload.assetId.label === result.value);
+            setUnderlying(!!asset ? asset.payload.assetId : emptyId);
           }}
         />
 

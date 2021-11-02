@@ -7,7 +7,7 @@ import {
 import { Observation } from '@daml.js/da-marketplace/lib/ContingentClaims/Observation/module';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module';
 
-const transformObservation = (obs: Observation<Date, Decimal>, linkText: string): any => {
+const transformObservation = (obs: Observation<Date, Decimal, Id>, linkText: string): any => {
   console.log(obs);
   switch (obs.tag) {
     case 'Add': //TODO: collapse a + (-b) into a - b
@@ -60,14 +60,14 @@ const transformObservation = (obs: Observation<Date, Decimal>, linkText: string)
         ...obs,
         linkText,
         type: 'Observation',
-        text: `Price(${obs.value.key})`,
+        text: `Price(${obs.value.key.label})`,
         children: null,
       };
   }
 };
 
 export const transformInequality = (
-  inequality: Inequality<Date, Decimal>,
+  inequality: Inequality<Date, Decimal, Id>,
   linkText: string
 ): any => {
   switch (inequality.tag) {

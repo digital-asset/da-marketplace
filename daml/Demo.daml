@@ -2,7 +2,7 @@ module Demo where
 
 import Common
 import ContingentClaims.Claim (Claim(Zero), serialize)
-import ContingentClaims.FinancialClaim (unrollDates)
+import ContingentClaims.Financial (unrollDates)
 import Daml.Script
 import DA.Date (date, Month(..))
 import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..), AssetDeposit_Transfer(..))
