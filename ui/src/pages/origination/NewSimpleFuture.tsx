@@ -28,9 +28,14 @@ import { makeDamlSet, ServicePageProps } from '../common';
 const NewSimpleFutureComponent: React.FC<RouteComponentProps & ServicePageProps<CustodyService>> =
   ({ services, history }) => {
     const el = useRef<HTMLDivElement>(null);
+    const emptyId = {
+      signatories: makeDamlSet<string>([]),
+      label: '',
+      version: '0',
+    };
 
     const displayErrorMessage = useDisplayErrorMessage();
-    const [underlying, setUnderlying] = useState('');
+    const [underlying, setUnderlying] = useState<Id>(emptyId);
     const [expiry, setExpiry] = useState<Date | null>(null);
     const [multiplier, setMultiplier] = useState('');
     const [label, setLabel] = useState('');
@@ -49,12 +54,8 @@ const NewSimpleFutureComponent: React.FC<RouteComponentProps & ServicePageProps<
         new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)) ||
       '';
 
-    const underlyingId: Id = allAssets.find(c => c.payload.assetId.label === underlying)?.payload
-      .assetId || {
-      signatories: makeDamlSet<string>([]),
-      label: '',
-      version: '0',
-    };
+    const underlyingId: Id =
+      allAssets.find(c => c.payload.assetId.label === underlying.label)?.payload.assetId || emptyId;
 
     const registrars = services
       .filter(
@@ -62,12 +63,15 @@ const NewSimpleFutureComponent: React.FC<RouteComponentProps & ServicePageProps<
       )
       .map(s => s.payload.provider);
 
-    const ineqExpiry: Inequality<DamlDate, Id> = {
+    const ineqExpiry: Inequality<DamlDate, Decimal, Id> = {
       tag: 'TimeGte',
       value: parseDate(expiry),
     };
 
-    const obsMult: Observation<DamlDate, Decimal> = { tag: 'Const', value: { value: multiplier } };
+    const obsMult: Observation<DamlDate, Decimal, Id> = {
+      tag: 'Const',
+      value: { value: multiplier },
+    };
 
     const oneUnderlying: Claim<DamlDate, Decimal, Id> = { tag: 'One', value: underlyingId };
 
@@ -117,7 +121,7 @@ const NewSimpleFutureComponent: React.FC<RouteComponentProps & ServicePageProps<
             className="issue-asset-form-field select-account"
             placeholder="Underlying"
             label="Underlying"
-            value={underlying}
+            value={underlying.label}
             options={allAssets.map(c => ({
               text: c.payload.assetId.label,
               value: c.payload.assetId.label,

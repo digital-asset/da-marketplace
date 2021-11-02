@@ -28,9 +28,14 @@ import { makeDamlSet, ServicePageProps } from '../common';
 const NewBinaryOptionComponent: React.FC<RouteComponentProps & ServicePageProps<CustodyService>> =
   ({ services, history }) => {
     const el = useRef<HTMLDivElement>(null);
+    const emptyId = {
+      signatories: makeDamlSet<string>([]),
+      label: '',
+      version: '0',
+    };
 
     const [isCall, setIsCall] = useState(true);
-    const [underlying, setUnderlying] = useState('');
+    const [underlying, setUnderlying] = useState<Id>(emptyId);
     const [strike, setStrike] = useState('');
     const [expiry, setExpiry] = useState<Date | null>(null);
     const [currency, setCurrency] = useState('');
@@ -47,11 +52,7 @@ const NewBinaryOptionComponent: React.FC<RouteComponentProps & ServicePageProps<
       c => c.payload.claims.tag === 'Zero' && c.payload.assetId.version === '0'
     );
     const ccy = assets.find(c => c.payload.assetId.label === currency);
-    const ccyId: Id = ccy?.payload.assetId || {
-      signatories: makeDamlSet<string>([]),
-      label: '',
-      version: '0',
-    };
+    const ccyId: Id = ccy?.payload.assetId || emptyId;
     const registrars = services
       .filter(
         s => !_.isEmpty(customerServices.find(i => i.payload.provider === s.payload.provider))
@@ -64,13 +65,19 @@ const NewBinaryOptionComponent: React.FC<RouteComponentProps & ServicePageProps<
         new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)) ||
       '';
 
-    const ineqEuropean: Inequality<DamlDate, Id> = {
+    const ineqEuropean: Inequality<DamlDate, Decimal, Id> = {
       tag: 'TimeGte',
       value: parseDate(expiry),
     };
-    const obsStrike: Observation<DamlDate, Decimal> = { tag: 'Const', value: { value: strike } };
-    const obsSpot: Observation<DamlDate, Decimal> = { tag: 'Observe', value: { key: underlying } };
-    const ineqPayoff: Inequality<DamlDate, Decimal> = {
+    const obsStrike: Observation<DamlDate, Decimal, Id> = {
+      tag: 'Const',
+      value: { value: strike },
+    };
+    const obsSpot: Observation<DamlDate, Decimal, Id> = {
+      tag: 'Observe',
+      value: { key: underlying },
+    };
+    const ineqPayoff: Inequality<DamlDate, Decimal, Id> = {
       tag: 'Lte',
       value: isCall ? { _1: obsStrike, _2: obsSpot } : { _1: obsSpot, _2: obsStrike },
     };
@@ -140,13 +147,14 @@ const NewBinaryOptionComponent: React.FC<RouteComponentProps & ServicePageProps<
             className="issue-asset-form-field select-account"
             placeholder="Underlying"
             label="Underlying"
-            value={underlying}
+            value={underlying.label}
             options={assets.map(c => ({
               text: c.payload.assetId.label,
               value: c.payload.assetId.label,
             }))}
-            onChange={(event: React.SyntheticEvent, result: any) => {
-              setUnderlying(result.value);
+            onChange={(_, result: any) => {
+              const asset = assets.find(a => a.payload.assetId.label === result.value);
+              setUnderlying(!!asset ? asset.payload.assetId : emptyId);
             }}
           />
 

@@ -6,7 +6,7 @@ import ContingentClaims.Claim
 import ContingentClaims.Observable qualified as O
 import ContingentClaims.Observation qualified as O
 import ContingentClaims.Observable (at)
-import ContingentClaims.FinancialClaim (fixed, floating, swap, european, bermudan, forward)
+import ContingentClaims.Financial (fixed, floating, swap, european, bermudan, forward)
 import DA.Finance.Asset
 import DA.Finance.Types (Account, Id(..))
 
@@ -49,16 +49,16 @@ callOptionPhysical asset assetQty ccy ccyQty d =
 
 binaryCallOption : Id -> Id -> Decimal -> Date -> C
 binaryCallOption underlying ccy strike expiry =
-  When (at expiry) $ Or (Cond (O.pure strike O.<= O.observe underlying.label) (One ccy) Zero) Zero
+  When (at expiry) $ Or (Cond (O.pure strike O.<= O.observe underlying) (One ccy) Zero) Zero
 
 koPutWarrant : Decimal -> Decimal -> Id -> Id -> C
 koPutWarrant barrier strike underlying ccy  =
-  Cond (O.observe underlying.label O.<= O.pure barrier) (Or (Scale (O.pure strike + (O.observe underlying.label)) (One ccy)) (Zero)) Zero
+  Cond (O.observe underlying O.<= O.pure barrier) (Or (Scale (O.pure strike + (O.observe underlying)) (One ccy)) (Zero)) Zero
 
 bermudanSwaption : Id -> Decimal -> Id -> Decimal -> [Date] -> [Date] -> C
 bermudanSwaption floatingRateId fixedRate fixedCcyId principal fixingDates exerciseDates =
   let
-    floatObs = O.observe floatingRateId.label
+    floatObs = O.observe floatingRateId
     floatingLeg = floating (O.pure 0.0) floatObs floatingRateId
     fixedLeg = fixed principal fixedRate fixedCcyId
   in bermudan (swap floatingLeg fixedLeg fixingDates) exerciseDates
@@ -67,8 +67,8 @@ bermudanSwaption floatingRateId fixedRate fixedCcyId principal fixingDates exerc
 convertibleNote : Id -> Id -> Decimal -> Decimal -> Date -> Decimal -> Decimal -> C
 convertibleNote underlying ccy principal discount maturity interest cap =
   let
-    conversionCondition = O.observe underlying.label O.<= O.pure cap
-    conversionPayout = Scale (O.pure (principal * (1.0 + interest)) / (O.observe underlying.label * O.pure (1.0 - discount))) (One underlying)
+    conversionCondition = O.observe underlying O.<= O.pure cap
+    conversionPayout = Scale (O.pure (principal * (1.0 + interest)) / (O.observe underlying * O.pure (1.0 - discount))) (One underlying)
     principalPayout = Scale (O.pure (principal * (1.0 + interest))) (One ccy)
   in When (at maturity) $ Cond conversionCondition conversionPayout principalPayout
 
