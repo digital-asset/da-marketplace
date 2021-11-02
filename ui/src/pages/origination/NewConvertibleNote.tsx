@@ -82,7 +82,10 @@ const NewConvertibleNoteComponent: React.FC<
     tag: 'Const',
     value: { value: (1.0 - parseFloat(discount || '0')).toFixed(2) },
   };
-  const obsSpot: Observation<DamlDate, Decimal, Id> = { tag: 'Observe', value: { key: underlying } };
+  const obsSpot: Observation<DamlDate, Decimal, Id> = {
+    tag: 'Observe',
+    value: { key: underlying },
+  };
   const ineqPayoff: Inequality<DamlDate, Decimal, Id> = {
     tag: 'Lte',
     value: { _1: obsSpot, _2: obsCap },

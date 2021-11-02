@@ -69,8 +69,14 @@ const NewBinaryOptionComponent: React.FC<RouteComponentProps & ServicePageProps<
       tag: 'TimeGte',
       value: parseDate(expiry),
     };
-    const obsStrike: Observation<DamlDate, Decimal, Id> = { tag: 'Const', value: { value: strike } };
-    const obsSpot: Observation<DamlDate, Decimal, Id> = { tag: 'Observe', value: { key: underlying } };
+    const obsStrike: Observation<DamlDate, Decimal, Id> = {
+      tag: 'Const',
+      value: { value: strike },
+    };
+    const obsSpot: Observation<DamlDate, Decimal, Id> = {
+      tag: 'Observe',
+      value: { key: underlying },
+    };
     const ineqPayoff: Inequality<DamlDate, Decimal, Id> = {
       tag: 'Lte',
       value: isCall ? { _1: obsStrike, _2: obsSpot } : { _1: obsSpot, _2: obsStrike },

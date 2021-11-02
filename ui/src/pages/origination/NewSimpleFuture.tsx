@@ -54,8 +54,8 @@ const NewSimpleFutureComponent: React.FC<RouteComponentProps & ServicePageProps<
         new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)) ||
       '';
 
-    const underlyingId: Id = allAssets
-      .find(c => c.payload.assetId.label === underlying.label)?.payload.assetId || emptyId;
+    const underlyingId: Id =
+      allAssets.find(c => c.payload.assetId.label === underlying.label)?.payload.assetId || emptyId;
 
     const registrars = services
       .filter(
@@ -68,7 +68,10 @@ const NewSimpleFutureComponent: React.FC<RouteComponentProps & ServicePageProps<
       value: parseDate(expiry),
     };
 
-    const obsMult: Observation<DamlDate, Decimal, Id> = { tag: 'Const', value: { value: multiplier } };
+    const obsMult: Observation<DamlDate, Decimal, Id> = {
+      tag: 'Const',
+      value: { value: multiplier },
+    };
 
     const oneUnderlying: Claim<DamlDate, Decimal, Id> = { tag: 'One', value: underlyingId };
 
