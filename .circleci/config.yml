@@ -134,13 +134,13 @@ workflows:
   test:
     jobs:
       - daml_test:
-          daml_sdk_version: "1.12.0"
+          daml_sdk_version: "1.17.1"
           filters:
             branches:
               ignore:
                 - main
       - ui_test:
-          daml_sdk_version: "1.12.0"
+          daml_sdk_version: "1.17.1"
           filters:
             branches:
               ignore:
@@ -148,7 +148,7 @@ workflows:
   publish:
     jobs:
       - publish:
-          daml_sdk_version: "1.12.0"
+          daml_sdk_version: "1.17.1"
           filters:
             branches:
               only:
