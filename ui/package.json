@@ -1,11 +1,11 @@
 {
   "name": "da-marketplace-ui",
-  "version": "0.2.0-rc.4",
+  "version": "0.2.0-rc.5",
   "private": true,
   "dependencies": {
     "@daml-ui.js/da-marketplace-ui": "file:../daml-ui.js/da-marketplace-ui-0.2.0",
     "@daml.js/da-marketplace": "file:../daml.js/da-marketplace-0.2.0",
-    "@daml/hub-react": "1.0.0-rc.4",
+    "@daml/hub-react": "1.0.0-rc.5",
     "@daml/ledger": "1.12.0",
     "@daml/react": "1.12.0",
     "@daml/types": "1.12.0",
