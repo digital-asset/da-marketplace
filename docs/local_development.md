@@ -143,8 +143,9 @@ The Exberry integration can be started up locally. There are two components: the
 in this repository, and the integration itself which is in its own repository.
 
 1. Clone [`daml-dit-integration-exberry`](https://github.com/digital-asset/daml-dit-integration-exberry) in a sibling directory next to `da-marketplace/`
-2. Open two terminals, one in the `da-marketplace/` directory, and one in the `daml-dit-integration-exberry/` directory.
-3. In `daml-dit-integration-exberry/`, create a file in the repo root named `int_args.yaml`. Fill it with the template below, replaced with your Exberry account details.
+2. Install `ddit` with `pip3 install daml-dit-ddit`
+3. Open two terminals, one in the `da-marketplace/` directory, and one in the `daml-dit-integration-exberry/` directory.
+4. In `daml-dit-integration-exberry/`, create a file in the repo root named `int_args.yaml`. Fill it with the template below, replaced with your Exberry account details.
 
 ```yaml
 "metadata":
@@ -157,9 +158,9 @@ in this repository, and the integration itself which is in its own repository.
   "secret": "EXBERRY_SECRET"
 ```
 
-4. In `daml-dit-integration-exberry/`, run `make all`
-5. In `da-marketplace/`, run `daml start --sandbox-option ../daml-dit-integration-exberry/dabl-integration-exberry-{VERSION}.dar`
-6. In `daml-dit-integration-exberry/`, run `DABL_INTEGRATION_TYPE_ID=com.projectdabl.integrations.exberry.integration ./dabl-integration-exberry-{VERSION}.dit`
+5. In `daml-dit-integration-exberry/`, run `make all`
+6. In `da-marketplace/`, run `daml start --sandbox-option ../daml-dit-integration-exberry/dabl-integration-exberry-{VERSION}.dar`
+7. In `daml-dit-integration-exberry/`, run `make start`
 
 With the sandbox ledger and integration both running, it is time to connect them via the Exberry adapter.
 
