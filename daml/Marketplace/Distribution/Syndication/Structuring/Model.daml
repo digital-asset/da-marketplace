@@ -5,7 +5,7 @@ import DA.List (groupOn, singleton)
 import DA.Optional (fromSome)
 import DA.Set (fromList)
 import Marketplace.Distribution.Syndication.Bidding.Model qualified as Bidding
-import Marketplace.Settlement.Hierarchical (SettlementInstruction(..), Dvp(..))
+import Marketplace.Settlement.Hierarchical (SettlementInstruction(..), Trade(..), Status(..))
 
 template CreateDealRequest
   with
@@ -45,8 +45,8 @@ template AccountInfo
     maintainer key._1
 
 
-createInstructions : Bool -> Party -> Party -> Text -> Int -> Asset -> Account -> Account -> Update [ContractId SettlementInstruction]
-createInstructions isCash operator rootProvider settlementId instructionIdx asset senderAccount receiverAccount = do
+createInstructions : Bool -> Party -> Party -> Party -> Text -> Int -> Asset -> Account -> Account -> Update [ContractId SettlementInstruction]
+createInstructions isCash operator agent rootProvider settlementId instructionIdx asset senderAccount receiverAccount = do
   let
     createInstruction sender receiver sAcc rAcc siAsset instIdx = do
       let si = SettlementInstruction with senderAccount = sAcc; receiverAccount = rAcc; asset = siAsset; signed = []; depositCid = None; instructionId = show instIdx; ..
@@ -57,13 +57,13 @@ createInstructions isCash operator rootProvider settlementId instructionIdx asse
     (_, providerAccountInfo) <- fetchByKey @AccountInfo (operator, receiverAccount.provider)
     let providerAccount = if isCash then fromSome providerAccountInfo.cashAccount else fromSome providerAccountInfo.securitiesAccount
     sis1 <- createInstruction receiverAccount.provider receiverAccount.owner (fromSome providerAccountInfo.ownAccount) receiverAccount (asset with id.signatories = fromList [providerAccountInfo.party]) instructionIdx
-    sis2 <- createInstructions isCash operator rootProvider settlementId (instructionIdx + 1) asset senderAccount providerAccount
+    sis2 <- createInstructions isCash operator agent rootProvider settlementId (instructionIdx + 1) asset senderAccount providerAccount
     pure $ sis1 <> sis2
   else if receiverAccount.provider == rootProvider then do
     (_, providerAccountInfo) <- fetchByKey @AccountInfo (operator, senderAccount.provider)
     let providerAccount = if isCash then fromSome providerAccountInfo.cashAccount else fromSome providerAccountInfo.securitiesAccount
     sis1 <- createInstruction senderAccount.owner senderAccount.provider senderAccount (fromSome providerAccountInfo.ownAccount) (asset with id.signatories = fromList [providerAccountInfo.party]) instructionIdx
-    sis2 <- createInstructions isCash operator rootProvider settlementId (instructionIdx + 1) asset providerAccount receiverAccount
+    sis2 <- createInstructions isCash operator agent rootProvider settlementId (instructionIdx + 1) asset providerAccount receiverAccount
     pure $ sis1 <> sis2
   else do
     (_, senderProviderAccountInfo) <- fetchByKey @AccountInfo (operator, senderAccount.provider)
@@ -72,7 +72,7 @@ createInstructions isCash operator rootProvider settlementId instructionIdx asse
     (_, receiverProviderAccountInfo) <- fetchByKey @AccountInfo (operator, receiverAccount.provider)
     let receiverProviderAccount = if isCash then fromSome receiverProviderAccountInfo.cashAccount else fromSome receiverProviderAccountInfo.securitiesAccount
     sis2 <- createInstruction receiverAccount.provider receiverAccount.owner (fromSome receiverProviderAccountInfo.ownAccount) receiverAccount (asset with id.signatories = fromList [receiverProviderAccountInfo.party]) (instructionIdx + 1)
-    sis3 <- createInstructions isCash operator rootProvider settlementId (instructionIdx + 2) asset senderProviderAccount receiverProviderAccount
+    sis3 <- createInstructions isCash operator agent rootProvider settlementId (instructionIdx + 2) asset senderProviderAccount receiverProviderAccount
     pure $ sis1 <> sis2 <> sis3
 
 template Deal
@@ -94,7 +94,7 @@ template Deal
     maintainer key._1
 
     controller operator can
-      nonconsuming InstructIssuerSettlement : [ContractId Dvp]
+      nonconsuming InstructIssuerSettlement : [ContractId Trade]
         with
           confirmationCids : [ContractId Bidding.Confirmation]
           price : Decimal
@@ -112,13 +112,13 @@ template Deal
                 settlementId = asset.id.label <> "-" <> partyToText issuer <> "-" <> partyToText settlementBank
               (_, issuerAccountInfo) <- fetchByKey @AccountInfo (operator, issuer)
               (_, settlementBankAccountInfo) <- fetchByKey @AccountInfo (operator, settlementBank)
-              bondSis <- createInstructions False operator bondRegistrar settlementId 0 aggregateAsset (fromSome issuerAccountInfo.securitiesAccount) (fromSome settlementBankAccountInfo.securitiesAccount)
-              cashSis <- createInstructions True operator cashProvider settlementId (length bondSis) aggregatePrice (fromSome settlementBankAccountInfo.cashAccount) (fromSome issuerAccountInfo.cashAccount)
+              bondSis <- createInstructions False operator bondRegistrar bondRegistrar settlementId 0 aggregateAsset (fromSome issuerAccountInfo.securitiesAccount) (fromSome settlementBankAccountInfo.securitiesAccount)
+              cashSis <- createInstructions True operator bondRegistrar cashProvider settlementId (length bondSis) aggregatePrice (fromSome settlementBankAccountInfo.cashAccount) (fromSome issuerAccountInfo.cashAccount)
               instructionIds <- map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
-              create Dvp with operator; deliverer = issuer; payer = settlementBank; settlementId; instructionIds; delivery = aggregateAsset; payment = aggregatePrice
+              create Trade with operator; agent = bondRegistrar; deliverer = issuer; payer = settlementBank; settlementId; instructionIds; delivery = aggregateAsset; payment = aggregatePrice; status = Instructed
           mapA (settleTranche confirmations) tranches
 
-      nonconsuming InstructBndSettlement : [ContractId Dvp]
+      nonconsuming InstructBndSettlement : [ContractId Trade]
         with
           confirmationCids : [ContractId Bidding.Confirmation]
           price : Decimal
@@ -136,13 +136,13 @@ template Deal
                 settlementId = asset.id.label <> "-" <> partyToText settlementBank <> "-" <> partyToText bndBank
               (_, settlementBankAccountInfo) <- fetchByKey @AccountInfo (operator, settlementBank)
               (_, bndBankAccountInfo) <- fetchByKey @AccountInfo (operator, bndBank)
-              bondSis <- createInstructions False operator bondRegistrar settlementId 0 aggregateAsset (fromSome settlementBankAccountInfo.securitiesAccount) (fromSome bndBankAccountInfo.securitiesAccount)
-              cashSis <- createInstructions True operator cashProvider settlementId (length bondSis) aggregatePrice (fromSome bndBankAccountInfo.cashAccount) (fromSome settlementBankAccountInfo.cashAccount)
+              bondSis <- createInstructions False operator bondRegistrar bondRegistrar settlementId 0 aggregateAsset (fromSome settlementBankAccountInfo.securitiesAccount) (fromSome bndBankAccountInfo.securitiesAccount)
+              cashSis <- createInstructions True operator bondRegistrar cashProvider settlementId (length bondSis) aggregatePrice (fromSome bndBankAccountInfo.cashAccount) (fromSome settlementBankAccountInfo.cashAccount)
               instructionIds <- map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
-              create Dvp with operator; deliverer = settlementBank; payer = bndBank; settlementId; instructionIds; delivery = aggregateAsset; payment = aggregatePrice
+              create Trade with operator; agent = bondRegistrar; deliverer = settlementBank; payer = bndBank; settlementId; instructionIds; delivery = aggregateAsset; payment = aggregatePrice; status = Instructed
           mapA (settleTranche confirmations) tranches
 
-      nonconsuming InstructInvestorSettlement : [ContractId Dvp]
+      nonconsuming InstructInvestorSettlement : [ContractId Trade]
         with
           confirmationCids : [ContractId Bidding.Confirmation]
           price : Decimal
@@ -156,10 +156,10 @@ template Deal
                 settlementId = asset.id.label <> "-" <> partyToText bndBank <> "-" <> partyToText conf.investor
               (_, bndBankAccountInfo) <- fetchByKey @AccountInfo (operator, bndBank)
               (_, investorAccountInfo) <- fetchByKey @AccountInfo (operator, conf.investor)
-              bondSis <- createInstructions False operator bondRegistrar settlementId 0 conf.asset (fromSome bndBankAccountInfo.securitiesAccount) (fromSome investorAccountInfo.securitiesAccount)
-              cashSis <- createInstructions True operator cashProvider settlementId (length bondSis) aggregatePrice (fromSome investorAccountInfo.cashAccount) (fromSome bndBankAccountInfo.cashAccount)
+              bondSis <- createInstructions False operator bondRegistrar bondRegistrar settlementId 0 conf.asset (fromSome bndBankAccountInfo.securitiesAccount) (fromSome investorAccountInfo.securitiesAccount)
+              cashSis <- createInstructions True operator bondRegistrar cashProvider settlementId (length bondSis) aggregatePrice (fromSome investorAccountInfo.cashAccount) (fromSome bndBankAccountInfo.cashAccount)
               instructionIds <- map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
-              create Dvp with operator; deliverer = settlementBank; payer = bndBank; settlementId; instructionIds; delivery = conf.asset; payment = aggregatePrice
+              create Trade with operator; agent = bondRegistrar; deliverer = settlementBank; payer = bndBank; settlementId; instructionIds; delivery = conf.asset; payment = aggregatePrice; status = Instructed
             settleTranche confs asset = do
               let
                 filtered = filter (\c -> c.asset.id.label == asset.id.label) confs

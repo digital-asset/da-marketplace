@@ -23,7 +23,7 @@ import Marketplace.Distribution.Syndication.Structurer qualified as Structurer
 import Marketplace.Distribution.Syndication.Distributor qualified as Distributor
 import Marketplace.Distribution.Syndication.Structuring.Model qualified as Structuring
 import Marketplace.Distribution.Syndication.Structuring.Service qualified as Structuring
-import Marketplace.Settlement.Hierarchical (SettlementInstruction, Allocate(..), Sign(..), Settle(..), Dvp)
+import Marketplace.Settlement.Hierarchical (SettlementInstruction, Allocate(..), Sign(..), Settle(..), Trade)
 
 createCustodianRole : Party -> Party -> Script (ContractId Custodian.Role)
 createCustodianRole operator provider = do
@@ -42,8 +42,8 @@ createIssuanceService operator provider customer = do
   issuanceServiceOfferCid <- submit provider do exerciseByKeyCmd @Custodian.Role (operator, provider) Custodian.OfferIssuanceService with ..
   submit customer do exerciseCmd issuanceServiceOfferCid Issuance.Accept
 
-createBookRunnerRole : Party -> Party -> Script (ContractId Structurer.Role)
-createBookRunnerRole operator provider = do
+createStructurerRole : Party -> Party -> Script (ContractId Structurer.Role)
+createStructurerRole operator provider = do
   bookRunnerRoleOfferCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferSyndicationStructurerRole with provider
   submit provider do exerciseCmd bookRunnerRoleOfferCid Structurer.Accept
 
@@ -150,9 +150,9 @@ sign party = do
   sis <- queryFilter @SettlementInstruction party (\si -> si.receiver == party)
   mapA (\(siCid, _) -> submit party do exerciseCmd siCid Sign) sis
 
-settle : Party -> ContractId Dvp -> Script [ContractId AssetDeposit]
+settle : Party -> ContractId Trade -> Script [ContractId AssetDeposit]
 settle party dvpCid = do
-  submit party do exerciseCmd dvpCid Settle
+  snd <$> submit party do exerciseCmd dvpCid Settle
 
 consolidate : Party -> Script ()
 consolidate party = do

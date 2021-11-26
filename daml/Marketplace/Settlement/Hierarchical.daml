@@ -4,33 +4,44 @@ import DA.Assert ((===))
 import DA.Finance.Types (Account, Asset)
 import DA.Finance.Asset (AssetDeposit(..), AssetDeposit_Transfer(..))
 
-template Dvp
+data Status =
+  Instructed
+  | Settled
+  deriving (Eq, Show)
+
+template Trade
   with
     operator : Party
+    agent : Party
     deliverer : Party
     payer : Party
     settlementId : Text
     instructionIds : [Text]
     payment : Asset
     delivery : Asset
+    status : Status
   where
-    signatory operator --, deliverer, payer
+    signatory operator
+    observer agent
 
     key (operator, settlementId) : (Party, Text)
     maintainer key._1
 
-    controller operator can
-      Settle : [ContractId AssetDeposit]
+    controller agent can
+      Settle : (ContractId Trade, [ContractId AssetDeposit])
         do
           let
             settle (instructionId : Text) = do
               (siCid, _) <- fetchByKey @SettlementInstruction (operator, settlementId, instructionId)
               exercise siCid SettleInstruction
-          mapA settle instructionIds
+          adCids <- mapA settle instructionIds
+          tradeCid <- create this with status = Settled
+          pure (tradeCid, adCids)
 
 template SettlementInstruction
   with
     operator : Party
+    agent : Party
     sender : Party
     receiver : Party
     signed : [Party]
@@ -42,7 +53,7 @@ template SettlementInstruction
     depositCid : Optional (ContractId AssetDeposit)
   where
     signatory operator, signed
-    observer sender, receiver
+    observer agent, sender, receiver
 
     key (operator, settlementId, instructionId) : (Party, Text, Text)
     maintainer key._1
@@ -62,7 +73,7 @@ template SettlementInstruction
         do
           create this with signed = receiver :: signed
 
-    controller operator can
+    controller agent can
       SettleInstruction : ContractId AssetDeposit
         do
           case depositCid of
