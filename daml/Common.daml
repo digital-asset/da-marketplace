@@ -105,7 +105,7 @@ onboardProviders Parties{userAdmin = operator; ..} = do
   operatorRoleCid <- submit operator  do createCmd Operator.Role with observers = fromList [public]; ..
 
   custodianRoleOfferCid  <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferCustodianRole with provider = bank
-  custodianRoleCid  <- submit bank do exerciseCmd custodianRoleOfferCid Custodian.Accept
+  (custodianRoleCid, _)  <- submit bank do exerciseCmd custodianRoleOfferCid Custodian.Accept with cashAccount = None; securitiesAccount = None
 
   exchangeRoleOfferCid  <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferExchangeRole with provider = exchange
   (exchangeRoleCid, matchingServiceCid, listingServiceCid, settlementServiceCid) <- submit exchange  do exerciseCmd exchangeRoleOfferCid Exchange.Accept
