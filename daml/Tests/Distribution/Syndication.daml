@@ -63,86 +63,73 @@ setup = do
 
   submit operator do createCmd Operator.Role with operator; observers = empty
 
-  createCustodianRole operator cashProvider
-  createCustodianRole operator bondRegistrar
-  createCustodianRole operator lm1
-  createCustodianRole operator lm2
-  createCustodianRole operator lm3
-  createCustodianRole operator custodian1
-  createCustodianRole operator custodian2
-  createCustodianRole operator custodian3
-  createCustodianRole operator custodian4
-  createCustodianRole operator custodian5
-
   -- 1st level
-  (_, lm1CashAccount)         <- createCustodyService operator cashProvider lm1
-  (_, lm2CashAccount)         <- createCustodyService operator cashProvider lm2
-  (_, lm3CashAccount)         <- createCustodyService operator cashProvider lm3
+  createCustodianRole operator cashProvider None None
   (_, issuerCashAccount)      <- createCustodyService operator cashProvider issuer
+  (_, lm1CashAccount) <- createCustodyService operator cashProvider lm1
+  (_, lm2CashAccount) <- createCustodyService operator cashProvider lm2
+  (_, lm3CashAccount) <- createCustodyService operator cashProvider lm3
+  createCustodianRole operator bondRegistrar None None
+  (_, issuerBondAccount)      <- createCustodyService operator bondRegistrar issuer
   (_, custodian1BondAccount)  <- createCustodyService operator bondRegistrar custodian1
   (_, custodian2BondAccount)  <- createCustodyService operator bondRegistrar custodian2
   (_, custodian3BondAccount)  <- createCustodyService operator bondRegistrar custodian3
   (_, custodian4BondAccount)  <- createCustodyService operator bondRegistrar custodian4
-  (_, issuerBondAccount)      <- createCustodyService operator bondRegistrar issuer
 
   -- 2nd level
-  (_, lm1OwnAccount)          <- createCustodyService operator lm1 lm1
-  (_, lm2OwnAccount)          <- createCustodyService operator lm2 lm2
-  (_, lm3OwnAccount)          <- createCustodyService operator lm3 lm3
-  (_, custodian1OwnAccount)   <- createCustodyService operator custodian1 custodian1
-  (_, custodian2OwnAccount)   <- createCustodyService operator custodian2 custodian2
-  (_, custodian3OwnAccount)   <- createCustodyService operator custodian3 custodian3
-  (_, custodian4OwnAccount)   <- createCustodyService operator custodian4 custodian4
-  (_, custodian5OwnAccount)   <- createCustodyService operator custodian5 custodian5
-  (_, investor1CashAccount)   <- createCustodyService operator lm1 investor1
-  (_, investor2CashAccount)   <- createCustodyService operator lm2 investor2
-  (_, investor3CashAccount)   <- createCustodyService operator lm3 investor3
-  (_, investor4CashAccount)   <- createCustodyService operator lm3 investor4
+  createCustodianRole operator custodian1 None (Some custodian1BondAccount)
   (_, lm1BondAccount)         <- createCustodyService operator custodian1 lm1
-  (_, lm2BondAccount)         <- createCustodyService operator custodian2 lm2
-  (_, lm3BondAccount)         <- createCustodyService operator custodian3 lm3
-  (_, custodian5BondAccount)  <- createCustodyService operator custodian4 custodian5
   (_, investor1BondAccount)   <- createCustodyService operator custodian1 investor1
+  createCustodianRole operator custodian2 None (Some custodian2BondAccount)
+  (_, lm2BondAccount)         <- createCustodyService operator custodian2 lm2
   (_, investor2BondAccount)   <- createCustodyService operator custodian2 investor2
+  createCustodianRole operator custodian3 None (Some custodian3BondAccount)
+  (_, lm3BondAccount)         <- createCustodyService operator custodian3 lm3
+  createCustodianRole operator custodian4 None (Some custodian4BondAccount)
+  (_, custodian5BondAccount)  <- createCustodyService operator custodian4 custodian5
 
   -- 3rd level
+  createCustodianRole operator custodian5 None (Some custodian5BondAccount)
   (_, investor3BondAccount)   <- createCustodyService operator custodian5 investor3
   (_, investor4BondAccount)   <- createCustodyService operator custodian5 investor4
+  createCustodianRole operator lm1 (Some lm1CashAccount) (Some lm1BondAccount)
+  (_, investor1CashAccount)   <- createCustodyService operator lm1 investor1
+  createCustodianRole operator lm2 (Some lm2CashAccount) (Some lm2BondAccount)
+  (_, investor2CashAccount)   <- createCustodyService operator lm2 investor2
+  createCustodianRole operator lm3 (Some lm3CashAccount) (Some lm3BondAccount)
+  (_, investor3CashAccount)   <- createCustodyService operator lm3 investor3
+  (_, investor4CashAccount)   <- createCustodyService operator lm3 investor4
 
-  -- Account info
-  submitMulti [operator, issuer] []     $ createCmd Structuring.AccountInfo with operator; party = issuer; ownAccount = None; cashAccount = Some issuerCashAccount; securitiesAccount = Some issuerBondAccount
-  submitMulti [operator, lm1] []        $ createCmd Structuring.AccountInfo with operator; party = lm1; ownAccount = Some lm1OwnAccount; cashAccount = Some lm1CashAccount; securitiesAccount = Some lm1BondAccount
-  submitMulti [operator, lm2] []        $ createCmd Structuring.AccountInfo with operator; party = lm2; ownAccount = Some lm2OwnAccount; cashAccount = Some lm2CashAccount; securitiesAccount = Some lm2BondAccount
-  submitMulti [operator, lm3] []        $ createCmd Structuring.AccountInfo with operator; party = lm3; ownAccount = Some lm3OwnAccount; cashAccount = Some lm3CashAccount; securitiesAccount = Some lm3BondAccount
-  submitMulti [operator, custodian1] [] $ createCmd Structuring.AccountInfo with operator; party = custodian1; ownAccount = Some custodian1OwnAccount; cashAccount = None; securitiesAccount = Some custodian1BondAccount
-  submitMulti [operator, custodian2] [] $ createCmd Structuring.AccountInfo with operator; party = custodian2; ownAccount = Some custodian2OwnAccount; cashAccount = None; securitiesAccount = Some custodian2BondAccount
-  submitMulti [operator, custodian3] [] $ createCmd Structuring.AccountInfo with operator; party = custodian3; ownAccount = Some custodian3OwnAccount; cashAccount = None; securitiesAccount = Some custodian3BondAccount
-  submitMulti [operator, custodian4] [] $ createCmd Structuring.AccountInfo with operator; party = custodian4; ownAccount = Some custodian4OwnAccount; cashAccount = None; securitiesAccount = Some custodian4BondAccount
-  submitMulti [operator, custodian5] [] $ createCmd Structuring.AccountInfo with operator; party = custodian5; ownAccount = Some custodian5OwnAccount; cashAccount = None; securitiesAccount = Some custodian5BondAccount
-  submitMulti [operator, investor1] []  $ createCmd Structuring.AccountInfo with operator; party = investor1; ownAccount = None; cashAccount = Some investor1CashAccount; securitiesAccount = Some investor1BondAccount
-  submitMulti [operator, investor2] []  $ createCmd Structuring.AccountInfo with operator; party = investor2; ownAccount = None; cashAccount = Some investor2CashAccount; securitiesAccount = Some investor2BondAccount
-  submitMulti [operator, investor3] []  $ createCmd Structuring.AccountInfo with operator; party = investor3; ownAccount = None; cashAccount = Some investor3CashAccount; securitiesAccount = Some investor3BondAccount
-  submitMulti [operator, investor4] []  $ createCmd Structuring.AccountInfo with operator; party = investor4; ownAccount = None; cashAccount = Some investor4CashAccount; securitiesAccount = Some investor4BondAccount
+  -- Investor roles
+  createInvestorRole operator investor1 investor1CashAccount investor1BondAccount
+  createInvestorRole operator investor2 investor2CashAccount investor2BondAccount
+  createInvestorRole operator investor3 investor3CashAccount investor3BondAccount
+  createInvestorRole operator investor4 investor4CashAccount investor4BondAccount
 
+  -- Issuer role
+  createIssuerRole operator issuer issuerCashAccount issuerBondAccount
   createIssuanceService operator cashProvider cashProvider
   createIssuanceService operator bondRegistrar issuer
 
-  createStructurerRole operator lm1
-
-  createDistributorRole operator issuer
-  createDistributorRole operator lm1
-  createDistributorRole operator lm2
-  createDistributorRole operator lm3
-  createDistributorRole operator cm1
-
+  -- Structurer role
+  createStructurerRole operator structurer
   createStructuringService operator structurer issuer
 
+  -- Distributor roles
+  -- createDistributorRole operator issuer
+  createDistributorRole operator lm1
   createBookBuildingService operator lm1 issuer
-  createBookBuildingService operator lm2 issuer
-  createBookBuildingService operator lm3 issuer
-  createBookBuildingService operator cm1 lm3
   createBiddingService operator lm1 investor1
+
+  createDistributorRole operator lm2
+  createBookBuildingService operator lm2 issuer
   createBiddingService operator lm2 investor2
+
+  createDistributorRole operator lm3
+  createBookBuildingService operator lm3 issuer
+
+  createDistributorRole operator cm1
+  createBookBuildingService operator cm1 lm3
   createBiddingService operator cm1 investor3
   createBiddingService operator cm1 investor4
 

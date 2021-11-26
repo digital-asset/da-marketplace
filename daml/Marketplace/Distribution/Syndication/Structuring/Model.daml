@@ -4,6 +4,7 @@ import DA.Finance.Types (Id, Account, Asset(..))
 import DA.List (groupOn, singleton)
 import DA.Optional (fromSome)
 import DA.Set (fromList)
+import Marketplace.Custody.Model (AccountInfo)
 import Marketplace.Distribution.Syndication.Bidding.Model qualified as Bidding
 import Marketplace.Settlement.Hierarchical (SettlementInstruction(..), Trade(..), Status(..))
 
@@ -30,20 +31,6 @@ template AddTrancheRequest
     tranche : Asset
   where
     signatory operator, provider, customer
-
-template AccountInfo
-  with
-    operator : Party
-    party : Party
-    ownAccount : Optional Account
-    cashAccount : Optional Account
-    securitiesAccount : Optional Account
-  where
-    signatory operator, party
-
-    key (operator, party) : (Party, Party)
-    maintainer key._1
-
 
 createInstructions : Bool -> Party -> Party -> Party -> Text -> Int -> Asset -> Account -> Account -> Update [ContractId SettlementInstruction]
 createInstructions isCash operator agent rootProvider settlementId instructionIdx asset senderAccount receiverAccount = do

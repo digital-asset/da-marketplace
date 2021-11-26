@@ -1,9 +1,4 @@
-module Marketplace.Custody.Model (
-    DepositRequest (..)
-  , WithdrawalRequest (..)
-  , LifecycleRequest(..)
-  , Process(..)
-) where
+module Marketplace.Custody.Model where
 
 import ContingentClaims.Claim (Claim(Zero), deserialize, serialize)
 import ContingentClaims.Lifecycle qualified as Lifecycle
@@ -19,6 +14,19 @@ import Marketplace.Issuance.AssetDescription qualified as AssetDescription
 import Marketplace.Settlement.Model (SettlementInstruction(..), SettlementDetails(..))
 import DA.List (init)
 import DA.Action (void, when, foldlA)
+
+template AccountInfo
+  with
+    operator : Party
+    party : Party
+    ownAccount : Optional Account
+    cashAccount : Optional Account
+    securitiesAccount : Optional Account
+  where
+    signatory operator, party
+
+    key (operator, party) : (Party, Party)
+    maintainer key._1
 
 template DepositRequest
   with

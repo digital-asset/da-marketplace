@@ -1,18 +1,17 @@
 module Marketplace.Custody.Role where
 
+import DA.Finance.Types (Account)
+import DA.Set (Set)
+import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Custody.Service qualified as Custody
 import Marketplace.Issuance.Service qualified as Issuance
-import Marketplace.Utils
-import DA.Set (Set)
 
 template Role
   with
     operator : Party
     provider : Party
-    observers : Set Party
   where
     signatory operator, provider
-    observer observers
 
     key (operator, provider) :  (Party, Party)
     maintainer key._1
@@ -64,15 +63,19 @@ template Offer
   with
     operator : Party
     provider : Party
-    observers : Set Party
   where
     signatory operator
 
     controller provider can
-      Accept : ContractId Role
+      Accept : (ContractId Role, ContractId Custody.AccountInfo)
+        with
+          cashAccount : Optional Account
+          securitiesAccount : Optional Account
         do
-          let account = Custody.createAccount provider provider
-          create Role with ..
+          let ownAccount = Some $ Custody.createAccount provider provider
+          infoCid <- create Custody.AccountInfo with party = provider; ..
+          roleCid <- create Role with ..
+          pure (roleCid, infoCid)
 
       Decline : ()
         do
@@ -82,20 +85,20 @@ template Request
   with
     provider : Party
     operator : Party
+    cashAccount : Optional Account
+    securitiesAccount : Optional Account
   where
     signatory provider
 
     controller operator can
-      Approve : (ContractId Role, ContractId Issuance.Service, ContractId Custody.Service)
+      Approve : (ContractId Role, ContractId Custody.AccountInfo)
         with
           observers : Set Party
         do
-          let account = Custody.createAccount provider provider
-
-          custodyCid  <- createOrLookup Custody.Service with customer = provider, ..
-          issuanceCid <- createOrLookup Issuance.Service with customer = provider, ..
-          roleCid     <- createOrLookup Role with ..
-          return (roleCid, issuanceCid, custodyCid)
+          let ownAccount = Some $ Custody.createAccount provider provider
+          infoCid <- create Custody.AccountInfo with party = provider; ..
+          roleCid <- create Role with ..
+          pure (roleCid, infoCid)
 
       Reject : ()
         do

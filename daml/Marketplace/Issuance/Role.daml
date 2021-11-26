@@ -1,0 +1,72 @@
+module Marketplace.Issuance.Role where
+
+import DA.Finance.Types (Account)
+import Marketplace.Custody.Model qualified as Custody
+
+template Role
+  with
+    operator : Party
+    issuer : Party
+  where
+    signatory operator, issuer
+
+    key (operator, issuer) :  (Party, Party)
+    maintainer key._1
+
+    controller issuer can
+
+      nonconsuming UpdateAccountInfo : ContractId Custody.AccountInfo
+        with
+          ownAccount : Optional Account
+          cashAccount : Optional Account
+          securitiesAccount : Optional Account
+        do
+          (infoCid, _) <- fetchByKey @Custody.AccountInfo (operator, issuer)
+          archive infoCid
+          create Custody.AccountInfo with party = issuer; ..
+
+    controller operator can
+      TerminateRole: ()
+        do
+          return ()
+
+template Offer
+  with
+    operator : Party
+    issuer : Party
+  where
+    signatory operator
+
+    controller issuer can
+      Accept : (ContractId Role, ContractId Custody.AccountInfo)
+        with
+          cashAccount : Optional Account
+          securitiesAccount : Optional Account
+        do
+          infoCid <- create Custody.AccountInfo with party = issuer; ownAccount = None; ..
+          roleCid <- create Role with ..
+          pure (roleCid, infoCid)
+
+      Decline : ()
+        do
+          return ()
+
+template Request
+  with
+    operator : Party
+    issuer : Party
+    cashAccount : Optional Account
+    securitiesAccount : Optional Account
+  where
+    signatory issuer
+
+    controller operator can
+      Approve : (ContractId Role, ContractId Custody.AccountInfo)
+        do
+          infoCid <- create Custody.AccountInfo with party = issuer; ownAccount = None; ..
+          roleCid <- create Role with ..
+          pure (roleCid, infoCid)
+
+      Reject : ()
+        do
+          return ()

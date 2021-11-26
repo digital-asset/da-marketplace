@@ -1,0 +1,72 @@
+module Marketplace.Distribution.Syndication.Investor where
+
+import DA.Finance.Types (Account)
+import Marketplace.Custody.Model qualified as Custody
+
+template Role
+  with
+    operator : Party
+    investor : Party
+  where
+    signatory operator, investor
+
+    key (operator, investor) :  (Party, Party)
+    maintainer key._1
+
+    controller investor can
+
+      nonconsuming UpdateAccountInfo : ContractId Custody.AccountInfo
+        with
+          ownAccount : Optional Account
+          cashAccount : Optional Account
+          securitiesAccount : Optional Account
+        do
+          (infoCid, _) <- fetchByKey @Custody.AccountInfo (operator, investor)
+          archive infoCid
+          create Custody.AccountInfo with party = investor; ..
+
+    controller operator can
+      TerminateRole: ()
+        do
+          return ()
+
+template Offer
+  with
+    operator : Party
+    investor : Party
+  where
+    signatory operator
+
+    controller investor can
+      Accept : (ContractId Role, ContractId Custody.AccountInfo)
+        with
+          cashAccount : Optional Account
+          securitiesAccount : Optional Account
+        do
+          infoCid <- create Custody.AccountInfo with party = investor; ownAccount = None; ..
+          roleCid <- create Role with ..
+          pure (roleCid, infoCid)
+
+      Decline : ()
+        do
+          return ()
+
+template Request
+  with
+    operator : Party
+    investor : Party
+    cashAccount : Optional Account
+    securitiesAccount : Optional Account
+  where
+    signatory investor
+
+    controller operator can
+      Approve : (ContractId Role, ContractId Custody.AccountInfo)
+        do
+          infoCid <- create Custody.AccountInfo with party = investor; ownAccount = None; ..
+          roleCid <- create Role with ..
+          pure (roleCid, infoCid)
+
+      Reject : ()
+        do
+          return ()

@@ -1,14 +1,15 @@
 module Marketplace.Operator.Role where
 
 import Marketplace.Regulator.Role qualified as Regulator
+import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Custody.Role qualified as Custodian
 import Marketplace.Clearing.Role qualified as Clearing
 import Marketplace.Distribution.Auction.Distributor qualified as AuctionDistributor
 import Marketplace.Distribution.Syndication.Distributor qualified as SyndicationDistributor
 import Marketplace.Distribution.Syndication.Structurer qualified as SyndicationStructurer
+import Marketplace.Distribution.Syndication.Investor qualified as Investor
+import Marketplace.Issuance.Role qualified as Issuer
 import Marketplace.Settlement.Service qualified as Settlement
-import Marketplace.Issuance.Service qualified as Issuance
-import Marketplace.Custody.Service qualified as Custody
 import Marketplace.Clearing.Market.Service qualified as Market
 import Marketplace.Trading.Role qualified as Exchange
 import Marketplace.Trading.Matching.Service qualified as Matching
@@ -34,7 +35,7 @@ template Role
         do
           create Custodian.Offer with ..
 
-      nonconsuming ApproveCustodianRequest : (ContractId Custodian.Role, ContractId Issuance.Service, ContractId Custody.Service)
+      nonconsuming ApproveCustodianRequest : (ContractId Custodian.Role, ContractId Custody.AccountInfo)
         with
           custodianRequestCid : ContractId Custodian.Request
         do
@@ -63,6 +64,30 @@ template Role
           regulatorRequestCid : ContractId Regulator.Request
         do
           exercise regulatorRequestCid Regulator.Approve with ..
+
+      nonconsuming OfferInvestorRole: ContractId Investor.Offer
+        with
+          investor : Party
+        do
+          create Investor.Offer with ..
+
+      nonconsuming ApproveInvestorRequest : (ContractId Investor.Role, ContractId Custody.AccountInfo)
+        with
+          investorRequestCid : ContractId Investor.Request
+        do
+          exercise investorRequestCid Investor.Approve
+
+      nonconsuming OfferIssuerRole: ContractId Issuer.Offer
+        with
+          issuer : Party
+        do
+          create Issuer.Offer with ..
+
+      nonconsuming ApproveIssuerRequest : (ContractId Issuer.Role, ContractId Custody.AccountInfo)
+        with
+          issuerRequestCid : ContractId Issuer.Request
+        do
+          exercise issuerRequestCid Issuer.Approve
 
       nonconsuming OfferMatchingService : ContractId Matching.Offer
         with
