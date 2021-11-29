@@ -1,7 +1,7 @@
 module Marketplace.Issuance.Role where
 
 import DA.Finance.Types (Account)
-import Marketplace.Custody.Model qualified as Custody
+import Marketplace.Settlement.Hierarchical qualified as Settlement
 
 template Role
   with
@@ -15,15 +15,15 @@ template Role
 
     controller issuer can
 
-      nonconsuming UpdateAccountInfo : ContractId Custody.AccountInfo
+      nonconsuming UpdateAccountInfo : ContractId Settlement.AccountInfo
         with
           ownAccount : Optional Account
           cashAccount : Optional Account
           securitiesAccount : Optional Account
         do
-          (infoCid, _) <- fetchByKey @Custody.AccountInfo (operator, issuer)
+          (infoCid, _) <- fetchByKey @Settlement.AccountInfo (operator, issuer)
           archive infoCid
-          create Custody.AccountInfo with party = issuer; ..
+          create Settlement.AccountInfo with party = issuer; ..
 
     controller operator can
       TerminateRole: ()
@@ -38,12 +38,12 @@ template Offer
     signatory operator
 
     controller issuer can
-      Accept : (ContractId Role, ContractId Custody.AccountInfo)
+      Accept : (ContractId Role, ContractId Settlement.AccountInfo)
         with
           cashAccount : Optional Account
           securitiesAccount : Optional Account
         do
-          infoCid <- create Custody.AccountInfo with party = issuer; ownAccount = None; ..
+          infoCid <- create Settlement.AccountInfo with party = issuer; ownAccount = None; ..
           roleCid <- create Role with ..
           pure (roleCid, infoCid)
 
@@ -61,9 +61,9 @@ template Request
     signatory issuer
 
     controller operator can
-      Approve : (ContractId Role, ContractId Custody.AccountInfo)
+      Approve : (ContractId Role, ContractId Settlement.AccountInfo)
         do
-          infoCid <- create Custody.AccountInfo with party = issuer; ownAccount = None; ..
+          infoCid <- create Settlement.AccountInfo with party = issuer; ownAccount = None; ..
           roleCid <- create Role with ..
           pure (roleCid, infoCid)
 

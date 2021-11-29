@@ -11,7 +11,6 @@ import DA.Optional (isNone, isSome, mapOptional)
 import DA.Set (fromList, empty)
 import Marketplace.Operator.Role qualified as Operator
 import Marketplace.Custody.Role qualified as Custodian
-import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Custody.Service qualified as Custody
 import Marketplace.Issuance.AssetDescription (AssetDescription)
 import Marketplace.Issuance.CFI qualified as CFI
@@ -26,9 +25,9 @@ import Marketplace.Distribution.Syndication.Distributor qualified as Distributor
 import Marketplace.Distribution.Syndication.Investor qualified as Investor
 import Marketplace.Distribution.Syndication.Structuring.Model qualified as Structuring
 import Marketplace.Distribution.Syndication.Structuring.Service qualified as Structuring
-import Marketplace.Settlement.Hierarchical (SettlementInstruction, Allocate(..), Sign(..), Settle(..), Trade)
+import Marketplace.Settlement.Hierarchical (AccountInfo, SettlementInstruction, Allocate(..), Sign(..), Settle(..), Trade)
 
-createCustodianRole : Party -> Party -> Optional Account -> Optional Account -> Script (ContractId Custodian.Role, ContractId Custody.AccountInfo)
+createCustodianRole : Party -> Party -> Optional Account -> Optional Account -> Script (ContractId Custodian.Role, ContractId AccountInfo)
 createCustodianRole operator provider cashAccount securitiesAccount = do
   custodianRoleOfferCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferCustodianRole with provider
   submit provider do exerciseCmd custodianRoleOfferCid Custodian.Accept with ..
@@ -55,12 +54,12 @@ createDistributorRole operator provider = do
   distributorRoleOfferCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferSyndicationDistributorRole with provider
   submit provider do exerciseCmd distributorRoleOfferCid Distributor.Accept
 
-createInvestorRole : Party -> Party -> Account -> Account -> Script (ContractId Investor.Role, ContractId Custody.AccountInfo)
+createInvestorRole : Party -> Party -> Account -> Account -> Script (ContractId Investor.Role, ContractId AccountInfo)
 createInvestorRole operator investor cashAccount securitiesAccount = do
   investorRoleOfferCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferInvestorRole with investor
   submit investor do exerciseCmd investorRoleOfferCid Investor.Accept with cashAccount = Some cashAccount; securitiesAccount = Some securitiesAccount
 
-createIssuerRole : Party -> Party -> Account -> Account -> Script (ContractId Issuer.Role, ContractId Custody.AccountInfo)
+createIssuerRole : Party -> Party -> Account -> Account -> Script (ContractId Issuer.Role, ContractId AccountInfo)
 createIssuerRole operator issuer cashAccount securitiesAccount = do
   issuerRoleOfferCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferIssuerRole with issuer
   submit issuer do exerciseCmd issuerRoleOfferCid Issuer.Accept with cashAccount = Some cashAccount; securitiesAccount = Some securitiesAccount

@@ -196,7 +196,7 @@ e2e = do
   sign settlementBank
   adCids1 <- mapA (settle bondRegistrar) dvpCids1
 
-  -- -- Step 2
+  -- Step 2
   dvpCids2 <- submit operator do exerciseCmd dealCid Structuring.InstructBndSettlement with ..
   allocateSis settlementBank
   allocateSis custodian2
@@ -208,7 +208,7 @@ e2e = do
   sign bndBank
   adCids2 <- mapA (settle bondRegistrar) dvpCids2
 
-  -- -- Step 3
+  -- Step 3
   dvpCids3 <- submit operator do exerciseCmd dealCid Structuring.InstructInvestorSettlement with ..
   allocateSis bndBank
   allocateSis lm1

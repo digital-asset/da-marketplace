@@ -15,19 +15,6 @@ import Marketplace.Settlement.Model (SettlementInstruction(..), SettlementDetail
 import DA.List (init)
 import DA.Action (void, when, foldlA)
 
-template AccountInfo
-  with
-    operator : Party
-    party : Party
-    ownAccount : Optional Account
-    cashAccount : Optional Account
-    securitiesAccount : Optional Account
-  where
-    signatory operator, party
-
-    key (operator, party) : (Party, Party)
-    maintainer key._1
-
 template DepositRequest
   with
     operator : Party

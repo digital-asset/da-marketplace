@@ -1,7 +1,7 @@
 module Marketplace.Distribution.Syndication.Investor where
 
 import DA.Finance.Types (Account)
-import Marketplace.Custody.Model qualified as Custody
+import Marketplace.Settlement.Hierarchical qualified as Settlement
 
 template Role
   with
@@ -15,15 +15,15 @@ template Role
 
     controller investor can
 
-      nonconsuming UpdateAccountInfo : ContractId Custody.AccountInfo
+      nonconsuming UpdateAccountInfo : ContractId Settlement.AccountInfo
         with
           ownAccount : Optional Account
           cashAccount : Optional Account
           securitiesAccount : Optional Account
         do
-          (infoCid, _) <- fetchByKey @Custody.AccountInfo (operator, investor)
+          (infoCid, _) <- fetchByKey @Settlement.AccountInfo (operator, investor)
           archive infoCid
-          create Custody.AccountInfo with party = investor; ..
+          create Settlement.AccountInfo with party = investor; ..
 
     controller operator can
       TerminateRole: ()
@@ -38,12 +38,12 @@ template Offer
     signatory operator
 
     controller investor can
-      Accept : (ContractId Role, ContractId Custody.AccountInfo)
+      Accept : (ContractId Role, ContractId Settlement.AccountInfo)
         with
           cashAccount : Optional Account
           securitiesAccount : Optional Account
         do
-          infoCid <- create Custody.AccountInfo with party = investor; ownAccount = None; ..
+          infoCid <- create Settlement.AccountInfo with party = investor; ownAccount = None; ..
           roleCid <- create Role with ..
           pure (roleCid, infoCid)
 
@@ -61,9 +61,9 @@ template Request
     signatory investor
 
     controller operator can
-      Approve : (ContractId Role, ContractId Custody.AccountInfo)
+      Approve : (ContractId Role, ContractId Settlement.AccountInfo)
         do
-          infoCid <- create Custody.AccountInfo with party = investor; ownAccount = None; ..
+          infoCid <- create Settlement.AccountInfo with party = investor; ownAccount = None; ..
           roleCid <- create Role with ..
           pure (roleCid, infoCid)
 
