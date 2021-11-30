@@ -49,7 +49,8 @@ template Trade
         do
           let
             settle (instructionId : Text) = do
-              (siCid, _) <- fetchByKey @SettlementInstruction (operator, settlementId, instructionId)
+              (siCid, si) <- fetchByKey @SettlementInstruction (operator, settlementId, instructionId)
+              assertMsg "Settlement id of instruction doesn't match trade" $ si.settlementId == settlementId
               exercise siCid SettleInstruction
           adCids <- mapA settle instructionIds
           tradeCid <- create this with status = Settled
@@ -77,11 +78,12 @@ template Payment
         do
           let
             settle (instructionId : Text) = do
-              (siCid, _) <- fetchByKey @SettlementInstruction (operator, settlementId, instructionId)
+              (siCid, si) <- fetchByKey @SettlementInstruction (operator, settlementId, instructionId)
+              assertMsg "Settlement id of instruction doesn't match payment" $ si.settlementId == settlementId
               exercise siCid SettleInstruction
           adCids <- mapA settle instructionIds
-          tradeCid <- create this with status = Settled
-          pure (tradeCid, adCids)
+          paymentCid <- create this with status = Settled
+          pure (paymentCid, adCids)
 
 template SettlementInstruction
   with

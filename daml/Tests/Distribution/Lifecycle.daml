@@ -9,15 +9,15 @@ import Tests.Distribution.Issuance (issuance, Issuance(..))
 import Tests.Distribution.Util
 
 instructLifecycle : Party -> Party -> Party -> [Party] -> Script ()
-instructLifecycle operator issuer provider custodians = do
-  [ (effectCid, _) ] <- queryFilter @Lifecycle.Effect provider (\le -> le.recipient == provider)
+instructLifecycle operator issuer custodian custodians = do
+  [ (effectCid, _) ] <- queryFilter @Lifecycle.Effect custodian (\le -> le.recipient == custodian)
   if null custodians
   then do
-    depositCids <- map fst <$> queryFilter @AssetDeposit provider (\ad -> ad.account.provider == provider)
+    depositCids <- map fst <$> queryFilter @AssetDeposit custodian (\ad -> ad.account.provider == custodian)
     -- TODO: This implies we have a lifecycle service with the operator signatures for every custodian. we'd then call `Instruct` through that service to have the necessary auth
-    submitMulti [operator, provider] [] do exerciseCmd effectCid Lifecycle.Instruct with ..
+    submitMulti [operator, custodian] [] do exerciseCmd effectCid Lifecycle.Instruct with ..
   else do
-    submitMulti [operator, provider] [] do exerciseCmd effectCid Lifecycle.Instruct with depositCids = []; ..
+    submitMulti [operator, custodian] [] do exerciseCmd effectCid Lifecycle.Instruct with depositCids = []; ..
   pure ()
 
 coupon : Script ()

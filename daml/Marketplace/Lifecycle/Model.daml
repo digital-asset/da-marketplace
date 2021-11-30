@@ -2,7 +2,7 @@ module Marketplace.Lifecycle.Model where
 
 import DA.Finance.Asset (AssetDeposit, AssetDeposit_Upgrade(..))
 import DA.Finance.Types (Asset(..), Id)
-import Marketplace.Settlement.Hierarchical (createInstructions, SettlementInstruction(..))
+import Marketplace.Settlement.Hierarchical (createInstructions, Payment(..), SettlementInstruction(..), Status(..))
 
 template Today
   with
@@ -44,25 +44,30 @@ template Effect
     signatory operator, issuer, bondRegistrar
     observer recipient
 
-    choice Instruct : ([ContractId Effect], [ContractId SettlementInstruction])
+    choice Instruct : ([ContractId Effect], [(ContractId Payment, [ContractId SettlementInstruction])])
       with
         custodians : [Party]
         depositCids : [ContractId AssetDeposit]
       controller operator, recipient
       do
         let
-          createInstructionsForAssetDeposit : (Decimal, Id) -> ContractId AssetDeposit -> Update [ContractId SettlementInstruction]
+          createInstructionsForAssetDeposit : (Decimal, Id) -> ContractId AssetDeposit -> Update (ContractId Payment, [ContractId SettlementInstruction])
           createInstructionsForAssetDeposit (amount, id) depositCid = do
             deposit <- fetch depositCid
             let
               settlementId = lifecycleId <> "-" <> partyToText deposit.account.owner
               instructionIdx = 0
-              asset = Asset with id; quantity = amount * deposit.asset.quantity
+              payment = Asset with id; quantity = amount * deposit.asset.quantity
+              sender = if amount > 0.0 then issuer else deposit.account.owner
+              receiver = if amount > 0.0 then deposit.account.owner else issuer
             exercise depositCid AssetDeposit_Upgrade with newVersion
-            createInstructions True operator bondRegistrar cashProvider issuer deposit.account.owner settlementId instructionIdx asset
-          createInstructionsForPayout : (Decimal, Id) -> Update [ContractId SettlementInstruction]
+            instructionCids <- createInstructions True operator bondRegistrar cashProvider sender receiver settlementId instructionIdx payment
+            instructionIds <- map (.instructionId) <$> mapA fetch instructionCids
+            paymentCid <- create Payment with operator; agent = bondRegistrar; payer = sender; payee = receiver; settlementId; instructionIds; payment; status = Instructed
+            pure (paymentCid, instructionCids)
+          createInstructionsForPayout : (Decimal, Id) -> Update [(ContractId Payment, [ContractId SettlementInstruction])]
           createInstructionsForPayout payout = do
-            concat <$> mapA (createInstructionsForAssetDeposit payout) depositCids
+            mapA (createInstructionsForAssetDeposit payout) depositCids
         effectCids <- mapA (\c -> create this with recipient = c) custodians
         instructionCids <- concat <$> mapA createInstructionsForPayout payouts
         pure (effectCids, instructionCids)
