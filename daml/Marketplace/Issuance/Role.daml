@@ -1,6 +1,7 @@
 module Marketplace.Issuance.Role where
 
 import DA.Finance.Types (Account)
+import Marketplace.Lifecycle.Service qualified as Lifecycle
 import Marketplace.Settlement.Hierarchical qualified as Settlement
 
 template Role
@@ -24,6 +25,20 @@ template Role
           (infoCid, _) <- fetchByKey @Settlement.AccountInfo (operator, issuer)
           archive infoCid
           create Settlement.AccountInfo with party = issuer; ..
+
+      nonconsuming OfferLifecycleService : ContractId Lifecycle.Offer
+        with
+          bondRegistrar : Party
+          cashProvider : Party
+        do
+          create Lifecycle.Offer with ..
+
+      nonconsuming ApproveLifecycleRequest : ContractId Lifecycle.Service
+        with
+          requestCid : ContractId Lifecycle.Request
+        do
+          exercise requestCid Lifecycle.Approve
+
 
     controller operator can
       TerminateRole: ()

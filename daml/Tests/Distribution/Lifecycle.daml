@@ -1,0 +1,37 @@
+module Tests.Distribution.Lifecycle where
+
+import Daml.Script
+import DA.Date (date, Month(..))
+import DA.Finance.Asset (AssetDeposit)
+import Marketplace.Lifecycle.Model qualified as Lifecycle
+import Tests.Distribution.Setup (Parties(..))
+import Tests.Distribution.Issuance (issuance, Issuance(..))
+import Tests.Distribution.Util
+
+instructLifecycle : Party -> Party -> Party -> [Party] -> Script ()
+instructLifecycle operator issuer provider custodians = do
+  [ (effectCid, _) ] <- queryFilter @Lifecycle.Effect provider (\le -> le.recipient == provider)
+  if null custodians
+  then do
+    depositCids <- map fst <$> queryFilter @AssetDeposit provider (\ad -> ad.account.provider == provider)
+    -- TODO: This implies we have a lifecycle service with the operator signatures for every custodian. we'd then call `Instruct` through that service to have the necessary auth
+    submitMulti [operator, provider] [] do exerciseCmd effectCid Lifecycle.Instruct with ..
+  else do
+    submitMulti [operator, provider] [] do exerciseCmd effectCid Lifecycle.Instruct with depositCids = []; ..
+  pure ()
+
+coupon : Script ()
+coupon = do
+
+  Issuance{parties, security} <- issuance
+  let Parties{..} = parties
+
+  submitMulti [operator, bondRegistrar] [] do createCmd Lifecycle.Today with operator; provider = bondRegistrar; date = date 2021 Jan 15
+
+  Some effectCid <- lifecycle operator issuer bondRegistrar security.assetId
+  instructLifecycle operator issuer bondRegistrar [ custodian1, custodian2, custodian3, custodian4 ]
+  instructLifecycle operator issuer custodian1 []
+  instructLifecycle operator issuer custodian2 []
+  instructLifecycle operator issuer custodian4 [ custodian5 ]
+  instructLifecycle operator issuer custodian5 []
+  pure ()

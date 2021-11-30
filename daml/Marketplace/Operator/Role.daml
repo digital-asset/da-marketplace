@@ -3,6 +3,7 @@ module Marketplace.Operator.Role where
 import Marketplace.Regulator.Role qualified as Regulator
 import Marketplace.Custody.Role qualified as Custodian
 import Marketplace.Clearing.Role qualified as Clearing
+import Marketplace.Clearing.Market.Service qualified as Market
 import Marketplace.Distribution.Auction.Distributor qualified as AuctionDistributor
 import Marketplace.Distribution.Syndication.Distributor qualified as SyndicationDistributor
 import Marketplace.Distribution.Syndication.Structurer qualified as SyndicationStructurer
@@ -10,7 +11,6 @@ import Marketplace.Distribution.Syndication.Investor qualified as Investor
 import Marketplace.Issuance.Role qualified as Issuer
 import Marketplace.Settlement.Hierarchical qualified as Settlement
 import Marketplace.Settlement.Service qualified as Settlement
-import Marketplace.Clearing.Market.Service qualified as Market
 import Marketplace.Trading.Role qualified as Exchange
 import Marketplace.Trading.Matching.Service qualified as Matching
 import Marketplace.Listing.Service qualified as Listing
@@ -37,9 +37,9 @@ template Role
 
       nonconsuming ApproveCustodianRequest : (ContractId Custodian.Role, ContractId Settlement.AccountInfo)
         with
-          custodianRequestCid : ContractId Custodian.Request
+          requestCid : ContractId Custodian.Request
         do
-          exercise custodianRequestCid Custodian.Approve with ..
+          exercise requestCid Custodian.Approve with ..
 
       nonconsuming OfferExchangeRole : ContractId Exchange.Offer
         with
@@ -49,9 +49,9 @@ template Role
 
       nonconsuming ApproveExchangeRequest : (ContractId Exchange.Role, ContractId Matching.Service, ContractId Listing.Service, ContractId Settlement.Service)
         with
-          exchangeRequestCid : ContractId Exchange.Request
+          requestCid : ContractId Exchange.Request
         do
-          exercise exchangeRequestCid Exchange.Approve with ..
+          exercise requestCid Exchange.Approve with ..
 
       nonconsuming OfferRegulatorRole: ContractId Regulator.Offer
         with
@@ -61,9 +61,9 @@ template Role
 
       nonconsuming ApproveRegulatorRequest : ContractId Regulator.Role
         with
-          regulatorRequestCid : ContractId Regulator.Request
+          requestCid : ContractId Regulator.Request
         do
-          exercise regulatorRequestCid Regulator.Approve with ..
+          exercise requestCid Regulator.Approve with ..
 
       nonconsuming OfferInvestorRole: ContractId Investor.Offer
         with
@@ -73,9 +73,9 @@ template Role
 
       nonconsuming ApproveInvestorRequest : (ContractId Investor.Role, ContractId Settlement.AccountInfo)
         with
-          investorRequestCid : ContractId Investor.Request
+          requestCid : ContractId Investor.Request
         do
-          exercise investorRequestCid Investor.Approve
+          exercise requestCid Investor.Approve
 
       nonconsuming OfferIssuerRole: ContractId Issuer.Offer
         with
@@ -97,9 +97,9 @@ template Role
 
       nonconsuming ApproveMatchingRequest : ContractId Matching.Service
         with
-          matchingRequestCid : ContractId Matching.Request
+          requestCid : ContractId Matching.Request
         do
-          exercise matchingRequestCid Matching.Approve
+          exercise requestCid Matching.Approve
 
       nonconsuming OfferSettlementService : ContractId Settlement.Offer
         with
@@ -109,9 +109,9 @@ template Role
 
       nonconsuming ApproveSettlementRequest : ContractId Settlement.Service
         with
-          settlementRequestCid : ContractId Settlement.Request
+          requestCid : ContractId Settlement.Request
         do
-          exercise settlementRequestCid Settlement.Approve
+          exercise requestCid Settlement.Approve
 
       nonconsuming OfferAuctionDistributorRole : ContractId AuctionDistributor.Offer
         with
@@ -121,9 +121,9 @@ template Role
 
       nonconsuming ApproveAuctionDistributorRequest : ContractId AuctionDistributor.Role
         with
-          distributorRequestCid : ContractId AuctionDistributor.Request
+          requestCid : ContractId AuctionDistributor.Request
         do
-          exercise distributorRequestCid AuctionDistributor.Approve with ..
+          exercise requestCid AuctionDistributor.Approve with ..
 
       nonconsuming OfferSyndicationDistributorRole : ContractId SyndicationDistributor.Offer
         with
@@ -133,9 +133,9 @@ template Role
 
       nonconsuming ApproveSyndicationDistributorRequest : ContractId SyndicationDistributor.Role
         with
-          distributorRequestCid : ContractId SyndicationDistributor.Request
+          requestCid : ContractId SyndicationDistributor.Request
         do
-          exercise distributorRequestCid SyndicationDistributor.Approve
+          exercise requestCid SyndicationDistributor.Approve
 
       nonconsuming OfferSyndicationStructurerRole : ContractId SyndicationStructurer.Offer
         with
@@ -145,9 +145,9 @@ template Role
 
       nonconsuming ApproveSyndicationStructurerRequest : ContractId SyndicationStructurer.Role
         with
-          structurerRequestCid : ContractId SyndicationStructurer.Request
+          requestCid : ContractId SyndicationStructurer.Request
         do
-          exercise structurerRequestCid SyndicationStructurer.Approve
+          exercise requestCid SyndicationStructurer.Approve
 
       nonconsuming OfferClearingRole : ContractId Clearing.Offer
         with
@@ -157,6 +157,6 @@ template Role
 
       nonconsuming ApproveClearingRequest : (ContractId Clearing.Role, ContractId Market.Service)
         with
-          clearingRequestCid : ContractId Clearing.Request
+          requestCid : ContractId Clearing.Request
         do
-          exercise clearingRequestCid Clearing.Approve with ..
+          exercise requestCid Clearing.Approve with ..

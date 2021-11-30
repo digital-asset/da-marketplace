@@ -1,6 +1,6 @@
 module Tests.Distribution.Util where
 
-import ContingentClaims.Claim (Claim, serialize)
+import ContingentClaims.Claim (Claim(Zero), serialize)
 import ContingentClaims.Observation (Observation)
 import Daml.Script
 import DA.Finance.Asset (AssetDeposit(..), AssetDeposit_Split(..))
@@ -25,59 +25,66 @@ import Marketplace.Distribution.Syndication.Distributor qualified as Distributor
 import Marketplace.Distribution.Syndication.Investor qualified as Investor
 import Marketplace.Distribution.Syndication.Structuring.Model qualified as Structuring
 import Marketplace.Distribution.Syndication.Structuring.Service qualified as Structuring
+import Marketplace.Lifecycle.Model qualified as Lifecycle
+import Marketplace.Lifecycle.Service qualified as Lifecycle
 import Marketplace.Settlement.Hierarchical (AccountInfo, SettlementInstruction, Allocate(..), Sign(..), Settle(..), Trade)
 
 createCustodianRole : Party -> Party -> Optional Account -> Optional Account -> Script (ContractId Custodian.Role, ContractId AccountInfo)
 createCustodianRole operator provider cashAccount securitiesAccount = do
-  custodianRoleOfferCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferCustodianRole with provider
-  submit provider do exerciseCmd custodianRoleOfferCid Custodian.Accept with ..
+  offerCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferCustodianRole with provider
+  submit provider do exerciseCmd offerCid Custodian.Accept with ..
 
 createCustodyService : Party -> Party -> Party -> Script (ContractId Custody.Service, Account)
 createCustodyService operator provider customer = do
-  custodyServiceOfferCid <- submit provider do exerciseByKeyCmd @Custodian.Role (operator, provider) Custodian.OfferCustodyService with ..
-  serviceCid <- submit customer do exerciseCmd custodyServiceOfferCid Custody.Accept
+  offerCid <- submit provider do exerciseByKeyCmd @Custodian.Role (operator, provider) Custodian.OfferCustodyService with ..
+  serviceCid <- submit customer do exerciseCmd offerCid Custody.Accept
   Some service <- queryContractId customer serviceCid
   pure (serviceCid, service.account)
 
 createIssuanceService : Party -> Party -> Party -> Script (ContractId Issuance.Service)
 createIssuanceService operator provider customer = do
-  issuanceServiceOfferCid <- submit provider do exerciseByKeyCmd @Custodian.Role (operator, provider) Custodian.OfferIssuanceService with ..
-  submit customer do exerciseCmd issuanceServiceOfferCid Issuance.Accept
+  offerCid <- submit provider do exerciseByKeyCmd @Custodian.Role (operator, provider) Custodian.OfferIssuanceService with ..
+  submit customer do exerciseCmd offerCid Issuance.Accept
 
 createStructurerRole : Party -> Party -> Script (ContractId Structurer.Role)
 createStructurerRole operator provider = do
-  bookRunnerRoleOfferCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferSyndicationStructurerRole with provider
-  submit provider do exerciseCmd bookRunnerRoleOfferCid Structurer.Accept
+  offerCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferSyndicationStructurerRole with provider
+  submit provider do exerciseCmd offerCid Structurer.Accept
 
 createDistributorRole : Party -> Party -> Script (ContractId Distributor.Role)
 createDistributorRole operator provider = do
-  distributorRoleOfferCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferSyndicationDistributorRole with provider
-  submit provider do exerciseCmd distributorRoleOfferCid Distributor.Accept
+  offerCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferSyndicationDistributorRole with provider
+  submit provider do exerciseCmd offerCid Distributor.Accept
 
 createInvestorRole : Party -> Party -> Account -> Account -> Script (ContractId Investor.Role, ContractId AccountInfo)
 createInvestorRole operator investor cashAccount securitiesAccount = do
-  investorRoleOfferCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferInvestorRole with investor
-  submit investor do exerciseCmd investorRoleOfferCid Investor.Accept with cashAccount = Some cashAccount; securitiesAccount = Some securitiesAccount
+  offerCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferInvestorRole with investor
+  submit investor do exerciseCmd offerCid Investor.Accept with cashAccount = Some cashAccount; securitiesAccount = Some securitiesAccount
 
 createIssuerRole : Party -> Party -> Account -> Account -> Script (ContractId Issuer.Role, ContractId AccountInfo)
 createIssuerRole operator issuer cashAccount securitiesAccount = do
-  issuerRoleOfferCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferIssuerRole with issuer
-  submit issuer do exerciseCmd issuerRoleOfferCid Issuer.Accept with cashAccount = Some cashAccount; securitiesAccount = Some securitiesAccount
+  offerCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferIssuerRole with issuer
+  submit issuer do exerciseCmd offerCid Issuer.Accept with cashAccount = Some cashAccount; securitiesAccount = Some securitiesAccount
 
 createStructuringService : Party -> Party -> Party -> Script (ContractId Structuring.Service)
 createStructuringService operator provider customer = do
-  structuringServiceOfferCid <- submit provider do exerciseByKeyCmd @Structurer.Role (operator, provider) Structurer.OfferStructuringService with ..
-  submit customer do exerciseCmd structuringServiceOfferCid Structuring.Accept
+  offerCid <- submit provider do exerciseByKeyCmd @Structurer.Role (operator, provider) Structurer.OfferStructuringService with ..
+  submit customer do exerciseCmd offerCid Structuring.Accept
 
 createBookBuildingService : Party -> Party -> Party -> Script (ContractId BookBuilding.Service)
 createBookBuildingService operator provider customer = do
-  bookBuildingServiceOfferCid <- submit provider do exerciseByKeyCmd @Distributor.Role (operator, provider) Distributor.OfferBookBuildingService with ..
-  submit customer do exerciseCmd bookBuildingServiceOfferCid BookBuilding.Accept
+  offerCid <- submit provider do exerciseByKeyCmd @Distributor.Role (operator, provider) Distributor.OfferBookBuildingService with ..
+  submit customer do exerciseCmd offerCid BookBuilding.Accept
 
 createBiddingService : Party -> Party -> Party -> Script (ContractId Bidding.Service)
 createBiddingService operator provider customer = do
-  biddingServiceOfferCid <- submit provider do exerciseByKeyCmd @Distributor.Role (operator, provider) Distributor.OfferBiddingService with ..
-  submit customer do exerciseCmd biddingServiceOfferCid Bidding.Accept
+  offerCid <- submit provider do exerciseByKeyCmd @Distributor.Role (operator, provider) Distributor.OfferBiddingService with ..
+  submit customer do exerciseCmd offerCid Bidding.Accept
+
+createLifecycleService : Party -> Party -> Party -> Party -> Script (ContractId Lifecycle.Service)
+createLifecycleService operator issuer bondRegistrar cashProvider  = do
+  offerCid <- submit issuer do exerciseByKeyCmd @Issuer.Role (operator, issuer) Issuer.OfferLifecycleService with ..
+  submit bondRegistrar do exerciseCmd offerCid Lifecycle.Accept
 
 originate : Party -> Party -> Party -> Party -> Text -> Claim Observation Date Decimal Id -> Script (ContractId AssetDescription, AssetDescription)
 originate operator provider customer public assetLabel claims = do
@@ -119,6 +126,10 @@ bid operator provider customer bookBuildingRequestCid quantity price = do
   Some BookBuilding.BuildRequest{issuer, dealId, asset, priceId} <- queryContractId provider bookBuildingRequestCid
   bidRequestCid <- submit provider do exerciseByKeyCmd @Bidding.Service (operator, provider, customer) Bidding.RequestBid with ..
   submit customer do exerciseByKeyCmd @Bidding.Service (operator, provider, customer) Bidding.SubmitBid with ..
+
+lifecycle : Party -> Party -> Party -> Id -> Script (Optional (ContractId Lifecycle.Effect))
+lifecycle operator issuer provider assetId = do
+  submit provider do exerciseByKeyCmd @Lifecycle.Service (operator, issuer, provider) Lifecycle.RequestLifecycle with assetId; election = serialize Zero
 
 allocate : Party -> ContractId Bidding.Bid -> Decimal -> Decimal -> Script (ContractId Bidding.Allocation)
 allocate bookRunner bidCid offeredQuantity offeredPrice = do

@@ -112,4 +112,5 @@ template Deal
               let
                 filtered = filter (\c -> c.asset.id.label == asset.id.label) confs
               mapA (settleInvestor asset) filtered
+          -- TODO: filter confirmations by tranche
           concat <$> mapA (settleTranche confirmations) tranches

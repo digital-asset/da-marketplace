@@ -1,0 +1,91 @@
+module Marketplace.Lifecycle.Service where
+
+import ContingentClaims.Claim (deserialize, serialize)
+import ContingentClaims.Lifecycle qualified as Lifecycle
+import ContingentClaims.Claim.Serializable (Claim(..))
+import DA.Finance.Types (Id)
+import DA.Set (fromList)
+import Marketplace.Issuance.AssetDescription qualified as AssetDescription
+import Marketplace.Lifecycle.Model (Observation, Today, Effect(..))
+import Marketplace.Utils
+
+type Claims = Claim Date Decimal Id
+
+type T = Service
+
+template Service
+  with
+    operator : Party
+    issuer : Party
+    bondRegistrar : Party
+    cashProvider : Party
+  where
+    signatory operator, issuer, bondRegistrar
+
+    key (operator, issuer, bondRegistrar) : (Party, Party, Party)
+    maintainer key._1
+
+    controller bondRegistrar can
+      RequestLifecycle : Optional (ContractId Effect)
+        with
+          assetId : Id
+          election : Claims
+        do
+          (_, today) <- fetchByKey @Today (operator, bondRegistrar)
+          (_, description) <- fetchByKey @AssetDescription.T assetId
+          (versionsCid, versions) <- fetchByKey @AssetDescription.Index (fromList . signatory $ description, assetId.label)
+          let obs label date = do
+              (_, observation) <- fetchByKey @Observation (operator, bondRegistrar, label, date)
+              pure observation.value
+          remaining <- if election /= Zero
+            then Lifecycle.exercise obs (True, deserialize election) (deserialize description.claims) today.date
+            else pure (deserialize description.claims)
+          Lifecycle.Result{remaining, pending} <- Lifecycle.lifecycle obs remaining today.date
+          let serializedRemaining = serialize remaining
+          (_, newVersion) <- exercise versionsCid AssetDescription.LookupOrInsert with claims = serializedRemaining
+          if newVersion /= assetId.version then do
+            create description with assetId.version = newVersion; claims = serializedRemaining
+            let lifecycleId = "Lifecycle-" <> show today.date <> "-" <> assetId.label <> "(v" <> show assetId.version <> ")"
+            Some <$> create Effect with operator; issuer; bondRegistrar; cashProvider; recipient = bondRegistrar; lifecycleId; assetId; newVersion; date = today.date; payouts = pending
+          else
+            pure None
+
+    controller operator can
+      Terminate : ()
+        do return ()
+
+template Offer
+  with
+    operator : Party
+    issuer : Party
+    bondRegistrar : Party
+    cashProvider : Party
+  where
+    signatory operator, issuer
+
+    controller bondRegistrar can
+      Accept : ContractId Service
+        do
+          createOrLookup Service with ..
+
+      Decline : ()
+        do
+          return ()
+
+template Request
+  with
+    issuer : Party
+    operator : Party
+    bondRegistrar : Party
+    cashProvider : Party
+  where
+    signatory bondRegistrar
+
+    controller operator, issuer can
+      Approve : ContractId Service
+        do
+          createOrLookup Service with ..
+
+      Reject : ()
+        do
+          return ()
