@@ -158,12 +158,6 @@ setupExchangeAccount da lp custodian tokenId depositQuantity investor = do
   -- move to exchange account
   investor `submit` exerciseByKeyCmd @Investor (operator, investor) Investor_AllocateToProvider
       with depositCids = [depositCid], amount = depositQuantity, provider = exchange
-  -- transferRequestCid <- investor `submit` exerciseByKeyCmd @Investor (operator, investor) Investor_DirectAllocate -- Investor_AllocateToProvider
-  --     with depositCids = [depositCid], amount = depositQuantity, provider = exchange
-  --
-  -- -- bank accepts transfer
-  -- custodian `submit` exerciseCmd transferRequestCid DepositTransferRequest_Approve
-
 
 createToken : Party -> Party -> Text -> Text -> Int -> [Party] -> Script Id
 createToken operator issuer name description quantityPrecision observers = do
@@ -196,14 +190,12 @@ handleOnboarding lp@(LedgerParties operator public custodian exchange btcIssuer 
   exchangeInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardExchange with ..
   exchangeCid <- exchange `submit` exerciseCmd exchangeInvCid ExchangeInvitation_Accept with name = "Exberry Exchange", ..
 
-
   -- issuers establish a relationship with the custodian
   relationshipReqCid <- btcIssuer `submit` exerciseCmd btcIssuerCid Issuer_RequestCustodianRelationship with ..
   custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
 
   relationshipReqCid <- usdtIssuer `submit` exerciseCmd usdtIssuerCid Issuer_RequestCustodianRelationship with ..
   custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
-
 
   -- exchange establishes a relationship with the custodian
   relationshipReqCid <- exchange `submit` exerciseCmd exchangeCid Exchange_RequestCustodianRelationship with ..

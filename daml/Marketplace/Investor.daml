@@ -109,7 +109,7 @@ template Investor
             CustodianRelationship_RequestDebit with
               request = DepositDebitRequest with owner = investor, ownerAccount = deposit.account, ..
 
-      nonconsuming Investor_AllocateToProvider : ContractId AssetDeposit -- DepositTransferRequest
+      nonconsuming Investor_AllocateToProvider : ContractId AssetDeposit
         with
           depositCids : [ContractId AssetDeposit]
           amount : Decimal
@@ -130,7 +130,6 @@ template Investor
                     version = 0
           exercise depositCid AssetDeposit_Transfer
             with receiverAccount = Account with id = receiverAccountId, owner = investor, ..
-          -- exercise self Investor_RequestDepositTransfer with ..
 
       nonconsuming Investor_DirectAllocate : ContractId AssetDeposit
         with
