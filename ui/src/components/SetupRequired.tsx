@@ -68,13 +68,13 @@ const SetupRequired  = () => {
 
   const userAdminRequired = (
       <p className='login-details dark'>Please create the 'UserAdmin' party and refresh this page. You can create the party
-                                        on the "Users" tab of the console.</p>
+                                        on the "Identities" tab of the console.</p>
   );
 
   const setupForm = (
     <>
       <p className='login-details dark'>If you would like to have the setup happen automatically,
-                                        please enter the JWT token found in the "Users" tab of the
+                                        please enter the JWT token found in the "Identities" tab of the
                                         Daml Hub for the UserAdmin party.</p>
       <Form size='large' className='login-form'>
           <Form.Input
@@ -104,12 +104,13 @@ const SetupRequired  = () => {
         <div>
           <p>
             Please create a "UserAdmin" party and make the "da-marketplace-triggers" artifact deployable to continue and to perform automatic setup.<br/><br/>
-            You can create the party on the "Users" tab and find the deployable option by clicking on the trigger in the "Deployments"
+            You can create the party on the "Identities" tab and find the deployable option by clicking on the trigger in the "Deployments"
             tab in the console, then clicking on "Settings".
            </p>
         </div>
       ) : !!operator ? setupForm : userAdminRequired }
-      <h4>See <a className='dark' href='https://github.com/digital-asset/da-marketplace#add-the-operator-role-contract'>here</a> for more information.</h4>
+      <h4>For manual setup (not recommended), see <a className='dark' href='https://github.com/digital-asset/da-marketplace/tree/0.1.x#add-the-operator-role-contract'>here</a>
+          for more information.</h4>
     </>
   );
 
