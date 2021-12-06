@@ -21,12 +21,9 @@ template DepositTransferRequest
   where
     let senderSig = head $ toList senderAccountId.signatories
         receiverSig = head $ toList receiverAccountId.signatories
-        custodian = getCustodian senderAccountId operator -- senderSig
+        custodian = getCustodian senderAccountId operator
     ensure senderSig == receiverSig && senderAccountId /= receiverAccountId
     signatory operator, sender
-    -- custodian, operator, sender -- toList senderAccountId.signatories, sender
-    -- toList senderAccountId.signatories <> toList receiverAccountId.signatories, sender
-    -- operator, custodian, sender
 
     controller custodian can
       DepositTransferRequest_Approve : ContractId AssetDeposit

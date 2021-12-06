@@ -53,9 +53,6 @@ doSetupTransfer lp@(LedgerParties operator public custodian exchange issuer _ al
 
   handleTrade lp btcTokenId usdTokenId aliceUsdId bobBtcId 1
 
-  -- Test multiple Custodians
-
-  -- onboard custodian
   custodianInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardCustodian with custodian = issuer, ..
   issuer `submit` exerciseCmd custodianInvCid CustodianInvitation_Accept with name = "Bank of Issuer", location = "", ..
 
@@ -109,9 +106,6 @@ handleTrade lp@LedgerParties{userAdmin = operator, exchange, bob, alice} btcToke
 
   assert $ aliceDeposit.asset.quantity == 1.0
   assert $ bobDeposit.asset.quantity == 40.0
-
-  -- return ()
-
 
 onboardInvestor : LedgerParties -> Party -> Text-> Script (ContractId Investor)
 onboardInvestor lp investor name = do

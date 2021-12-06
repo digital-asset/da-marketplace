@@ -65,16 +65,8 @@ function computeToken(party: string): string {
     "https://daml.com/ledger-api": {
       "ledgerId": ledgerId,
       "applicationId": APPLICATION_ID,
-      "actAs": [party],
-      "readAs": [party],
-      "owner": party,
-      "party": party,
-    },
-    "party": party,
-    "partyName": party,
-    "exp": 5000,
-    "ledgerId": ledgerId,
-    "owner": party,
+      "actAs": [party]
+    }
   };
   return encode(payload, SECRET_KEY, 'HS256');
 }

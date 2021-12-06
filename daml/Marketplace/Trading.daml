@@ -253,8 +253,7 @@ template BrokerOrderRequest
           brokerOrderCid <- create BrokerOrder with ..
           let receiverAccountId = Id with signatories = deposit.account.id.signatories, label = getAccountLabel broker broker, version = 0
           let custodian = getCustodian deposit.account.id operator
-          -- depositTransferReqCid <- exerciseByKey @CustodianRelationship (custodian, operator, brokerCustomer) CustodianRelationship_RequestTransfer with
-                -- request =
+
           depositTransferReqCid <- create DepositTransferRequest with sender = brokerCustomer, senderAccountId = deposit.account.id, ..
           return (brokerOrderCid, depositTransferReqCid)
 
@@ -546,12 +545,9 @@ template TradeSide
               (sendDepositCid, restDepositCids) <-
                 if isBuy && (deposit.asset.quantity > qty * price)
                 then do
-                  -- let [sendAsset, restAsset] = assetSplit asset [qty * price]
                   [sendDepositCid, restDepositCid] <- exercise depositCid AssetDeposit_Split with quantities = [qty * price]
-
-                  -- restDepositCid' <- exercise restDepositCid AssetDeposit_Unlock
-
                   return (sendDepositCid, [restDepositCid])
+
                 else return (depositCid, [])
 
               let receiverAccount = getAccount receiverAccountId
