@@ -47,7 +47,8 @@ template Service
           if newVersion /= assetId.version then do
             create description with assetId.version = newVersion; claims = serializedRemaining
             let lifecycleId = "Lifecycle-" <> show today.date <> "-" <> assetId.label <> "(v" <> show assetId.version <> ")"
-            Some <$> create Effect with operator; issuer; bondRegistrar; cashProvider; lifecycleId; assetId; newVersion; date = today.date; payouts = pending
+            let expired = serializedRemaining == Zero
+            Some <$> create Effect with operator; issuer; bondRegistrar; cashProvider; lifecycleId; assetId; newVersion; date = today.date; payouts = pending; expired
           else
             pure None
 

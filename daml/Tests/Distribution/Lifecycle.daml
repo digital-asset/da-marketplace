@@ -8,7 +8,7 @@ import DA.Set (fromList, toList)
 import Marketplace.Issuance.AssetDescription (AssetDescription)
 import Marketplace.Lifecycle.Model qualified as Lifecycle
 import Marketplace.Lifecycle.Service qualified as Lifecycle
-import Marketplace.Settlement.Hierarchical (Payment, SettlementInstruction)
+import Marketplace.Settlement.Hierarchical (Delivery, SettlementInstruction)
 import Tests.Distribution.Setup (setup, Parties(..))
 import Tests.Distribution.Issuance (issuance, Issuance(..))
 import Tests.Distribution.Util
@@ -24,7 +24,7 @@ forwardRequest custodian = do
   depositCids <- map fst <$> queryFilter @AssetDeposit custodian (\ad -> ad.account.provider == custodian)
   submit custodian do exerciseCmd srCid Lifecycle.Forward with depositCids
 
-instructLifecycle : Party -> Party -> Script [(ContractId Payment, [ContractId SettlementInstruction])]
+instructLifecycle : Party -> Party -> Script [ContractId Delivery]
 instructLifecycle operator bondRegistrar = do
   [(effectCid, effect)] <- query @Lifecycle.Effect bondRegistrar
   snapshotCids <- map fst <$> queryFilter @Lifecycle.Snapshot bondRegistrar (\e -> e.bondRegistrar == bondRegistrar)
@@ -54,11 +54,20 @@ lifecycle Parties{..} security date = do
   provideSnapshot custodian2
   forwardRequest custodian4
   provideSnapshot custodian5
-  paymentCids <- map fst <$> instructLifecycle operator bondRegistrar
+  paymentCids <- instructLifecycle operator bondRegistrar
   allocateSis issuer
   allocateSis lm1
   allocateSis lm2
   allocateSis lm3
+  allocateSis investor1
+  allocateSis investor2
+  allocateSis investor3
+  allocateSis investor4
+  allocateSis custodian1
+  allocateSis custodian2
+  allocateSis custodian4
+  allocateSis custodian5
+  sign issuer
   sign lm1
   sign lm2
   sign lm3
@@ -66,15 +75,23 @@ lifecycle Parties{..} security date = do
   sign investor2
   sign investor3
   sign investor4
-  adCids <- mapA (settlePayment bondRegistrar) paymentCids
+  sign custodian1
+  sign custodian2
+  sign custodian4
+  sign custodian5
+  adCids <- mapA (settleDelivery bondRegistrar) paymentCids
 
-  -- consolidate issuer
-  -- consolidate lm1
-  -- consolidate lm2
-  -- consolidate lm3
-  -- consolidate investor1
-  -- consolidate investor2
-  -- consolidate investor3
-  -- consolidate investor4
+  consolidate issuer
+  consolidate lm1
+  consolidate lm2
+  consolidate lm3
+  consolidate investor1
+  consolidate investor2
+  consolidate investor3
+  consolidate investor4
+  consolidate custodian1
+  consolidate custodian2
+  consolidate custodian4
+  consolidate custodian5
 
   pure ()

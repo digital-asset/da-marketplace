@@ -4,7 +4,7 @@ import DA.Finance.Asset (AssetDeposit, AssetDeposit_Upgrade(..))
 import DA.Finance.Types (Asset(..), Id)
 import DA.Foldable (forA_)
 import DA.Set (fromList, toList)
-import Marketplace.Settlement.Hierarchical (createInstructions, Payment(..), SettlementInstruction(..), Status(..))
+import Marketplace.Settlement.Hierarchical (createInstructions, Delivery(..), Status(..))
 
 template Today
   with
@@ -65,10 +65,10 @@ template SnapshotRequest
       controller custodian
       do
         deposits <- zip depositCids <$> mapA fetch depositCids
-        let
-          filtered = filter (\(_, d) -> d.asset.id.label == assetId.label && d.asset.id.version == assetId.version) deposits
+        let filtered = filter (\(_, d) -> d.asset.id.label == assetId.label && d.asset.id.version == assetId.version) deposits
         depCids <- mapA (\(cid, _) -> exercise cid AssetDeposit_Upgrade with newVersion) filtered
-        let snapshots = map (\(_, deposit) -> Snapshot with ..) filtered
+        upgraded <- mapA fetch depCids
+        let snapshots = map (\deposit -> Snapshot with ..) upgraded
         mapA create snapshots
 
 template Snapshot
@@ -95,6 +95,7 @@ template Effect
     newVersion : Int
     date : Date
     payouts : [(Decimal, Id)]
+    expired : Bool
   where
     signatory operator, issuer, bondRegistrar
 
@@ -103,29 +104,40 @@ template Effect
       do
         create SnapshotRequest with custodian = bondRegistrar; ..
 
-    choice Instruct : [(ContractId Payment, [ContractId SettlementInstruction])]
+    choice Instruct : [ContractId Delivery]
       with
         snapshotCids : [ContractId Snapshot]
       controller operator
       do
         let
-          createInstructionsForSnapshot : (Int, (Decimal, Id)) -> ContractId Snapshot -> Update (ContractId Payment, [ContractId SettlementInstruction])
-          createInstructionsForSnapshot (index, (amount, id)) snapshotCid = do
-            snapshot <- fetch snapshotCid
+          indexedPayouts = zip [0 .. length payouts - 1] payouts
+          createInstructionsForPayout : Snapshot -> (Int, (Decimal, Id)) -> Update (ContractId Delivery)
+          createInstructionsForPayout snapshot (index, (amount, id)) = do
             let
               settlementId = lifecycleId <> "-" <> partyToText snapshot.deposit.account.owner <> "-" <> show index
               instructionIdx = 0
-              payment = Asset with id; quantity = amount * snapshot.deposit.asset.quantity
+              asset = Asset with id; quantity = amount * snapshot.deposit.asset.quantity
               sender = if amount > 0.0 then issuer else snapshot.deposit.account.owner
               receiver = if amount > 0.0 then snapshot.deposit.account.owner else issuer
-            instructionCids <- createInstructions True operator bondRegistrar cashProvider sender receiver settlementId instructionIdx payment
+            instructionCids <- createInstructions True operator bondRegistrar cashProvider sender receiver settlementId instructionIdx asset
             instructionIds <- map (.instructionId) <$> mapA fetch instructionCids
-            paymentCid <- create Payment with operator; agent = bondRegistrar; payer = sender; payee = receiver; settlementId; instructionIds; payment; status = Instructed
-            pure (paymentCid, instructionCids)
-          createInstructionsForPayout : (Int, (Decimal, Id)) -> Update [(ContractId Payment, [ContractId SettlementInstruction])]
-          createInstructionsForPayout indexedPayout = do
-            mapA (createInstructionsForSnapshot indexedPayout) snapshotCids
-          indexedPayouts = zip [0 .. length payouts - 1] payouts
-        paymentCids <- concat <$> mapA createInstructionsForPayout indexedPayouts
-        forA_ snapshotCids $ \cid -> exercise cid Delete
-        pure paymentCids
+            create Delivery with operator; agent = bondRegistrar; sender; receiver; settlementId; instructionIds; asset; status = Instructed
+          createInstructionsForSnapshot : ContractId Snapshot -> Update [ContractId Delivery]
+          createInstructionsForSnapshot snapshotCid = do
+            snapshot <- fetch snapshotCid
+            deliveryCids <-
+              if expired
+              then do
+                let
+                  settlementId = lifecycleId <> "-" <> partyToText snapshot.deposit.account.owner <> "-Expiry"
+                  asset = snapshot.deposit.asset with id.signatories = fromList [bondRegistrar, issuer]
+                instructionCids <- createInstructions False operator bondRegistrar bondRegistrar snapshot.deposit.account.owner issuer settlementId 0 asset
+                instructionIds <- map (.instructionId) <$> mapA fetch instructionCids
+                dCid <- create Delivery with operator; agent = bondRegistrar; sender = snapshot.deposit.account.owner; receiver = issuer; settlementId; instructionIds; asset; status = Instructed
+                dCids <- mapA (createInstructionsForPayout snapshot) indexedPayouts
+                pure $ dCid :: dCids
+              else
+                mapA (createInstructionsForPayout snapshot) indexedPayouts
+            exercise snapshotCid Delete
+            pure deliveryCids
+        concat <$> mapA createInstructionsForSnapshot snapshotCids

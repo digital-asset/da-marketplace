@@ -1,6 +1,6 @@
 module Tests.Distribution.Util where
 
-import ContingentClaims.Claim (Claim(Zero), serialize)
+import ContingentClaims.Claim (Claim, serialize)
 import ContingentClaims.Observation (Observation)
 import Daml.Script
 import DA.Finance.Asset (AssetDeposit(..), AssetDeposit_Split(..), AssetDeposit_Merge(..))
@@ -25,9 +25,8 @@ import Marketplace.Distribution.Syndication.Distributor qualified as Distributor
 import Marketplace.Distribution.Syndication.Investor qualified as Investor
 import Marketplace.Distribution.Syndication.Structuring.Model qualified as Structuring
 import Marketplace.Distribution.Syndication.Structuring.Service qualified as Structuring
-import Marketplace.Lifecycle.Model qualified as Lifecycle
 import Marketplace.Lifecycle.Service qualified as Lifecycle
-import Marketplace.Settlement.Hierarchical (AccountInfo, SettlementInstruction, Allocate(..), Sign(..), Settle(..), Trade, Payment, SettlePayment(..))
+import Marketplace.Settlement.Hierarchical (AccountInfo, SettlementInstruction, Allocate(..), Sign(..), Settle(..), Trade, Delivery, SettleDelivery(..))
 
 createCustodianRole : Party -> Party -> Optional Account -> Optional Account -> Script (ContractId Custodian.Role, ContractId AccountInfo)
 createCustodianRole operator provider cashAccount securitiesAccount = do
@@ -185,9 +184,9 @@ settleTrade : Party -> ContractId Trade -> Script [ContractId AssetDeposit]
 settleTrade party tradeCid = do
   snd <$> submit party do exerciseCmd tradeCid Settle
 
-settlePayment : Party -> ContractId Payment -> Script [ContractId AssetDeposit]
-settlePayment party paymentCid = do
-  snd <$> submit party do exerciseCmd paymentCid SettlePayment
+settleDelivery : Party -> ContractId Delivery -> Script [ContractId AssetDeposit]
+settleDelivery party deliveryCid = do
+  snd <$> submit party do exerciseCmd deliveryCid SettleDelivery
 
 consolidate : Party -> Script ()
 consolidate party = do
