@@ -3,7 +3,7 @@ module Tests.Distribution.Util where
 import ContingentClaims.Claim (Claim(Zero), serialize)
 import ContingentClaims.Observation (Observation)
 import Daml.Script
-import DA.Finance.Asset (AssetDeposit(..), AssetDeposit_Split(..))
+import DA.Finance.Asset (AssetDeposit(..), AssetDeposit_Split(..), AssetDeposit_Merge(..))
 import DA.Finance.Types (Account, Asset(..), Id(..))
 import DA.Foldable (forA_)
 import DA.List (head)
@@ -27,7 +27,7 @@ import Marketplace.Distribution.Syndication.Structuring.Model qualified as Struc
 import Marketplace.Distribution.Syndication.Structuring.Service qualified as Structuring
 import Marketplace.Lifecycle.Model qualified as Lifecycle
 import Marketplace.Lifecycle.Service qualified as Lifecycle
-import Marketplace.Settlement.Hierarchical (AccountInfo, SettlementInstruction, Allocate(..), Sign(..), Settle(..), Trade)
+import Marketplace.Settlement.Hierarchical (AccountInfo, SettlementInstruction, Allocate(..), Sign(..), Settle(..), Trade, Payment, SettlePayment(..))
 
 createCustodianRole : Party -> Party -> Optional Account -> Optional Account -> Script (ContractId Custodian.Role, ContractId AccountInfo)
 createCustodianRole operator provider cashAccount securitiesAccount = do
@@ -127,9 +127,9 @@ bid operator provider customer bookBuildingRequestCid quantity price = do
   bidRequestCid <- submit provider do exerciseByKeyCmd @Bidding.Service (operator, provider, customer) Bidding.RequestBid with ..
   submit customer do exerciseByKeyCmd @Bidding.Service (operator, provider, customer) Bidding.SubmitBid with ..
 
-lifecycle : Party -> Party -> Party -> Id -> Script (Optional (ContractId Lifecycle.Effect))
-lifecycle operator issuer provider assetId = do
-  submit provider do exerciseByKeyCmd @Lifecycle.Service (operator, issuer, provider) Lifecycle.RequestLifecycle with assetId; election = serialize Zero
+-- lifecycle : Party -> Party -> Party -> Id -> Script (Optional (ContractId Lifecycle.Effect))
+-- lifecycle operator issuer provider assetId = do
+--   submit provider do exerciseByKeyCmd @Lifecycle.Service (operator, issuer, provider) Lifecycle.CalculateEffect with assetId; election = None
 
 allocate : Party -> ContractId Bidding.Bid -> Decimal -> Decimal -> Script (ContractId Bidding.Allocation)
 allocate bookRunner bidCid offeredQuantity offeredPrice = do
@@ -142,10 +142,10 @@ confirm investor allocationCid = do
 allocateSi : Party -> (ContractId SettlementInstruction, SettlementInstruction) -> Script ()
 allocateSi party (siCid, si) = do
   adsAllocated <- mapOptional ((.depositCid) . snd) <$> queryFilter @SettlementInstruction party (\si -> si.sender == party && isSome si.depositCid)
-  ads <- filter ((`notElem` adsAllocated) . fst) <$> queryFilter @AssetDeposit party (\ad -> ad.account.owner == party)
+  ads <- queryFilter @AssetDeposit party (\ad -> ad.account.owner == party)
   let
-    valid (_, ad) = ad.account.owner == party && ad.account == si.senderAccount && ad.asset.id == si.asset.id && ad.asset.quantity >= si.asset.quantity
-    adCids = filter valid ads
+    valid (adCid, ad) = notElem adCid adsAllocated && ad.account.owner == party && ad.account == si.senderAccount && ad.asset.id == si.asset.id && ad.asset.quantity >= si.asset.quantity
+    adCids = map fst $ filter valid ads
   case adCids of
     [] ->
       if si.senderAccount.provider == party && si.senderAccount.owner == party then do
@@ -154,13 +154,21 @@ allocateSi party (siCid, si) = do
         pure ()
       else do
         pure ()
-    (adCid, ad) :: _ ->
-      if ad.asset.quantity > si.asset.quantity then do
-        adCid :: _ <- submit party do exerciseCmd adCid AssetDeposit_Split with quantities = [ si.asset.quantity ]
+    adHead :: adTail -> do
+      adMergedCid <-
+        if null adTail
+        then pure adHead
+        else submit party do exerciseCmd adHead AssetDeposit_Merge with depositCids = adTail
+      Some adMerged <- queryContractId party adMergedCid
+      if adMerged.asset.quantity > si.asset.quantity then do
+        adCid :: _ <- submit party do exerciseCmd adMergedCid AssetDeposit_Split with quantities = [ si.asset.quantity ]
         submit party do exerciseCmd siCid Allocate with settlementDepositCid = adCid
         pure ()
+      else if adMerged.asset.quantity == si.asset.quantity then do
+        submit party do exerciseCmd siCid Allocate with settlementDepositCid = adMergedCid
+        pure ()
       else do
-        submit party do exerciseCmd siCid Allocate with settlementDepositCid = adCid
+        debug $ "Insufficient funds for party " <> partyToText party
         pure ()
 
 allocateSis : Party -> Script ()
@@ -173,9 +181,13 @@ sign party = do
   sis <- queryFilter @SettlementInstruction party (\si -> si.receiver == party)
   mapA (\(siCid, _) -> submit party do exerciseCmd siCid Sign) sis
 
-settle : Party -> ContractId Trade -> Script [ContractId AssetDeposit]
-settle party dvpCid = do
-  snd <$> submit party do exerciseCmd dvpCid Settle
+settleTrade : Party -> ContractId Trade -> Script [ContractId AssetDeposit]
+settleTrade party tradeCid = do
+  snd <$> submit party do exerciseCmd tradeCid Settle
+
+settlePayment : Party -> ContractId Payment -> Script [ContractId AssetDeposit]
+settlePayment party paymentCid = do
+  snd <$> submit party do exerciseCmd paymentCid SettlePayment
 
 consolidate : Party -> Script ()
 consolidate party = do

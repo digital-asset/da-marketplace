@@ -3,35 +3,78 @@ module Tests.Distribution.Lifecycle where
 import Daml.Script
 import DA.Date (date, Month(..))
 import DA.Finance.Asset (AssetDeposit)
+import DA.Finance.Types (Id)
+import DA.Set (fromList, toList)
+import Marketplace.Issuance.AssetDescription (AssetDescription)
 import Marketplace.Lifecycle.Model qualified as Lifecycle
-import Tests.Distribution.Setup (Parties(..))
+import Marketplace.Lifecycle.Service qualified as Lifecycle
+import Marketplace.Settlement.Hierarchical (Payment, SettlementInstruction)
+import Tests.Distribution.Setup (setup, Parties(..))
 import Tests.Distribution.Issuance (issuance, Issuance(..))
 import Tests.Distribution.Util
 
-instructLifecycle : Party -> Party -> Party -> [Party] -> Script ()
-instructLifecycle operator issuer custodian custodians = do
-  [ (effectCid, _) ] <- queryFilter @Lifecycle.Effect custodian (\le -> le.recipient == custodian)
-  if null custodians
-  then do
-    depositCids <- map fst <$> queryFilter @AssetDeposit custodian (\ad -> ad.account.provider == custodian)
-    -- TODO: This implies we have a lifecycle service with the operator signatures for every custodian. we'd then call `Instruct` through that service to have the necessary auth
-    submitMulti [operator, custodian] [] do exerciseCmd effectCid Lifecycle.Instruct with ..
-  else do
-    submitMulti [operator, custodian] [] do exerciseCmd effectCid Lifecycle.Instruct with depositCids = []; ..
-  pure ()
+requestSnapshot : Party -> Party -> Id -> Script (ContractId Lifecycle.SnapshotRequest)
+requestSnapshot operator bondRegistrar assetId = do
+  [(effectCid, effect)] <- query @Lifecycle.Effect bondRegistrar
+  submit bondRegistrar do exerciseCmd effectCid Lifecycle.RequestSnapshot
 
-coupon : Script ()
-coupon = do
+forwardRequest : Party -> Script [ContractId Lifecycle.SnapshotRequest]
+forwardRequest custodian = do
+  [(srCid, sr)] <- queryFilter @Lifecycle.SnapshotRequest custodian (\r -> r.custodian == custodian)
+  depositCids <- map fst <$> queryFilter @AssetDeposit custodian (\ad -> ad.account.provider == custodian)
+  submit custodian do exerciseCmd srCid Lifecycle.Forward with depositCids
 
-  Issuance{parties, security} <- issuance
-  let Parties{..} = parties
+instructLifecycle : Party -> Party -> Script [(ContractId Payment, [ContractId SettlementInstruction])]
+instructLifecycle operator bondRegistrar = do
+  [(effectCid, effect)] <- query @Lifecycle.Effect bondRegistrar
+  snapshotCids <- map fst <$> queryFilter @Lifecycle.Snapshot bondRegistrar (\e -> e.bondRegistrar == bondRegistrar)
+  submit operator do exerciseCmd effectCid Lifecycle.Instruct with snapshotCids
 
+provideSnapshot : Party -> Script [ContractId Lifecycle.Snapshot]
+provideSnapshot custodian = do
+  [(srCid, sr)] <- queryFilter @Lifecycle.SnapshotRequest custodian (\e -> e.custodian == custodian)
+  depositCids <- map fst <$> queryFilter @AssetDeposit custodian (\ad -> ad.account.provider == custodian)
+  submit custodian do exerciseCmd srCid Lifecycle.Provide with depositCids
+
+test : Script ()
+test = do
+  parties@Parties{..} <- setup
+  Issuance{security} <- issuance parties
   submitMulti [operator, bondRegistrar] [] do createCmd Lifecycle.Today with operator; provider = bondRegistrar; date = date 2021 Jan 15
+  lifecycle parties security (date 2022 Jan 15)
 
-  Some effectCid <- lifecycle operator issuer bondRegistrar security.assetId
-  instructLifecycle operator issuer bondRegistrar [ custodian1, custodian2, custodian3, custodian4 ]
-  instructLifecycle operator issuer custodian1 []
-  instructLifecycle operator issuer custodian2 []
-  instructLifecycle operator issuer custodian4 [ custodian5 ]
-  instructLifecycle operator issuer custodian5 []
+lifecycle : Parties -> AssetDescription -> Date -> Script ()
+lifecycle Parties{..} security date = do
+
+  submit bondRegistrar do exerciseByKeyCmd @Lifecycle.Today (operator, bondRegistrar) Lifecycle.SetDate with newDate = date
+  Some effectCid <- submit bondRegistrar do exerciseByKeyCmd @Lifecycle.Service (operator, issuer, bondRegistrar) Lifecycle.CalculateEffect with assetId = security.assetId; election = None
+  requestSnapshot operator bondRegistrar security.assetId
+  forwardRequest bondRegistrar
+  provideSnapshot custodian1
+  provideSnapshot custodian2
+  forwardRequest custodian4
+  provideSnapshot custodian5
+  paymentCids <- map fst <$> instructLifecycle operator bondRegistrar
+  allocateSis issuer
+  allocateSis lm1
+  allocateSis lm2
+  allocateSis lm3
+  sign lm1
+  sign lm2
+  sign lm3
+  sign investor1
+  sign investor2
+  sign investor3
+  sign investor4
+  adCids <- mapA (settlePayment bondRegistrar) paymentCids
+
+  -- consolidate issuer
+  -- consolidate lm1
+  -- consolidate lm2
+  -- consolidate lm3
+  -- consolidate investor1
+  -- consolidate investor2
+  -- consolidate investor3
+  -- consolidate investor4
+
   pure ()

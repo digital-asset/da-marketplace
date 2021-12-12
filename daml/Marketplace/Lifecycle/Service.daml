@@ -26,10 +26,10 @@ template Service
     maintainer key._1
 
     controller bondRegistrar can
-      RequestLifecycle : Optional (ContractId Effect)
+      nonconsuming CalculateEffect : Optional (ContractId Effect)
         with
           assetId : Id
-          election : Claims
+          election : Optional Claims
         do
           (_, today) <- fetchByKey @Today (operator, bondRegistrar)
           (_, description) <- fetchByKey @AssetDescription.T assetId
@@ -37,16 +37,17 @@ template Service
           let obs label date = do
               (_, observation) <- fetchByKey @Observation (operator, bondRegistrar, label, date)
               pure observation.value
-          remaining <- if election /= Zero
-            then Lifecycle.exercise obs (True, deserialize election) (deserialize description.claims) today.date
-            else pure (deserialize description.claims)
+          remaining <-
+            case election of
+            Some e -> Lifecycle.exercise obs (True, deserialize e) (deserialize description.claims) today.date
+            _ -> pure (deserialize description.claims)
           Lifecycle.Result{remaining, pending} <- Lifecycle.lifecycle obs remaining today.date
           let serializedRemaining = serialize remaining
           (_, newVersion) <- exercise versionsCid AssetDescription.LookupOrInsert with claims = serializedRemaining
           if newVersion /= assetId.version then do
             create description with assetId.version = newVersion; claims = serializedRemaining
             let lifecycleId = "Lifecycle-" <> show today.date <> "-" <> assetId.label <> "(v" <> show assetId.version <> ")"
-            Some <$> create Effect with operator; issuer; bondRegistrar; cashProvider; recipient = bondRegistrar; lifecycleId; assetId; newVersion; date = today.date; payouts = pending
+            Some <$> create Effect with operator; issuer; bondRegistrar; cashProvider; lifecycleId; assetId; newVersion; date = today.date; payouts = pending
           else
             pure None
 

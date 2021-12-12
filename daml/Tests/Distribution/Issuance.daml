@@ -15,18 +15,21 @@ import Tests.Distribution.Util
 
 data Issuance = Issuance
   with
-    parties : Parties
     cash : AssetDescription
     security : AssetDescription
 
-issuance : Script Issuance
-issuance = do
+test : Script Issuance
+test = do
+  parties <- setup
+  issuance parties
 
-  p@Parties{..} <- setup
+issuance : Parties -> Script Issuance
+issuance Parties{..} = do
 
   (_, usd)  <- originate operator cashProvider cashProvider public "USD" Zero
-  (_, bond) <- originate operator bondRegistrar issuer public "BOND1" $ bond usd.assetId 1.0 0.02275 (unrollDates 2021 2023 [Jan,Jul] 15)
+  (_, bond) <- originate operator bondRegistrar issuer public "BOND1" $ bond usd.assetId 1.0 0.02275 (unrollDates 2022 2023 [Jan,Jul] 15)
 
+  issuerDepositCid      <- deposit operator cashProvider issuer 9_100_000.0 "USD"
   lm1DepositCid         <- deposit operator cashProvider lm1 10_000_000.0 "USD"
   lm2DepositCid         <- deposit operator cashProvider lm2 100_000_000.0 "USD"
   lm3DepositCid         <- deposit operator cashProvider lm3 100_000_000.0 "USD"
@@ -78,7 +81,7 @@ issuance = do
   sign issuer
   sign custodian2
   sign settlementBank
-  adCids1 <- mapA (settle bondRegistrar) dvpCids1
+  adCids1 <- mapA (settleTrade bondRegistrar) dvpCids1
 
   -- Step 2
   dvpCids2 <- submit operator do exerciseCmd dealCid Structuring.InstructBndSettlement with ..
@@ -90,7 +93,7 @@ issuance = do
   sign custodian2
   sign custodian3
   sign bndBank
-  adCids2 <- mapA (settle bondRegistrar) dvpCids2
+  adCids2 <- mapA (settleTrade bondRegistrar) dvpCids2
 
   -- Step 3
   dvpCids3 <- submit operator do exerciseCmd dealCid Structuring.InstructInvestorSettlement with ..
@@ -120,7 +123,7 @@ issuance = do
   sign investor2
   sign investor3
   sign investor4
-  adCids3 <- mapA (settle bondRegistrar) dvpCids3
+  adCids3 <- mapA (settleTrade bondRegistrar) dvpCids3
 
   -- Clean up
   consolidate issuer
@@ -135,4 +138,4 @@ issuance = do
   consolidate custodian4
   consolidate custodian5
 
-  pure Issuance with parties = p; cash = usd; security = bond
+  pure Issuance with cash = usd; security = bond
