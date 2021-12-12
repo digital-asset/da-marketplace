@@ -1,0 +1,53 @@
+module Marketplace.Trading.Otc.Model where
+
+import DA.Finance.Types (Asset)
+import Marketplace.Settlement.Hierarchical (createInstructions, Trade(..), Status(..))
+import Marketplace.Trading.Model (Side(..))
+
+template Order
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    counterparty : Party
+    deliveryRegistrar : Party
+    paymentRegistrar : Party
+    id : Text
+    delivery : Asset
+    payment : Asset
+    side : Side
+  where
+    signatory operator, provider, customer
+    observer counterparty
+
+    nonconsuming choice Accept : ContractId Match
+      controller counterparty
+      do
+        create Match with ..
+
+template Match
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    counterparty : Party
+    deliveryRegistrar : Party
+    paymentRegistrar : Party
+    id : Text
+    delivery : Asset
+    payment : Asset
+    side : Side
+  where
+    signatory operator, provider, customer, counterparty
+
+    nonconsuming choice Instruct : ContractId Trade
+      controller operator
+      do
+        let
+          buyer = if side == Buy then customer else counterparty
+          seller = if side == Buy then counterparty else customer
+          settlementId = id <> "-" <> partyToText customer <> "-" <> partyToText counterparty
+        deliverySis <- createInstructions False operator operator deliveryRegistrar seller buyer settlementId 0 delivery
+        paymentSis <- createInstructions True operator operator paymentRegistrar buyer seller settlementId (length deliverySis) payment
+        instructionIds <- map (.instructionId) <$> mapA fetch (deliverySis <> paymentSis)
+        create Trade with operator; agent = operator; deliverer = seller; payer = buyer; settlementId; instructionIds; delivery; payment; status = Instructed

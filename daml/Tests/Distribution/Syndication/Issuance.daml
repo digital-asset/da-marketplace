@@ -1,4 +1,4 @@
-module Tests.Distribution.Issuance where
+module Tests.Distribution.Syndication.Issuance where
 
 import ContingentClaims.Claim (Claim(Zero))
 import ContingentClaims.FinancialClaim (unrollDates)
@@ -10,8 +10,8 @@ import DA.Set (fromList)
 import Marketplace.Issuance.AssetDescription (AssetDescription)
 import Marketplace.Distribution.Syndication.Structuring.Model qualified as Structuring
 import Tests.Utils
-import Tests.Distribution.Setup (setup, Parties(..))
-import Tests.Distribution.Util
+import Tests.Distribution.Syndication.Setup (setup, Parties(..))
+import Tests.Distribution.Syndication.Util
 
 data Issuance = Issuance
   with
@@ -30,10 +30,10 @@ issuance Parties{..} = do
   (_, bond) <- originate operator bondRegistrar issuer public "BOND1" $ bond usd.assetId 1.0 0.02275 (unrollDates 2022 2023 [Jan,Jul] 15)
 
   issuerDepositCid      <- deposit operator cashProvider issuer 9_100_000.0 "USD"
-  lm1DepositCid         <- deposit operator cashProvider lm1 10_000_000.0 "USD"
+  lm1DepositCid         <- deposit operator cashProvider lm1 11_000_000.0 "USD"
   lm2DepositCid         <- deposit operator cashProvider lm2 100_000_000.0 "USD"
   lm3DepositCid         <- deposit operator cashProvider lm3 100_000_000.0 "USD"
-  investor1DepositCid   <- deposit operator lm1 investor1 10_000_000.0 "USD"
+  investor1DepositCid   <- deposit operator lm1 investor1 11_000_000.0 "USD"
   investor2DepositCid   <- deposit operator lm2 investor2 20_000_000.0 "USD"
   investor3DepositCid   <- deposit operator lm3 investor3 30_000_000.0 "USD"
   investor4DepositCid   <- deposit operator lm3 investor4 40_000_000.0 "USD"

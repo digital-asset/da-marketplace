@@ -1,4 +1,4 @@
-module Tests.Distribution.Util where
+module Tests.Distribution.Syndication.Util where
 
 import ContingentClaims.Claim (Claim, serialize)
 import ContingentClaims.Observation (Observation)
@@ -27,6 +27,7 @@ import Marketplace.Distribution.Syndication.Structuring.Model qualified as Struc
 import Marketplace.Distribution.Syndication.Structuring.Service qualified as Structuring
 import Marketplace.Lifecycle.Service qualified as Lifecycle
 import Marketplace.Settlement.Hierarchical (AccountInfo, SettlementInstruction, Allocate(..), Sign(..), Settle(..), Trade, Delivery, SettleDelivery(..))
+import Marketplace.Trading.Otc.Service qualified as Trading
 
 createCustodianRole : Party -> Party -> Optional Account -> Optional Account -> Script (ContractId Custodian.Role, ContractId AccountInfo)
 createCustodianRole operator provider cashAccount securitiesAccount = do
@@ -84,6 +85,11 @@ createLifecycleService : Party -> Party -> Party -> Party -> Script (ContractId 
 createLifecycleService operator issuer bondRegistrar cashProvider  = do
   offerCid <- submit issuer do exerciseByKeyCmd @Issuer.Role (operator, issuer) Issuer.OfferLifecycleService with ..
   submit bondRegistrar do exerciseCmd offerCid Lifecycle.Accept
+
+createTradingService : Party -> Party -> Script (ContractId Trading.Service)
+createTradingService operator customer  = do
+  offerCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferTradingService with ..
+  submit customer do exerciseCmd offerCid Trading.Accept
 
 originate : Party -> Party -> Party -> Party -> Text -> Claim Observation Date Decimal Id -> Script (ContractId AssetDescription, AssetDescription)
 originate operator provider customer public assetLabel claims = do

@@ -1,0 +1,102 @@
+module Marketplace.Trading.Otc.Service where
+
+import DA.Finance.Types (Asset)
+import Marketplace.Trading.Model (Side(..))
+import Marketplace.Trading.Otc.Model qualified as Trading
+
+type T = Service
+
+template Service
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    tradingAllowed : Bool
+  where
+    signatory operator, provider, customer
+
+    key (operator, provider, customer) : (Party, Party, Party)
+    maintainer key._1
+
+    nonconsuming choice CreateOrder : ContractId Trading.Order
+      with
+        counterparty : Party
+        id : Text
+        delivery : Asset
+        deliveryRegistrar : Party
+        payment : Asset
+        paymentRegistrar : Party
+        side : Side
+      controller customer
+      do
+        if not tradingAllowed
+        then fail "Trading not allowed"
+        else create Trading.Order with ..
+
+    nonconsuming choice AcceptOrder : ContractId Trading.Match
+      with
+        ctrl : Party
+        orderCid : ContractId Trading.Order
+      controller ctrl
+      do
+        if not tradingAllowed
+        then fail "Trading not allowed"
+        else do
+          exercise orderCid Trading.Accept
+
+    choice SetStatus : ContractId Service
+      with
+        isTradingAllowed : Bool
+      controller operator
+      do
+        create this with tradingAllowed = isTradingAllowed
+
+    choice Terminate : ()
+      with
+        ctrl : Party
+      controller ctrl
+      do pure ()
+
+template Offer
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+  where
+    signatory operator, provider
+
+    controller customer can
+      Accept : ContractId Service
+        with
+        do
+          create Service with tradingAllowed = False; ..
+
+      Decline : ()
+        do
+          return ()
+
+    controller provider can
+      Withdraw : ()
+        do pure ()
+
+template Request
+  with
+    customer : Party
+    provider : Party
+  where
+    signatory customer
+
+    controller customer can
+      Cancel : ()
+        do pure ()
+
+    controller provider can
+      Reject : ()
+        do pure ()
+
+    choice Approve : ContractId Service
+      with
+        operator : Party
+      controller operator, provider
+      do
+        create Service with tradingAllowed = False; ..

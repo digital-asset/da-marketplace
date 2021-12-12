@@ -1,11 +1,11 @@
-module Tests.Distribution.Redemption where
+module Tests.Distribution.Syndication.Redemption where
 
 import Daml.Script
 import DA.Date (date, Month(..))
 import Marketplace.Lifecycle.Model qualified as Lifecycle
-import Tests.Distribution.Setup (setup, Parties(..))
-import Tests.Distribution.Issuance (issuance, Issuance(..))
-import Tests.Distribution.Lifecycle (lifecycle)
+import Tests.Distribution.Syndication.Setup (setup, Parties(..))
+import Tests.Distribution.Syndication.Issuance (issuance, Issuance(..))
+import Tests.Distribution.Syndication.Lifecycle (lifecycle)
 
 redemption : Script ()
 redemption = do

@@ -13,6 +13,7 @@ import Marketplace.Settlement.Hierarchical qualified as Settlement
 import Marketplace.Settlement.Service qualified as Settlement
 import Marketplace.Trading.Role qualified as Exchange
 import Marketplace.Trading.Matching.Service qualified as Matching
+import Marketplace.Trading.Otc.Service qualified as Trading
 import Marketplace.Listing.Service qualified as Listing
 
 import DA.Set (Set)
@@ -112,6 +113,18 @@ template Role
           requestCid : ContractId Settlement.Request
         do
           exercise requestCid Settlement.Approve
+
+      nonconsuming OfferTradingService : ContractId Trading.Offer
+        with
+          customer : Party
+        do
+          create Trading.Offer with provider = operator; ..
+
+      nonconsuming ApproveTradingRequest : ContractId Trading.Service
+        with
+          requestCid : ContractId Trading.Request
+        do
+          exercise requestCid Trading.Approve with operator
 
       nonconsuming OfferAuctionDistributorRole : ContractId AuctionDistributor.Offer
         with

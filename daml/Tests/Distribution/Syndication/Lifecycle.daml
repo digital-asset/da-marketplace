@@ -1,4 +1,4 @@
-module Tests.Distribution.Lifecycle where
+module Tests.Distribution.Syndication.Lifecycle where
 
 import Daml.Script
 import DA.Date (date, Month(..))
@@ -9,9 +9,9 @@ import Marketplace.Issuance.AssetDescription (AssetDescription)
 import Marketplace.Lifecycle.Model qualified as Lifecycle
 import Marketplace.Lifecycle.Service qualified as Lifecycle
 import Marketplace.Settlement.Hierarchical (Delivery, SettlementInstruction)
-import Tests.Distribution.Setup (setup, Parties(..))
-import Tests.Distribution.Issuance (issuance, Issuance(..))
-import Tests.Distribution.Util
+import Tests.Distribution.Syndication.Setup (setup, Parties(..))
+import Tests.Distribution.Syndication.Issuance (issuance, Issuance(..))
+import Tests.Distribution.Syndication.Util
 
 requestSnapshot : Party -> Party -> Id -> Script (ContractId Lifecycle.SnapshotRequest)
 requestSnapshot operator bondRegistrar assetId = do

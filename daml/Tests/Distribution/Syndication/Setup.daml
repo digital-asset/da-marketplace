@@ -1,9 +1,9 @@
-module Tests.Distribution.Setup where
+module Tests.Distribution.Syndication.Setup where
 
 import Daml.Script
 import DA.Set (empty)
 import Marketplace.Operator.Role qualified as Operator
-import Tests.Distribution.Util
+import Tests.Distribution.Syndication.Util
 
 data Parties = Parties
   with
@@ -98,6 +98,10 @@ setup = do
   createInvestorRole operator investor2 investor2CashAccount investor2BondAccount
   createInvestorRole operator investor3 investor3CashAccount investor3BondAccount
   createInvestorRole operator investor4 investor4CashAccount investor4BondAccount
+  createTradingService operator investor1
+  createTradingService operator investor2
+  createTradingService operator investor3
+  createTradingService operator investor4
 
   -- Issuer role
   createIssuerRole operator issuer issuerCashAccount issuerBondAccount

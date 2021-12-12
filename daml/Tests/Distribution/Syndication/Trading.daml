@@ -1,0 +1,69 @@
+module Tests.Distribution.Syndication.Trading where
+
+import Daml.Script
+import DA.Finance.Types (Asset(..))
+import Marketplace.Issuance.AssetDescription (AssetDescription)
+import Marketplace.Settlement.Hierarchical qualified as Settlement
+import Marketplace.Trading.Model (Side(..))
+import Marketplace.Trading.Otc.Model qualified as Trading
+import Marketplace.Trading.Otc.Service qualified as Trading
+import Tests.Distribution.Syndication.Setup (setup, Parties(..))
+import Tests.Distribution.Syndication.Issuance (issuance, Issuance(..))
+import Tests.Distribution.Syndication.Util
+
+setTradingStatus : Party -> Bool -> Script [ContractId Trading.Service]
+setTradingStatus operator isTradingAllowed = do
+  serviceCids <- map fst <$> queryFilter @Trading.Service operator (\s -> s.operator == operator)
+  submit operator do mapA (\sCid -> exerciseCmd sCid Trading.SetStatus with isTradingAllowed) serviceCids
+
+createOrder : Party -> Party -> Party -> Party -> Party -> Text -> Asset -> Asset -> Side -> Script (ContractId Trading.Order)
+createOrder operator customer counterparty deliveryRegistrar paymentRegistrar id delivery payment side = do
+  submit customer do exerciseByKeyCmd @Trading.Service (operator, operator, customer) Trading.CreateOrder with ..
+
+acceptOrder : Party -> Party -> ContractId Trading.Order -> Script (ContractId Trading.Match)
+acceptOrder operator customer orderCid = do
+  submit customer do exerciseByKeyCmd @Trading.Service (operator, operator, customer) Trading.AcceptOrder with ctrl = customer; orderCid
+
+instructMatch : Party -> ContractId Trading.Match -> Script (ContractId Settlement.Trade)
+instructMatch operator matchCid = do
+  submit operator do exerciseCmd matchCid Trading.Instruct
+
+test : Script ()
+test = do
+  parties@Parties{..} <- setup
+  Issuance{security, cash} <- issuance parties
+  trading parties security cash
+
+trading : Parties -> AssetDescription -> AssetDescription -> Script ()
+trading Parties{..} security cash = do
+
+  setTradingStatus operator True
+  let
+    delivery = Asset with id = security.assetId; quantity = 1_000_000.0
+    payment = Asset with id = cash.assetId; quantity = 1_000_000.0
+  orderCid <- createOrder operator investor1 investor2 bondRegistrar cashProvider "TRD1" delivery payment Buy
+  matchCid <- acceptOrder operator investor2 orderCid
+  tradeCid <- instructMatch operator matchCid
+
+  allocateSis lm1
+  allocateSis lm2
+  allocateSis investor1
+  allocateSis investor2
+  allocateSis custodian1
+  allocateSis custodian2
+  sign lm1
+  sign lm2
+  sign investor1
+  sign investor2
+  sign custodian1
+  sign custodian2
+  adCids <- settleTrade operator tradeCid
+
+  consolidate lm1
+  consolidate lm2
+  consolidate investor1
+  consolidate investor2
+  consolidate custodian1
+  consolidate custodian2
+
+  pure ()
