@@ -4,9 +4,12 @@ import ContingentClaims.Claim (Claim, serialize)
 import ContingentClaims.Observation (Observation)
 import Daml.Script
 import DA.Finance.Asset (AssetDeposit(..), AssetDeposit_Split(..), AssetDeposit_Merge(..))
+import DA.Finance.Base.DayCount (DayCountConvention)
+import DA.Finance.Base.HolidayCalendar (BusinessDayConventionEnum)
+import DA.Finance.Base.RollConvention (PeriodEnum, RollConventionEnum)
 import DA.Finance.Types (Account, Asset(..), Id(..))
 import DA.Foldable (forA_)
-import DA.List (head)
+import DA.List (head, dedup)
 import DA.Optional (isNone, isSome, mapOptional)
 import DA.Set (fromList, empty)
 import Marketplace.Operator.Role qualified as Operator
@@ -14,6 +17,8 @@ import Marketplace.Custody.Role qualified as Custodian
 import Marketplace.Custody.Service qualified as Custody
 import Marketplace.Issuance.AssetDescription (AssetDescription)
 import Marketplace.Issuance.CFI qualified as CFI
+import Marketplace.Issuance.Instrument.Bond.Model qualified as Bond
+import Marketplace.Issuance.Instrument.Bond.Service qualified as Bond
 import Marketplace.Issuance.Service qualified as Issuance
 import Marketplace.Issuance.Role qualified as Issuer
 import Marketplace.Distribution.Syndication.Bidding.Model qualified as Bidding
@@ -45,6 +50,11 @@ createIssuanceService : Party -> Party -> Party -> Script (ContractId Issuance.S
 createIssuanceService operator provider customer = do
   offerCid <- submit provider do exerciseByKeyCmd @Custodian.Role (operator, provider) Custodian.OfferIssuanceService with ..
   submit customer do exerciseCmd offerCid Issuance.Accept
+
+createBondService : Party -> Party -> Party -> Script (ContractId Bond.Service)
+createBondService operator provider customer = do
+  offerCid <- submit provider do exerciseByKeyCmd @Custodian.Role (operator, provider) Custodian.OfferBondService with ..
+  submit customer do exerciseCmd offerCid Bond.Accept
 
 createStructurerRole : Party -> Party -> Script (ContractId Structurer.Role)
 createStructurerRole operator provider = do
@@ -100,6 +110,16 @@ originate operator provider customer public assetLabel claims = do
   createOriginationCid <- submit customer do exerciseByKeyCmd @Issuance.Service (operator, provider, customer) Issuance.RequestOrigination with claims = serialize claims; ..
   submit provider do exerciseByKeyCmd @Issuance.Service (operator, provider, customer) Issuance.Originate with createOriginationCid
 
+createBond : Id -> Id -> Date -> Date -> PeriodEnum -> Int -> Decimal -> [Text] -> BusinessDayConventionEnum -> DayCountConvention -> RollConventionEnum -> Bool -> Bool -> [Party] -> Bond.FixedRateBond
+createBond id currencyId issueDate maturityDate couponPeriod couponPeriodMultiplier couponPerAnnum calendarIds businessDayConvention dayCountConvention rollConvention isTradeable isPricedDirty observers =
+  Bond.FixedRateBond with id; currencyId; issueDate; maturityDate; couponPeriod; couponPeriodMultiplier; couponPerAnnum; calendarIds; businessDayConvention; dayCountConvention; rollConvention; isTradeable; isPricedDirty; observers
+
+originateBond : Party -> Party -> Party -> Party -> Bond.FixedRateBond -> Script (AssetDescription, ContractId Bond.FixedRateBond)
+originateBond operator provider customer public bond = do
+  (requestCid, bondCid) <- submit customer do exerciseByKeyCmd @Bond.Service (operator, provider, customer) Bond.RequestFixedRate with bond
+  desc <- snd <$> submit provider do exerciseByKeyCmd @Issuance.Service (operator, provider, customer) Issuance.Originate with createOriginationCid = requestCid
+  pure (desc, bondCid)
+
 issue : Party -> Party -> Party -> Text -> Decimal -> Id -> Script (ContractId AssetDeposit)
 issue operator provider customer issuanceId quantity assetId = do
   (_, Custody.Service{account}) <- head <$> queryFilter @Custody.Service customer (\s -> s.provider == provider)
@@ -112,23 +132,23 @@ deposit operator provider customer quantity assetLabel = do
   depositRequestCid <- submitMulti [customer] [] do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.RequestDeposit with asset
   submit provider do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.Deposit with depositRequestCid
 
-createDeal : Party -> Party -> Party -> Party -> Party -> Party -> Party -> Text -> Id -> Script (ContractId Structuring.Deal)
-createDeal operator provider customer settlementBank bndBank bondRegistrar cashProvider dealId priceId = do
+createDeal : Party -> Party -> Party -> Party -> Party -> Party -> Party -> Text -> Script (ContractId Structuring.Deal)
+createDeal operator provider customer settlementBank bndBank bondRegistrar cashProvider dealId = do
   createDealRequestCid <- submit customer do exerciseByKeyCmd @Structuring.Service (operator, provider, customer) Structuring.RequestCreateDeal with ..
   submit provider do exerciseByKeyCmd @Structuring.Service (operator, provider, customer) Structuring.CreateDeal with ..
 
-addTranche : Party -> Party -> Party -> Text -> Asset -> Script (ContractId Structuring.Deal)
-addTranche operator provider customer dealId tranche = do
+addTranche : Party -> Party -> Party -> Text -> Text -> Id -> Id -> Decimal -> Script (ContractId Structuring.Deal, ContractId Structuring.Tranche)
+addTranche operator provider customer dealId trancheId deliveryId paymentId size = do
   addTrancheRequestCid <- submit customer do exerciseByKeyCmd @Structuring.Service (operator, provider, customer) Structuring.RequestAddTranche with ..
   submit provider do exerciseByKeyCmd @Structuring.Service (operator, provider, customer) Structuring.AddTranche with ..
 
-requestBookBuilding : Party -> Party -> Party -> ContractId Structuring.Deal -> Script [ContractId BookBuilding.BuildRequest]
-requestBookBuilding operator provider customer dealCid = do
+requestBookBuilding : Party -> Party -> Party -> ContractId Structuring.Tranche -> Script (ContractId BookBuilding.BuildRequest)
+requestBookBuilding operator provider customer trancheCid = do
   submit customer do exerciseByKeyCmd @BookBuilding.Service (operator, provider, customer) BookBuilding.RequestBookBuilding with ..
 
 bid : Party -> Party -> Party -> ContractId BookBuilding.BuildRequest -> Decimal -> Decimal -> Script (ContractId Bidding.Bid)
 bid operator provider customer bookBuildingRequestCid quantity price = do
-  Some BookBuilding.BuildRequest{issuer, dealId, asset, priceId} <- queryContractId provider bookBuildingRequestCid
+  Some BookBuilding.BuildRequest{issuer, dealId, trancheId, deliveryId, paymentId, size} <- queryContractId provider bookBuildingRequestCid
   bidRequestCid <- submit provider do exerciseByKeyCmd @Bidding.Service (operator, provider, customer) Bidding.RequestBid with ..
   submit customer do exerciseByKeyCmd @Bidding.Service (operator, provider, customer) Bidding.SubmitBid with ..
 
@@ -176,13 +196,13 @@ allocateSi party (siCid, si) = do
         debug $ "Insufficient funds for party " <> partyToText party
         pure ()
 
-allocateSis : Party -> Script ()
-allocateSis party = do
+allocateInstructions : Party -> Script ()
+allocateInstructions party = do
   sisUnallocated <- queryFilter @SettlementInstruction party (\si -> si.sender == party && isNone si.depositCid)
   forA_ sisUnallocated (allocateSi party)
 
-sign : Party -> Script [ContractId SettlementInstruction]
-sign party = do
+signInstructions : Party -> Script [ContractId SettlementInstruction]
+signInstructions party = do
   sis <- queryFilter @SettlementInstruction party (\si -> si.receiver == party)
   mapA (\(siCid, _) -> submit party do exerciseCmd siCid Sign) sis
 
@@ -198,3 +218,11 @@ consolidate : Party -> Script ()
 consolidate party = do
   adCids <- map fst <$> queryFilter @AssetDeposit party (\ad -> ad.account.owner == party && ad.account.provider == party)
   forA_ adCids (\cid -> submit party do archiveCmd cid)
+  ads <- queryFilter @AssetDeposit party (\ad -> ad.account.owner == party)
+  let ids = dedup $ map ((.asset.id) . snd) ads
+  forA_ ids (merge party ads)
+
+merge : Party -> [(ContractId AssetDeposit, AssetDeposit)] -> Id -> Script (ContractId AssetDeposit)
+merge party deposits id = do
+  let (adCid, _) :: t = filter (\(_, ad) -> ad.asset.id == id) deposits
+  submit party do exerciseCmd adCid AssetDeposit_Merge with depositCids = map fst t

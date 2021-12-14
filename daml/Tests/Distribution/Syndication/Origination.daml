@@ -1,0 +1,57 @@
+module Tests.Distribution.Syndication.Origination where
+
+import ContingentClaims.Claim (Claim(Zero))
+import Daml.Script
+import DA.Date (date, Month(..), DayOfWeek(Saturday, Sunday))
+import DA.Finance.Base.DayCount (DayCountConvention(..))
+import DA.Finance.Base.HolidayCalendar (BusinessDayConventionEnum(..), HolidayCalendarData(..), HolidayCalendar(..))
+import DA.Finance.Base.RollConvention (PeriodEnum(..), RollConventionEnum(..))
+import DA.Finance.Types (Id(..))
+import DA.Set (fromList)
+import Marketplace.Issuance.AssetDescription (AssetDescription)
+import Marketplace.Issuance.Instrument.Bond.Model qualified as Bond
+import Tests.Distribution.Syndication.Setup (setup, Parties(..))
+import Tests.Distribution.Syndication.Util
+
+data Origination = Origination
+  with
+    usd : AssetDescription
+    bond1Desc : AssetDescription
+    bond2Desc : AssetDescription
+    bond3Desc : AssetDescription
+    bond1 : Bond.FixedRateBond
+    bond2 : Bond.FixedRateBond
+    bond3 : Bond.FixedRateBond
+
+test : Script Origination
+test = do
+  parties <- setup
+  origination parties
+
+origination : Parties -> Script Origination
+origination Parties{..} = do
+
+  (_, usd)  <- originate operator cashProvider cashProvider public "USD" Zero
+
+  let
+    fedHolidays =
+      [ date 2021 Jan 1, date 2021 Jan 18, date 2021 Feb 15, date 2021 May 31, date 2021 Jun 19, date 2021 Jul 5, date 2021 Sep 6, date 2021 Oct 11, date 2021 Nov 11, date 2021 Nov 25, date 2021 Dec 25,
+        date 2022 Jan 1, date 2022 Jan 17, date 2022 Feb 21, date 2022 May 30, date 2022 Jun 20, date 2022 Jul 4, date 2022 Sep 5, date 2022 Oct 10, date 2022 Nov 11, date 2022 Nov 24, date 2022 Dec 26,
+        date 2023 Jan 2, date 2023 Jan 16, date 2023 Feb 20, date 2023 May 29, date 2023 Jun 19, date 2023 Jul 4, date 2023 Sep 4, date 2023 Oct 9,  date 2023 Nov 11, date 2023 Nov 23, date 2023 Dec 25,
+        date 2024 Jan 1, date 2024 Jan 15, date 2024 Feb 19, date 2024 May 27, date 2024 Jun 19, date 2024 Jul 4, date 2024 Sep 2, date 2024 Oct 14, date 2024 Nov 11, date 2024 Nov 28, date 2024 Dec 25,
+        date 2025 Jan 1, date 2025 Jan 20, date 2025 Feb 17, date 2025 May 26, date 2025 Jun 19, date 2025 Jul 4, date 2025 Sep 1, date 2025 Oct 13, date 2025 Nov 11, date 2025 Nov 27, date 2025 Dec 25 ]
+    fedCalendar = HolidayCalendarData with id = "FED"; weekend = [ Saturday, Sunday ]; holidays = fedHolidays
+    bond1Id = Id with signatories = fromList [bondRegistrar, issuer]; label = "BOND1"; version = 0
+    bond2Id = Id with signatories = fromList [bondRegistrar, issuer]; label = "BOND2"; version = 0
+    bond3Id = Id with signatories = fromList [bondRegistrar, issuer]; label = "BOND3"; version = 0
+    bond1 = createBond bond1Id usd.assetId (date 2021 Dec 20) (date 2023 Dec 20) M 3 0.04 ["FED"] MODFOLLOWING DC_Act_Act_ISDA (DOM 20) True True [public]
+    bond2 = createBond bond2Id usd.assetId (date 2021 Dec 20) (date 2024 Dec 20) M 6 0.05 ["FED"] MODFOLLOWING DC_Act_Act_ISDA (DOM 20) True True [public]
+    bond3 = createBond bond3Id usd.assetId (date 2021 Dec 20) (date 2026 Dec 20) Y 1 0.06 ["FED"] MODFOLLOWING DC_Act_Act_ISDA (DOM 20) True True [public]
+
+  submitMulti [operator, bondRegistrar] [] do createCmd HolidayCalendar with operator; provider = bondRegistrar; calendar = fedCalendar; observers = fromList [issuer]
+
+  (bond1Desc, _) <- originateBond operator bondRegistrar issuer public bond1
+  (bond2Desc, _) <- originateBond operator bondRegistrar issuer public bond2
+  (bond3Desc, _) <- originateBond operator bondRegistrar issuer public bond3
+
+  pure Origination with ..

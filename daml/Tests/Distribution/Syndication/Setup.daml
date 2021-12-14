@@ -107,6 +107,7 @@ setup = do
   createIssuerRole operator issuer issuerCashAccount issuerBondAccount
   createIssuanceService operator cashProvider cashProvider
   createIssuanceService operator bondRegistrar issuer
+  createBondService operator bondRegistrar issuer
 
   -- Structurer role
   createStructurerRole operator structurer

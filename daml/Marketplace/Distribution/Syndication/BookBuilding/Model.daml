@@ -1,6 +1,6 @@
 module Marketplace.Distribution.Syndication.BookBuilding.Model where
 
-import DA.Finance.Types (Id, Asset(..))
+import DA.Finance.Types (Id)
 
 template BuildRequest
   with
@@ -9,10 +9,12 @@ template BuildRequest
     customer : Party
     issuer : Party
     dealId : Text
-    asset : Asset
-    priceId : Id
+    trancheId : Text
+    deliveryId : Id
+    paymentId : Id
+    size : Decimal
   where
     signatory operator, provider, customer
 
-    key (operator, provider, customer, dealId, asset.id.label) : (Party, Party, Party, Text, Text)
+    key (operator, provider, customer, dealId, trancheId) : (Party, Party, Party, Text, Text)
     maintainer key._1

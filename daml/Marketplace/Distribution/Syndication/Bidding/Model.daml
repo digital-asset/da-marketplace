@@ -9,8 +9,10 @@ template BidRequest
     investor : Party
     issuer : Party
     dealId : Text
-    asset : Asset
-    priceId : Id
+    trancheId : Text
+    deliveryId : Id
+    paymentId : Id
+    size : Decimal
   where
     signatory operator, provider, investor
 
@@ -21,15 +23,13 @@ template Bid
     investor : Party
     issuer : Party
     dealId : Text
+    trancheId : Text
     asset : Asset
     price : Asset
   where
     signatory operator, provider, investor
     observer issuer
     ensure asset.quantity > 0.0 && price.quantity > 0.0
-
-    key (operator, provider, investor, dealId) : (Party, Party, Party, Text)
-    maintainer key._1
 
     controller issuer can
       Allocate : ContractId Allocation
@@ -53,9 +53,6 @@ template Allocation
     observer issuer
     ensure asset.quantity > 0.0 && price.quantity > 0.0
 
-    key (operator, provider, investor, dealId) : (Party, Party, Party, Text)
-    maintainer key._1
-
     controller investor can
       Confirm : ContractId Confirmation
         do
@@ -74,6 +71,3 @@ template Confirmation
     signatory operator, provider, investor
     observer issuer
     ensure asset.quantity > 0.0 && price.quantity > 0.0
-
-    key (operator, provider, investor, dealId) : (Party, Party, Party, Text)
-    maintainer key._1

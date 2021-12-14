@@ -1,7 +1,6 @@
 module Marketplace.Distribution.Syndication.Structuring.Model where
 
 import DA.Finance.Types (Id, Asset(..))
-import DA.List (groupOn)
 import Marketplace.Distribution.Syndication.Bidding.Model qualified as Bidding
 import Marketplace.Settlement.Hierarchical (createInstructions, Trade(..), Status(..))
 
@@ -15,7 +14,6 @@ template CreateDealRequest
     cashProvider : Party
     bondRegistrar : Party
     dealId : Text
-    priceId : Id
   where
     signatory operator, provider, customer
 
@@ -25,7 +23,10 @@ template AddTrancheRequest
     provider : Party
     customer : Party
     dealId : Text
-    tranche : Asset
+    trancheId : Text
+    deliveryId : Id
+    paymentId : Id
+    size : Decimal
   where
     signatory operator, provider, customer
 
@@ -38,59 +39,85 @@ template Deal
     bndBank : Party
     cashProvider : Party
     bondRegistrar : Party
-    tranches : [Asset]
     dealId : Text
-    priceId : Id
+    trancheIds : [Text]
   where
     signatory operator, structurer, issuer
 
     key (operator, issuer, dealId) : (Party, Party, Text)
     maintainer key._1
 
-    controller operator can
-      nonconsuming InstructIssuerSettlement : [ContractId Trade]
+    controller issuer can
+      CreateTranche : (ContractId Deal, ContractId Tranche)
         with
-          confirmationCids : [ContractId Bidding.Confirmation]
-          price : Decimal
+          trancheId : Text
+          deliveryId : Id
+          paymentId : Id
+          size : Decimal
         do
-          confirmations <- mapA fetch confirmationCids
-          let
-            grouped = groupOn (\c -> c.asset.id.label) confirmations
-            settleTranche confs asset = do
-              let
-                filtered = filter (\c -> c.asset.id.label == asset.id.label) confs
-                quantities = map (.asset.quantity) filtered
-                aggregate = sum quantities
-                aggregateAsset = asset with quantity = aggregate
-                aggregatePrice = Asset with id = priceId; quantity = aggregate * price
-                settlementId = asset.id.label <> "-" <> partyToText issuer <> "-" <> partyToText settlementBank
-              bondSis <- createInstructions False operator bondRegistrar bondRegistrar issuer settlementBank settlementId 0 aggregateAsset
-              cashSis <- createInstructions True operator bondRegistrar cashProvider settlementBank issuer settlementId (length bondSis) aggregatePrice
-              instructionIds <- map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
-              create Trade with operator; agent = bondRegistrar; deliverer = issuer; payer = settlementBank; settlementId; instructionIds; delivery = aggregateAsset; payment = aggregatePrice; status = Instructed
-          mapA (settleTranche confirmations) tranches
+          dealCid <- create this with trancheIds = trancheIds <> [trancheId]
+          trancheCid <- create Tranche with ..
+          pure (dealCid, trancheCid)
 
-      nonconsuming InstructBndSettlement : [ContractId Trade]
+template Tranche
+  with
+    operator : Party
+    structurer : Party
+    issuer : Party
+    settlementBank : Party
+    bndBank : Party
+    cashProvider : Party
+    bondRegistrar : Party
+    dealId : Text
+    trancheId : Text
+    deliveryId : Id
+    paymentId : Id
+    size : Decimal
+  where
+    signatory operator, structurer, issuer
+    observer settlementBank, bndBank
+
+    key (operator, issuer, dealId, trancheId) : (Party, Party, Text, Text)
+    maintainer key._1
+
+    controller operator can
+      nonconsuming InstructIssuerSettlement : ContractId Trade
         with
           confirmationCids : [ContractId Bidding.Confirmation]
           price : Decimal
         do
           confirmations <- mapA fetch confirmationCids
           let
-            grouped = groupOn (\c -> c.asset.id.label) confirmations
-            settleTranche confs asset = do
-              let
-                filtered = filter (\c -> c.asset.id.label == asset.id.label) confs
-                quantities = map (.asset.quantity) filtered
-                aggregate = sum quantities
-                aggregateAsset = asset with quantity = aggregate
-                aggregatePrice = Asset with id = priceId; quantity = aggregate * price
-                settlementId = asset.id.label <> "-" <> partyToText settlementBank <> "-" <> partyToText bndBank
-              bondSis <- createInstructions False operator bondRegistrar bondRegistrar settlementBank bndBank settlementId 0 aggregateAsset
-              cashSis <- createInstructions True operator bondRegistrar cashProvider bndBank settlementBank settlementId (length bondSis) aggregatePrice
-              instructionIds <- map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
-              create Trade with operator; agent = bondRegistrar; deliverer = settlementBank; payer = bndBank; settlementId; instructionIds; delivery = aggregateAsset; payment = aggregatePrice; status = Instructed
-          mapA (settleTranche confirmations) tranches
+            filtered = filter (\c -> c.asset.id == deliveryId) confirmations
+            quantities = map (.asset.quantity) filtered
+            aggregate = sum quantities
+            aggregateAsset = Asset with id = deliveryId; quantity = aggregate
+            aggregatePrice = Asset with id = paymentId; quantity = aggregate * price
+            settlementId = deliveryId.label <> "-" <> partyToText issuer <> "-" <> partyToText settlementBank
+          assertMsg "Total confirmed amount is larger than available quantity" $ aggregate <= size
+          bondSis <- createInstructions False operator bondRegistrar bondRegistrar issuer settlementBank settlementId 0 aggregateAsset
+          cashSis <- createInstructions True operator bondRegistrar cashProvider settlementBank issuer settlementId (length bondSis) aggregatePrice
+          instructionIds <- map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
+          create Trade with operator; agent = bondRegistrar; deliverer = issuer; payer = settlementBank; settlementId; instructionIds; delivery = aggregateAsset; payment = aggregatePrice; status = Instructed
+
+      nonconsuming InstructBndSettlement : ContractId Trade
+        with
+          confirmationCids : [ContractId Bidding.Confirmation]
+          price : Decimal
+        do
+          confirmations <- mapA fetch confirmationCids
+          let
+            filtered = filter (\c -> c.asset.id == deliveryId) confirmations
+            quantities = map (.asset.quantity) filtered
+            aggregate = sum quantities
+            aggregateAsset = Asset with id = deliveryId; quantity = aggregate
+            aggregatePrice = Asset with id = paymentId; quantity = aggregate * price
+            settlementId = deliveryId.label <> "-" <> partyToText settlementBank <> "-" <> partyToText bndBank
+          assertMsg "Total confirmed amount is larger than available quantity" $ aggregate <= size
+          bondSis <- createInstructions False operator bondRegistrar bondRegistrar settlementBank bndBank settlementId 0 aggregateAsset
+          cashSis <- createInstructions True operator bondRegistrar cashProvider bndBank settlementBank settlementId (length bondSis) aggregatePrice
+          instructionIds <- map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
+          create Trade with operator; agent = bondRegistrar; deliverer = settlementBank; payer = bndBank; settlementId; instructionIds; delivery = aggregateAsset; payment = aggregatePrice; status = Instructed
 
       nonconsuming InstructInvestorSettlement : [ContractId Trade]
         with
@@ -99,18 +126,13 @@ template Deal
         do
           confirmations <- mapA fetch confirmationCids
           let
-            grouped = groupOn (\c -> c.asset.id.label) confirmations
-            settleInvestor asset conf = do
+            filtered = filter (\c -> c.asset.id == deliveryId) confirmations
+            settleConfirmation conf = do
               let
                 aggregatePrice = conf.price with quantity = conf.price.quantity * conf.asset.quantity
-                settlementId = asset.id.label <> "-" <> partyToText bndBank <> "-" <> partyToText conf.investor
+                settlementId = deliveryId.label <> "-" <> partyToText bndBank <> "-" <> partyToText conf.investor
               bondSis <- createInstructions False operator bondRegistrar bondRegistrar bndBank conf.investor settlementId 0 conf.asset
               cashSis <- createInstructions True operator bondRegistrar cashProvider conf.investor bndBank settlementId (length bondSis) aggregatePrice
               instructionIds <- map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
               create Trade with operator; agent = bondRegistrar; deliverer = settlementBank; payer = bndBank; settlementId; instructionIds; delivery = conf.asset; payment = aggregatePrice; status = Instructed
-            settleTranche confs asset = do
-              let
-                filtered = filter (\c -> c.asset.id.label == asset.id.label) confs
-              mapA (settleInvestor asset) filtered
-          -- TODO: filter confirmations by tranche
-          concat <$> mapA (settleTranche confirmations) tranches
+          mapA settleConfirmation filtered

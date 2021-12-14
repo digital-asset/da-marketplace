@@ -16,13 +16,12 @@ template Service
     maintainer key._1
 
     controller customer can
-      nonconsuming RequestBookBuilding : [ContractId BookBuilding.BuildRequest]
+      nonconsuming RequestBookBuilding : ContractId BookBuilding.BuildRequest
         with
-          dealCid : ContractId Structuring.Deal
+          trancheCid : ContractId Structuring.Tranche
         do
-          deal@Structuring.Deal{dealId, priceId} <- fetch dealCid
-          mapA (\asset -> create BookBuilding.BuildRequest with issuer = deal.issuer; ..) deal.tranches
-
+          Structuring.Tranche{..} <- fetch trancheCid
+          create BookBuilding.BuildRequest with operator; provider; customer; issuer; dealId; trancheId; deliveryId; paymentId; size
 
 template Offer
   with

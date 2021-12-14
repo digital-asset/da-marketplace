@@ -4,6 +4,7 @@ import DA.Finance.Types (Account)
 import DA.Set (Set)
 import Marketplace.Custody.Service qualified as Custody
 import Marketplace.Issuance.Service qualified as Issuance
+import Marketplace.Issuance.Instrument.Bond.Service qualified as Bond
 import Marketplace.Settlement.Hierarchical qualified as Settlement
 
 template Role
@@ -53,6 +54,18 @@ template Role
           issuanceServiceCid : ContractId Issuance.Service
         do
           archive issuanceServiceCid
+
+      nonconsuming OfferBondService : ContractId Bond.Offer
+        with
+          customer : Party
+        do
+          create Bond.Offer with ..
+
+      nonconsuming ApproveBondRequest : ContractId Bond.Service
+        with
+          requestCid : ContractId Bond.Request
+        do
+          exercise requestCid Bond.Approve with ..
 
     controller operator can
       TerminateRole: ()

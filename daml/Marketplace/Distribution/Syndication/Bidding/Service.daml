@@ -26,15 +26,17 @@ template Service
           quantity : Decimal
         do
           Bidding.BidRequest{..} <- fetchAndArchive bidRequestCid
-          create Bidding.Bid with asset = (asset with quantity); price = (Asset with id = priceId; quantity = price); ..
+          create Bidding.Bid with asset = (Asset with id = deliveryId; quantity); price = (Asset with id = paymentId; quantity = price); ..
 
     controller provider can
       nonconsuming RequestBid : ContractId Bidding.BidRequest
         with
           issuer : Party
           dealId : Text
-          asset : Asset
-          priceId : Id
+          trancheId : Text
+          deliveryId : Id
+          paymentId : Id
+          size : Decimal
         do
           create Bidding.BidRequest with investor = customer; ..
 

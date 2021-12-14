@@ -9,7 +9,6 @@ import Marketplace.Issuance.Model (Issuance(..))
 import Marketplace.Issuance.CFI
 import Marketplace.Issuance.AssetDescription (AssetDescription(..), Claims)
 import Marketplace.Issuance.AssetDescription qualified as AssetDescription
-import Marketplace.Utils
 
 template Service
   with
@@ -56,8 +55,6 @@ template Service
           createOriginationCid: ContractId OriginationRequest
         do
           OriginationRequest{assetLabel; cfi; description; claims; observers} <- fetch createOriginationCid
-          -- assertMsg "issued must be 0" $ description.issued == 0.0
-          -- assertMsg "authorized must be > 0" $ description.authorized > 0.0
           archive createOriginationCid
           let assetId = Id with signatories = fromList [ provider, customer ]; label = assetLabel; version = 0
               issuer = customer
@@ -116,7 +113,7 @@ template Offer
     controller customer can
       Accept : ContractId Service
         do
-          createOrLookup Service with ..
+          create Service with ..
 
       Decline : ()
         do pure ()
@@ -146,7 +143,7 @@ template Request
         operator : Party
       controller operator, provider
       do
-        createOrLookup Service with ..
+        create Service with ..
 
 template CreateIssuanceRequest
   with

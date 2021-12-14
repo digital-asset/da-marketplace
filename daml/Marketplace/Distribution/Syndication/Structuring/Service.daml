@@ -1,8 +1,8 @@
 module Marketplace.Distribution.Syndication.Structuring.Service where
 
-import DA.Finance.Types (Id, Asset)
+import DA.Finance.Types (Id)
 import DA.Finance.Utils (fetchAndArchive)
-import Marketplace.Distribution.Syndication.Structuring.Model
+import Marketplace.Distribution.Syndication.Structuring.Model (Deal(..), CreateTranche(..), Tranche, CreateDealRequest(..), AddTrancheRequest(..))
 import Marketplace.Utils
 
 type S = Service
@@ -26,14 +26,16 @@ template Service
           cashProvider : Party
           bondRegistrar : Party
           dealId : Text
-          priceId : Id
         do
           create CreateDealRequest with ..
 
       nonconsuming RequestAddTranche : ContractId AddTrancheRequest
         with
           dealId : Text
-          tranche : Asset
+          trancheId : Text
+          deliveryId : Id
+          paymentId : Id
+          size : Decimal
         do
           create AddTrancheRequest with ..
 
@@ -43,16 +45,14 @@ template Service
           createDealRequestCid : ContractId CreateDealRequest
         do
           CreateDealRequest{..} <- fetchAndArchive createDealRequestCid
-          create Deal with structurer = provider; issuer = customer; tranches = []; ..
+          create Deal with structurer = provider; issuer = customer; trancheIds = []; ..
 
-      nonconsuming AddTranche : ContractId Deal
+      nonconsuming AddTranche : (ContractId Deal, ContractId Tranche)
         with
           addTrancheRequestCid : ContractId AddTrancheRequest
         do
-          AddTrancheRequest{dealId, tranche} <- fetchAndArchive addTrancheRequestCid
-          (dealCid, deal) <- fetchByKey @Deal (operator, customer, dealId)
-          archive dealCid
-          create deal with tranches = tranche :: deal.tranches
+          AddTrancheRequest{..} <- fetchAndArchive addTrancheRequestCid
+          exerciseByKey @Deal (operator, customer, dealId) CreateTranche with ..
 
 template Offer
   with

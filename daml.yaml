@@ -23,6 +23,8 @@ start-navigator: no
 sandbox-options:
   - --wall-clock-time
   - --ledgerid=da-marketplace-sandbox
+scenario-service:
+  grpc-max-message-size: 134217728
 codegen:
   js:
     output-directory: daml.js

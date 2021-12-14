@@ -1,129 +1,171 @@
 module Tests.Distribution.Syndication.Issuance where
 
-import ContingentClaims.Claim (Claim(Zero))
-import ContingentClaims.FinancialClaim (unrollDates)
 import Daml.Script
-import DA.Date (Month(..))
-import DA.Finance.Asset (AssetDeposit(..))
-import DA.Finance.Types (Asset(..), Id(..))
-import DA.Set (fromList)
-import Marketplace.Issuance.AssetDescription (AssetDescription)
 import Marketplace.Distribution.Syndication.Structuring.Model qualified as Structuring
-import Tests.Utils
+import Tests.Distribution.Syndication.Origination (origination, Origination(..))
 import Tests.Distribution.Syndication.Setup (setup, Parties(..))
 import Tests.Distribution.Syndication.Util
 
-data Issuance = Issuance
-  with
-    cash : AssetDescription
-    security : AssetDescription
-
-test : Script Issuance
+test : Script ()
 test = do
   parties <- setup
-  issuance parties
+  orig <- origination parties
+  issuance parties orig
 
-issuance : Parties -> Script Issuance
-issuance Parties{..} = do
+issuance : Parties -> Origination -> Script ()
+issuance Parties{..} Origination{..} = do
 
-  (_, usd)  <- originate operator cashProvider cashProvider public "USD" Zero
-  (_, bond) <- originate operator bondRegistrar issuer public "BOND1" $ bond usd.assetId 1.0 0.02275 (unrollDates 2022 2023 [Jan,Jul] 15)
+  let dealId = "DEAL1"
+  dealCid     <- createDeal operator structurer issuer settlementBank bndBank bondRegistrar cashProvider dealId
+  (dealCid, tranche1Cid) <- addTranche operator structurer issuer dealId "TRANCHE1" bond1.id usd.assetId 100_000_000.0
+  (dealCid, tranche2Cid) <- addTranche operator structurer issuer dealId "TRANCHE2" bond2.id usd.assetId 100_000_000.0
+  (dealCid, tranche3Cid) <- addTranche operator structurer issuer dealId "TRANCHE3" bond3.id usd.assetId 100_000_000.0
 
-  issuerDepositCid      <- deposit operator cashProvider issuer 9_100_000.0 "USD"
-  lm1DepositCid         <- deposit operator cashProvider lm1 11_000_000.0 "USD"
-  lm2DepositCid         <- deposit operator cashProvider lm2 100_000_000.0 "USD"
-  lm3DepositCid         <- deposit operator cashProvider lm3 100_000_000.0 "USD"
-  investor1DepositCid   <- deposit operator lm1 investor1 11_000_000.0 "USD"
-  investor2DepositCid   <- deposit operator lm2 investor2 20_000_000.0 "USD"
-  investor3DepositCid   <- deposit operator lm3 investor3 30_000_000.0 "USD"
-  investor4DepositCid   <- deposit operator lm3 investor4 40_000_000.0 "USD"
+  issuerDepositCid      <- deposit operator cashProvider  issuer     53_000_000.0 "USD"
+  lm1DepositCid         <- deposit operator cashProvider  lm1        30_000_000.0 "USD"
+  lm2DepositCid         <- deposit operator cashProvider  lm2       300_000_000.0 "USD"
+  lm3DepositCid         <- deposit operator cashProvider  lm3       300_000_000.0 "USD"
+  investor1DepositCid   <- deposit operator lm1           investor1  30_000_000.0 "USD"
+  investor2DepositCid   <- deposit operator lm2           investor2  60_000_000.0 "USD"
+  investor3DepositCid   <- deposit operator lm3           investor3  90_000_000.0 "USD"
+  investor4DepositCid   <- deposit operator lm3           investor4 120_000_000.0 "USD"
 
-  bondDepositCid <- issue operator bondRegistrar issuer "BondIssuance" 100_000_000.0 bond.assetId
-  Some bondDeposit <- queryContractId @AssetDeposit issuer bondDepositCid
+  bondDepositCid <- issue operator bondRegistrar issuer "BOND1-Issuance" 100_000_000.0 bond1.id
+  bondDepositCid <- issue operator bondRegistrar issuer "BOND2-Issuance" 100_000_000.0 bond2.id
+  bondDepositCid <- issue operator bondRegistrar issuer "BOND3-Issuance" 100_000_000.0 bond3.id
 
-  let
-    dealId = "DEAL1"
-    priceId = Id with signatories = fromList [cashProvider]; label = "USD"; version = 0
-    tranche = Asset with id = bond.assetId; quantity = 100_000_000.0
-  dealCid <- createDeal operator structurer issuer settlementBank bndBank bondRegistrar cashProvider dealId priceId
-  dealCid <- addTranche operator structurer issuer dealId tranche
+  bookBuildingRequest11Cid <- requestBookBuilding operator lm1 issuer tranche1Cid
+  bookBuildingRequest12Cid <- requestBookBuilding operator lm1 issuer tranche2Cid
+  bookBuildingRequest13Cid <- requestBookBuilding operator lm1 issuer tranche3Cid
+  bookBuildingRequest21Cid <- requestBookBuilding operator lm2 issuer tranche1Cid
+  bookBuildingRequest22Cid <- requestBookBuilding operator lm2 issuer tranche2Cid
+  bookBuildingRequest23Cid <- requestBookBuilding operator lm2 issuer tranche3Cid
+  bookBuildingRequest31Cid <- requestBookBuilding operator lm3 issuer tranche1Cid
+  bookBuildingRequest32Cid <- requestBookBuilding operator lm3 issuer tranche2Cid
+  bookBuildingRequest33Cid <- requestBookBuilding operator lm3 issuer tranche3Cid
+  bookBuildingRequest41Cid <- requestBookBuilding operator cm1 lm3 tranche1Cid
+  bookBuildingRequest42Cid <- requestBookBuilding operator cm1 lm3 tranche2Cid
+  bookBuildingRequest43Cid <- requestBookBuilding operator cm1 lm3 tranche3Cid
 
-  [bookBuildingRequest1Cid] <- requestBookBuilding operator lm1 issuer dealCid
-  [bookBuildingRequest2Cid] <- requestBookBuilding operator lm2 issuer dealCid
-  [bookBuildingRequest3Cid] <- requestBookBuilding operator lm3 issuer dealCid
-  [bookBuildingRequest4Cid] <- requestBookBuilding operator cm1 lm3 dealCid
-
-  bid1Cid <- bid operator lm1 investor1 bookBuildingRequest1Cid 10_000_000.0 1.001
-  bid2Cid <- bid operator lm2 investor2 bookBuildingRequest2Cid 20_000_000.0 0.999
-  bid3Cid <- bid operator cm1 investor3 bookBuildingRequest4Cid 30_000_000.0 0.997
-  bid4Cid <- bid operator cm1 investor4 bookBuildingRequest4Cid 40_000_000.0 0.995
+  bid11Cid <- bid operator lm1 investor1 bookBuildingRequest11Cid 10_000_000.0 1.001
+  bid12Cid <- bid operator lm1 investor1 bookBuildingRequest12Cid 10_000_000.0 1.002
+  bid13Cid <- bid operator lm1 investor1 bookBuildingRequest13Cid 10_000_000.0 1.003
+  bid21Cid <- bid operator lm2 investor2 bookBuildingRequest21Cid 20_000_000.0 0.997
+  bid22Cid <- bid operator lm2 investor2 bookBuildingRequest22Cid 20_000_000.0 0.998
+  bid23Cid <- bid operator lm2 investor2 bookBuildingRequest23Cid 20_000_000.0 0.999
+  bid31Cid <- bid operator cm1 investor3 bookBuildingRequest41Cid 30_000_000.0 0.995
+  bid32Cid <- bid operator cm1 investor3 bookBuildingRequest42Cid 30_000_000.0 0.996
+  bid33Cid <- bid operator cm1 investor3 bookBuildingRequest43Cid 30_000_000.0 0.997
+  bid41Cid <- bid operator cm1 investor4 bookBuildingRequest41Cid 40_000_000.0 0.993
+  bid42Cid <- bid operator cm1 investor4 bookBuildingRequest42Cid 40_000_000.0 0.994
+  bid43Cid <- bid operator cm1 investor4 bookBuildingRequest43Cid 40_000_000.0 0.995
 
   let offeredPrice = 1.0
-  allocation1Cid <- allocate issuer bid1Cid 10_000_000.0 offeredPrice
-  allocation2Cid <- allocate issuer bid2Cid 20_000_000.0 offeredPrice
-  allocation3Cid <- allocate issuer bid3Cid 30_000_000.0 offeredPrice
-  allocation4Cid <- allocate issuer bid4Cid 40_000_000.0 offeredPrice
+  allocation11Cid <- allocate issuer bid11Cid 10_000_000.0 offeredPrice
+  allocation12Cid <- allocate issuer bid12Cid 10_000_000.0 offeredPrice
+  allocation13Cid <- allocate issuer bid13Cid 10_000_000.0 offeredPrice
+  allocation21Cid <- allocate issuer bid21Cid 20_000_000.0 offeredPrice
+  allocation22Cid <- allocate issuer bid22Cid 20_000_000.0 offeredPrice
+  allocation23Cid <- allocate issuer bid23Cid 20_000_000.0 offeredPrice
+  allocation31Cid <- allocate issuer bid31Cid 30_000_000.0 offeredPrice
+  allocation32Cid <- allocate issuer bid32Cid 30_000_000.0 offeredPrice
+  allocation33Cid <- allocate issuer bid33Cid 30_000_000.0 offeredPrice
+  allocation41Cid <- allocate issuer bid41Cid 40_000_000.0 offeredPrice
+  allocation42Cid <- allocate issuer bid42Cid 40_000_000.0 offeredPrice
+  allocation43Cid <- allocate issuer bid43Cid 40_000_000.0 offeredPrice
 
-  confirmation1Cid <- confirm investor1 allocation1Cid
-  confirmation2Cid <- confirm investor2 allocation2Cid
-  confirmation3Cid <- confirm investor3 allocation3Cid
-  confirmation4Cid <- confirm investor4 allocation4Cid
+  confirmation11Cid <- confirm investor1 allocation11Cid
+  confirmation12Cid <- confirm investor1 allocation12Cid
+  confirmation13Cid <- confirm investor1 allocation13Cid
+  confirmation21Cid <- confirm investor2 allocation21Cid
+  confirmation22Cid <- confirm investor2 allocation22Cid
+  confirmation23Cid <- confirm investor2 allocation23Cid
+  confirmation31Cid <- confirm investor3 allocation31Cid
+  confirmation32Cid <- confirm investor3 allocation32Cid
+  confirmation33Cid <- confirm investor3 allocation33Cid
+  confirmation41Cid <- confirm investor4 allocation41Cid
+  confirmation42Cid <- confirm investor4 allocation42Cid
+  confirmation43Cid <- confirm investor4 allocation43Cid
 
   let
-    confirmationCids = [ confirmation1Cid, confirmation2Cid, confirmation3Cid, confirmation4Cid ]
+    confirmationCids =
+      [ confirmation11Cid
+      , confirmation12Cid
+      , confirmation13Cid
+      , confirmation21Cid
+      , confirmation22Cid
+      , confirmation23Cid
+      , confirmation31Cid
+      , confirmation32Cid
+      , confirmation33Cid
+      , confirmation41Cid
+      , confirmation42Cid
+      , confirmation43Cid ]
     price = offeredPrice
 
   -- Step 1
-  dvpCids1 <- submit operator do exerciseCmd dealCid Structuring.InstructIssuerSettlement with ..
-  allocateSis issuer
-  allocateSis custodian2
-  allocateSis settlementBank
-  sign issuer
-  sign custodian2
-  sign settlementBank
-  adCids1 <- mapA (settleTrade bondRegistrar) dvpCids1
+  dvpCid11 <- submit operator do exerciseCmd tranche1Cid Structuring.InstructIssuerSettlement with confirmationCids; price
+  dvpCid12 <- submit operator do exerciseCmd tranche2Cid Structuring.InstructIssuerSettlement with confirmationCids; price
+  dvpCid13 <- submit operator do exerciseCmd tranche3Cid Structuring.InstructIssuerSettlement with confirmationCids; price
+  allocateInstructions issuer
+  allocateInstructions custodian2
+  allocateInstructions settlementBank
+  signInstructions issuer
+  signInstructions custodian2
+  signInstructions settlementBank
+  settleTrade bondRegistrar dvpCid11
+  settleTrade bondRegistrar dvpCid12
+  settleTrade bondRegistrar dvpCid13
 
   -- Step 2
-  dvpCids2 <- submit operator do exerciseCmd dealCid Structuring.InstructBndSettlement with ..
-  allocateSis settlementBank
-  allocateSis custodian2
-  allocateSis custodian3
-  allocateSis bndBank
-  sign settlementBank
-  sign custodian2
-  sign custodian3
-  sign bndBank
-  adCids2 <- mapA (settleTrade bondRegistrar) dvpCids2
+  dvpCid21 <- submit operator do exerciseCmd tranche1Cid Structuring.InstructBndSettlement with confirmationCids; price
+  dvpCid22 <- submit operator do exerciseCmd tranche2Cid Structuring.InstructBndSettlement with confirmationCids; price
+  dvpCid23 <- submit operator do exerciseCmd tranche3Cid Structuring.InstructBndSettlement with confirmationCids; price
+  allocateInstructions settlementBank
+  allocateInstructions custodian2
+  allocateInstructions custodian3
+  allocateInstructions bndBank
+  signInstructions settlementBank
+  signInstructions custodian2
+  signInstructions custodian3
+  signInstructions bndBank
+  settleTrade bondRegistrar dvpCid21
+  settleTrade bondRegistrar dvpCid22
+  settleTrade bondRegistrar dvpCid23
 
   -- Step 3
-  dvpCids3 <- submit operator do exerciseCmd dealCid Structuring.InstructInvestorSettlement with ..
-  allocateSis bndBank
-  allocateSis lm1
-  allocateSis lm2
-  allocateSis lm3
-  allocateSis custodian1
-  allocateSis custodian2
-  allocateSis custodian3
-  allocateSis custodian4
-  allocateSis custodian5
-  allocateSis investor1
-  allocateSis investor2
-  allocateSis investor3
-  allocateSis investor4
-  sign bndBank
-  sign lm1
-  sign lm2
-  sign lm3
-  sign custodian1
-  sign custodian2
-  sign custodian3
-  sign custodian4
-  sign custodian5
-  sign investor1
-  sign investor2
-  sign investor3
-  sign investor4
-  adCids3 <- mapA (settleTrade bondRegistrar) dvpCids3
+  dvpCids31 <- submit operator do exerciseCmd tranche1Cid Structuring.InstructInvestorSettlement with confirmationCids; price
+  dvpCids32 <- submit operator do exerciseCmd tranche2Cid Structuring.InstructInvestorSettlement with confirmationCids; price
+  dvpCids33 <- submit operator do exerciseCmd tranche3Cid Structuring.InstructInvestorSettlement with confirmationCids; price
+  allocateInstructions bndBank
+  allocateInstructions lm1
+  allocateInstructions lm2
+  allocateInstructions lm3
+  allocateInstructions custodian1
+  allocateInstructions custodian2
+  allocateInstructions custodian3
+  allocateInstructions custodian4
+  allocateInstructions custodian5
+  allocateInstructions investor1
+  allocateInstructions investor2
+  allocateInstructions investor3
+  allocateInstructions investor4
+  signInstructions bndBank
+  signInstructions lm1
+  signInstructions lm2
+  signInstructions lm3
+  signInstructions custodian1
+  signInstructions custodian2
+  signInstructions custodian3
+  signInstructions custodian4
+  signInstructions custodian5
+  signInstructions investor1
+  signInstructions investor2
+  signInstructions investor3
+  signInstructions investor4
+  mapA (settleTrade bondRegistrar) dvpCids31
+  mapA (settleTrade bondRegistrar) dvpCids32
+  mapA (settleTrade bondRegistrar) dvpCids33
 
   -- Clean up
   consolidate issuer
@@ -138,4 +180,4 @@ issuance Parties{..} = do
   consolidate custodian4
   consolidate custodian5
 
-  pure Issuance with cash = usd; security = bond
+  pure ()

@@ -3,7 +3,8 @@ module Marketplace.Lifecycle.Model where
 import DA.Finance.Asset (AssetDeposit, AssetDeposit_Upgrade(..))
 import DA.Finance.Types (Asset(..), Id)
 import DA.Foldable (forA_)
-import DA.Set (fromList, toList)
+import DA.List (dedup)
+import DA.Set (fromList)
 import Marketplace.Settlement.Hierarchical (createInstructions, Delivery(..), Status(..))
 
 template Today
@@ -43,6 +44,7 @@ template SnapshotRequest
     bondRegistrar : Party
     custodian : Party
     assetId : Id
+    date : Date
     newVersion : Int
   where
     signatory operator, bondRegistrar
@@ -54,9 +56,10 @@ template SnapshotRequest
       controller custodian
       do
         deposits <- zip depositCids <$> mapA fetch depositCids
-        debug deposits
-        let holders = toList . fromList $ map ((.account.owner) . snd) $ filter (\(_, d) -> d.asset.id.label == assetId.label && d.asset.id.version == assetId.version) deposits
-        forA_ depositCids $ (\cid -> exercise cid AssetDeposit_Upgrade with newVersion)
+        let
+          filtered = filter (\(_, d) -> d.asset.id.label == assetId.label && d.asset.id.version == assetId.version) deposits
+          holders = dedup $ map ((.account.owner) . snd) filtered
+        forA_ filtered $ (\(cid, _) -> exercise cid AssetDeposit_Upgrade with newVersion)
         mapA (\c -> create this with custodian = c) holders
 
     choice Provide : [ContractId Snapshot]
@@ -66,9 +69,8 @@ template SnapshotRequest
       do
         deposits <- zip depositCids <$> mapA fetch depositCids
         let filtered = filter (\(_, d) -> d.asset.id.label == assetId.label && d.asset.id.version == assetId.version) deposits
-        depCids <- mapA (\(cid, _) -> exercise cid AssetDeposit_Upgrade with newVersion) filtered
-        upgraded <- mapA fetch depCids
-        let snapshots = map (\deposit -> Snapshot with ..) upgraded
+        forA_ filtered (\(cid, _) -> exercise cid AssetDeposit_Upgrade with newVersion)
+        let snapshots = map (\(_, deposit) -> Snapshot with ..) filtered
         mapA create snapshots
 
 template Snapshot
@@ -76,6 +78,8 @@ template Snapshot
     operator : Party
     bondRegistrar : Party
     custodian : Party
+    assetId : Id
+    date : Date
     deposit : AssetDeposit
   where
     signatory operator, bondRegistrar, custodian
@@ -130,7 +134,7 @@ template Effect
               then do
                 let
                   settlementId = lifecycleId <> "-" <> partyToText snapshot.deposit.account.owner <> "-Expiry"
-                  asset = snapshot.deposit.asset with id.signatories = fromList [bondRegistrar, issuer]
+                  asset = snapshot.deposit.asset with id.signatories = fromList [bondRegistrar, issuer]; id.version = newVersion
                 instructionCids <- createInstructions False operator bondRegistrar bondRegistrar snapshot.deposit.account.owner issuer settlementId 0 asset
                 instructionIds <- map (.instructionId) <$> mapA fetch instructionCids
                 dCid <- create Delivery with operator; agent = bondRegistrar; sender = snapshot.deposit.account.owner; receiver = issuer; settlementId; instructionIds; asset; status = Instructed
