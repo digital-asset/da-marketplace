@@ -4,7 +4,6 @@ import ContingentClaims.Claim (deserialize, serialize)
 import ContingentClaims.Lifecycle qualified as Lifecycle
 import ContingentClaims.Claim.Serializable (Claim(..))
 import DA.Finance.Types (Id)
-import DA.Set (fromList)
 import Marketplace.Issuance.AssetDescription qualified as AssetDescription
 import Marketplace.Lifecycle.Model (Observation, Today, Effect(..))
 import Marketplace.Utils
@@ -33,7 +32,6 @@ template Service
         do
           (_, today) <- fetchByKey @Today (operator, bondRegistrar)
           (_, description) <- fetchByKey @AssetDescription.T assetId
-          (versionsCid, versions) <- fetchByKey @AssetDescription.Index (fromList . signatory $ description, assetId.label)
           let obs label date = do
               (_, observation) <- fetchByKey @Observation (operator, bondRegistrar, label, date)
               pure observation.value
@@ -43,11 +41,11 @@ template Service
             _ -> pure (deserialize description.claims)
           Lifecycle.Result{remaining, pending} <- Lifecycle.lifecycle obs remaining today.date
           let serializedRemaining = serialize remaining
-          (_, newVersion) <- exercise versionsCid AssetDescription.LookupOrInsert with claims = serializedRemaining
-          if newVersion /= assetId.version then do
-            create description with assetId.version = newVersion; claims = serializedRemaining
+          if description.claims /= serialize remaining then do
+            let newVersion = assetId.version + 1
             let lifecycleId = "Lifecycle-" <> show today.date <> "-" <> assetId.label <> "(v" <> show assetId.version <> ")"
             let expired = serializedRemaining == Zero
+            create description with assetId.version = newVersion; claims = serializedRemaining
             Some <$> create Effect with operator; issuer; bondRegistrar; cashProvider; lifecycleId; assetId; newVersion; date = today.date; payouts = pending; expired
           else
             pure None

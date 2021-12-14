@@ -3,12 +3,12 @@ module Marketplace.Issuance.Service where
 import DA.Finance.Asset
 import DA.Finance.Types
 import DA.Finance.Utils (fetchAndArchive)
-import DA.Map qualified as Map
+-- import DA.Map qualified as Map
 import DA.Set (Set, fromList, empty)
 import Marketplace.Issuance.Model (Issuance(..))
 import Marketplace.Issuance.CFI
 import Marketplace.Issuance.AssetDescription (AssetDescription(..), Claims)
-import Marketplace.Issuance.AssetDescription qualified as AssetDescription
+-- import Marketplace.Issuance.AssetDescription qualified as AssetDescription
 
 template Service
   with
@@ -60,11 +60,11 @@ template Service
               issuer = customer
               registrar = provider
 
-          create AssetDescription.Index
-                   with
-                     assetLabel
-                     descriptionSignatories = assetId.signatories
-                     versions = Map.insert claims 0 Map.empty
+          -- create AssetDescription.Index
+          --          with
+          --            assetLabel
+          --            descriptionSignatories = assetId.signatories
+          --            versions = Map.insert claims 0 Map.empty
           let ad = AssetDescription
                    with
                      assetId

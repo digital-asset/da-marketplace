@@ -196,31 +196,50 @@ allocateSi party (siCid, si) = do
         debug $ "Insufficient funds for party " <> partyToText party
         pure ()
 
-allocateInstructions : Party -> Script ()
-allocateInstructions party = do
-  sisUnallocated <- queryFilter @SettlementInstruction party (\si -> si.sender == party && isNone si.depositCid)
-  forA_ sisUnallocated (allocateSi party)
+allocateInstructions : [Party] -> Script ()
+allocateInstructions parties = do
+  let
+    allocate party = do
+      sisUnallocated <- queryFilter @SettlementInstruction party (\si -> si.sender == party && isNone si.depositCid)
+      forA_ sisUnallocated (allocateSi party)
+  forA_ parties allocate
 
-signInstructions : Party -> Script [ContractId SettlementInstruction]
-signInstructions party = do
-  sis <- queryFilter @SettlementInstruction party (\si -> si.receiver == party)
-  mapA (\(siCid, _) -> submit party do exerciseCmd siCid Sign) sis
+signInstructions : [Party] -> Script ()
+signInstructions parties = do
+  let
+    sign party = do
+      sis <- queryFilter @SettlementInstruction party (\si -> si.receiver == party)
+      forA_ sis (\(siCid, _) -> submit party do exerciseCmd siCid Sign)
+  forA_ parties sign
 
-settleTrade : Party -> ContractId Trade -> Script [ContractId AssetDeposit]
+settleTrade : Party -> ContractId Trade -> Script ()
 settleTrade party tradeCid = do
-  snd <$> submit party do exerciseCmd tradeCid Settle
+  submit party do exerciseCmd tradeCid Settle
+  pure ()
 
-settleDelivery : Party -> ContractId Delivery -> Script [ContractId AssetDeposit]
+settleTrades : Party -> [ContractId Trade] -> Script ()
+settleTrades party tradeCids = do
+  forA_ tradeCids $ settleTrade party
+
+settleDelivery : Party -> ContractId Delivery -> Script ()
 settleDelivery party deliveryCid = do
-  snd <$> submit party do exerciseCmd deliveryCid SettleDelivery
+  submit party do exerciseCmd deliveryCid SettleDelivery
+  pure ()
 
-consolidate : Party -> Script ()
-consolidate party = do
-  adCids <- map fst <$> queryFilter @AssetDeposit party (\ad -> ad.account.owner == party && ad.account.provider == party)
-  forA_ adCids (\cid -> submit party do archiveCmd cid)
-  ads <- queryFilter @AssetDeposit party (\ad -> ad.account.owner == party)
-  let ids = dedup $ map ((.asset.id) . snd) ads
-  forA_ ids (merge party ads)
+settleDeliveries : Party -> [ContractId Delivery] -> Script ()
+settleDeliveries party deliveryCids = do
+  forA_ deliveryCids $ settleDelivery party
+
+consolidate : [Party] -> Script ()
+consolidate parties = do
+  let
+    cleanup party = do
+      adCids <- map fst <$> queryFilter @AssetDeposit party (\ad -> ad.account.owner == party && ad.account.provider == party)
+      forA_ adCids (\cid -> submit party do archiveCmd cid)
+      ads <- queryFilter @AssetDeposit party (\ad -> ad.account.owner == party)
+      let ids = dedup $ map ((.asset.id) . snd) ads
+      forA_ ids (merge party ads)
+  forA_ parties cleanup
 
 merge : Party -> [(ContractId AssetDeposit, AssetDeposit)] -> Id -> Script (ContractId AssetDeposit)
 merge party deposits id = do

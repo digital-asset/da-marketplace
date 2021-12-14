@@ -44,9 +44,9 @@ origination Parties{..} = do
     bond1Id = Id with signatories = fromList [bondRegistrar, issuer]; label = "BOND1"; version = 0
     bond2Id = Id with signatories = fromList [bondRegistrar, issuer]; label = "BOND2"; version = 0
     bond3Id = Id with signatories = fromList [bondRegistrar, issuer]; label = "BOND3"; version = 0
-    bond1 = createBond bond1Id usd.assetId (date 2021 Dec 20) (date 2023 Dec 20) M 3 0.04 ["FED"] MODFOLLOWING DC_Act_Act_ISDA (DOM 20) True True [public]
-    bond2 = createBond bond2Id usd.assetId (date 2021 Dec 20) (date 2024 Dec 20) M 6 0.05 ["FED"] MODFOLLOWING DC_Act_Act_ISDA (DOM 20) True True [public]
-    bond3 = createBond bond3Id usd.assetId (date 2021 Dec 20) (date 2026 Dec 20) Y 1 0.06 ["FED"] MODFOLLOWING DC_Act_Act_ISDA (DOM 20) True True [public]
+    bond1 = createBond bond1Id usd.assetId (date 2021 Dec 20) (date 2022 Dec 20) M 3 0.04 ["FED"] MODFOLLOWING DC_Act_Act_ISDA (DOM 20) True True [public]
+    bond2 = createBond bond2Id usd.assetId (date 2021 Dec 20) (date 2023 Dec 20) M 6 0.05 ["FED"] MODFOLLOWING DC_Act_Act_ISDA (DOM 20) True True [public]
+    bond3 = createBond bond3Id usd.assetId (date 2021 Dec 20) (date 2023 Dec 20) Y 1 0.06 ["FED"] MODFOLLOWING DC_Act_Act_ISDA (DOM 20) True True [public]
 
   submitMulti [operator, bondRegistrar] [] do createCmd HolidayCalendar with operator; provider = bondRegistrar; calendar = fedCalendar; observers = fromList [issuer]
 

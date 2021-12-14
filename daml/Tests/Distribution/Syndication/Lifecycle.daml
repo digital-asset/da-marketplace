@@ -1,6 +1,7 @@
 module Tests.Distribution.Syndication.Lifecycle where
 
 import Daml.Script
+import DA.Assert ((===))
 import DA.Date (date, Month(..))
 import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Id)
@@ -46,22 +47,26 @@ test = do
   submitMulti [operator, bondRegistrar] [] do createCmd Lifecycle.Today with operator; provider = bondRegistrar; date = date 2021 Jan 15
 
   let
-    dates =
-      [ date 2022 Mar 21, date 2022 Jun 21, date 2022 Sep 20, date 2022 Dec 20, date 2023 Mar 20, date 2023 Jun 20, date 2023 Sep 20
-      , date 2023 Dec 20, date 2024 Jun 20, date 2024 Dec 20, date 2025 Dec 22, date 2026 Jun 22, date 2026 Dec 21 ]
+    d1 = [ date 2022 Mar 21, date 2022 Jun 21, date 2022 Sep 20, date 2022 Dec 20 ]
+    d2 = [ date 2022 Jun 21, date 2022 Dec 20, date 2023 Jun 20, date 2023 Dec 20 ]
 
-  forA_ dates (\d -> do
-    lifecycle parties bond1Desc.assetId d
-    lifecycle parties bond2Desc.assetId d
-    lifecycle parties bond3Desc.assetId d
-    )
+  lifecycleDates parties bond1Desc.assetId d1
+  lifecycleDates parties bond2Desc.assetId d2
 
   [(_, ad1)] <- queryFilter @AssetDeposit investor1 (\ad -> ad.asset.id.label == usd.assetId.label)
   [(_, ad2)] <- queryFilter @AssetDeposit investor2 (\ad -> ad.asset.id.label == usd.assetId.label)
   [(_, ad3)] <- queryFilter @AssetDeposit investor3 (\ad -> ad.asset.id.label == usd.assetId.label)
   [(_, ad4)] <- queryFilter @AssetDeposit investor4 (\ad -> ad.asset.id.label == usd.assetId.label)
+  ad1.asset.quantity === 21_400_000.0
+  ad2.asset.quantity === 42_800_000.0
+  ad3.asset.quantity === 64_200_000.0
+  ad4.asset.quantity === 85_600_000.0
 
   pure ()
+
+lifecycleDates : Parties -> Id -> [Date] -> Script ()
+lifecycleDates parties assetId dates = do
+  forA_ dates $ lifecycle parties assetId
 
 lifecycle : Parties -> Id -> Date -> Script ()
 lifecycle Parties{..} assetId date = do
@@ -74,6 +79,7 @@ lifecycle Parties{..} assetId date = do
     Some effectCid -> do
       Some effect <- queryContractId bondRegistrar effectCid
       debug $ "[" <> show date <> "][" <> maxId.label <> "(v" <> show maxId.version <> ")] " <> "Event with " <> show (length effect.payouts) <> " payouts"
+
       requestSnapshot operator bondRegistrar maxId date
       forwardRequest bondRegistrar maxId date
       provideSnapshot custodian1 maxId date
@@ -81,44 +87,12 @@ lifecycle Parties{..} assetId date = do
       forwardRequest custodian4 maxId date
       provideSnapshot custodian5 maxId date
       paymentCids <- instructLifecycle operator bondRegistrar maxId date
-      allocateInstructions issuer
-      allocateInstructions lm1
-      allocateInstructions lm2
-      allocateInstructions lm3
-      allocateInstructions investor1
-      allocateInstructions investor2
-      allocateInstructions investor3
-      allocateInstructions investor4
-      allocateInstructions custodian1
-      allocateInstructions custodian2
-      allocateInstructions custodian4
-      allocateInstructions custodian5
-      signInstructions issuer
-      signInstructions lm1
-      signInstructions lm2
-      signInstructions lm3
-      signInstructions investor1
-      signInstructions investor2
-      signInstructions investor3
-      signInstructions investor4
-      signInstructions custodian1
-      signInstructions custodian2
-      signInstructions custodian4
-      signInstructions custodian5
-      adCids <- mapA (settleDelivery bondRegistrar) paymentCids
 
-      consolidate issuer
-      consolidate lm1
-      consolidate lm2
-      consolidate lm3
-      consolidate investor1
-      consolidate investor2
-      consolidate investor3
-      consolidate investor4
-      consolidate custodian1
-      consolidate custodian2
-      consolidate custodian4
-      consolidate custodian5
+      allocateInstructions [ issuer, lm1, lm2, lm3, custodian1, custodian2, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
+      signInstructions [ issuer, lm1, lm2, lm3, custodian1, custodian2, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
+      settleDeliveries bondRegistrar paymentCids
+      consolidate [ issuer, lm1, lm2, lm3, custodian1, custodian2, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
+
     None -> do
       debug $ "[" <> show date <> "][" <> maxId.label <> "(v" <> show maxId.version <> ")] " <> "No event"
-  pure ()
+
