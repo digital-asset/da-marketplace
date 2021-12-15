@@ -120,7 +120,7 @@ template Effect
             let
               settlementId = lifecycleId <> "-" <> partyToText snapshot.deposit.account.owner <> "-" <> show index
               instructionIdx = 0
-              asset = Asset with id; quantity = amount * snapshot.deposit.asset.quantity
+              asset = Asset with id; quantity = (abs amount) * snapshot.deposit.asset.quantity
               sender = if amount > 0.0 then issuer else snapshot.deposit.account.owner
               receiver = if amount > 0.0 then snapshot.deposit.account.owner else issuer
             instructionCids <- createInstructions True operator bondRegistrar cashProvider sender receiver settlementId instructionIdx asset

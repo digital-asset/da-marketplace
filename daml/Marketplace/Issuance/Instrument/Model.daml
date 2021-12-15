@@ -1,0 +1,120 @@
+module Marketplace.Issuance.Instrument.Model where
+
+import ContingentClaims.Observable qualified as O
+import ContingentClaims.Observation (Observation)
+import ContingentClaims.Claim.Serializable (Claim(..), Inequality(..))
+import DA.Date (toGregorian)
+import DA.Finance.Base.DayCount (DayCountConvention)
+import DA.Finance.Base.HolidayCalendar (BusinessDayConventionEnum, BusinessDayAdjustment(..), HolidayCalendar)
+import DA.Finance.Base.RollConvention (PeriodEnum(..), RollConventionEnum)
+import DA.Finance.Base.Schedule (createSchedule, Frequency(..), PeriodicSchedule(..))
+import DA.Finance.Types (Id)
+import DA.List (last)
+import DA.Set (Set)
+
+data InterestSchedule = InterestSchedule
+  with
+    startDate : Date
+    endDate : Date
+    period : PeriodEnum
+    periodMultiplier : Int
+    calendarIds : [Text]
+    businessDayConvention : BusinessDayConventionEnum
+    dayCountConvention : DayCountConvention
+    rollConvention : RollConventionEnum
+  deriving (Eq, Show)
+
+data InterestAmount
+    = Fixed with annualRate : Decimal
+    | Float with rateId : Id, periodSpread : Decimal
+  deriving (Eq, Show)
+
+data InterestStream = InterestStream
+  with
+    schedule : InterestSchedule
+    amount : InterestAmount
+  deriving (Eq, Show)
+
+template Bond
+  with
+    id : Id
+    currencyId : Id
+    issueDate : Date
+    maturityDate : Date
+    stream : Optional InterestStream
+    isTradeable : Bool
+    isPricedDirty : Bool
+    observers : [Party]
+  where
+    signatory id.signatories
+    observer observers
+
+    key (id.signatories, id.label) : (Set Party, Text)
+    maintainer key._1
+
+template Swap
+  with
+    id : Id
+    issueDate : Date
+    maturityDate : Date
+    pay : InterestStream
+    payCurrencyId : Id
+    receive : InterestStream
+    receiveCurrencyId : Id
+    isTradeable : Bool
+    observers : [Party]
+  where
+    signatory id.signatories
+    observer observers
+
+    key (id.signatories, id.label) : (Set Party, Text)
+    maintainer key._1
+
+payment : Observation Date Decimal -> Id -> Date -> Claim Date Decimal Id
+payment amount asset date =
+  When (TimeGte date) $ Scale amount (One asset)
+
+unitFloating : Observation Date Decimal -> Id -> [Date] -> Bool -> Claim Date Decimal Id
+unitFloating amount asset dates includeNotional =
+  And $ map (payment amount asset) dates <> if includeNotional then [payment (O.pure 1.0) asset (last dates)] else []
+
+unitFixed : Decimal -> Id -> [Date] -> Bool -> Claim Date Decimal Id
+unitFixed amount asset dates includeNotional = unitFloating (O.pure amount) asset dates includeNotional
+
+getClaims : Party -> Party -> Optional InterestStream -> Id -> Date -> Bool -> Update (Claim Date Decimal Id)
+getClaims operator provider stream currencyId maturityDate includePrincipal = do
+  case stream of
+    Some s -> do
+      let InterestSchedule{..} = s.schedule
+      calendars <- mapA (\id -> fetchByKey @HolidayCalendar (operator, provider, id)) calendarIds
+      let
+        calendarData = map ((.calendar) . snd) calendars
+        (y, m, d) = toGregorian startDate
+        periodicSchedule = PeriodicSchedule with
+          effectiveDate = startDate
+          terminationDate = endDate
+          firstRegularPeriodStartDate = None
+          lastRegularPeriodEndDate = None
+          frequency = Frequency with period; periodMultiplier; rollConvention
+          businessDayAdjustment = BusinessDayAdjustment with calendarIds; convention = businessDayConvention
+          effectiveDateBusinessDayAdjustment = None
+          terminationDateBusinessDayAdjustment = None
+          stubPeriodType = None
+        schedule = createSchedule calendarData periodicSchedule
+        dates = map (.adjustedEndDate) schedule
+        proRata amount =
+          case period of
+          D -> error "Daily coupon period not supported"
+          W -> error "Weekly coupon period not supported"
+          M -> amount * (intToDecimal periodMultiplier / 12.0)
+          Y -> amount
+        claims =
+          case s.amount of
+            Fixed{annualRate} ->
+              unitFixed (proRata annualRate) currencyId dates includePrincipal
+            Float{rateId, periodSpread} ->
+              let amount = if periodSpread == 0.0 then O.observe rateId.label else O.observe rateId.label + O.pure periodSpread
+              in unitFloating amount currencyId dates includePrincipal
+      pure claims
+    None -> do
+      pure $ payment (O.pure 1.0) currencyId maturityDate

@@ -1,0 +1,43 @@
+module Tests.Distribution.Syndication.Hedging where
+
+import Daml.Script
+import DA.Assert ((===))
+import DA.Date (date, Month(..))
+import DA.Finance.Asset (AssetDeposit)
+import DA.Foldable (forA_)
+import DA.Set (singleton)
+import Marketplace.Lifecycle.Model qualified as Lifecycle
+import Tests.Distribution.Syndication.Setup (setup, Parties(..))
+import Tests.Distribution.Syndication.Lifecycle (lifecycleAssets)
+import Tests.Distribution.Syndication.Origination (origination, Origination(..))
+import Tests.Distribution.Syndication.Util
+
+test : Script ()
+test = do
+  parties@Parties{..} <- setup
+  orig@Origination{..} <- origination parties
+
+  deposit operator cashProvider  issuer     107_000_000.0 usd.assetId
+  -- deposit operator cashProvider  lm1         10_000_000.0 usd.assetId
+  -- deposit operator lm1           investor1   10_000_000.0 (usd.assetId with signatories = singleton lm1)
+  deposit operator bondRegistrar custodian1 100_000_000.0 bond3.id
+  deposit operator custodian1    investor1  100_000_000.0 (bond3.id with signatories = singleton custodian1)
+  deposit operator bondRegistrar custodian1 100_000_000.0 swap1.id
+  deposit operator custodian1    investor1  100_000_000.0 (swap1.id with signatories = singleton custodian1)
+
+  submitMulti [operator, bondRegistrar] [] do createCmd Lifecycle.Today with operator; provider = bondRegistrar; date = date 2021 Jan 15
+  submitMulti [operator, bondRegistrar] [] do createCmd Lifecycle.Observation with operator; provider = bondRegistrar; label = libor6m.label; date = date 2022 Jun 21; value = 0.003
+  submitMulti [operator, bondRegistrar] [] do createCmd Lifecycle.Observation with operator; provider = bondRegistrar; label = libor6m.label; date = date 2022 Dec 20; value = 0.002
+  submitMulti [operator, bondRegistrar] [] do createCmd Lifecycle.Observation with operator; provider = bondRegistrar; label = libor6m.label; date = date 2023 Jun 20; value = 0.004
+  submitMulti [operator, bondRegistrar] [] do createCmd Lifecycle.Observation with operator; provider = bondRegistrar; label = libor6m.label; date = date 2023 Dec 20; value = 0.001
+
+  let dates = [ date 2022 Jun 21, date 2022 Dec 20, date 2023 Jun 20, date 2023 Dec 20 ]
+
+  forA_ dates $ lifecycleAssets parties [ bond3Desc.assetId, swap1Desc.assetId ]
+
+  [(_, ad1)] <- queryFilter @AssetDeposit issuer (\ad -> ad.asset.id.label == usd.assetId.label)
+  [(_, ad2)] <- queryFilter @AssetDeposit investor1 (\ad -> ad.asset.id.label == usd.assetId.label)
+  ad1.asset.quantity ===   1_000_000.0
+  ad2.asset.quantity === 106_000_000.0
+
+  pure ()

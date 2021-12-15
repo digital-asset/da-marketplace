@@ -1,6 +1,7 @@
 module Tests.Distribution.Syndication.Issuance where
 
 import Daml.Script
+import DA.Set (singleton)
 import Marketplace.Distribution.Syndication.Structuring.Model qualified as Structuring
 import Tests.Distribution.Syndication.Origination (origination, Origination(..))
 import Tests.Distribution.Syndication.Setup (setup, Parties(..))
@@ -20,17 +21,17 @@ issuance Parties{..} Origination{..} = do
   (dealCid, tranche1Cid) <- addTranche operator structurer issuer dealId "TRANCHE1" bond1.id usd.assetId 100_000_000.0
   (dealCid, tranche2Cid) <- addTranche operator structurer issuer dealId "TRANCHE2" bond2.id usd.assetId 100_000_000.0
 
-  issuerDepositCid      <- deposit operator cashProvider  issuer     14_000_000.0 "USD"
-  lm1DepositCid         <- deposit operator cashProvider  lm1        20_000_000.0 "USD"
-  lm2DepositCid         <- deposit operator cashProvider  lm2       200_000_000.0 "USD"
-  lm3DepositCid         <- deposit operator cashProvider  lm3       200_000_000.0 "USD"
-  investor1DepositCid   <- deposit operator lm1           investor1  20_000_000.0 "USD"
-  investor2DepositCid   <- deposit operator lm2           investor2  40_000_000.0 "USD"
-  investor3DepositCid   <- deposit operator lm3           investor3  60_000_000.0 "USD"
-  investor4DepositCid   <- deposit operator lm3           investor4  80_000_000.0 "USD"
+  deposit operator cashProvider  issuer     14_000_000.0 usd.assetId
+  deposit operator cashProvider  lm1        20_000_000.0 usd.assetId
+  deposit operator cashProvider  lm2       200_000_000.0 usd.assetId
+  deposit operator cashProvider  lm3       200_000_000.0 usd.assetId
+  deposit operator lm1           investor1  20_000_000.0 (usd.assetId with signatories = singleton lm1)
+  deposit operator lm2           investor2  40_000_000.0 (usd.assetId with signatories = singleton lm2)
+  deposit operator lm3           investor3  60_000_000.0 (usd.assetId with signatories = singleton lm3)
+  deposit operator lm3           investor4  80_000_000.0 (usd.assetId with signatories = singleton lm3)
 
-  bondDepositCid <- issue operator bondRegistrar issuer "BOND1-Issuance" 100_000_000.0 bond1.id
-  bondDepositCid <- issue operator bondRegistrar issuer "BOND2-Issuance" 100_000_000.0 bond2.id
+  issue operator bondRegistrar issuer "BOND1-Issuance" 100_000_000.0 bond1.id
+  issue operator bondRegistrar issuer "BOND2-Issuance" 100_000_000.0 bond2.id
 
   bookBuildingRequest11Cid <- requestBookBuilding operator lm1 issuer tranche1Cid
   bookBuildingRequest12Cid <- requestBookBuilding operator lm1 issuer tranche2Cid

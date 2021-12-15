@@ -1,0 +1,85 @@
+module Marketplace.Issuance.Instrument.Service where
+
+import ContingentClaims.Claim.Serializable (Claim(And, Give))
+import Marketplace.Issuance.CFI (CFI(..))
+import Marketplace.Issuance.Service qualified as Issuance
+import Marketplace.Issuance.Instrument.Model (getClaims, Bond(..), Swap(..))
+
+type T = Service
+
+template Service
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+  where
+    signatory operator, provider, customer
+
+    key (operator, provider, customer) : (Party, Party, Party)
+    maintainer key._1
+
+    controller customer can
+      nonconsuming RequestBond : (ContractId Issuance.OriginationRequest, ContractId Bond)
+        with
+          bond : Bond
+        do
+          let cfi = CFI with code = "DBXXXX"
+          claims <- getClaims operator provider bond.stream bond.currencyId bond.maturityDate True
+          bondCid <- create bond
+          assetCid <- exerciseByKey @Issuance.Service (operator, provider, customer) Issuance.RequestOrigination with assetLabel = bond.id.label; cfi; description = bond.id.label; claims; observers = []
+          pure (assetCid, bondCid)
+
+      nonconsuming RequestSwap : (ContractId Issuance.OriginationRequest, ContractId Swap)
+        with
+          swap : Swap
+        do
+          let cfi = CFI with code = "SRXXXX"
+          pay <- getClaims operator provider (Some swap.pay) swap.payCurrencyId swap.maturityDate False
+          receive <- getClaims operator provider (Some swap.receive) swap.receiveCurrencyId swap.maturityDate False
+          let claims = And [ Give pay, receive ]
+          swapCid <- create swap
+          assetCid <- exerciseByKey @Issuance.Service (operator, provider, customer) Issuance.RequestOrigination with assetLabel = swap.id.label; cfi; description = swap.id.label; claims; observers = []
+          pure (assetCid, swapCid)
+
+template Offer
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+  where
+    signatory operator, provider
+
+    controller customer can
+      Accept : ContractId Service
+        do
+          create Service with ..
+
+      Decline : ()
+        do pure ()
+
+    controller provider can
+      Withdraw : ()
+        do pure ()
+
+template Request
+  with
+    customer : Party
+    provider : Party
+  where
+    signatory customer
+    observer provider
+
+    controller customer can
+      Cancel : ()
+        do pure ()
+
+    controller provider can
+      Reject : ()
+        do pure ()
+
+    choice Approve : ContractId Service
+      with
+        operator : Party
+      controller operator, provider
+      do
+        create Service with ..

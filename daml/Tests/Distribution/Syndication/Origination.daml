@@ -9,19 +9,22 @@ import DA.Finance.Base.RollConvention (PeriodEnum(..), RollConventionEnum(..))
 import DA.Finance.Types (Id(..))
 import DA.Set (fromList)
 import Marketplace.Issuance.AssetDescription (AssetDescription)
-import Marketplace.Issuance.Instrument.Bond.Model qualified as Bond
+import Marketplace.Issuance.Instrument.Model qualified as Instrument
 import Tests.Distribution.Syndication.Setup (setup, Parties(..))
 import Tests.Distribution.Syndication.Util
 
 data Origination = Origination
   with
     usd : AssetDescription
+    libor6m : Id
     bond1Desc : AssetDescription
     bond2Desc : AssetDescription
     bond3Desc : AssetDescription
-    bond1 : Bond.FixedRateBond
-    bond2 : Bond.FixedRateBond
-    bond3 : Bond.FixedRateBond
+    swap1Desc : AssetDescription
+    bond1 : Instrument.Bond
+    bond2 : Instrument.Bond
+    bond3 : Instrument.Bond
+    swap1 : Instrument.Swap
 
 test : Script Origination
 test = do
@@ -41,17 +44,30 @@ origination Parties{..} = do
         date 2024 Jan 1, date 2024 Jan 15, date 2024 Feb 19, date 2024 May 27, date 2024 Jun 19, date 2024 Jul 4, date 2024 Sep 2, date 2024 Oct 14, date 2024 Nov 11, date 2024 Nov 28, date 2024 Dec 25,
         date 2025 Jan 1, date 2025 Jan 20, date 2025 Feb 17, date 2025 May 26, date 2025 Jun 19, date 2025 Jul 4, date 2025 Sep 1, date 2025 Oct 13, date 2025 Nov 11, date 2025 Nov 27, date 2025 Dec 25 ]
     fedCalendar = HolidayCalendarData with id = "FED"; weekend = [ Saturday, Sunday ]; holidays = fedHolidays
+    libor6m = Id with signatories = fromList [bondRegistrar, issuer]; label = "LIBOR-6M"; version = 0
     bond1Id = Id with signatories = fromList [bondRegistrar, issuer]; label = "BOND1"; version = 0
     bond2Id = Id with signatories = fromList [bondRegistrar, issuer]; label = "BOND2"; version = 0
     bond3Id = Id with signatories = fromList [bondRegistrar, issuer]; label = "BOND3"; version = 0
-    bond1 = createBond bond1Id usd.assetId (date 2021 Dec 20) (date 2022 Dec 20) M 3 0.04 ["FED"] MODFOLLOWING DC_Act_Act_ISDA (DOM 20) True True [public]
-    bond2 = createBond bond2Id usd.assetId (date 2021 Dec 20) (date 2023 Dec 20) M 6 0.05 ["FED"] MODFOLLOWING DC_Act_Act_ISDA (DOM 20) True True [public]
-    bond3 = createBond bond3Id usd.assetId (date 2021 Dec 20) (date 2023 Dec 20) Y 1 0.06 ["FED"] MODFOLLOWING DC_Act_Act_ISDA (DOM 20) True True [public]
+    swap1Id = Id with signatories = fromList [bondRegistrar, issuer]; label = "SWAP1"; version = 0
+    bondSched1 = createSchedule (date 2021 Dec 20) (date 2022 Dec 20) M 3 ["FED"] MODFOLLOWING DC_Act_Act_ISDA (DOM 20)
+    bondSched2 = createSchedule (date 2021 Dec 20) (date 2023 Dec 20) M 6 ["FED"] MODFOLLOWING DC_Act_Act_ISDA (DOM 20)
+    bondSched3 = createSchedule (date 2021 Dec 20) (date 2023 Dec 20) M 6 ["FED"] MODFOLLOWING DC_Act_Act_ISDA (DOM 20)
+    swapPaySched = createSchedule (date 2021 Dec 20) (date 2023 Dec 20) M 6 ["FED"] MODFOLLOWING DC_Act_Act_ISDA (DOM 20)
+    swapRecSched = createSchedule (date 2021 Dec 20) (date 2023 Dec 20) M 6 ["FED"] MODFOLLOWING DC_Act_Act_ISDA (DOM 20)
+    swapPayAmount = Instrument.Float with rateId = libor6m; periodSpread = 0.00
+    swapRecAmount = Instrument.Fixed with annualRate = 0.01
+    swapPay = Instrument.InterestStream with schedule = swapPaySched; amount = swapPayAmount
+    swapRec = Instrument.InterestStream with schedule = swapRecSched; amount = swapRecAmount
+    bond1 = createFixedRateBond     bond1Id usd.assetId bondSched1.startDate bondSched1.endDate bondSched1 0.04 True True [public]
+    bond2 = createFixedRateBond     bond2Id usd.assetId bondSched2.startDate bondSched2.endDate bondSched2 0.05 True True [public]
+    bond3 = createFloatingRateBond  bond3Id usd.assetId bondSched3.startDate bondSched3.endDate bondSched3 libor6m 0.01 True True [public]
+    swap1 = createSwap              swap1Id usd.assetId usd.assetId swapPaySched.startDate swapPaySched.endDate swapPay swapRec True [public]
 
   submitMulti [operator, bondRegistrar] [] do createCmd HolidayCalendar with operator; provider = bondRegistrar; calendar = fedCalendar; observers = fromList [issuer]
 
   (bond1Desc, _) <- originateBond operator bondRegistrar issuer public bond1
   (bond2Desc, _) <- originateBond operator bondRegistrar issuer public bond2
   (bond3Desc, _) <- originateBond operator bondRegistrar issuer public bond3
+  (swap1Desc, _) <- originateSwap operator bondRegistrar issuer public swap1
 
   pure Origination with ..

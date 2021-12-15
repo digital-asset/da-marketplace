@@ -22,16 +22,24 @@ requestSnapshot operator bondRegistrar assetId date = do
 
 forwardRequest : Party -> Id -> Date -> Script [ContractId Lifecycle.SnapshotRequest]
 forwardRequest custodian assetId date = do
-  [(srCid, sr)] <- queryFilter @Lifecycle.SnapshotRequest custodian (\sr -> sr.custodian == custodian && sr.assetId == assetId && sr.date == date)
-  depositCids <- map fst <$> queryFilter @AssetDeposit custodian (\ad -> ad.account.provider == custodian && ad.asset.id.label == assetId.label && ad.asset.id.version == assetId.version)
-  -- debug $ "[" <> show date <> "] " <> partyToText custodian <> " forwarding snapshot request for " <> assetId.label <> "(v" <> show assetId.version <> ") to " <> show (length depositCids) <> " custodians"
-  submit custodian do exerciseCmd srCid Lifecycle.Forward with depositCids
+  srs <- queryFilter @Lifecycle.SnapshotRequest custodian (\sr -> sr.custodian == custodian && sr.assetId == assetId && sr.date == date)
+  case srs of
+    [(srCid, sr)] -> do
+      depositCids <- map fst <$> queryFilter @AssetDeposit custodian (\ad -> ad.account.provider == custodian && ad.asset.id.label == assetId.label && ad.asset.id.version == assetId.version)
+      -- debug $ "[" <> show date <> "] " <> partyToText custodian <> " forwarding snapshot request for " <> assetId.label <> "(v" <> show assetId.version <> ") to " <> show (length depositCids) <> " custodians"
+      submit custodian do exerciseCmd srCid Lifecycle.Forward with depositCids
+    [] -> pure []
+    _ -> fail "More than one snapshot request received"
 
 provideSnapshot : Party -> Id -> Date -> Script [ContractId Lifecycle.Snapshot]
 provideSnapshot custodian assetId date = do
-  [(srCid, sr)] <- queryFilter @Lifecycle.SnapshotRequest custodian (\sr -> sr.custodian == custodian && sr.assetId == assetId && sr.date == date)
-  depositCids <- map fst <$> queryFilter @AssetDeposit custodian (\ad -> ad.account.provider == custodian && ad.asset.id.label == assetId.label && ad.asset.id.version == assetId.version)
-  submit custodian do exerciseCmd srCid Lifecycle.Provide with depositCids
+  srs <- queryFilter @Lifecycle.SnapshotRequest custodian (\sr -> sr.custodian == custodian && sr.assetId == assetId && sr.date == date)
+  case srs of
+    [(srCid, sr)] -> do
+      depositCids <- map fst <$> queryFilter @AssetDeposit custodian (\ad -> ad.account.provider == custodian && ad.asset.id.label == assetId.label && ad.asset.id.version == assetId.version)
+      submit custodian do exerciseCmd srCid Lifecycle.Provide with depositCids
+    [] -> pure []
+    _ -> fail "More than one snapshot request received"
 
 instructLifecycle : Party -> Party -> Id -> Date -> Script [ContractId Delivery]
 instructLifecycle operator bondRegistrar assetId date = do
@@ -46,12 +54,9 @@ test = do
   issuance parties orig
   submitMulti [operator, bondRegistrar] [] do createCmd Lifecycle.Today with operator; provider = bondRegistrar; date = date 2021 Jan 15
 
-  let
-    d1 = [ date 2022 Mar 21, date 2022 Jun 21, date 2022 Sep 20, date 2022 Dec 20 ]
-    d2 = [ date 2022 Jun 21, date 2022 Dec 20, date 2023 Jun 20, date 2023 Dec 20 ]
+  let dates = [ date 2022 Mar 21, date 2022 Jun 21, date 2022 Sep 20, date 2022 Dec 20, date 2023 Jun 20, date 2023 Dec 20 ]
 
-  lifecycleDates parties bond1Desc.assetId d1
-  lifecycleDates parties bond2Desc.assetId d2
+  forA_ dates $ lifecycleAssets parties [ bond1Desc.assetId, bond2Desc.assetId ]
 
   [(_, ad1)] <- queryFilter @AssetDeposit investor1 (\ad -> ad.asset.id.label == usd.assetId.label)
   [(_, ad2)] <- queryFilter @AssetDeposit investor2 (\ad -> ad.asset.id.label == usd.assetId.label)
@@ -64,12 +69,12 @@ test = do
 
   pure ()
 
-lifecycleDates : Parties -> Id -> [Date] -> Script ()
-lifecycleDates parties assetId dates = do
-  forA_ dates $ lifecycle parties assetId
+lifecycleAssets : Parties -> [Id] -> Date -> Script ()
+lifecycleAssets parties assetIds date = do
+  forA_ assetIds $ lifecycle parties date
 
-lifecycle : Parties -> Id -> Date -> Script ()
-lifecycle Parties{..} assetId date = do
+lifecycle : Parties -> Date -> Id -> Script ()
+lifecycle Parties{..} date assetId = do
 
   h :: t <- map snd <$> queryFilter @AssetDescription bondRegistrar (\ad -> ad.assetId.signatories == assetId.signatories && ad.assetId.label == assetId.label)
   let maxId = foldl (\id desc -> if desc.assetId.version > id.version then desc.assetId else id) h.assetId t

@@ -11,14 +11,14 @@ import DA.Finance.Types (Account, Asset(..), Id(..))
 import DA.Foldable (forA_)
 import DA.List (head, dedup)
 import DA.Optional (isNone, isSome, mapOptional)
-import DA.Set (fromList, empty)
+import DA.Set (empty)
 import Marketplace.Operator.Role qualified as Operator
 import Marketplace.Custody.Role qualified as Custodian
 import Marketplace.Custody.Service qualified as Custody
 import Marketplace.Issuance.AssetDescription (AssetDescription)
 import Marketplace.Issuance.CFI qualified as CFI
-import Marketplace.Issuance.Instrument.Bond.Model qualified as Bond
-import Marketplace.Issuance.Instrument.Bond.Service qualified as Bond
+import Marketplace.Issuance.Instrument.Model qualified as Instrument
+import Marketplace.Issuance.Instrument.Service qualified as Instrument
 import Marketplace.Issuance.Service qualified as Issuance
 import Marketplace.Issuance.Role qualified as Issuer
 import Marketplace.Distribution.Syndication.Bidding.Model qualified as Bidding
@@ -51,10 +51,10 @@ createIssuanceService operator provider customer = do
   offerCid <- submit provider do exerciseByKeyCmd @Custodian.Role (operator, provider) Custodian.OfferIssuanceService with ..
   submit customer do exerciseCmd offerCid Issuance.Accept
 
-createBondService : Party -> Party -> Party -> Script (ContractId Bond.Service)
-createBondService operator provider customer = do
-  offerCid <- submit provider do exerciseByKeyCmd @Custodian.Role (operator, provider) Custodian.OfferBondService with ..
-  submit customer do exerciseCmd offerCid Bond.Accept
+createInstrumentService : Party -> Party -> Party -> Script (ContractId Instrument.Service)
+createInstrumentService operator provider customer = do
+  offerCid <- submit provider do exerciseByKeyCmd @Custodian.Role (operator, provider) Custodian.OfferInstrumentService with ..
+  submit customer do exerciseCmd offerCid Instrument.Accept
 
 createStructurerRole : Party -> Party -> Script (ContractId Structurer.Role)
 createStructurerRole operator provider = do
@@ -110,15 +110,43 @@ originate operator provider customer public assetLabel claims = do
   createOriginationCid <- submit customer do exerciseByKeyCmd @Issuance.Service (operator, provider, customer) Issuance.RequestOrigination with claims = serialize claims; ..
   submit provider do exerciseByKeyCmd @Issuance.Service (operator, provider, customer) Issuance.Originate with createOriginationCid
 
-createBond : Id -> Id -> Date -> Date -> PeriodEnum -> Int -> Decimal -> [Text] -> BusinessDayConventionEnum -> DayCountConvention -> RollConventionEnum -> Bool -> Bool -> [Party] -> Bond.FixedRateBond
-createBond id currencyId issueDate maturityDate couponPeriod couponPeriodMultiplier couponPerAnnum calendarIds businessDayConvention dayCountConvention rollConvention isTradeable isPricedDirty observers =
-  Bond.FixedRateBond with id; currencyId; issueDate; maturityDate; couponPeriod; couponPeriodMultiplier; couponPerAnnum; calendarIds; businessDayConvention; dayCountConvention; rollConvention; isTradeable; isPricedDirty; observers
+createSchedule : Date -> Date -> PeriodEnum -> Int -> [Text] -> BusinessDayConventionEnum -> DayCountConvention -> RollConventionEnum -> Instrument.InterestSchedule
+createSchedule startDate endDate period periodMultiplier calendarIds businessDayConvention dayCountConvention rollConvention =
+  Instrument.InterestSchedule with ..
 
-originateBond : Party -> Party -> Party -> Party -> Bond.FixedRateBond -> Script (AssetDescription, ContractId Bond.FixedRateBond)
+createFixedRateBond : Id -> Id -> Date -> Date -> Instrument.InterestSchedule -> Decimal -> Bool -> Bool -> [Party] -> Instrument.Bond
+createFixedRateBond id currencyId issueDate maturityDate schedule annualRate isTradeable isPricedDirty observers =
+  let
+    amount = Instrument.Fixed with annualRate
+    stream = Some Instrument.InterestStream with schedule; amount
+  in Instrument.Bond with id; currencyId; issueDate; maturityDate; stream; isTradeable; isPricedDirty; observers
+
+createFloatingRateBond : Id -> Id -> Date -> Date -> Instrument.InterestSchedule -> Id -> Decimal -> Bool -> Bool -> [Party] -> Instrument.Bond
+createFloatingRateBond id currencyId issueDate maturityDate schedule rateId periodSpread isTradeable isPricedDirty observers =
+  let
+    amount = Instrument.Float with rateId; periodSpread
+    stream = Some Instrument.InterestStream with schedule; amount
+  in Instrument.Bond with id; currencyId; issueDate; maturityDate; stream; isTradeable; isPricedDirty; observers
+
+createZeroCouponBond : Id -> Id -> Date -> Date -> Bool -> Bool -> [Party] -> Instrument.Bond
+createZeroCouponBond id currencyId issueDate maturityDate isTradeable isPricedDirty observers =
+  Instrument.Bond with id; currencyId; issueDate; maturityDate; stream = None; isTradeable; isPricedDirty; observers
+
+createSwap : Id -> Id -> Id -> Date -> Date -> Instrument.InterestStream -> Instrument.InterestStream -> Bool -> [Party] -> Instrument.Swap
+createSwap id payCurrencyId receiveCurrencyId issueDate maturityDate pay receive isTradeable observers =
+  Instrument.Swap with id; payCurrencyId; receiveCurrencyId; issueDate; maturityDate; pay; receive; isTradeable; observers
+
+originateBond : Party -> Party -> Party -> Party -> Instrument.Bond -> Script (AssetDescription, ContractId Instrument.Bond)
 originateBond operator provider customer public bond = do
-  (requestCid, bondCid) <- submit customer do exerciseByKeyCmd @Bond.Service (operator, provider, customer) Bond.RequestFixedRate with bond
+  (requestCid, bondCid) <- submit customer do exerciseByKeyCmd @Instrument.Service (operator, provider, customer) Instrument.RequestBond with bond
   desc <- snd <$> submit provider do exerciseByKeyCmd @Issuance.Service (operator, provider, customer) Issuance.Originate with createOriginationCid = requestCid
   pure (desc, bondCid)
+
+originateSwap : Party -> Party -> Party -> Party -> Instrument.Swap -> Script (AssetDescription, ContractId Instrument.Swap)
+originateSwap operator provider customer public swap = do
+  (requestCid, swapCid) <- submit customer do exerciseByKeyCmd @Instrument.Service (operator, provider, customer) Instrument.RequestSwap with swap
+  desc <- snd <$> submit provider do exerciseByKeyCmd @Issuance.Service (operator, provider, customer) Issuance.Originate with createOriginationCid = requestCid
+  pure (desc, swapCid)
 
 issue : Party -> Party -> Party -> Text -> Decimal -> Id -> Script (ContractId AssetDeposit)
 issue operator provider customer issuanceId quantity assetId = do
@@ -126,9 +154,9 @@ issue operator provider customer issuanceId quantity assetId = do
   createIssuanceRequestCid <- submit customer do exerciseByKeyCmd @Issuance.Service (operator, provider, customer) Issuance.RequestCreateIssuance with ..
   snd <$> submit provider do exerciseByKeyCmd @Issuance.Service (operator, provider, customer) Issuance.CreateIssuance with createIssuanceRequestCid
 
-deposit : Party -> Party -> Party -> Decimal -> Text -> Script (ContractId AssetDeposit)
-deposit operator provider customer quantity assetLabel = do
-  let asset = Asset with id = (Id with signatories = fromList [provider]; label = assetLabel; version = 0); quantity
+deposit : Party -> Party -> Party -> Decimal -> Id -> Script (ContractId AssetDeposit)
+deposit operator provider customer quantity assetId = do
+  let asset = Asset with id = assetId; quantity
   depositRequestCid <- submitMulti [customer] [] do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.RequestDeposit with asset
   submit provider do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.Deposit with depositRequestCid
 
