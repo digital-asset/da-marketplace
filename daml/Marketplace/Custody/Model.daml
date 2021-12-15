@@ -5,9 +5,7 @@ import ContingentClaims.Lifecycle qualified as Lifecycle
 import DA.Date (toDateUTC)
 import DA.Finance.Asset
 import DA.Finance.Types
-import DA.Map (Map)
-import DA.Map qualified as Map
-import DA.Set
+import DA.Map qualified as M
 import DA.Optional (fromSomeNote)
 import Marketplace.Issuance.AssetDescription (AssetDescription, Claims)
 import Marketplace.Issuance.AssetDescription qualified as AssetDescription
@@ -48,7 +46,7 @@ template LifecycleRequest
       with
           investor: Party
           safekeepingDepositCid: ContractId AssetDeposit
-          fixings: Map Text (Map Date Decimal) --TODO these should be looked up from a contract on-ledger, not provided by the custodian!
+          fixings: M.Map Text (M.Map Date Decimal) --TODO these should be looked up from a contract on-ledger, not provided by the custodian!
           uniquePayoutId: Text
       controller investor
         do
@@ -56,18 +54,19 @@ template LifecycleRequest
           assetDeposit <- fetch assetDepositCid
           (_, description) <- fetchByKey @AssetDescription assetDeposit.asset.id
           (AssetDeposit{account = safekeepingAccount}) <- fetch safekeepingDepositCid
-          (versionsCid, versions) <- fetchByKey @AssetDescription.Index (fromList . signatory $ description, assetDeposit.asset.id.label)
+          -- (versionsCid, versions) <- fetchByKey @AssetDescription.Index (fromList . signatory $ description, assetDeposit.asset.id.label)
           let spot : Text -> Date -> Update Decimal
               spot label dt = pure $ fromSomeNote
                 ("Lifecycle: Underlying data '" <> label <> "' missing on " <> show dt)
-                (Map.lookup label fixings >>= Map.lookup dt)
+                (M.lookup label fixings >>= M.lookup dt)
               election = (True, deserialize choice)
           remaining <- if election._2 /= Zero
             then Lifecycle.exercise spot election (deserialize description.claims) t
             else pure (deserialize description.claims)
           Lifecycle.Result{remaining, pending} <- Lifecycle.lifecycle spot remaining t
           let serializedRemaining = serialize remaining
-          (_, postAssetVersion) <- exercise versionsCid AssetDescription.LookupOrInsert with claims = serializedRemaining
+          -- (_, postAssetVersion) <- exercise versionsCid AssetDescription.LookupOrInsert with claims = serializedRemaining
+          let postAssetVersion = if serializedRemaining == description.claims then description.assetId.version else description.assetId.version + 1
           when (postAssetVersion /= assetDeposit.asset.id.version) $
             createNewVersionOfDescription description postAssetVersion serializedRemaining
           let payoutSplitQuantities = (\(qty, _) -> qty * assetDeposit.asset.quantity) <$> pending

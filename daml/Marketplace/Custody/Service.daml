@@ -3,9 +3,11 @@ module Marketplace.Custody.Service where
 import DA.Finance.Asset
 import DA.Finance.Types
 import DA.Finance.Utils (fetchAndArchive)
+import DA.Map (Map)
 import DA.Set
 import Marketplace.Issuance.AssetDescription (Claims)
 import Marketplace.Custody.Model qualified as Custody
+import Marketplace.Settlement.Model (SettlementInstruction)
 import Marketplace.Utils
 
 template Service
@@ -60,6 +62,16 @@ template Service
           assertMsg "Deposit account provider and service provider do not match" $ deposit.account.provider == provider
 
           archive depositCid
+
+      nonconsuming Lifecycle : (ContractId AssetDeposit, [ContractId SettlementInstruction])
+        with
+          lifecycleRequestCid : ContractId Custody.LifecycleRequest
+          safekeepingDepositCid : ContractId AssetDeposit
+          fixings : Map Text (Map Date Decimal) --TODO these should be looked up from a contract on-ledger, not provided by the custodian!
+          uniquePayoutId : Text
+        do
+          exercise lifecycleRequestCid Custody.Process with investor = customer; ..
+
 
     choice Terminate : ()
       with

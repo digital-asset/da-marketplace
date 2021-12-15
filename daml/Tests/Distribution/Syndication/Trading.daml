@@ -2,13 +2,14 @@ module Tests.Distribution.Syndication.Trading where
 
 import Daml.Script
 import DA.Finance.Types (Asset(..))
-import Marketplace.Issuance.AssetDescription (AssetDescription)
+import DA.Set (singleton)
 import Marketplace.Settlement.Hierarchical qualified as Settlement
 import Marketplace.Trading.Model (Side(..))
 import Marketplace.Trading.Otc.Model qualified as Trading
 import Marketplace.Trading.Otc.Service qualified as Trading
 import Tests.Distribution.Syndication.Setup (setup, Parties(..))
-import Tests.Distribution.Syndication.Issuance (issuance, Issuance(..))
+import Tests.Distribution.Syndication.Issuance (issuance)
+import Tests.Distribution.Syndication.Origination (origination, Origination(..))
 import Tests.Distribution.Syndication.Util
 
 setTradingStatus : Party -> Bool -> Script [ContractId Trading.Service]
@@ -31,39 +32,28 @@ instructMatch operator matchCid = do
 test : Script ()
 test = do
   parties@Parties{..} <- setup
-  Issuance{security, cash} <- issuance parties
-  trading parties security cash
+  orig <- origination parties
+  issuance parties orig
+  trading parties orig
 
-trading : Parties -> AssetDescription -> AssetDescription -> Script ()
-trading Parties{..} security cash = do
+trading : Parties -> Origination -> Script ()
+trading Parties{..} Origination{..}= do
+
+  deposit operator cashProvider  lm1        1_000_000.0 usd.assetId
+  deposit operator lm1           investor1  1_000_000.0 (usd.assetId with signatories = singleton lm1)
 
   setTradingStatus operator True
   let
-    delivery = Asset with id = security.assetId; quantity = 1_000_000.0
-    payment = Asset with id = cash.assetId; quantity = 1_000_000.0
+    delivery = Asset with id = bond1Desc.assetId; quantity = 1_000_000.0
+    payment = Asset with id = usd.assetId; quantity = 1_000_000.0
   orderCid <- createOrder operator investor1 investor2 bondRegistrar cashProvider "TRD1" delivery payment Buy
   matchCid <- acceptOrder operator investor2 orderCid
   tradeCid <- instructMatch operator matchCid
 
-  allocateSis lm1
-  allocateSis lm2
-  allocateSis investor1
-  allocateSis investor2
-  allocateSis custodian1
-  allocateSis custodian2
-  sign lm1
-  sign lm2
-  sign investor1
-  sign investor2
-  sign custodian1
-  sign custodian2
-  adCids <- settleTrade operator tradeCid
+  allocateInstructions [ lm1, lm2, investor1, investor2, custodian1, custodian2 ]
+  signInstructions [ lm1, lm2, investor1, investor2, custodian1, custodian2 ]
+  settleTrade operator tradeCid
 
-  consolidate lm1
-  consolidate lm2
-  consolidate investor1
-  consolidate investor2
-  consolidate custodian1
-  consolidate custodian2
+  consolidate [ lm1, lm2, investor1, investor2, custodian1, custodian2 ]
 
   pure ()
