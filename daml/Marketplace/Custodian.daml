@@ -4,12 +4,14 @@ import Marketplace.Notification
 import Marketplace.Registry
 import Marketplace.Token
 import Marketplace.Utils
+import Marketplace.Transfer
 
 import DA.Finance.Asset
 import DA.Finance.Types
 
 import DA.Action
-import DA.Next.Set
+import DA.Optional
+import DA.Next.Set hiding (null)
 
 
 template CustodianRelationship
@@ -18,9 +20,25 @@ template CustodianRelationship
     custodian : Party
     party : Party
   where
-    signatory custodian, party
+    signatory operator, custodian, party
     key (custodian, operator, party) : (Party, Party, Party)
     maintainer key._1
+
+    controller party can
+      nonconsuming CustodianRelationship_RequestCredit : ContractId DepositCreditRequest
+        with
+          request : DepositCreditRequest
+        do create request
+
+      nonconsuming CustodianRelationship_RequestDebit : ContractId DepositDebitRequest
+        with
+          request : DepositDebitRequest
+        do create request
+
+      nonconsuming CustodianRelationship_RequestTransfer : ContractId DepositTransferRequest
+        with
+          request : DepositTransferRequest
+        do create request
 
 
 template CustodianRelationshipRequest
@@ -124,7 +142,7 @@ template Custodian
         with
           investor : Party
         do
-          let accountId = getAccountId investor custodian [custodian]
+          let accountId = getAccountId investor custodian [custodian, operator]
           return Account with id = accountId, provider = custodian, owner = investor
 
       nonconsuming Custodian_CreateDeposit : ContractId AssetDeposit
@@ -133,9 +151,12 @@ template Custodian
           depositQuantity : Decimal
           beneficiary : Party
         do
+          optRelationships <- mapM (\s -> lookupByKey @CustodianRelationship (custodian, operator, s)) $ toList tokenId.signatories
+          assertMsg "Custodian must have a relationship with the issuer to deposit this token"
+            $ not (null (catOptionals optRelationships)) || custodian `member` tokenId.signatories
           (tokenCid, token) <- fetchByKey @Token tokenId
           account <- exercise self Custodian_GetAccount with investor = beneficiary
           let quantity = roundBankers token.quantityPrecision depositQuantity
               asset = Asset with id = tokenId, ..
-              depositObs = fromList $ account.provider :: beneficiary :: signatory token
+              depositObs = fromList $ [] -- account.provider :: signatory token
           create AssetDeposit with observers = depositObs, account = account, ..

@@ -4,12 +4,12 @@ import Marketplace.BinaryOption
 import Marketplace.CentralCounterpartyCustomer
 import Marketplace.Notification
 import Marketplace.Trading
-import Marketplace.Transfer
 import Marketplace.Token
 import Marketplace.Utils
 
 import DA.Finance.Asset
 import DA.List
+import qualified DA.Next.Set as Set
 
 template ExchangeParticipantInvitation
   with
@@ -25,6 +25,7 @@ template ExchangeParticipantInvitation
           create DismissibleNotification with
             sender = exchParticipant, senderRole = None
             receiver = exchange, text = "Exchange invitation accepted."
+          createOrLookup SettlementAgreement with ..
           createOrLookup ExchangeParticipant with ..
 
       ExchangeParticipantInvitation_Reject : ()
@@ -46,7 +47,7 @@ template ExchangeParticipant
     maintainer key._1
 
     controller exchParticipant can
-      nonconsuming ExchangeParticipant_PlaceBinaryOptionOrder : (ContractId OrderRequest, ContractId DepositDebitRequest)
+      nonconsuming ExchangeParticipant_PlaceBinaryOptionOrder : ContractId OrderRequest
         with
           depositCid : ContractId AssetDeposit
           binOption : IdPair
@@ -76,7 +77,7 @@ template ExchangeParticipant
           exercise self ExchangeParticipant_MakeOrder
               with depositCid = orderDepositCid, pair = binOption, ..
 
-      nonconsuming ExchangeParticipant_PlaceBid : (ContractId OrderRequest, ContractId DepositDebitRequest)
+      nonconsuming ExchangeParticipant_PlaceBid : ContractId OrderRequest
         with
           depositCids : [ContractId AssetDeposit]
           pair : IdPair
@@ -104,7 +105,7 @@ template ExchangeParticipant
 
           exercise self ExchangeParticipant_MakeOrder with depositCid = newDepositCid, pair, price, qty, isBid = True
 
-      nonconsuming ExchangeParticipant_PlaceOffer : (ContractId OrderRequest, ContractId DepositDebitRequest)
+      nonconsuming ExchangeParticipant_PlaceOffer : ContractId OrderRequest
         with
           depositCids : [ContractId AssetDeposit]
           pair : IdPair
@@ -132,7 +133,7 @@ template ExchangeParticipant
 
           exercise self ExchangeParticipant_MakeOrder with depositCid = newDepositCid, pair, price, qty, isBid = False
 
-      nonconsuming ExchangeParticipant_MakeOrder : (ContractId OrderRequest, ContractId DepositDebitRequest)
+      nonconsuming ExchangeParticipant_MakeOrder : ContractId OrderRequest
         with
           depositCid : ContractId AssetDeposit
           pair: IdPair
@@ -141,6 +142,7 @@ template ExchangeParticipant
           isBid : Bool
         do
           deposit <- fetch depositCid
+          assertMsg "Deposit must be signed by Exchange operator!" $ Set.member operator deposit.account.id.signatories
 
           assertMsg "deposit is not allocated to the exchange"
             $ deposit.account.id.label == getAccountLabel exchParticipant exchange
@@ -149,17 +151,13 @@ template ExchangeParticipant
           assertMsg ("price should be rounded to at most " <> show quoteToken.quantityPrecision <> " decimal places")
             $ roundBankers quoteToken.quantityPrecision price == price
 
-          debitRequestCid <- create DepositDebitRequest with
-              owner = exchParticipant
-              ownerAccount = deposit.account
-              depositCid = depositCid
+          newDepositCid <- exercise depositCid AssetDeposit_Lock with locker = exchange
+
           createdAt <- getTime
           let order = Order with
                   isBid, qty, status = "New", orderId = -1
-                  asset = deposit.asset, account = deposit.account, ..
-          orderRequestCid <- create OrderRequest with ..
-
-          return (orderRequestCid, debitRequestCid)
+                  depositCid = newDepositCid, account = deposit.account, ..
+          create OrderRequest with ..
 
       nonconsuming ExchangeParticipant_PlaceClearedBid : ContractId ClearedOrderRequest
         with

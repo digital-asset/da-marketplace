@@ -12,6 +12,7 @@ import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { WalletIcon } from '../../icons/Icons'
 import { useContractQuery } from '../../websocket/queryStream'
 
+import { useParty } from '@daml/react'
 import { damlTupleToString } from './damlTypes'
 import { useRegistryLookup } from './RegistryLookup'
 import { ITopMenuButtonInfo } from './TopMenu'
@@ -27,13 +28,14 @@ const Wallet = (props: {
     showNotificationAlert?: boolean;
     handleNotificationAlert?: () => void;
 }) => {
-    const history = useHistory()
+    const history = useHistory();
+    const party = useParty();
     const { path, url } = useRouteMatch();
     const { brokerMap, custodianMap, exchangeMap, ccpMap } = useRegistryLookup();
 
     const { sideNav, onLogout, role, showNotificationAlert, handleNotificationAlert } = props
 
-    const allDeposits = useContractQuery(AssetDeposit);
+    const allDeposits = useContractQuery(AssetDeposit).filter(ad => ad.contractData.account.owner === party);
 
     const ccpCustomers = useContractQuery(CCPCustomer);
     const marginDepositsCids = ccpCustomers

@@ -173,7 +173,7 @@ doSetupBroker (LedgerParties operator public custodian exchange btcIssuer usdtIs
 
   -- onboard broker
   brokerInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardBroker with ..
-  broker `submit` exerciseCmd brokerInvCid BrokerInvitation_Accept with name = "Example Broker", ..
+  (_,brokerCid) <- broker `submit` exerciseCmd brokerInvCid BrokerInvitation_Accept with name = "Example Broker", ..
 
   -- onboard issuers
   btcIssuerInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardIssuer with issuer = btcIssuer, ..
@@ -192,6 +192,10 @@ doSetupBroker (LedgerParties operator public custodian exchange btcIssuer usdtIs
 
   relationshipReqCid <- usdtIssuer `submit` exerciseCmd usdtIssuerCid Issuer_RequestCustodianRelationship with ..
   custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
+
+  relationshipReqCid <- broker `submit` exerciseCmd brokerCid Broker_RequestCustodianRelationship with ..
+  custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
+
 
   -- alice establishes a relationship with the custodian
   relationshipReqCid <- alice `submit` exerciseCmd aliceInvestorCid Investor_RequestCustodianRelationship with ..

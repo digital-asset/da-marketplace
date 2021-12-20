@@ -5,10 +5,47 @@ module DA.Finance.Asset where
 
 import DA.Action
 import DA.Assert
-import DA.Next.Set
+import DA.Next.Set (Set)
 
 import DA.Finance.Types
 import DA.Finance.Utils
+
+template LockedAssetDeposit
+  with
+    account : Account
+    asset : Asset
+    locker : Party
+    observers : Set Party
+  where
+    signatory account.id.signatories, locker
+    observer observers, account.provider
+
+    let setQty (qty: Decimal) (ad: LockedAssetDeposit) =
+          ad with asset = ad.asset with quantity = qty
+
+    controller account.owner, locker can
+      LockedAssetDeposit_Unlock : ContractId AssetDeposit
+        -- ^ Unlock a locked asset deposit
+        do
+          create AssetDeposit with ..
+
+      LockedAssetDeposit_Split : [ContractId LockedAssetDeposit]
+        -- ^ Splits an asset deposit according to the provided list of quantities.
+        with
+          quantities : [Decimal]
+            -- ^ The quantities of the newly created asset deposits. The total quantity
+            -- needs to be smaller or equal than the current quantity. If it does not add up,
+            -- an asset deposit with the remainder is created.
+        do
+          let quantitySum = foldl (+) 0.0 quantities
+          assert $ quantitySum <= asset.quantity
+
+          let quantitiesAll =
+                if quantitySum == asset.quantity
+                then quantities
+                else quantities ++ [asset.quantity - quantitySum]
+          mapA (\q -> create $ setQty q this) quantitiesAll
+
 
 -- | Represents a deposit of an asset in an account. The `account.id` and `asset.id` fields
 -- can be used to link the contract to other contracts that provide further information
@@ -28,18 +65,20 @@ template AssetDeposit
     observers : Set Party
   where
     signatory account.id.signatories
-    observer insert account.provider observers
+    observer observers, account.provider
     ensure asset.quantity > 0.0
 
     let setQty (qty: Decimal) (ad: AssetDeposit) =
           ad with asset = ad.asset with quantity = qty
 
     controller account.owner can
-      AssetDeposit_SetObservers : ContractId AssetDeposit
-        with newObservers : Set Party
-        do create this with observers = newObservers
 
-    controller account.owner can
+      AssetDeposit_SetObservers : ContractId AssetDeposit
+        with
+          newObservers : Set Party
+        do
+          create this with observers = newObservers
+
       AssetDeposit_Split : [ContractId AssetDeposit]
         -- ^ Splits an asset deposit according to the provided list of quantities.
         with
@@ -74,6 +113,22 @@ template AssetDeposit
             this
             depositCids
           create deposit
+
+    choice AssetDeposit_Lock : ContractId LockedAssetDeposit
+      -- ^ Lock an asset deposit
+      with
+        locker : Party
+      controller account.owner, locker
+      do
+        create LockedAssetDeposit with ..
+
+    choice AssetDeposit_Transfer : ContractId AssetDeposit
+      -- ^ Transfers an asset from one owner to an owner with the same account provider
+      with
+        receiverAccount : Account
+      controller account.owner, receiverAccount.owner
+      do
+        create this with account = receiverAccount
 
 template AssetCategorization
   with

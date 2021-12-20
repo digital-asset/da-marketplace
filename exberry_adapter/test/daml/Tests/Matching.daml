@@ -4,13 +4,10 @@ import Tests.ExchangeTrade
 import Setup
 
 import Daml.Script
-import DA.List
 import DA.Optional
 
-import Marketplace.Custodian
 import Marketplace.Exchange
 import Marketplace.ExchangeParticipant
-import Marketplace.Transfer
 import Marketplace.Trading
 import Marketplace.Utils
 
@@ -51,22 +48,20 @@ runMatchingTest lp@LedgerParties{userAdmin = operator; btcIssuer = issuer; ..} =
   sleep (seconds 10)
 
   debug "Setting up accounts..."
-  aliceUsdId <- setupExchangeAccount lp usdTokenId 10000.0 alice
-  bobTokenId <- setupExchangeAccount lp testTokenId 10.0 bob
+  aliceUsdId <- setupExchangeAccount DepositDirect lp custodian usdTokenId 10000.0 alice
+  bobTokenId <- setupExchangeAccount DepositDirect lp custodian testTokenId 10.0 bob
 
   debug "Submitting Alice's order..."
   let aliceOrderId = testNumber + 1
-  (_, debitRequestCid) <- alice `submit` exerciseByKeyCmd @ExchangeParticipant (exchange, operator, alice) ExchangeParticipant_PlaceBid
+  alice `submit` exerciseByKeyCmd @ExchangeParticipant (exchange, operator, alice) ExchangeParticipant_PlaceBid
       with depositCids = [aliceUsdId], amount = 10000.0, pair = (testTokenId, usdTokenId), price = 10000.00
-  custodian `submit` exerciseCmd debitRequestCid DepositDebitRequest_Approve
 
   (_, aliceOrder) <- waitQuery 10.0 (queryContractKey @Order exchange (exchange, aliceOrderId))
 
   debug "Submitting Bob's order..."
   let bobOrderId = aliceOrderId + 1
-  (_, debitRequestCid) <- bob `submit` exerciseByKeyCmd @ExchangeParticipant (exchange, operator, bob) ExchangeParticipant_PlaceOffer
+  bob `submit` exerciseByKeyCmd @ExchangeParticipant (exchange, operator, bob) ExchangeParticipant_PlaceOffer
       with depositCids = [bobTokenId], amount = 10.0, pair = (testTokenId, usdTokenId), price = 10000.00
-  custodian `submit` exerciseCmd debitRequestCid DepositDebitRequest_Approve
 
   debug "Waiting for execution..."
   waitUntil 10.0 $ do

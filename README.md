@@ -41,7 +41,7 @@ This can be done by rebuilding the project using `make clean && make package`.
 Alternatively, to only build the DAR file and regenerate the TypeScript bindings:
 ```
 daml build
-daml codegen js .daml/dist/da-marketplace-0.1.20.dar -o daml.js
+daml codegen js .daml/dist/da-marketplace-0.1.21.dar -o daml.js
 cd ui
 yarn install --force --frozen-lockfile
 ```
@@ -213,6 +213,6 @@ Next, in deployments, click on the Integration and configure it with your Exberr
 
 ![13_click_exberry](https://user-images.githubusercontent.com/71082197/98867872-50139e00-243d-11eb-8448-479e46fd85df.png)
 
-Finally, upload the `da-marketplace-exberry-adapter-0.1.20.tar.gz` file in the `target` folder and launch the automation as `Exchange`.
+Finally, upload the `da-marketplace-exberry-adapter-0.1.21.tar.gz` file in the `target` folder and launch the automation as `Exchange`.
 
 If you would like to change which `SID` the Exberry adapter begins counting at for the `orderId` calls to Exberry, create a `Marketplace.Utils.ExberrySID` contract as the `Exchange` party _after_ launching the adapter.

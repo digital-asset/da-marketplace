@@ -13,6 +13,7 @@ import DA.Next.Set
 
 template DepositTransferRequest
   with
+    operator : Party
     sender : Party
     senderAccountId : Id
     receiverAccountId : Id
@@ -20,9 +21,9 @@ template DepositTransferRequest
   where
     let senderSig = head $ toList senderAccountId.signatories
         receiverSig = head $ toList receiverAccountId.signatories
-        custodian = senderSig
+        custodian = getCustodian senderAccountId operator
     ensure senderSig == receiverSig && senderAccountId /= receiverAccountId
-    signatory sender
+    signatory operator, sender
 
     controller custodian can
       DepositTransferRequest_Approve : ContractId AssetDeposit
@@ -40,11 +41,11 @@ template DepositTransferRequest
 
           senderRuleCid <- create AssetSettlementRule
             with account = senderAccount,
-                  observers = fromList [senderProvider],
+                  observers = mempty,
                   ctrls = empty
           receiverRuleCid <- create AssetSettlementRule
             with account = receiverAccount,
-                  observers = fromList [receiverProvider, receiver],
+                  observers = mempty,
                   ctrls = fromList [sender]
 
           newDepositCid <- exercise senderRuleCid AssetSettlement_Transfer
@@ -66,13 +67,13 @@ template DepositTransferRequest
 
 template DepositDebitRequest
   with
+    operator : Party
     owner : Party
     ownerAccount : Account
     depositCid : ContractId AssetDeposit
   where
-    let senderSig = head $ toList ownerAccount.id.signatories
-        custodian = senderSig
-    signatory owner
+    let custodian = getCustodian ownerAccount.id operator
+    signatory operator, custodian, owner
 
     controller custodian can
       DepositDebitRequest_Approve : Asset
@@ -81,7 +82,7 @@ template DepositDebitRequest
 
           depositRuleCid <- create AssetSettlementRule
             with account = ownerAccount
-                 observers = fromList [provider]
+                 observers = mempty
                  ctrls = empty
 
           newAsset <- exercise depositRuleCid AssetSettlement_Debit
@@ -95,13 +96,13 @@ template DepositDebitRequest
 
 template DepositCreditRequest
   with
+    operator : Party
     owner : Party
     account : Account
     asset : Asset
   where
-    let senderSig = head $ toList account.id.signatories
-        custodian = senderSig
-    signatory owner
+    let custodian = getCustodian account.id operator
+    signatory operator, custodian, owner
 
     controller custodian can
       DepositCreditRequest_Approve : ContractId AssetDeposit
@@ -111,11 +112,12 @@ template DepositCreditRequest
 
           depositRuleCid <- create AssetSettlementRule
             with account = account
-                 observers = tokenSignatories <> fromList [provider, owner]
+                 observers = tokenSignatories
                  ctrls = fromList [custodian]
 
           newDepositCid <- exercise depositRuleCid AssetSettlement_Credit with asset, ctrl = custodian
           archive depositRuleCid
           return newDepositCid
+
       DepositCreditRequest_Reject : ()
         do return ()

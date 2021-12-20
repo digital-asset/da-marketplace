@@ -19,7 +19,6 @@ import Marketplace.CentralCounterparty
 import Marketplace.CentralCounterpartyCustomer
 
 import Marketplace.Trading
-import Marketplace.Transfer
 
 import DA.Finance.Asset
 import DA.Finance.Types
@@ -114,13 +113,6 @@ doSetupClearing wt lp@(LedgerParties operator public custodian exchange issuer a
   awaitOrDo' wt 0.5 "novating trades"
     $ forA_ tradeCids (\tCid -> ccp `submit` exerciseByKeyCmd @CCP (operator, ccp)
          CCP_NovateClearedTrade with clearedTradeCid = tCid)
-
-  -- let fairValuePairs = [ (h2oQ121DerId, 1000.0)
-  --                      , (h2oQ221DerId, 1500.0) ]
-  --
-  -- upTo <- getTime
-  -- forA_ fairValuePairs $ \(derId, price) -> void $ makeFairValue operator exchange derId price usdTokenId upTo observers
-
 
 runSetupAccounts : LedgerParties -> Script ()
 runSetupAccounts = doSetupAccounts False
@@ -336,16 +328,9 @@ createClearingDeposit wt lp@LedgerParties{userAdmin = operator, custodian, ccp} 
       with tokenId = usdTokenId, depositQuantity = amount, beneficiary = investor
 
   -- > allocate deposit to CCP for Clearing Account
-  transferRequestCid <- investor `submit` exerciseByKeyCmd @Investor (operator, investor) Investor_AllocateToProvider
+  depositCid <- investor `submit` exerciseByKeyCmd @Investor (operator, investor) Investor_AllocateToProvider
       with depositCids = [depositCid], amount = amount, provider = ccp
-
-  if wt
-  then do
-    sleep (decToRelTime 0.25)
-    return None
-  else do
-    depositCid <- custodian `submit` exerciseCmd transferRequestCid DepositTransferRequest_Approve
-    return $ Some depositCid
+  return $ Some depositCid
 
 createToken : Party -> Party -> Text -> Text -> Int -> [Party] -> Script Id
 createToken operator issuer name description quantityPrecision observers = do

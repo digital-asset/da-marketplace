@@ -14,7 +14,7 @@ template BrokerCustomerInvitation
     broker : Party
     brokerCustomer : Party
   where
-    signatory broker
+    signatory broker, operator
 
     controller brokerCustomer can
       BrokerCustomerInvitation_Accept : ContractId BrokerCustomer
@@ -37,7 +37,7 @@ template BrokerCustomer
     broker : Party
     brokerCustomer : Party
   where
-    signatory broker, brokerCustomer
+    signatory broker, brokerCustomer, operator
 
     key (broker, operator, brokerCustomer) : (Party, Party, Party)
     maintainer key._1

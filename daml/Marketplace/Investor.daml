@@ -11,6 +11,7 @@ import DA.Finance.Asset
 import DA.Finance.Types
 
 import DA.List
+import DA.Next.Set qualified as Set
 
 template InvestorInvitation
   with
@@ -63,9 +64,11 @@ template Investor
           depositCid : ContractId AssetDeposit
           receiverAccountId : Id
         do
-           deposit <- fetch depositCid
-           assert $ deposit.account.owner == investor
-           create DepositTransferRequest with sender = investor, senderAccountId = deposit.account.id, ..
+          deposit <- fetch depositCid
+          assert $ deposit.account.owner == investor
+          let custodian = getCustodian deposit.account.id operator
+          exerciseByKey @CustodianRelationship (custodian, operator, investor) CustodianRelationship_RequestTransfer
+            with request = DepositTransferRequest with sender = investor, senderAccountId = deposit.account.id, ..
 
       nonconsuming Investor_RequestDeposit : ContractId DepositCreditRequest
         with
@@ -74,12 +77,13 @@ template Investor
           custodian : Party
         do
           (tokenCid, token) <- fetchByKey @Token tokenId
-          let accountId = getAccountId investor custodian [custodian]
+          let accountId = getAccountId investor custodian [custodian, operator]
               quantity = roundBankers token.quantityPrecision depositQuantity
               account = Account with id = accountId, provider = custodian, owner = investor
               asset = Asset with id = tokenId, ..
 
-          create DepositCreditRequest with owner = investor, ..
+          exerciseByKey @CustodianRelationship (custodian, operator, investor)
+            CustodianRelationship_RequestCredit with request = DepositCreditRequest with owner = investor, ..
 
       nonconsuming Investor_RequestWithdrawl : ContractId DepositDebitRequest
         with
@@ -98,10 +102,14 @@ template Investor
             with quantities = [ withdrawalQuantity ]
 
           deposit <- fetch depositCid
-          create DepositDebitRequest with
-              owner = investor, ownerAccount = deposit.account, ..
 
-      nonconsuming Investor_AllocateToProvider : ContractId DepositTransferRequest
+          let custodian = head $ Set.toList $ deposit.account.id.signatories
+
+          exerciseByKey @CustodianRelationship (custodian, operator, investor)
+            CustodianRelationship_RequestDebit with
+              request = DepositDebitRequest with owner = investor, ownerAccount = deposit.account, ..
+
+      nonconsuming Investor_AllocateToProvider : ContractId AssetDeposit
         with
           depositCids : [ContractId AssetDeposit]
           amount : Decimal
@@ -120,4 +128,27 @@ template Investor
                   signatories = deposit.account.id.signatories,
                     label = getAccountLabel investor provider,
                     version = 0
-          exercise self Investor_RequestDepositTransfer with ..
+          exercise depositCid AssetDeposit_Transfer
+            with receiverAccount = Account with id = receiverAccountId, owner = investor, ..
+
+      nonconsuming Investor_DirectAllocate : ContractId AssetDeposit
+        with
+          depositCids : [ContractId AssetDeposit]
+          amount : Decimal
+          provider : Party
+        do
+          aggregateQty <- getDepositQuantities depositCids
+
+          assertMsg ("amount should be less than or equal to total deposit amount") $ amount <= aggregateQty
+
+          mergedCid <- exercise (head depositCids) AssetDeposit_Merge with depositCids = tail depositCids
+          depositCid <- head <$> exercise mergedCid AssetDeposit_Split with quantities = [ amount ]
+
+          deposit <- fetch depositCid
+          let receiverAccountId = Id
+                with
+                  signatories = deposit.account.id.signatories,
+                    label = getAccountLabel investor provider,
+                    version = 0
+          exercise depositCid AssetDeposit_Transfer
+            with receiverAccount = Account with id = receiverAccountId, owner = investor, ..
