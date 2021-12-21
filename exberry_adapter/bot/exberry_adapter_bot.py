@@ -203,7 +203,11 @@ def main():
     @client.ledger_created(MARKETPLACE.ClearedOrderRequest)
     def handle_cleared_order_request(event):
         logging.info(f"Handling new ClearedOrderRequest")
-        sid = get_sid()
+
+        if event.cdata['optOrderId']:
+            sid = event.cdata['optOrderId']
+        else:
+            sid = get_sid()
 
         order = event.cdata['order']
         order['isCleared'] = True
@@ -231,9 +235,12 @@ def main():
     # Marketplace --> Exberry
     @client.ledger_created(MARKETPLACE.OrderRequest)
     def handle_order_request(event):
-        logging.info(f"Handling new OrderRequest")
+        logging.info(f"Handling new OrderRequest: {event.cdata}")
 
-        sid = get_sid()
+        if event.cdata['optOrderId']:
+            sid = event.cdata['optOrderId']
+        else:
+            sid = get_sid()
 
         order = event.cdata['order']
         order['isCleared'] = False
@@ -262,11 +269,25 @@ def main():
 
         event_sid = event.cdata['sid']
 
-        if not event_sid in sid_to_order:
-            logging.error(f'Order {event.cdata} not found in adapter state')
-            client.submit_exercise(event.cid, 'Archive', {})
+        requests = client.find(MARKETPLACE.OrderRequest, { 'optOrderId': event_sid })
+        cleared_requests = client.find(MARKETPLACE.ClearedOrderRequest, { 'optOrderId': event_sid })
 
-        order = sid_to_order.pop(event_sid)
+        order = None
+
+        if len(requests) > 0:
+            order = requests[0].cdata['order']
+            order['isCleared'] = False
+        elif len(cleared_requests) > 0:
+            order = cleared_requests[0].cdata['order']
+            order['isCleared'] = True
+        else:
+            if event_sid in sid_to_order:
+                order = sid_to_order.pop(event_sid)
+
+        if order == None:
+            logging.error(f'Order {event.cdata} not found in adapter state or order requests')
+            client.submit_exercise(event.cid, 'Archive', {})
+            return []
 
         sid_is_cleared[event_sid] = order['isCleared']
 

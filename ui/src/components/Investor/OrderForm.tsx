@@ -107,7 +107,8 @@ const OrderForm: React.FC<Props> = ({
                 ccp: defaultCCP, // TODO: Allow user-selectable CCP
                 pair,
                 baseType: getType(tokenPair[0]),
-                quoteType: getType(tokenPair[1])
+                quoteType: getType(tokenPair[1]),
+                optOrderId: null
             }
             const placeClearedBid = ExchangeParticipant.ExchangeParticipant_PlaceClearedBid;
             const placeClearedOffer = ExchangeParticipant.ExchangeParticipant_PlaceClearedOffer;
@@ -123,7 +124,8 @@ const OrderForm: React.FC<Props> = ({
                 price,
                 amount,
                 depositCids,
-                pair
+                pair,
+                optOrderId: null
             }
 
             if (kind === OrderKind.BID) {

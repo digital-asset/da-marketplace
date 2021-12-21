@@ -52,16 +52,17 @@ runMatchingTest lp@LedgerParties{userAdmin = operator; btcIssuer = issuer; ..} =
   bobTokenId <- setupExchangeAccount DepositDirect lp custodian testTokenId 10.0 bob
 
   debug "Submitting Alice's order..."
-  let aliceOrderId = testNumber + 1
+  let aliceOrderId = 1 -- testNumber + 1
+
   alice `submit` exerciseByKeyCmd @ExchangeParticipant (exchange, operator, alice) ExchangeParticipant_PlaceBid
-      with depositCids = [aliceUsdId], amount = 10000.0, pair = (testTokenId, usdTokenId), price = 10000.00
+      with depositCids = [aliceUsdId], amount = 10000.0, pair = (testTokenId, usdTokenId), price = 10000.00, optOrderId = Some aliceOrderId
 
   (_, aliceOrder) <- waitQuery 10.0 (queryContractKey @Order exchange (exchange, aliceOrderId))
 
   debug "Submitting Bob's order..."
   let bobOrderId = aliceOrderId + 1
   bob `submit` exerciseByKeyCmd @ExchangeParticipant (exchange, operator, bob) ExchangeParticipant_PlaceOffer
-      with depositCids = [bobTokenId], amount = 10.0, pair = (testTokenId, usdTokenId), price = 10000.00
+      with depositCids = [bobTokenId], amount = 10.0, pair = (testTokenId, usdTokenId), price = 10000.00, optOrderId = Some bobOrderId
 
   debug "Waiting for execution..."
   waitUntil 10.0 $ do
