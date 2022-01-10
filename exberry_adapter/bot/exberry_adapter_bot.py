@@ -284,6 +284,8 @@ def main():
             if event_sid in sid_to_order:
                 order = sid_to_order.pop(event_sid)
 
+        # if event_sid in sid_to_order: del sid_to_order[event_sid]
+
         if order == None:
             logging.error(f'Order {event.cdata} not found in adapter state or order requests')
             client.submit_exercise(event.cid, 'Archive', {})
@@ -317,11 +319,26 @@ def main():
         logging.info(f"Handling NewOrderFailure")
 
         event_sid = event.cdata['sid']
-        if not event_sid in sid_to_order:
-            logging.warning(f'Order for {event_sid} not found')
-            return []
 
-        order = sid_to_order.pop(event_sid)
+        requests = client.find(MARKETPLACE.OrderRequest, { 'optOrderId': event_sid })
+        cleared_requests = client.find(MARKETPLACE.ClearedOrderRequest, { 'optOrderId': event_sid })
+
+        order = None
+
+        if len(requests) > 0:
+            order = requests[0].cdata['order']
+            order['isCleared'] = False
+        elif len(cleared_requests) > 0:
+            order = cleared_requests[0].cdata['order']
+            order['isCleared'] = True
+        else:
+            if event_sid in sid_to_order:
+                order = sid_to_order.pop(event_sid)
+
+        if order == None:
+            logging.error(f'Order {event.cdata} not found in adapter state or order requests')
+            client.submit_exercise(event.cid, 'Archive', {})
+            return []
 
         query = { 'order': order }
         client.submit_exercise(event.cid, 'Archive', {})
@@ -450,10 +467,10 @@ def main():
                 try:
                     taker_cid, taker = await find_one_timeout(MARKETPLACE.ClearedOrder, {
                         'orderId': execution['takerMpOrderId']
-                    }, 5)
+                    }, 8)
                     maker_cid, maker = await find_one_timeout(MARKETPLACE.ClearedOrder, {
                         'orderId': execution['makerMpOrderId']
-                    }, 5)
+                    }, 8)
 
                     ccp = taker['ccp'] if (taker['ccp'] == maker['ccp']) else None
 
@@ -494,10 +511,10 @@ def main():
                 try:
                     taker_cid, taker = await find_one_timeout(MARKETPLACE.Order, {
                         'orderId': execution['takerMpOrderId']
-                    }, 5)
+                    }, 8)
                     maker_cid, maker = await find_one_timeout(MARKETPLACE.Order, {
                         'orderId': execution['makerMpOrderId']
-                    }, 5)
+                    }, 8)
 
                     client.submit_exercise(taker_cid, 'Order_Fill', {
                         'fillQty': execution['executedQuantity'],
@@ -513,7 +530,7 @@ def main():
                         'counterOrderId': taker['orderId'],
                         'timeMatched': execution['eventTimestamp']
                         })
-                except: logging.error(f'Could not find orders for execution: {execution}')
+                except Exception as e: logging.error(f'Could not find orders for execution: {execution}: {e}')
         else:
             logging.info(f"Instrument: {instrument_name} does not exist, ignoring ExecutionReport.")
         return []
