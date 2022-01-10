@@ -9,10 +9,6 @@ template CreateDealRequest
     operator : Party
     provider : Party
     customer : Party
-    settlementBank : Party
-    bndBank : Party
-    cashProvider : Party
-    bondRegistrar : Party
     dealId : Text
   where
     signatory operator, provider, customer
@@ -22,6 +18,10 @@ template AddTrancheRequest
     operator : Party
     provider : Party
     customer : Party
+    settlementBank : Party
+    bndBank : Party
+    cashProvider : Party
+    bondRegistrar : Party
     dealId : Text
     trancheId : Text
     deliveryId : Id
@@ -35,10 +35,6 @@ template Deal
     operator : Party
     structurer : Party
     issuer : Party
-    settlementBank : Party
-    bndBank : Party
-    cashProvider : Party
-    bondRegistrar : Party
     dealId : Text
     trancheIds : [Text]
   where
@@ -54,6 +50,10 @@ template Deal
           deliveryId : Id
           paymentId : Id
           size : Decimal
+          settlementBank : Party
+          bndBank : Party
+          cashProvider : Party
+          bondRegistrar : Party
         do
           dealCid <- create this with trancheIds = trancheIds <> [trancheId]
           trancheCid <- create Tranche with ..

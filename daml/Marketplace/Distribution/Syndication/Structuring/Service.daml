@@ -21,16 +21,16 @@ template Service
     controller customer can
       nonconsuming RequestCreateDeal : ContractId CreateDealRequest
         with
-          settlementBank : Party
-          bndBank : Party
-          cashProvider : Party
-          bondRegistrar : Party
           dealId : Text
         do
           create CreateDealRequest with ..
 
       nonconsuming RequestAddTranche : ContractId AddTrancheRequest
         with
+          settlementBank : Party
+          bndBank : Party
+          cashProvider : Party
+          bondRegistrar : Party
           dealId : Text
           trancheId : Text
           deliveryId : Id
