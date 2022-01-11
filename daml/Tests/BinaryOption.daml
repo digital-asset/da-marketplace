@@ -17,7 +17,7 @@ import Tests.Utils (binaryCallOption)
 import DA.Time (time)
 import DA.Assert
 import DA.Foldable
-
+import Marketplace.Custody.Model
 
 expiry = date 2022 Oct 22
 notExpiry = date 2020 Mar 18
@@ -109,7 +109,7 @@ requestExercise underlyingPrice observationDate = script do
   setTime $ time observationDate 16 30 00
 
   -- The issuer, Alice, must deposit the payout in the safekeeping account
-  corpActReqCid <- submit alice.customer $ exerciseCmd alice.custodyServiceCid $ RequestDeposit usd with quantity = 3000.0
+  corpActReqCid <- submit alice.customer $ exerciseCmd alice.custodyServiceCid $ RequestDeposit with asset = (usd with quantity = 3000.0), depositChannel = ONLEDGER
   corpActDepositCid <- submit providers.bank $ exerciseCmd alice.custodyServiceCid Deposit with
     depositRequestCid = corpActReqCid
 

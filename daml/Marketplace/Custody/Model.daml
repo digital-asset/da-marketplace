@@ -13,14 +13,58 @@ import Marketplace.Settlement.Model (SettlementInstruction(..), SettlementDetail
 import DA.List (init)
 import DA.Action (void, when, foldlA)
 
+
+
+data Channel =
+  ETH with coin: Text , address: Text
+  | POLY with coin: Text , address: Text
+  | SWIFT with remark: Text
+  | ONLEDGER 
+    deriving (Eq, Show)
+
 template DepositRequest
   with
     operator : Party
     provider : Party
     customer : Party
     asset : Asset
+    depositChannel: Channel
   where
     signatory operator, provider, customer
+
+    controller provider can
+      AckExternalDepositRequest: ContractId DepositRequestAcknowledged
+        with
+          referenceId: Text
+        do
+          assertMsg "only off-ledger request required acknowledge" (depositChannel /= ONLEDGER)
+          create DepositRequestAcknowledged with ..
+
+
+template DepositRequestAcknowledged
+  with
+    operator: Party
+    provider : Party
+    customer : Party
+    asset : Asset
+    depositChannel: Channel
+    referenceId: Text
+  where
+    signatory operator, provider, customer
+
+
+template DepositConfirmed
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    asset : Asset
+    depositChannel: Channel
+    referenceId: Text
+    account: Account
+  where
+    signatory operator, provider, customer
+
 
 template WithdrawalRequest
   with
@@ -28,8 +72,42 @@ template WithdrawalRequest
     provider : Party
     customer : Party
     depositCid : ContractId AssetDeposit
+    withdrawalChannel: Channel
   where
     signatory operator, provider, customer
+
+
+    controller provider can
+      AckExternalWithdrawRequest: ContractId WithdrawalRequestAcknowledged
+        with
+          referenceId: Text
+        do
+          assertMsg "only off-ledger request required acknowledge" (withdrawalChannel /= ONLEDGER)
+          create WithdrawalRequestAcknowledged with ..
+
+
+template WithdrawalRequestAcknowledged
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    depositCid : ContractId AssetDeposit
+    withdrawalChannel: Channel
+    referenceId: Text
+  where
+    signatory operator, provider, customer
+
+
+template WithdrawalConfirmed
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    withdrawalChannel: Channel
+    referenceId: Text
+  where
+    signatory operator, provider, customer
+
 
 template LifecycleRequest
   with

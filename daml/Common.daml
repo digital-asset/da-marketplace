@@ -26,6 +26,7 @@ import qualified Marketplace.Regulator.Role as Regulator
 import Marketplace.Issuance.AssetDescription
 import Marketplace.Issuance.CFI (CFI)
 import Marketplace.Issuance.CFI qualified as CFI
+import Marketplace.Custody.Model
 
 data Parties = Parties
   with
@@ -204,7 +205,7 @@ onboardAssets providers issuer = do
 depositAsset : Providers -> Customer -> Asset -> Id -> Set Party -> Script (ContractId AssetDeposit)
 depositAsset Providers{..} Customer{..} asset accountId observers = do
   -- Assets
-  depositRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestDeposit with asset
+  depositRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestDeposit with asset , depositChannel = ONLEDGER
   depositCid <- submit bank do exerciseCmd custodyServiceCid Custody.Deposit with ..
   (Some deposit) <- queryContractId bank depositCid
   submit customer do exerciseCmd depositCid AssetDeposit.AssetDeposit_SetObservers with newObservers = deposit.observers `union` observers
