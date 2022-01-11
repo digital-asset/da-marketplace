@@ -103,6 +103,9 @@ template Effect
   where
     signatory operator, issuer, bondRegistrar
 
+    key (bondRegistrar, lifecycleId): (Party, Text)
+    maintainer key._1
+
     nonconsuming choice RequestSnapshot : ContractId SnapshotRequest
       controller bondRegistrar
       do
