@@ -1,0 +1,26 @@
+module Model.MT564 where 
+-- Corporate Action Notification
+import Model.Utils (FunctionOfTheMessage(..), CorporateActionEvenIndicatorType(..), MandatoryOrVoluntaryIndicatorType(..), YesOrNo(..), DebtOrCred(..))
+
+
+data MT564Details = MT564Details with
+    corporateActionReference: Text
+    senderMessageReference: Text
+    functionOfTheMsg: FunctionOfTheMessage
+    corporateActionEventIndicator: CorporateActionEvenIndicatorType
+    mandatoryOrVoluntaryIndicator: MandatoryOrVoluntaryIndicatorType
+    instrumentId: Text
+    receiverAccount: Party
+    receiverBalance: Decimal
+    recordDate: Date
+    isCertificationBreakdownRequired: YesOrNo
+    caOptionNumber: Text
+    currencyCode: Text
+    securitiesCreditOrDebit: DebtOrCred
+    securitiesId: Text
+    cfiCode: Text
+    maturityDate: Date
+    redemptionDate: Date
+    cashPaymentDate: Date
+    issuer: Party
+  deriving (Eq, Show)

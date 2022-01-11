@@ -1,0 +1,22 @@
+module Model.MT546 where 
+-- Deliver Free Confirmation
+import Model.Utils (FunctionOfTheMessage(..), SettTransactionIndicatorType(..))
+
+
+data MT546Details = MT546Details with
+    senderMsgRef: Text -- 56357776146
+    functionOfTheMsg: FunctionOfTheMessage -- NEWM
+    relatedMsgRef: Text -- same as senderMessageReference 
+    dateOfSettlement: Date  -- 20201102
+    dateOfTrade: Date -- 20201029
+    effDateOfSettlement: Date -- for partial settlement, should this be optional?
+    instrumentId: Text --ISIN IE00BYVQ9F29 ISHARES NASDAQ 100 UCITS ETF ISHARES NASDAQ 100 EUR-H ACC
+    qtyOfInstrument: Decimal -- security quantity
+    buyerSafekeepingAcc: Party 
+    settTransIndicatorType: SettTransactionIndicatorType -- placeholder as pending on GS side
+    receivingAgent: Text -- ##not in GS list, need to verify##
+    buyer: Party
+    placeOfSettlement: Text
+    seller: Party
+    sellerSafekeepingAcc: Party  -- ##not in GS list, need to verify##
+  deriving (Eq, Show)

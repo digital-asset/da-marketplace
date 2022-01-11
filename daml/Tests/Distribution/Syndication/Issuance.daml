@@ -17,9 +17,10 @@ issuance : Parties -> Origination -> Script ()
 issuance Parties{..} Origination{..} = do
 
   let dealId = "DEAL1"
-  dealCid     <- createDeal operator structurer issuer settlementBank bndBank bondRegistrar cashProvider dealId
-  (dealCid, tranche1Cid) <- addTranche operator structurer issuer dealId "TRANCHE1" bond1.id usd.assetId 100_000_000.0
-  (dealCid, tranche2Cid) <- addTranche operator structurer issuer dealId "TRANCHE2" bond2.id usd.assetId 100_000_000.0
+  -- dealCid     <- createDeal operator structurer issuer settlementBank bndBank bondRegistrar cashProvider dealId
+  dealCid     <- createDeal operator structurer issuer  dealId
+  (dealCid, tranche1Cid) <- addTranche operator issuer structurer settlementBank bndBank bondRegistrar cashProvider dealId "TRANCHE1" bond1.id usd.assetId 100_000_000.0
+  (dealCid, tranche2Cid) <- addTranche operator issuer structurer settlementBank bndBank bondRegistrar cashProvider dealId "TRANCHE2" bond2.id usd.assetId 100_000_000.0
 
   deposit operator cashProvider  issuer     14_000_000.0 usd.assetId
   deposit operator cashProvider  lm1        20_000_000.0 usd.assetId
@@ -74,21 +75,21 @@ issuance Parties{..} Origination{..} = do
     confirmationCids = [ confirmation11Cid, confirmation12Cid, confirmation21Cid, confirmation22Cid, confirmation31Cid, confirmation32Cid, confirmation41Cid, confirmation42Cid ]
     price = offeredPrice
 
-  -- Step 1
+  -- settlment level 1
   dvpCid11 <- submit operator do exerciseCmd tranche1Cid Structuring.InstructIssuerSettlement with confirmationCids; price
   dvpCid12 <- submit operator do exerciseCmd tranche2Cid Structuring.InstructIssuerSettlement with confirmationCids; price
   allocateInstructions [ issuer, custodian2, settlementBank ]
   signInstructions [ issuer, custodian2, settlementBank ]
   settleTrades bondRegistrar [ dvpCid11, dvpCid12 ]
 
-  -- Step 2
+  -- settlment level 2
   dvpCid21 <- submit operator do exerciseCmd tranche1Cid Structuring.InstructBndSettlement with confirmationCids; price
   dvpCid22 <- submit operator do exerciseCmd tranche2Cid Structuring.InstructBndSettlement with confirmationCids; price
   allocateInstructions [ settlementBank, custodian2, custodian3, bndBank ]
   signInstructions [ settlementBank, custodian2, custodian3, bndBank ]
   settleTrades bondRegistrar [ dvpCid21, dvpCid22 ]
 
-  -- Step 3
+  -- settlment level 3
   dvpCids31 <- submit operator do exerciseCmd tranche1Cid Structuring.InstructInvestorSettlement with confirmationCids; price
   dvpCids32 <- submit operator do exerciseCmd tranche2Cid Structuring.InstructInvestorSettlement with confirmationCids; price
   allocateInstructions [ bndBank, lm1, lm2, lm3, custodian1, custodian2, custodian3, custodian4, custodian5, investor1, investor2, investor3, investor4 ]

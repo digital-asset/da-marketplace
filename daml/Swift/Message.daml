@@ -1,0 +1,455 @@
+module Message where 
+
+import Daml.Script
+import Model.MT545 ( MT545Details(..))
+import Model.MT547 ( MT547Details(..))
+import Model.MT544 ( MT544Details(..))
+import Model.MT546 ( MT546Details(..))
+import Model.MT564 ( MT564Details(..))
+import Model.MT566 ( MT566Details(..))
+import Model.MT535 ( MT535Details(..))
+import Model.MT940 ( MT940Details(..))
+import DA.Date (date, Month(..))
+import Model.Utils (FunctionOfTheMessage(..), SettTransactionIndicatorType(..), CorporateActionEvenIndicatorType(..), MandatoryOrVoluntaryIndicatorType(..), YesOrNo(..), DebtOrCred(..), DCMark(..), FinBlock(..))
+
+
+data ConsumerResponse = 
+  COMPLETED
+  | FAILED with errorMessage: Text
+  deriving (Eq, Show)
+
+data SwiftMessageType = 
+    MT544 (MT544Details)
+    | MT545 (MT545Details)
+    | MT546 (MT546Details)
+    | MT547 (MT547Details)
+    | MT564 (MT564Details)
+    | MT566 (MT566Details)
+    | MT535 (MT535Details)
+    | MT940 (MT940Details)
+  deriving (Eq, Show)
+
+
+template SwiftOutboundMessage
+  with 
+    referenceId: Text
+    provider: Party 
+    consumer: Party
+    swiftMessageType: SwiftMessageType
+  where 
+    signatory provider
+
+    controller consumer can
+      Response: ContractId SwiftOutboundMessageResponse
+        with
+          response: ConsumerResponse
+          timeStamp: Time
+        do
+          create SwiftOutboundMessageResponse with ..
+
+    controller provider can
+      Cancel: ()
+        do
+          pure ()
+
+
+template SwiftOutboundMessageResponse
+    with 
+      referenceId: Text
+      provider: Party 
+      consumer: Party
+      swiftMessageType: SwiftMessageType
+      response: ConsumerResponse
+      timeStamp: Time
+    where
+      signatory provider, consumer
+
+
+
+
+test : Script ()
+test = do
+  alice      <- allocatePartyWithHint "Alice" $ PartyIdHint "Alice" -- Seller
+  bob      <- allocatePartyWithHint "Bob" $ PartyIdHint "Bob" -- Buyer
+  swiftAdapter      <- allocatePartyWithHint "SwiftAdapter" $ PartyIdHint "SwiftAdapter"
+  let example = MT545Details with 
+        senderMsgRef = "56357776146"
+        functionOfTheMsg = NEWM
+        relatedMsgRef = "56357776146"
+        dateOfSettlement = date 2021 Oct 22
+        dateOfTrade= date 2021 Oct 20
+        effDateOfSettlement = date 2021 Oct 22
+        instrumentId = "InstrumentId"
+        qtyOfInstrument = 1000.0
+        buyerSafekeepingAcc = bob
+        safekeepingPlace = "SafekeepingPlace"
+        settTransIndicatorType = TRAD
+        deliveringAgent = "DeliveringAgent"
+        placeOfSettlement = "PlaceOfSettlement"
+        seller = alice
+        sellerSafekeepingAcc = alice
+        settCurrency = "EUR"
+        settledAmount = 1000.0
+
+
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF1", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT545 (example)
+{-   submit alice do createCmd SwiftOutboundMessage with referenceId = "REF2", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT545 (example)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF3", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT545 (example)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF4", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT545 (example)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF5", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT545 (example)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF6", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT545 (example)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF7", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT545 (example)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF8", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT545 (example)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF9", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT545 (example)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF10", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT545 (example) -}
+
+  let example2 = MT547Details with 
+        senderMsgRef = "56357776146"
+        functionOfTheMsg = NEWM
+        relatedMsgRef = "56357776146"
+        dateOfSettlement = date 2021 Oct 22
+        dateOfTrade= date 2021 Oct 20
+        effDateOfSettlement = date 2021 Oct 22
+        instrumentId = "InstrumentId"
+        qtyOfInstrument = 1000.0
+        buyerSafekeepingAcc = bob
+        safekeepingPlace = "SafekeepingPlace"
+        settTransIndicatorType = TRAD
+        receivingAgent = "RecivingAgent"
+        placeOfSettlement = "PlaceOfSettlement"
+        seller = alice
+        sellerSafekeepingAcc = alice
+        settledAmount = 1000.0
+        valueDate  = date 2021 Oct 22
+
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF11", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT547 (example2)
+{-   submit alice do createCmd SwiftOutboundMessage with referenceId = "REF12", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT547 (example2)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF13", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT547 (example2)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF14", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT547 (example2)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF15", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT547 (example2)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF16", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT547 (example2)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF17", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT547 (example2)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF18", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT547 (example2)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF19", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT547 (example2)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF20", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT547 (example2) -}
+
+
+  let example3 = MT546Details with 
+        senderMsgRef = "56357776146"
+        functionOfTheMsg = NEWM
+        relatedMsgRef = "56357776146"
+        dateOfSettlement = date 2021 Oct 22
+        dateOfTrade= date 2021 Oct 20
+        effDateOfSettlement = date 2021 Oct 22
+        instrumentId = "InstrumentId"
+        qtyOfInstrument = 1000.0
+        buyerSafekeepingAcc = bob
+        settTransIndicatorType = TRAD
+        receivingAgent = "RecivingAgent"
+        buyer = bob
+        placeOfSettlement = "PlaceOfSettlement"
+        seller = alice
+        sellerSafekeepingAcc = alice
+
+
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF31", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT546 (example3)
+{-   submit alice do createCmd SwiftOutboundMessage with referenceId = "REF32", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT546 (example3)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF33", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT546 (example3)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF34", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT546 (example3)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF35", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT546 (example3)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF36", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT546 (example3)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF37", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT546 (example3)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF38", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT546 (example3)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF39", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT546 (example3)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF40", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT546 (example3) -}
+
+
+  let example4 = MT544Details with 
+        senderMsgRef = "56357776146"
+        functionOfTheMsg = NEWM
+        relatedMsgRef = "56357776146"
+        dateOfSettlement = date 2021 Oct 22
+        dateOfTrade= date 2021 Oct 20
+        effDateOfSettlement = date 2021 Oct 22
+        instrumentId = "InstrumentId"
+        qtyOfInstrument = 1000.0
+        buyerSafekeepingAcc = bob
+        settTransIndicatorType = TRAD
+        deliveringAgent = "DeliveryAgent"
+        placeOfSettlement = "PlaceOfSettlement"
+        seller = alice
+        sellerSafekeepingAcc = alice
+
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF41", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT544 (example4)
+  {- submit alice do createCmd SwiftOutboundMessage with referenceId = "REF42", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT544 (example4)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF43", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT544 (example4)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF44", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT544 (example4)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF45", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT544 (example4)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF46", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT544 (example4)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF47", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT544 (example4)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF48", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT544 (example4)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF49", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT544 (example4)
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF50", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT544 (example4) -}
+
+
+  let example5 = MT566Details with 
+        corporateActionReference = "corporateActionReference"
+        senderMessageReference = "senderMessageReference"
+        officialCorporateActionReference = "officialCorporateActionReference"
+        functionOfTheMsg = NEWM
+        previousMessageReference = "previousMessageReference"
+        safekeepingAccount = alice
+        placeOfSafekeeping = "placeOfSafekeeping"
+        instrumentId = "instrumentId"
+        listingPlaceCode = "listingPlaceCode"
+        maturityDate = date 2021 Oct 22
+        totalEligibleForCorporateActionBalance = 1000.0
+        confirmedBalance = 900.0
+        recordDate = date 2021 Oct 23
+        effectiveDate = date 2021 Oct 24
+        caOptionNumber = "caOptionNumber"
+        securitiesCreditOrDebit = DEBT
+        securitiesId = "securitiesId"
+        securitiesPostingQuantity = 2000.0
+        securitiesPostingDate = date 2021 Oct 25
+        securitiesPaymentDate = date 2021 Oct 26
+        cashAccount = alice
+        currencyCode = "USDT"
+        cashPostedAmount = 1500.0
+        cashGrossAmount = 1600.0
+        cashPostingDate = date 2021 Oct 27
+        cashValueDate = date 2021 Oct 28
+        cashPaymentDate = date 2021 Oct 29
+        genericCashPricePerProduct = 100.0
+        originatorOfMessage = alice
+
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF51", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT566 (example5)
+  
+
+  let example6 = MT564Details with 
+        corporateActionReference = "corporateActionReference"
+        senderMessageReference = "senderMessageReference"
+        functionOfTheMsg = NEWM
+        corporateActionEventIndicator = REDM
+        mandatoryOrVoluntaryIndicator = MAND
+        instrumentId = "instrumentId"
+        receiverAccount = alice
+        receiverBalance = 100.0
+        recordDate = date 2021 Nov 1
+        isCertificationBreakdownRequired = N
+        caOptionNumber = "caOptionNumber"
+        currencyCode = "USDT"
+        securitiesCreditOrDebit = DEBT
+        securitiesId = "securitiesId"
+        cfiCode = "cfiCode"
+        maturityDate = date 2021 Nov 2
+        redemptionDate = date 2021 Nov 3
+        cashPaymentDate = date 2021 Nov 4
+        issuer = alice
+
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF61", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT564 (example6)
+
+  let example7 = MT535Details with 
+        senderMsgRef = "senderMsgRef"
+        functionOfTheMsg = NEWM
+        statementDate = date 2021 Nov 5
+        safekeepingAccount = alice
+        financialInstrumentBlocks = [
+          FinBlock {instrumentId = "instrumentId", aggregateBalance = 1234.5}, 
+          FinBlock {instrumentId = "instrumentId2", aggregateBalance = 1234.52}]
+         
+
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF71", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT535 (example7)
+
+
+  let example8 = MT940Details with 
+        transactionReferenceNumber = "transactionReferenceNumber"
+        accountIdentification = "accountIdentification"
+        statementNumber = 100
+        sequenceNumber = 1
+        openingBalanceMark = D
+        openingBalanceDate = date 2021 Nov 6
+        openingBalanceCurrency = "openingBalanceCurrency"
+        openingBalanceAmount = 456.7
+        closingBalanceMark = C
+        closingBalanceDate = date 2021 Nov 7
+        closingBalanceCurrency = "closingBalanceCurrency"
+        closingBalanceAmount = 789.10
+
+  submit alice do createCmd SwiftOutboundMessage with referenceId = "REF81", provider = alice, consumer = swiftAdapter,  swiftMessageType = MT940 (example8)
+
+  pure()
+
+data Channel =
+  ETH with coin: Text , address: Text
+  | POLY with coin: Text , address: Text
+  | SWIFT with remark: Text
+    deriving (Eq, Show)
+
+template DepositRequest
+  with
+    provider : Party
+    customer : Party
+    asset : Text
+    amount : Decimal
+    depositChannel: Channel
+    referenceId: Text
+    account: Text
+  where
+    signatory customer
+
+    controller provider can
+      Approve: ContractId DepositRequestAcknowledged
+        do
+          create DepositRequestAcknowledged with ..
+
+template DepositRequestAcknowledged
+  with
+    provider : Party
+    customer : Party
+    asset : Text
+    amount : Decimal
+    depositChannel: Channel
+    referenceId: Text
+    account: Text
+  where
+    signatory provider, customer
+    controller provider can
+      Mint: (ContractId DepositConfirmed, ContractId Cash)
+        do
+          confirmed <- create DepositConfirmed with ..
+          cash <- create Cash with locked=False,payrecord="",..
+          return (confirmed, cash)
+
+template DepositConfirmed
+  with
+    provider : Party
+    customer : Party
+    asset : Text
+    amount : Decimal
+    depositChannel: Channel
+    referenceId: Text
+    account: Text
+  where
+    signatory provider, customer
+
+template Cash
+  with
+    provider : Party
+    customer : Party
+    asset : Text
+    amount : Decimal
+    locked : Bool
+    payrecord : Text
+  where
+    signatory provider
+    controller customer can
+      Give : ContractId Cash
+        with
+          target : Party
+        do
+          create this with customer=target
+    controller provider can
+      Lock : ContractId Cash
+        do
+          create this with locked=True
+      Pay : ContractId Cash
+        with
+          txId : Text
+        do
+          create this with payrecord = txId
+
+template WithdrawalRequest
+  with
+    provider : Party
+    customer : Party
+    asset : Text
+    cashCid : ContractId Cash
+    withdrawalChannel: Channel
+    referenceId: Text
+    account: Text
+  where
+    signatory customer
+    controller provider can
+      ApproveWithdrawal : (ContractId Cash, ContractId WithdrawalRequestAcknowledged)
+        do
+          cash <- exercise cashCid Lock
+          reqacked <- create WithdrawalRequestAcknowledged with lockedCashCid=cash,..
+          return (cash, reqacked)
+
+template WithdrawalRequestAcknowledged
+  with
+    provider : Party
+    customer : Party
+    asset : Text
+    cashCid : ContractId Cash
+    lockedCashCid: ContractId Cash
+    withdrawalChannel: Channel
+    referenceId: Text
+    account: Text
+  where
+    signatory provider, customer
+    controller provider can
+      Burn: (ContractId WithdrawalConfirmed, ContractId Cash)
+        with
+          lockedcash : ContractId Cash
+          txId : Text
+        do
+          confirmed <- create WithdrawalConfirmed with ..
+          cash <- exercise lockedcash Pay with ..
+          return (confirmed, cash)
+
+template WithdrawalConfirmed
+  with
+    provider : Party
+    customer : Party
+    asset : Text
+    withdrawalChannel: Channel
+    referenceId: Text
+    account: Text
+  where
+    signatory provider, customer
+
+
+testBridge = script do
+  gs <- allocatePartyWithHint "GS" (PartyIdHint "GS")
+  tornike <- allocatePartyWithHint "Tornike" (PartyIdHint "Tornike")
+
+  request <- submit tornike do
+    createCmd DepositRequest with
+      provider = gs
+      customer = tornike
+      asset = "USD"
+      amount = 10.5
+      depositChannel = ETH with coin = "USDP", address = "0x515e34F4760c7fdcd61d9cAa278f80C15AC7ECdB"
+      referenceId = "00112233"
+      account = "tornike’s account"
+  ack <- submit gs do
+    exerciseCmd request Approve
+
+  (confirmed, cash) <- submit gs do
+    exerciseCmd ack Mint
+
+  withdrawalreq <- submit tornike do
+    createCmd WithdrawalRequest with
+      provider = gs
+      customer = tornike
+      asset = "USD"
+      cashCid = cash
+      withdrawalChannel = ETH with coin = "USDP", address = "0x515e34F4760c7fdcd61d9cAa278f80C15AC7ECdB"
+      referenceId = "00112233"
+      account = "tornike's account"
+
+  request1 <- submit gs do
+    createCmd DepositRequest with
+      provider = tornike
+      customer = gs
+      asset = "USD"
+      amount = 10.0
+      depositChannel = ETH with coin = "USDP", address ="0x515e34F4760c7fdcd61d9cAa278f80C15AC7ECdB"
+      referenceId = "1"
+      account = "customer account"
+  pure()
+
+
+    

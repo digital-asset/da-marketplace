@@ -1,0 +1,12 @@
+module Model.MT535 where 
+--  Statement of Holdings
+import Model.Utils (FunctionOfTheMessage(..), FinBlock(..))
+
+
+data MT535Details = MT535Details with
+    senderMsgRef: Text
+    functionOfTheMsg: FunctionOfTheMessage
+    statementDate: Date
+    safekeepingAccount: Party
+    financialInstrumentBlocks: [FinBlock]
+  deriving (Eq, Show)

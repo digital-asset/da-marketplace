@@ -1,0 +1,36 @@
+module Model.MT566 where 
+-- Corporate Action Confirmation
+import Model.Utils (FunctionOfTheMessage(..), DebtOrCred(..))
+
+
+data MT566Details = MT566Details with
+    corporateActionReference: Text
+    senderMessageReference: Text
+    officialCorporateActionReference: Text
+    functionOfTheMsg: FunctionOfTheMessage
+    previousMessageReference: Text
+    safekeepingAccount: Party
+    placeOfSafekeeping: Text
+    instrumentId: Text
+    listingPlaceCode: Text
+    maturityDate: Date
+    totalEligibleForCorporateActionBalance: Decimal
+    confirmedBalance: Decimal
+    recordDate: Date
+    effectiveDate: Date
+    caOptionNumber: Text
+    securitiesCreditOrDebit: DebtOrCred
+    securitiesId: Text
+    securitiesPostingQuantity: Decimal
+    securitiesPostingDate: Date
+    securitiesPaymentDate: Date
+    cashAccount: Party
+    currencyCode: Text
+    cashPostedAmount: Decimal
+    cashGrossAmount: Decimal
+    cashPostingDate: Date
+    cashValueDate: Date
+    cashPaymentDate: Date
+    genericCashPricePerProduct: Decimal
+    originatorOfMessage: Party
+  deriving (Eq, Show)

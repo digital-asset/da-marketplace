@@ -45,6 +45,7 @@ template Bond
     isTradeable : Bool
     isPricedDirty : Bool
     observers : [Party]
+    isin: Text
   where
     signatory id.signatories
     observer observers
@@ -115,6 +116,47 @@ getClaims operator provider stream currencyId maturityDate includePrincipal = do
             Float{rateId, periodSpread} ->
               let amount = if periodSpread == 0.0 then O.observe rateId.label else O.observe rateId.label + O.pure periodSpread
               in unitFloating amount currencyId dates includePrincipal
+      pure claims
+    None -> do
+      pure $ payment (O.pure 1.0) currencyId maturityDate
+
+generateEffect : Party -> Party -> Optional InterestStream -> Id -> Date -> Bool -> Update (Claim Date Decimal Id)
+generateEffect operator provider stream currencyId maturityDate includePrincipal = do
+  case stream of
+    Some s -> do
+      let InterestSchedule{..} = s.schedule
+      calendars <- mapA (\id -> fetchByKey @HolidayCalendar (operator, provider, id)) calendarIds
+      let
+        calendarData = map ((.calendar) . snd) calendars
+        (y, m, d) = toGregorian startDate
+        periodicSchedule = PeriodicSchedule with
+          effectiveDate = startDate
+          terminationDate = endDate
+          firstRegularPeriodStartDate = None
+          lastRegularPeriodEndDate = None
+          frequency = Frequency with period; periodMultiplier; rollConvention
+          businessDayAdjustment = BusinessDayAdjustment with calendarIds; convention = businessDayConvention
+          effectiveDateBusinessDayAdjustment = None
+          terminationDateBusinessDayAdjustment = None
+          stubPeriodType = None
+        schedule = createSchedule calendarData periodicSchedule
+        dates = map (.adjustedEndDate) schedule
+        proRata amount =
+          case period of
+          D -> error "Daily coupon period not supported"
+          W -> error "Weekly coupon period not supported"
+          M -> amount * (intToDecimal periodMultiplier / 12.0)
+          Y -> amount
+        claims =
+          case s.amount of
+            Fixed{annualRate} ->
+              unitFixed (proRata annualRate) currencyId dates includePrincipal
+            Float{rateId, periodSpread} ->
+              let amount = if periodSpread == 0.0 then O.observe rateId.label else O.observe rateId.label + O.pure periodSpread
+              in unitFloating amount currencyId dates includePrincipal
+      debug "schedule"
+      debug schedule
+      debug claims
       pure claims
     None -> do
       pure $ payment (O.pure 1.0) currencyId maturityDate

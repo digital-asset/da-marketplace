@@ -1,0 +1,19 @@
+module Model.MT940 where 
+--  End-of-day bank account statement
+import Model.Utils (DCMark(..))
+
+
+data MT940Details = MT940Details with
+    transactionReferenceNumber: Text
+    accountIdentification: Text
+    statementNumber: Int
+    sequenceNumber: Int
+    openingBalanceMark: DCMark
+    openingBalanceDate: Date
+    openingBalanceCurrency: Text
+    openingBalanceAmount: Decimal
+    closingBalanceMark: DCMark
+    closingBalanceDate: Date
+    closingBalanceCurrency: Text
+    closingBalanceAmount: Decimal
+  deriving (Eq, Show)

@@ -1,0 +1,49 @@
+module Model.Utils where 
+
+
+data FunctionOfTheMessage = 
+  CANC -- Cancellation Request
+  | NEWM -- New
+  | RVSL -- Reversal
+  | REPE
+  | REPL
+  | RMDR
+  deriving (Eq, Show)
+
+data SettTransactionIndicatorType = 
+  TRAD -- Relates to the settlement of a trade.
+  deriving (Eq, Show)
+
+data DCMark =
+  D -- Debit
+  | C -- Credit
+  deriving (Eq, Show)
+
+data CorporateActionEvenIndicatorType =
+  REDM
+  | INTR
+  | MCAL
+  | PCAL
+  | PRED
+  deriving (Eq, Show)
+
+data MandatoryOrVoluntaryIndicatorType =
+  CHOS
+  | MAND
+  | VOLU
+  deriving (Eq, Show)
+
+data YesOrNo =
+  Y
+  | N
+  deriving (Eq, Show)
+
+data DebtOrCred =
+  DEBT
+  | CRED
+  deriving (Eq, Show)
+
+data FinBlock = FinBlock with
+    instrumentId: Text
+    aggregateBalance: Decimal
+  deriving (Eq, Show)

@@ -4,6 +4,7 @@ import ContingentClaims.Claim.Serializable (Claim(And, Give))
 import Marketplace.Issuance.CFI (CFI(..))
 import Marketplace.Issuance.Service qualified as Issuance
 import Marketplace.Issuance.Instrument.Model (getClaims, Bond(..), Swap(..))
+import ContingentClaims.Claim (deserialize, serialize)
 
 type T = Service
 
@@ -25,6 +26,7 @@ template Service
         do
           let cfi = CFI with code = "DBXXXX"
           claims <- getClaims operator provider bond.stream bond.currencyId bond.maturityDate True
+          -- mapA (\id -> debug $ id) $ deserialize claims
           bondCid <- create bond
           assetCid <- exerciseByKey @Issuance.Service (operator, provider, customer) Issuance.RequestOrigination with assetLabel = bond.id.label; cfi; description = bond.id.label; claims; observers = []
           pure (assetCid, bondCid)

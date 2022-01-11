@@ -56,7 +56,7 @@ setup = do
 
   submit operator do createCmd Operator.Role with operator; observers = empty
 
-  -- 1st level
+  -- Account 1st level
   createCustodianRole operator cashProvider None None
   (_, issuerCashAccount)        <- createCustodyService operator cashProvider issuer
   (_, lm1CashAccount)           <- createCustodyService operator cashProvider lm1
@@ -69,7 +69,7 @@ setup = do
   (_, custodian3BondAccount)    <- createCustodyService operator bondRegistrar custodian3
   (_, custodian4BondAccount)    <- createCustodyService operator bondRegistrar custodian4
 
-  -- 2nd level
+  -- Account 2nd level
   createCustodianRole operator custodian1 None (Some custodian1BondAccount)
   (_, lm1BondAccount)         <- createCustodyService operator custodian1 lm1
   (_, investor1BondAccount)   <- createCustodyService operator custodian1 investor1
@@ -81,7 +81,7 @@ setup = do
   createCustodianRole operator custodian4 None (Some custodian4BondAccount)
   (_, custodian5BondAccount)  <- createCustodyService operator custodian4 custodian5
 
-  -- 3rd level
+  -- Account 3rd level
   createCustodianRole operator custodian5 None (Some custodian5BondAccount)
   (_, investor3BondAccount)   <- createCustodyService operator custodian5 investor3
   (_, investor4BondAccount)   <- createCustodyService operator custodian5 investor4

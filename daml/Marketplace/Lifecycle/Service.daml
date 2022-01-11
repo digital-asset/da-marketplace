@@ -7,6 +7,7 @@ import DA.Finance.Types (Id)
 import Marketplace.Issuance.AssetDescription qualified as AssetDescription
 import Marketplace.Lifecycle.Model (Observation, Today, Effect(..))
 import Marketplace.Utils
+import Marketplace.Issuance.Instrument.Model qualified as Instrument
 
 type Claims = Claim Date Decimal Id
 
@@ -29,24 +30,27 @@ template Service
         with
           assetId : Id
           election : Optional Claims
+          payDate: Date
+          recordDate : Date
         do
-          (_, today) <- fetchByKey @Today (operator, bondRegistrar)
+          -- (_, today) <- fetchByKey @Today (operator, bondRegistrar)
           (_, description) <- fetchByKey @AssetDescription.T assetId
+          (_, bond) <- fetchByKey @Instrument.Bond (assetId.signatories,assetId.label)
           let obs label date = do
               (_, observation) <- fetchByKey @Observation (operator, bondRegistrar, label, date)
               pure observation.value
           remaining <-
             case election of
-            Some e -> Lifecycle.exercise obs (True, deserialize e) (deserialize description.claims) today.date
+            Some e -> Lifecycle.exercise obs (True, deserialize e) (deserialize description.claims) payDate
             _ -> pure (deserialize description.claims)
-          Lifecycle.Result{remaining, pending} <- Lifecycle.lifecycle obs remaining today.date
+          Lifecycle.Result{remaining, pending} <- Lifecycle.lifecycle obs remaining payDate
           let serializedRemaining = serialize remaining
           if description.claims /= serialize remaining then do
             let newVersion = assetId.version + 1
-            let lifecycleId = "Lifecycle-" <> show today.date <> "-" <> assetId.label <> "(v" <> show assetId.version <> ")"
+            let lifecycleId = "Lifecycle-" <> show payDate <> "-" <> assetId.label <> "(v" <> show assetId.version <> ")"
             let expired = serializedRemaining == Zero
-            create description with assetId.version = newVersion; claims = serializedRemaining
-            Some <$> create Effect with operator; issuer; bondRegistrar; cashProvider; lifecycleId; assetId; newVersion; date = today.date; payouts = pending; expired
+            -- create description with assetId.version = newVersion; claims = serializedRemaining
+            Some <$> create Effect with remainingClaims = serializedRemaining; operator; issuer; bondRegistrar; cashProvider; lifecycleId; assetId; newVersion; payDate; payouts = pending; expired; recordDate; isin = bond.isin; cfi = description.cfi
           else
             pure None
 
