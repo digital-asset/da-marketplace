@@ -45,7 +45,7 @@ template Service
           createDealRequestCid : ContractId CreateDealRequest
         do
           CreateDealRequest{..} <- fetchAndArchive createDealRequestCid
-          create Deal with structurer = provider; issuer = customer; trancheIds = []; ..
+          create Deal with dealProvider = provider; issuer = customer; trancheIds = []; ..
 
       nonconsuming AddTranche : (ContractId Deal, ContractId Tranche)
         with

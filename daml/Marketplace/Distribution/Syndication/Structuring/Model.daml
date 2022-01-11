@@ -33,12 +33,12 @@ template AddTrancheRequest
 template Deal
   with
     operator : Party
-    structurer : Party
+    dealProvider : Party
     issuer : Party
     dealId : Text
     trancheIds : [Text]
   where
-    signatory operator, structurer, issuer
+    signatory operator, dealProvider, issuer
 
     key (operator, issuer, dealId) : (Party, Party, Text)
     maintainer key._1
@@ -56,13 +56,13 @@ template Deal
           bondRegistrar : Party
         do
           dealCid <- create this with trancheIds = trancheIds <> [trancheId]
-          trancheCid <- create Tranche with ..
+          trancheCid <- create Tranche with trancheProvider = dealProvider; ..
           pure (dealCid, trancheCid)
 
 template Tranche
   with
     operator : Party
-    structurer : Party
+    trancheProvider : Party
     issuer : Party
     settlementBank : Party
     bndBank : Party
@@ -74,7 +74,7 @@ template Tranche
     paymentId : Id
     size : Decimal
   where
-    signatory operator, structurer, issuer
+    signatory operator, trancheProvider, issuer
     observer settlementBank, bndBank
 
     key (operator, issuer, dealId, trancheId) : (Party, Party, Text, Text)
