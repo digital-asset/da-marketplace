@@ -134,5 +134,5 @@ template Tranche
               bondSis <- createInstructions False operator bondRegistrar bondRegistrar bndBank conf.investor settlementId 0 conf.asset
               cashSis <- createInstructions True operator bondRegistrar cashProvider conf.investor bndBank settlementId (length bondSis) aggregatePrice
               instructionIds <- map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
-              create Trade with operator; agent = bondRegistrar; deliverer = settlementBank; payer = bndBank; settlementId; instructionIds; delivery = conf.asset; payment = aggregatePrice; status = Instructed
+              create Trade with operator; agent = bondRegistrar; deliverer = bndBank; payer = conf.investor; settlementId; instructionIds; delivery = conf.asset; payment = aggregatePrice; status = Instructed
           mapA settleConfirmation filtered
