@@ -24,11 +24,24 @@ template Service
     key (operator, issuer, bondRegistrar) : (Party, Party, Party)
     maintainer key._1
 
+    -- controller bondRegistrar can
+    --   nonconsuming PreCalculateEffect: ()
+    --     with
+    --       assetId: Id
+    --       recordDate : Date
+    --     do
+    --       (_, description) <- fetchByKey @AssetDescription.T assetId
+    --       let remaining = deserialize description.claims
+    --       Lifecycle.Result{remaining, pending} <- Lifecycle.lifecycle obs remaining payDate
+    --       pure()
+
     controller bondRegistrar can
       nonconsuming CalculateEffect : Optional (ContractId Effect)
         with
           assetId : Id
           election : Optional Claims
+          payDate : Date
+          recordDate : Date
         do
           (_, today) <- fetchByKey @Today (operator, bondRegistrar)
           (_, description) <- fetchByKey @AssetDescription.T assetId
@@ -41,6 +54,8 @@ template Service
             _ -> pure (deserialize description.claims)
           Lifecycle.Result{remaining, pending} <- Lifecycle.lifecycle obs remaining today.date
           let serializedRemaining = serialize remaining
+          debug "serializedRemaining"
+          debug  serializedRemaining
           if description.claims /= serialize remaining then do
             let newVersion = assetId.version + 1
             let lifecycleId = "Lifecycle-" <> show today.date <> "-" <> assetId.label <> "(v" <> show assetId.version <> ")"
