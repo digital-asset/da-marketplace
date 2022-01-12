@@ -66,31 +66,28 @@ test = do
   lifecycleAssets parties [ bond1Desc.assetId ] (date 2022 Sep 20)
 
   createLifecycleEffect parties bond1Desc.assetId (date 2022 Dec 20) (date 2022 Dec 06)
-  lifecycleAssets parties [ bond1Desc.assetId ] (date 2022 Dec 20)
+  -- lifecycleAssets parties [ bond1Desc.assetId ] (date 2022 Dec 20)
 
-  createLifecycleEffect parties bond2Desc.assetId (date 2022 Jun 21) (date 2022 Jun 07)
-  lifecycleAssets parties [ bond2Desc.assetId ] (date 2022 Jun 21)
+  -- createLifecycleEffect parties bond2Desc.assetId (date 2022 Jun 21) (date 2022 Jun 07)
+  -- lifecycleAssets parties [ bond2Desc.assetId ] (date 2022 Jun 21)
 
-  createLifecycleEffect parties bond2Desc.assetId (date 2022 Dec 20) (date 2022 Dec 06)
-  lifecycleAssets parties [ bond2Desc.assetId ] (date 2022 Dec 20)
+  -- createLifecycleEffect parties bond2Desc.assetId (date 2022 Dec 20) (date 2022 Dec 06)
+  -- lifecycleAssets parties [ bond2Desc.assetId ] (date 2022 Dec 20)
 
-  createLifecycleEffect parties bond2Desc.assetId (date 2023 Jun 20) (date 2023 Jun 07)
-  lifecycleAssets parties [ bond2Desc.assetId ] (date 2023 Jun 20)
+  -- createLifecycleEffect parties bond2Desc.assetId (date 2023 Jun 20) (date 2023 Jun 07)
+  -- lifecycleAssets parties [ bond2Desc.assetId ] (date 2023 Jun 20)
 
-  createLifecycleEffect parties bond2Desc.assetId (date 2023 Dec 20) (date 2023 Dec 07)
-  lifecycleAssets parties [ bond2Desc.assetId ] (date 2023 Dec 20)
+  -- createLifecycleEffect parties bond2Desc.assetId (date 2023 Dec 20) (date 2023 Dec 07)
+  -- lifecycleAssets parties [ bond2Desc.assetId ] (date 2023 Dec 20)
 
-  -- forA_ dates $ lifecycleAssets parties [ bond1Desc.assetId, bond2Desc.assetId ]
-
-
-  [(_, ad1)] <- queryFilter @AssetDeposit investor1 (\ad -> ad.asset.id.label == usd.assetId.label)
-  [(_, ad2)] <- queryFilter @AssetDeposit investor2 (\ad -> ad.asset.id.label == usd.assetId.label)
-  [(_, ad3)] <- queryFilter @AssetDeposit investor3 (\ad -> ad.asset.id.label == usd.assetId.label)
-  [(_, ad4)] <- queryFilter @AssetDeposit investor4 (\ad -> ad.asset.id.label == usd.assetId.label)
-  ad1.asset.quantity === 21_400_000.0
-  ad2.asset.quantity === 42_800_000.0
-  ad3.asset.quantity === 64_200_000.0
-  ad4.asset.quantity === 85_600_000.0
+  -- [(_, ad1)] <- queryFilter @AssetDeposit investor1 (\ad -> ad.asset.id.label == usd.assetId.label)
+  -- [(_, ad2)] <- queryFilter @AssetDeposit investor2 (\ad -> ad.asset.id.label == usd.assetId.label)
+  -- [(_, ad3)] <- queryFilter @AssetDeposit investor3 (\ad -> ad.asset.id.label == usd.assetId.label)
+  -- [(_, ad4)] <- queryFilter @AssetDeposit investor4 (\ad -> ad.asset.id.label == usd.assetId.label)
+  -- ad1.asset.quantity === 21_400_000.0
+  -- ad2.asset.quantity === 42_800_000.0
+  -- ad3.asset.quantity === 64_200_000.0
+  -- ad4.asset.quantity === 85_600_000.0
 
   pure ()
 
@@ -103,7 +100,6 @@ createLifecycleEffect: Parties -> Id -> Date -> Date -> Script (Optional (Contra
 createLifecycleEffect Parties{..} assetId payDate recordDate = do
   h :: t <- map snd <$> queryFilter @AssetDescription bondRegistrar (\ad -> ad.assetId.signatories == assetId.signatories && ad.assetId.label == assetId.label)
   let maxId = foldl (\id desc -> if desc.assetId.version > id.version then desc.assetId else id) h.assetId t
-  -- submit bondRegistrar do exerciseByKeyCmd @Lifecycle.Today (operator, bondRegistrar) Lifecycle.SetDate with newDate = date
   submit bondRegistrar do exerciseByKeyCmd @Lifecycle.Service (operator, issuer, bondRegistrar) Lifecycle.CalculateEffect with assetId = maxId; election = None; payDate; recordDate
   
 
@@ -114,14 +110,12 @@ lifecycle Parties{..} date assetId = do
   let maxId = foldl (\id desc -> if desc.assetId.version > id.version then desc.assetId else id) h.assetId t
   submit bondRegistrar do exerciseByKeyCmd @Lifecycle.Today (operator, bondRegistrar) Lifecycle.SetDate with newDate = date
   let lifecycleId = "Lifecycle-" <> show date <> "-" <> assetId.label <> "(v" <> show maxId.version <> ")"
-  debug lifecycleId
   effectCidOpt <- queryContractKey @Lifecycle.Effect bondRegistrar (bondRegistrar, lifecycleId)
 
   case effectCidOpt of
     Some (effectCid, _) -> do
       Some effect <- queryContractId bondRegistrar effectCid
       debug $ "[" <> show date <> "][" <> maxId.label <> "(v" <> show maxId.version <> ")] " <> "Event with " <> show (length effect.payouts) <> " payouts"
-      debug maxId
       requestSnapshot operator bondRegistrar maxId date
       forwardRequest bondRegistrar maxId date
       provideSnapshot custodian1 maxId date

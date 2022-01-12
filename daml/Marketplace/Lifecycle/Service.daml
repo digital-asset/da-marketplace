@@ -8,6 +8,7 @@ import Marketplace.Issuance.AssetDescription qualified as AssetDescription
 import Marketplace.Lifecycle.Model (Observation, Today, Effect(..))
 import Marketplace.Utils
 import Marketplace.Issuance.Instrument.Model qualified as Instrument
+import DA.List
 
 type Claims = Claim Date Decimal Id
 
@@ -24,6 +25,17 @@ template Service
 
     key (operator, issuer, bondRegistrar) : (Party, Party, Party)
     maintainer key._1
+
+    -- controller bondRegistrar can
+    --   nonconsuming PreCalculateEffect: ()
+    --     with
+    --       assetId: Id
+    --       recordDate : Date
+    --     do
+    --       (_, description) <- fetchByKey @AssetDescription.T assetId
+    --       let remaining = deserialize description.claims
+    --       Lifecycle.Result{remaining, pending} <- Lifecycle.lifecycle obs remaining payDate
+    --       pure()
 
     controller bondRegistrar can
       nonconsuming CalculateEffect : Optional (ContractId Effect)
@@ -45,6 +57,8 @@ template Service
             _ -> pure (deserialize description.claims)
           Lifecycle.Result{remaining, pending} <- Lifecycle.lifecycle obs remaining payDate
           let serializedRemaining = serialize remaining
+          debug "serializedRemaining"
+          debug  serializedRemaining
           if description.claims /= serialize remaining then do
             let newVersion = assetId.version + 1
             let lifecycleId = "Lifecycle-" <> show payDate <> "-" <> assetId.label <> "(v" <> show assetId.version <> ")"
