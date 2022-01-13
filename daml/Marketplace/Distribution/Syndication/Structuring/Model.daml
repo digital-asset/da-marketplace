@@ -1,8 +1,15 @@
 module Marketplace.Distribution.Syndication.Structuring.Model where
 
 import DA.Finance.Types (Id, Asset(..))
+import DA.Optional (fromSomeNote)
+import DA.Set (fromList)
 import Marketplace.Distribution.Syndication.Bidding.Model qualified as Bidding
-import Marketplace.Settlement.Hierarchical (createInstructions, Trade(..), Status(..))
+import Marketplace.Settlement.Hierarchical (AccountInfo, createInstructions, Trade(..), Status(..))
+import Marketplace.Issuance.Instrument.Model(Bond(..))
+import SwiftMessage.Model.MT545
+import SwiftMessage.Model.MT547
+import SwiftMessage.Util
+import SwiftMessage.Message (SwiftMessage(MT547), SwiftMessage(MT545), SwiftMessageType(..), SwiftOutboundMessage(..))
 
 template CreateDealRequest
   with
@@ -80,59 +87,94 @@ template Tranche
     key (operator, issuer, dealId, trancheId) : (Party, Party, Text, Text)
     maintainer key._1
 
+    -- helper fuction to send swift message 
+    let 
+      sendSwiftMessage : Party -> Party -> Decimal -> Decimal -> Id -> Text -> Date -> Date -> Date -> Update (ContractId SwiftOutboundMessage) 
+      sendSwiftMessage seller buyer settledQty settledAmount settledCurrency settlementId dateOfTrade dateOfSettlement effDateOfSettlement = do
+        (_, sellerAccountInfo) <- fetchByKey @AccountInfo (operator, seller)
+        (_, receiverAccountInfo) <- fetchByKey @AccountInfo (operator, buyer)
+        (_, bond) <- fetchByKey @Bond (fromList [bondRegistrar, issuer], deliveryId.label)
+        let 
+          getSecurityAcc accInfo = fromSomeNote "current party has not security account" accInfo.securitiesAccount
+          instrumentId = bond.isin <> "-" <> deliveryId.label 
+          buyerSafekeepingAcc = getSecurityAcc receiverAccountInfo
+          sellerSafkeepingAcc = getSecurityAcc sellerAccountInfo
+          mt545 = createMT545Details instrumentId settledQty buyerSafekeepingAcc.provider seller settledAmount settledCurrency 
+                    dateOfTrade dateOfSettlement effDateOfSettlement
+                    settlementId settlementId buyerSafekeepingAcc (getSecurityAcc sellerAccountInfo) "safekeepingPlace" "placeOfSettlement"
+          
+          mt547 = createMT547Details instrumentId settledQty sellerSafkeepingAcc.provider seller settledAmount settledCurrency 
+                    dateOfTrade dateOfSettlement effDateOfSettlement dateOfSettlement
+                    settlementId settlementId buyerSafekeepingAcc (getSecurityAcc sellerAccountInfo) "safekeepingPlace" "placeOfSettlement"
+        create SwiftOutboundMessage with referenceId = settlementId; provider = operator ; consumer = operator; swiftMessage=MT545 (mt545); swiftMessageType=MT545_t; status=Pending; observers= fromList [bondRegistrar]    
+        create SwiftOutboundMessage with referenceId = settlementId; provider = operator ; consumer = operator; swiftMessage=MT547 (mt547); swiftMessageType=MT547_t; status=Pending; observers=fromList [bondRegistrar]    
+    
     controller operator can
       nonconsuming InstructIssuerSettlement : ContractId Trade
         with
           confirmationCids : [ContractId Bidding.Confirmation]
           price : Decimal
+          dateOfTrade : Date
+          dateOfSettlement : Date 
         do
           confirmations <- mapA fetch confirmationCids
           let
             filtered = filter (\c -> c.asset.id == deliveryId) confirmations
             quantities = map (.asset.quantity) filtered
             aggregate = sum quantities
+            settledAmount = aggregate * price
             aggregateAsset = Asset with id = deliveryId; quantity = aggregate
-            aggregatePrice = Asset with id = paymentId; quantity = aggregate * price
+            aggregatePrice = Asset with id = paymentId; quantity = settledAmount
             settlementId = deliveryId.label <> "-" <> partyToText issuer <> "-" <> partyToText settlementBank
           assertMsg "Total confirmed amount is larger than available quantity" $ aggregate <= size
           bondSis <- createInstructions False operator bondRegistrar bondRegistrar issuer settlementBank settlementId 0 aggregateAsset
           cashSis <- createInstructions True operator bondRegistrar cashProvider settlementBank issuer settlementId (length bondSis) aggregatePrice
           instructionIds <- map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
+          sendSwiftMessage issuer settlementBank aggregate settledAmount paymentId settlementId dateOfTrade dateOfSettlement dateOfSettlement
           create Trade with operator; agent = bondRegistrar; deliverer = issuer; payer = settlementBank; settlementId; instructionIds; delivery = aggregateAsset; payment = aggregatePrice; status = Instructed
 
       nonconsuming InstructBndSettlement : ContractId Trade
         with
           confirmationCids : [ContractId Bidding.Confirmation]
           price : Decimal
+          dateOfTrade : Date
+          dateOfSettlement : Date
         do
           confirmations <- mapA fetch confirmationCids
           let
             filtered = filter (\c -> c.asset.id == deliveryId) confirmations
             quantities = map (.asset.quantity) filtered
             aggregate = sum quantities
+            settledAmount = aggregate * price
             aggregateAsset = Asset with id = deliveryId; quantity = aggregate
-            aggregatePrice = Asset with id = paymentId; quantity = aggregate * price
+            aggregatePrice = Asset with id = paymentId; quantity = settledAmount
             settlementId = deliveryId.label <> "-" <> partyToText settlementBank <> "-" <> partyToText bndBank
           assertMsg "Total confirmed amount is larger than available quantity" $ aggregate <= size
           bondSis <- createInstructions False operator bondRegistrar bondRegistrar settlementBank bndBank settlementId 0 aggregateAsset
           cashSis <- createInstructions True operator bondRegistrar cashProvider bndBank settlementBank settlementId (length bondSis) aggregatePrice
           instructionIds <- map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
+          sendSwiftMessage settlementBank bndBank aggregate settledAmount paymentId settlementId dateOfTrade dateOfSettlement dateOfSettlement 
           create Trade with operator; agent = bondRegistrar; deliverer = settlementBank; payer = bndBank; settlementId; instructionIds; delivery = aggregateAsset; payment = aggregatePrice; status = Instructed
 
       nonconsuming InstructInvestorSettlement : [ContractId Trade]
         with
           confirmationCids : [ContractId Bidding.Confirmation]
           price : Decimal
+          dateOfTrade : Date
+          dateOfSettlement : Date
         do
           confirmations <- mapA fetch confirmationCids
           let
             filtered = filter (\c -> c.asset.id == deliveryId) confirmations
             settleConfirmation conf = do
               let
-                aggregatePrice = conf.price with quantity = conf.price.quantity * conf.asset.quantity
+                aggregate = conf.asset.quantity
+                settledAmount = conf.price.quantity * conf.asset.quantity
+                aggregatePrice = conf.price with quantity = settledAmount
                 settlementId = deliveryId.label <> "-" <> partyToText bndBank <> "-" <> partyToText conf.investor
               bondSis <- createInstructions False operator bondRegistrar bondRegistrar bndBank conf.investor settlementId 0 conf.asset
               cashSis <- createInstructions True operator bondRegistrar cashProvider conf.investor bndBank settlementId (length bondSis) aggregatePrice
               instructionIds <- map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
+              sendSwiftMessage settlementBank bndBank aggregate settledAmount paymentId settlementId dateOfTrade dateOfSettlement dateOfSettlement 
               create Trade with operator; agent = bondRegistrar; deliverer = bndBank; payer = conf.investor; settlementId; instructionIds; delivery = conf.asset; payment = aggregatePrice; status = Instructed
           mapA settleConfirmation filtered

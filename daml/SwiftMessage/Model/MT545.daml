@@ -1,0 +1,37 @@
+module SwiftMessage.Model.MT545 where
+
+import DA.Finance.Types (Id(..), Account(..))
+import SwiftMessage.Util
+
+data MT545Details = MT545Details with
+    messageType: MessageType -- NEWM
+    
+    instrumentId: Text --ISIN IE00BYVQ9F29 ISHARES NASDAQ 100 UCITS ETF ISHARES NASDAQ 100 EUR-H ACC
+    qtyOfInstrument: Decimal -- security quantity
+
+    deliveringAgent: Party  -- placeholder as pending on GS side // deliverying or receiving agent??
+    seller: Party
+
+    settledAmount: Decimal -- notional
+    settledCurrency: Id
+    dateOfTrade: Date -- 20201029
+    dateOfSettlement: Date  -- 20201102
+    effDateOfSettlement: Date -- this should be SETT instead of ESET and should be same as dateOfSettlement
+    
+    senderMsgRef: Text -- settlement id
+    relatedMsgRef: Text -- same as senderMessageReference 
+    
+    buyerSafekeepingAcc: Account -- custodian bond registart account 
+    sellerSafekeepingAcc: Account -- Issuer bondregistar account 
+    safekeepingPlace: Text --  TOKENIZED INFRASTRUCTURE
+    placeOfSettlement: Text --  TOKENIZED INFRASTRUCTURE
+  deriving (Eq, Show)
+
+  
+createMT545Details : Text -> Decimal -> Party -> Party -> Decimal -> Id
+  -> Date -> Date -> Date 
+  -> Text -> Text -> Account -> Account -> Text -> Text -> MT545Details
+createMT545Details instrumentId qtyOfInstrument deliveringAgent seller settledAmount settledCurrency 
+  dateOfTrade dateOfSettlement effDateOfSettlement 
+  senderMsgRef relatedMsgRef buyerSafekeepingAcc sellerSafekeepingAcc safekeepingPlace placeOfSettlement =
+    MT545Details with messageType = NEWM; ..

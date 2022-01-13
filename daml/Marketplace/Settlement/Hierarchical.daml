@@ -7,6 +7,7 @@ import DA.List (singleton)
 import DA.Optional (fromSome, fromSomeNote)
 import DA.Set (fromList)
 import Prelude hiding (lookup)
+import SwiftMessage.Message
 
 data Status =
   Instructed
@@ -54,6 +55,10 @@ template Trade
               exercise siCid SettleInstruction
           adCids <- mapA settle instructionIds
           tradeCid <- create this with status = Settled
+          (mt545Cid, _) <- fetchByKey @SwiftOutboundMessage (operator, settlementId, MT545_t)
+          (mt547Cid, _) <- fetchByKey @SwiftOutboundMessage (operator, settlementId, MT547_t)
+          exercise mt545Cid Finalize
+          exercise mt547Cid Finalize
           pure (tradeCid, adCids)
 
 template Delivery
