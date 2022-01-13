@@ -4,7 +4,7 @@ import DA.Assert ((===))
 import DA.Finance.Types (Account, Asset)
 import DA.Finance.Asset (AssetDeposit(..), AssetDeposit_Transfer(..), AssetDeposit_SetObservers(..))
 import DA.List (singleton)
-import DA.Optional (fromSome, fromSomeNote)
+import DA.Optional (whenSome, fromSome, fromSomeNote)
 import DA.Set (fromList)
 import Prelude hiding (lookup)
 import SwiftMessage.Message
@@ -47,11 +47,7 @@ template Trade
 
     let finalizeSwiftMessage k = do
         cidOpt <- lookupByKey @SwiftOutboundMessage k
-        case cidOpt of
-              Some cid -> do 
-                exercise cid Finalize
-                pure ()
-              None -> pure ()  -- do nothing during the trade matching for now
+        whenSome cidOpt (\cid -> do exercise cid Finalize; pure ())
     controller agent can
       Settle : (ContractId Trade, [ContractId AssetDeposit])
         do
