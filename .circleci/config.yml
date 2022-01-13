@@ -81,32 +81,6 @@ jobs:
       - store_artifacts:
           path: da-marketplace-test-report
 
-  ui_test:
-    parameters:
-      daml_sdk_version:
-        type: string
-    executor: daml-executor
-    steps:
-      - checkout
-      - init_submodules
-      - restore_cache:
-          keys:
-            - daml-{{ checksum "daml.yaml" }}
-      - install_sdk:
-          version: << parameters.daml_sdk_version >>
-      - install_python
-      - install_yq
-      - run:
-          name: UI test
-          command: |
-            echo 'export PATH=$HOME/yq:$PATH' >> $BASH_ENV
-            source $BASH_ENV
-            make test-ui
-      - save_cache:
-          paths:
-            - ~/.daml
-          key: daml-{{ checksum "daml.yaml" }}
-
   publish:
     parameters:
       daml_sdk_version:
