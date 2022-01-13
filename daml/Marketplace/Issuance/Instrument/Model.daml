@@ -38,6 +38,7 @@ data InterestStream = InterestStream
 template Bond
   with
     id : Id
+    isin : Text
     currencyId : Id
     issueDate : Date
     maturityDate : Date

@@ -1,0 +1,18 @@
+module SwiftMessage.Util where
+
+data MessageStatus = Pending | Finalized
+  deriving (Eq, Show)
+
+data MessageType = 
+    CANC -- Cancellation Request
+  | NEWM -- New
+  | RVSL -- Reversal
+  | REPE
+  | REPL
+  | RMDR
+  deriving (Eq, Show)
+
+data ConsumerResponse = 
+  COMPLETED
+  | FAILED with errorMessage: Text
+  deriving (Eq, Show)

@@ -114,23 +114,23 @@ createSchedule : Date -> Date -> PeriodEnum -> Int -> [Text] -> BusinessDayConve
 createSchedule startDate endDate period periodMultiplier calendarIds businessDayConvention dayCountConvention rollConvention =
   Instrument.InterestSchedule with ..
 
-createFixedRateBond : Id -> Id -> Date -> Date -> Instrument.InterestSchedule -> Decimal -> Bool -> Bool -> [Party] -> Instrument.Bond
-createFixedRateBond id currencyId issueDate maturityDate schedule annualRate isTradeable isPricedDirty observers =
+createFixedRateBond : Id -> Text -> Id -> Date -> Date -> Instrument.InterestSchedule -> Decimal -> Bool -> Bool -> [Party] -> Instrument.Bond
+createFixedRateBond id isin currencyId issueDate maturityDate schedule annualRate isTradeable isPricedDirty observers =
   let
     amount = Instrument.Fixed with annualRate
     stream = Some Instrument.InterestStream with schedule; amount
-  in Instrument.Bond with id; currencyId; issueDate; maturityDate; stream; isTradeable; isPricedDirty; observers
+  in Instrument.Bond with ..
 
-createFloatingRateBond : Id -> Id -> Date -> Date -> Instrument.InterestSchedule -> Id -> Decimal -> Bool -> Bool -> [Party] -> Instrument.Bond
-createFloatingRateBond id currencyId issueDate maturityDate schedule rateId periodSpread isTradeable isPricedDirty observers =
+createFloatingRateBond : Id -> Text -> Id -> Date -> Date -> Instrument.InterestSchedule -> Id -> Decimal -> Bool -> Bool -> [Party] -> Instrument.Bond
+createFloatingRateBond id isin currencyId issueDate maturityDate schedule rateId periodSpread isTradeable isPricedDirty observers =
   let
     amount = Instrument.Float with rateId; periodSpread
     stream = Some Instrument.InterestStream with schedule; amount
-  in Instrument.Bond with id; currencyId; issueDate; maturityDate; stream; isTradeable; isPricedDirty; observers
+  in Instrument.Bond with ..
 
-createZeroCouponBond : Id -> Id -> Date -> Date -> Bool -> Bool -> [Party] -> Instrument.Bond
-createZeroCouponBond id currencyId issueDate maturityDate isTradeable isPricedDirty observers =
-  Instrument.Bond with id; currencyId; issueDate; maturityDate; stream = None; isTradeable; isPricedDirty; observers
+createZeroCouponBond : Id -> Text -> Id -> Date -> Date -> Bool -> Bool -> [Party] -> Instrument.Bond
+createZeroCouponBond id isin currencyId issueDate maturityDate isTradeable isPricedDirty observers =
+  Instrument.Bond with stream = None; ..
 
 createSwap : Id -> Id -> Id -> Date -> Date -> Instrument.InterestStream -> Instrument.InterestStream -> Bool -> [Party] -> Instrument.Swap
 createSwap id payCurrencyId receiveCurrencyId issueDate maturityDate pay receive isTradeable observers =
@@ -160,13 +160,13 @@ deposit operator provider customer quantity assetId = do
   depositRequestCid <- submitMulti [customer] [] do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.RequestDeposit with asset
   submit provider do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.Deposit with depositRequestCid
 
-createDeal : Party -> Party -> Party -> Party -> Party -> Party -> Party -> Text -> Script (ContractId Structuring.Deal)
-createDeal operator provider customer settlementBank bndBank bondRegistrar cashProvider dealId = do
+createDeal : Party -> Party -> Party -> Text -> Script (ContractId Structuring.Deal)
+createDeal operator provider customer dealId = do
   createDealRequestCid <- submit customer do exerciseByKeyCmd @Structuring.Service (operator, provider, customer) Structuring.RequestCreateDeal with ..
   submit provider do exerciseByKeyCmd @Structuring.Service (operator, provider, customer) Structuring.CreateDeal with ..
 
-addTranche : Party -> Party -> Party -> Text -> Text -> Id -> Id -> Decimal -> Script (ContractId Structuring.Deal, ContractId Structuring.Tranche)
-addTranche operator provider customer dealId trancheId deliveryId paymentId size = do
+addTranche : Party -> Party -> Party -> Party -> Party -> Party -> Party -> Text -> Text -> Id -> Id -> Decimal -> Script (ContractId Structuring.Deal, ContractId Structuring.Tranche)
+addTranche operator provider customer settlementBank bndBank bondRegistrar cashProvider dealId trancheId deliveryId paymentId size = do
   addTrancheRequestCid <- submit customer do exerciseByKeyCmd @Structuring.Service (operator, provider, customer) Structuring.RequestAddTranche with ..
   submit provider do exerciseByKeyCmd @Structuring.Service (operator, provider, customer) Structuring.AddTranche with ..
 

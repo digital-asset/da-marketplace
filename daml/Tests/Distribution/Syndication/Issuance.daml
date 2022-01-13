@@ -6,6 +6,7 @@ import Marketplace.Distribution.Syndication.Structuring.Model qualified as Struc
 import Tests.Distribution.Syndication.Origination (origination, Origination(..))
 import Tests.Distribution.Syndication.Setup (setup, Parties(..))
 import Tests.Distribution.Syndication.Util
+import DA.Date (Month(Dec), date)
 
 test : Script ()
 test = do
@@ -17,9 +18,9 @@ issuance : Parties -> Origination -> Script ()
 issuance Parties{..} Origination{..} = do
 
   let dealId = "DEAL1"
-  dealCid     <- createDeal operator structurer issuer settlementBank bndBank bondRegistrar cashProvider dealId
-  (dealCid, tranche1Cid) <- addTranche operator structurer issuer dealId "TRANCHE1" bond1.id usd.assetId 100_000_000.0
-  (dealCid, tranche2Cid) <- addTranche operator structurer issuer dealId "TRANCHE2" bond2.id usd.assetId 100_000_000.0
+  dealCid     <- createDeal operator structurer issuer dealId
+  (dealCid, tranche1Cid) <- addTranche operator structurer issuer settlementBank bndBank bondRegistrar cashProvider dealId "TRANCHE1" bond1.id usd.assetId 100_000_000.0
+  (dealCid, tranche2Cid) <- addTranche operator structurer issuer settlementBank bndBank bondRegistrar cashProvider dealId "TRANCHE2" bond2.id usd.assetId 100_000_000.0
 
   deposit operator cashProvider  issuer     14_000_000.0 usd.assetId
   deposit operator cashProvider  lm1        20_000_000.0 usd.assetId
@@ -73,24 +74,26 @@ issuance Parties{..} Origination{..} = do
   let
     confirmationCids = [ confirmation11Cid, confirmation12Cid, confirmation21Cid, confirmation22Cid, confirmation31Cid, confirmation32Cid, confirmation41Cid, confirmation42Cid ]
     price = offeredPrice
+    dateOfSettlement = date 2021 Dec 20
+    dateOfTrade = dateOfSettlement
 
   -- Step 1
-  dvpCid11 <- submit operator do exerciseCmd tranche1Cid Structuring.InstructIssuerSettlement with confirmationCids; price
-  dvpCid12 <- submit operator do exerciseCmd tranche2Cid Structuring.InstructIssuerSettlement with confirmationCids; price
+  dvpCid11 <- submit operator do exerciseCmd tranche1Cid Structuring.InstructIssuerSettlement with confirmationCids; price; dateOfSettlement; dateOfTrade
+  dvpCid12 <- submit operator do exerciseCmd tranche2Cid Structuring.InstructIssuerSettlement with confirmationCids; price; dateOfSettlement; dateOfTrade
   allocateInstructions [ issuer, custodian2, settlementBank ]
   signInstructions [ issuer, custodian2, settlementBank ]
   settleTrades bondRegistrar [ dvpCid11, dvpCid12 ]
 
-  -- Step 2
-  dvpCid21 <- submit operator do exerciseCmd tranche1Cid Structuring.InstructBndSettlement with confirmationCids; price
-  dvpCid22 <- submit operator do exerciseCmd tranche2Cid Structuring.InstructBndSettlement with confirmationCids; price
+  -- Step 2 
+  dvpCid21 <- submit operator do exerciseCmd tranche1Cid Structuring.InstructBndSettlement with confirmationCids; price; dateOfSettlement; dateOfTrade 
+  dvpCid22 <- submit operator do exerciseCmd tranche2Cid Structuring.InstructBndSettlement with confirmationCids; price; dateOfSettlement; dateOfTrade
   allocateInstructions [ settlementBank, custodian2, custodian3, bndBank ]
   signInstructions [ settlementBank, custodian2, custodian3, bndBank ]
   settleTrades bondRegistrar [ dvpCid21, dvpCid22 ]
 
-  -- Step 3
-  dvpCids31 <- submit operator do exerciseCmd tranche1Cid Structuring.InstructInvestorSettlement with confirmationCids; price
-  dvpCids32 <- submit operator do exerciseCmd tranche2Cid Structuring.InstructInvestorSettlement with confirmationCids; price
+  -- -- Step 3
+  dvpCids31 <- submit operator do exerciseCmd tranche1Cid Structuring.InstructInvestorSettlement with confirmationCids; price; dateOfSettlement; dateOfTrade
+  dvpCids32 <- submit operator do exerciseCmd tranche2Cid Structuring.InstructInvestorSettlement with confirmationCids; price; dateOfSettlement; dateOfTrade
   allocateInstructions [ bndBank, lm1, lm2, lm3, custodian1, custodian2, custodian3, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
   signInstructions [ bndBank, lm1, lm2, lm3, custodian1, custodian2, custodian3, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
   settleTrades bondRegistrar $ dvpCids31 <> dvpCids32

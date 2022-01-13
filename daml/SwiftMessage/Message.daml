@@ -1,0 +1,63 @@
+module SwiftMessage.Message where
+
+import SwiftMessage.Util
+import SwiftMessage.Model.MT545
+import SwiftMessage.Model.MT547
+import DA.Set (Set)
+
+data SwiftMessage = 
+      MT545 (MT545Details)
+    | MT547 (MT547Details)
+  deriving (Eq, Show)
+
+data SwiftMessageType = MT545_t | MT547_t 
+  deriving (Eq, Show)
+
+
+-- This is the message that will be published from daml side onto ledger and consumed by swift adaptor
+template SwiftOutboundMessage
+  with 
+    referenceId : Text
+    provider : Party 
+    consumer : Party
+    observers : Set Party
+    swiftMessage : SwiftMessage
+    swiftMessageType : SwiftMessageType
+    status : MessageStatus
+  where 
+    signatory provider
+    observer observers
+
+    key (provider, referenceId, swiftMessageType) : (Party, Text, SwiftMessageType)
+    maintainer key._1
+
+    controller consumer can
+      Response : ContractId SwiftOutboundMessageResponse
+        with
+          response : ConsumerResponse
+          timeStamp : Time
+        do create SwiftOutboundMessageResponse with ..
+    
+    controller observers can
+      Finalize : ContractId SwiftOutboundMessage
+        do create this with status = Finalized
+
+    controller provider can
+      Cancel : ()
+        do pure ()
+    
+    controller provider can
+      AddObservers : ContractId SwiftOutboundMessage
+        with 
+          newObserver : Set Party 
+            do create this with observers = newObserver <> observers  
+template SwiftOutboundMessageResponse
+    with 
+      referenceId : Text
+      provider : Party 
+      consumer : Party
+      swiftMessage : SwiftMessage
+      response : ConsumerResponse
+      timeStamp : Time
+    where
+      signatory provider, consumer

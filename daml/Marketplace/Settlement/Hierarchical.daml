@@ -4,9 +4,10 @@ import DA.Assert ((===))
 import DA.Finance.Types (Account, Asset)
 import DA.Finance.Asset (AssetDeposit(..), AssetDeposit_Transfer(..), AssetDeposit_SetObservers(..))
 import DA.List (singleton)
-import DA.Optional (fromSome, fromSomeNote)
+import DA.Optional (whenSome, fromSome, fromSomeNote)
 import DA.Set (fromList)
 import Prelude hiding (lookup)
+import SwiftMessage.Message
 
 data Status =
   Instructed
@@ -44,6 +45,9 @@ template Trade
     key (operator, settlementId) : (Party, Text)
     maintainer key._1
 
+    let finalizeSwiftMessage k = do
+        cidOpt <- lookupByKey @SwiftOutboundMessage k
+        whenSome cidOpt (\cid -> do exercise cid Finalize; pure ())
     controller agent can
       Settle : (ContractId Trade, [ContractId AssetDeposit])
         do
@@ -54,6 +58,8 @@ template Trade
               exercise siCid SettleInstruction
           adCids <- mapA settle instructionIds
           tradeCid <- create this with status = Settled
+          finalizeSwiftMessage (operator, settlementId, MT545_t)
+          finalizeSwiftMessage (operator, settlementId, MT547_t)
           pure (tradeCid, adCids)
 
 template Delivery

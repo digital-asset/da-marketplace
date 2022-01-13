@@ -21,16 +21,16 @@ template Service
     controller customer can
       nonconsuming RequestCreateDeal : ContractId CreateDealRequest
         with
-          settlementBank : Party
-          bndBank : Party
-          cashProvider : Party
-          bondRegistrar : Party
           dealId : Text
         do
           create CreateDealRequest with ..
 
       nonconsuming RequestAddTranche : ContractId AddTrancheRequest
         with
+          settlementBank : Party
+          bndBank : Party
+          cashProvider : Party
+          bondRegistrar : Party
           dealId : Text
           trancheId : Text
           deliveryId : Id
@@ -45,7 +45,7 @@ template Service
           createDealRequestCid : ContractId CreateDealRequest
         do
           CreateDealRequest{..} <- fetchAndArchive createDealRequestCid
-          create Deal with structurer = provider; issuer = customer; trancheIds = []; ..
+          create Deal with dealProvider = provider; issuer = customer; trancheIds = []; ..
 
       nonconsuming AddTranche : (ContractId Deal, ContractId Tranche)
         with
