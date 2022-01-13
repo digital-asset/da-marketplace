@@ -82,6 +82,10 @@ unitFloating amount asset dates includeNotional =
 unitFixed : Decimal -> Id -> [Date] -> Bool -> Claim Date Decimal Id
 unitFixed amount asset dates includeNotional = unitFloating (O.pure amount) asset dates includeNotional
 
+-- generateCorpActionEvent: Party -> Party -> Optional InterestStream -> Id -> Date -> ()
+-- generateCorpActionEvent operator provider stream currencyId maturityDate  = do
+
+
 getClaims : Party -> Party -> Optional InterestStream -> Id -> Date -> Bool -> Update (Claim Date Decimal Id)
 getClaims operator provider stream currencyId maturityDate includePrincipal = do
   case stream of

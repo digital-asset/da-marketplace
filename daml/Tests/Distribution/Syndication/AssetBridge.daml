@@ -1,0 +1,35 @@
+module Tests.Distribution.Syndication.AssetBridge where
+
+import Tests.Distribution.Syndication.Setup (setup, Parties(..))
+import DA.Finance.Types (Asset(..))
+import Marketplace.Custody.Model
+import Marketplace.Custody.Service qualified as Custody
+import Daml.Script
+import Tests.Distribution.Syndication.Util
+import ContingentClaims.Claim (Claim(Zero))
+
+test : Script ()
+test = do
+  parties <- setup
+  htlcDeposit parties
+  pure()
+
+
+htlcDeposit : Parties  -> Script ()
+htlcDeposit Parties{..} = do
+  (_, usd)  <- originate operator cashProvider cashProvider public "USD" Zero
+  let asset = Asset with id =usd.assetId; quantity = 14_000_000.0
+  --deposit
+  depositRequestCid <- submitMulti [lm1] [] do exerciseByKeyCmd @Custody.Service (operator, cashProvider, lm1) Custody.RequestDeposit with asset, depositChannel = ETH with coin = "USDP", address = "0x515e34F4760c7fdcd61d9cAa278f80C15AC7ECdB"
+  -- submitMustFail cashProvider do exerciseByKeyCmd @Custody.Service (operator, cashProvider, lm1) Custody.Deposit with depositRequestCid
+  -- depositRequestAcknowledgedCid <- submit cashProvider do exerciseCmd depositRequestCid AckExternalDepositRequest with referenceId = "00112233"
+  -- (assetDepositCid , confirmedCid ) <- submit cashProvider do exerciseByKeyCmd @Custody.Service (operator, cashProvider, lm1) Custody.ExternalDeposit with depositRequestAcknowledgedCid
+
+  -- --withdraw
+  -- withdrawalRequestCid <- submitMulti [lm1] [] do exerciseByKeyCmd @Custody.Service (operator, cashProvider, lm1) Custody.RequestWithdrawal with depositCid = assetDepositCid, withdrawalChannel = ETH with coin = "USDP", address = "0x515e34F4760c7fdcd61d9cAa278f80C15AC7ECdB"
+  -- submitMustFail cashProvider do exerciseByKeyCmd @Custody.Service (operator, cashProvider, lm1) Custody.Withdrawal with withdrawalRequestCid
+  -- withdrawalRequestAcknowledgedCid <- submit cashProvider do exerciseCmd withdrawalRequestCid AckExternalWithdrawRequest with referenceId = "00112233"
+  -- confirmedCid <- submit cashProvider do exerciseByKeyCmd @Custody.Service (operator, cashProvider, lm1) Custody.ExternalWithdrawal with withdrawalRequestAcknowledgedCid
+
+
+  pure()

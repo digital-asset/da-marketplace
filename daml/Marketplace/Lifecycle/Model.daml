@@ -6,6 +6,11 @@ import DA.Foldable (forA_)
 import DA.List (dedup)
 import DA.Set (fromList)
 import Marketplace.Settlement.Hierarchical (createInstructions, Delivery(..), Status(..))
+import Marketplace.Issuance.CFI
+import ContingentClaims.Claim.Serializable (Claim(..))
+import Marketplace.Issuance.AssetDescription qualified as AssetDescription
+
+type Claims = Claim Date Decimal Id
 
 template Today
   with
@@ -95,18 +100,27 @@ template Effect
     bondRegistrar : Party
     cashProvider : Party
     lifecycleId : Text
+    cfi: CFI
     assetId : Id
     newVersion : Int
-    date : Date
+    recordDate: Date
+    payDate : Date
     payouts : [(Decimal, Id)]
+    remainingClaims : Claims
     expired : Bool
+    isin: Text
   where
     signatory operator, issuer, bondRegistrar
+
+    key (bondRegistrar, lifecycleId): (Party, Text)
+    maintainer key._1
 
     nonconsuming choice RequestSnapshot : ContractId SnapshotRequest
       controller bondRegistrar
       do
-        create SnapshotRequest with custodian = bondRegistrar; ..
+        (_, description) <- fetchByKey @AssetDescription.T assetId
+        create description with assetId.version = newVersion; claims = remainingClaims
+        create SnapshotRequest with custodian = bondRegistrar; date = payDate; ..
 
     choice Instruct : [ContractId Delivery]
       with
