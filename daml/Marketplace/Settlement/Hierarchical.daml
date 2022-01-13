@@ -45,6 +45,13 @@ template Trade
     key (operator, settlementId) : (Party, Text)
     maintainer key._1
 
+    let finalizeSwiftMessage k = do
+        cidOpt <- lookupByKey @SwiftOutboundMessage k
+        case cidOpt of
+              Some cid -> do 
+                exercise cid Finalize
+                pure ()
+              None -> pure ()  -- do nothing during the trade matching for now
     controller agent can
       Settle : (ContractId Trade, [ContractId AssetDeposit])
         do
@@ -55,10 +62,8 @@ template Trade
               exercise siCid SettleInstruction
           adCids <- mapA settle instructionIds
           tradeCid <- create this with status = Settled
-          (mt545Cid, _) <- fetchByKey @SwiftOutboundMessage (operator, settlementId, MT545_t)
-          (mt547Cid, _) <- fetchByKey @SwiftOutboundMessage (operator, settlementId, MT547_t)
-          exercise mt545Cid Finalize
-          exercise mt547Cid Finalize
+          finalizeSwiftMessage (operator, settlementId, MT545_t)
+          finalizeSwiftMessage (operator, settlementId, MT547_t)
           pure (tradeCid, adCids)
 
 template Delivery
