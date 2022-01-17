@@ -29,6 +29,7 @@ template AddTrancheRequest
     bndBank : Party
     cashProvider : Party
     bondRegistrar : Party
+    payingAgent : Party
     dealId : Text
     trancheId : Text
     deliveryId : Id
@@ -61,6 +62,7 @@ template Deal
           bndBank : Party
           cashProvider : Party
           bondRegistrar : Party
+          payingAgent : Party
         do
           dealCid <- create this with trancheIds = trancheIds <> [trancheId]
           trancheCid <- create Tranche with trancheProvider = dealProvider; ..
@@ -75,6 +77,7 @@ template Tranche
     bndBank : Party
     cashProvider : Party
     bondRegistrar : Party
+    payingAgent : Party
     dealId : Text
     trancheId : Text
     deliveryId : Id

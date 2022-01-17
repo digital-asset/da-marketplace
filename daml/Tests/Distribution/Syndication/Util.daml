@@ -165,8 +165,8 @@ createDeal operator provider customer dealId = do
   createDealRequestCid <- submit customer do exerciseByKeyCmd @Structuring.Service (operator, provider, customer) Structuring.RequestCreateDeal with ..
   submit provider do exerciseByKeyCmd @Structuring.Service (operator, provider, customer) Structuring.CreateDeal with ..
 
-addTranche : Party -> Party -> Party -> Party -> Party -> Party -> Party -> Text -> Text -> Id -> Id -> Decimal -> Script (ContractId Structuring.Deal, ContractId Structuring.Tranche)
-addTranche operator provider customer settlementBank bndBank bondRegistrar cashProvider dealId trancheId deliveryId paymentId size = do
+addTranche : Party -> Party -> Party -> Party -> Party -> Party -> Party -> Party -> Text -> Text -> Id -> Id -> Decimal -> Script (ContractId Structuring.Deal, ContractId Structuring.Tranche)
+addTranche operator provider customer settlementBank bndBank bondRegistrar cashProvider payingAgent dealId trancheId deliveryId paymentId size = do
   addTrancheRequestCid <- submit customer do exerciseByKeyCmd @Structuring.Service (operator, provider, customer) Structuring.RequestAddTranche with ..
   submit provider do exerciseByKeyCmd @Structuring.Service (operator, provider, customer) Structuring.AddTranche with ..
 

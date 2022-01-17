@@ -28,12 +28,14 @@ data Parties = Parties
     structurer : Party
     settlementBank : Party
     bndBank : Party
+    payingAgent : Party
 
 setup : Script Parties
 setup = do
   operator      <- allocatePartyWithHint "Operator" $ PartyIdHint "Operator"
   cashProvider  <- allocatePartyWithHint "CashProvider" $ PartyIdHint "CashProvider"
   bondRegistrar <- allocatePartyWithHint "BondRegistrar" $ PartyIdHint "BondRegistrar"
+  payingAgent <- allocatePartyWithHint "PayingAgent" $ PartyIdHint "PayingAgent"
   lm1  <- allocatePartyWithHint "LeadMgr1" $ PartyIdHint "LeadMgr1"
   lm2  <- allocatePartyWithHint "LeadMgr2" $ PartyIdHint "LeadMgr2"
   lm3  <- allocatePartyWithHint "LeadMgr3" $ PartyIdHint "LeadMgr3"
