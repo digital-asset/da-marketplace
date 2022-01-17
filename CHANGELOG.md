@@ -33,3 +33,17 @@ FL-176 - Modify Trade contract to show sender and receiver in each DvP leg
 FL-182 - Integrate MT545 SWIFT message 
 
 FL-183 - Integrate MT547 SWIFT message 
+### Changed
+None
+
+### Deprecated
+None
+
+### Removed
+None
+
+### Fixed
+None
+
+### Security
+None
