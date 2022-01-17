@@ -65,9 +65,9 @@ origination Parties{..} = do
 
   submitMulti [operator, bondRegistrar] [] do createCmd HolidayCalendar with operator; provider = bondRegistrar; calendar = fedCalendar; observers = fromList [issuer]
 
-  (bond1Desc, _) <- originateBond operator bondRegistrar issuer public bond1
-  (bond2Desc, _) <- originateBond operator bondRegistrar issuer public bond2
-  (bond3Desc, _) <- originateBond operator bondRegistrar issuer public bond3
+  (bond1Desc, _) <- originateBond operator bondRegistrar issuer [public, payingAgent] bond1
+  (bond2Desc, _) <- originateBond operator bondRegistrar issuer [public, payingAgent] bond2
+  (bond3Desc, _) <- originateBond operator bondRegistrar issuer [public, payingAgent] bond3
   (swap1Desc, _) <- originateSwap operator bondRegistrar issuer public swap1
 
   pure Origination with ..

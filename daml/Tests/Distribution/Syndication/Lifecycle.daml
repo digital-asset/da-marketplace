@@ -76,7 +76,7 @@ lifecycleAssets parties assetIds date = do
 lifecycle : Parties -> Date -> Id -> Script ()
 lifecycle Parties{..} date assetId = do
 
-  h :: t <- map snd <$> queryFilter @AssetDescription bondRegistrar (\ad -> ad.assetId.signatories == assetId.signatories && ad.assetId.label == assetId.label)
+  h :: t <- map snd <$> queryFilter @AssetDescription payingAgent (\ad -> ad.assetId.signatories == assetId.signatories && ad.assetId.label == assetId.label)
   let maxId = foldl (\id desc -> if desc.assetId.version > id.version then desc.assetId else id) h.assetId t
   submit bondRegistrar do exerciseByKeyCmd @Lifecycle.Today (operator, bondRegistrar) Lifecycle.SetDate with newDate = date
   effectCidOpt <- submit bondRegistrar do exerciseByKeyCmd @Lifecycle.Service (operator, issuer, bondRegistrar) Lifecycle.CalculateEffect with assetId = maxId; election = None
