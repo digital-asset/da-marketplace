@@ -424,14 +424,14 @@ def main():
 
         if event.cdata['sid'] in sid_is_cleared and sid_is_cleared[event.cdata['sid']]:
             await client.exercise_by_key(MARKETPLACE.ClearedOrderCancelRequest,
-                                {'_1': client.party, '_2': event.cdata['sid']},
-                                'ClearedOrderCancel_Ack', {})
+                                'ClearedOrderCancel_Ack',
+                                {'_1': client.party, '_2': event.cdata['sid']}, {})
             await client.exercise(event.cid, 'Archive', {})
             return []
         else:
             await client.exercise_by_key(MARKETPLACE.OrderCancelRequest,
-                                {'_1': client.party, '_2': event.cdata['sid']},
-                                'OrderCancel_Ack', {})
+                                'OrderCancel_Ack',
+                                {'_1': client.party, '_2': event.cdata['sid']}, {})
             await client.exercise(event.cid, 'Archive', {})
 
     # Marketplace <-- Exberry
@@ -439,10 +439,10 @@ def main():
     async def handle_cancel_order_failure(event):
         logging.info(f"Handling CancelOrderFailure")
 
-        return [exercise_by_key(MARKETPLACE.OrderCancelRequest,
-                                {'_1': client.party, '_2': event.cdata['sid']},
-                                'OrderCancel_Ack', {}),
-                exercise(event.cid, 'Archive', {})]
+        await client.exercise_by_key(MARKETPLACE.OrderCancelRequest,
+                                'OrderCancel_Ack',
+                                {'_1': client.party, '_2': event.cdata['sid']}, {})
+        await client.exercise(event.cid, 'Archive', {})
 
     # Marketplace <-- Exberry
     @client.ledger_created(EXBERRY.ExecutionReport)

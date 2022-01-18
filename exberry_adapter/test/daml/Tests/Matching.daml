@@ -69,4 +69,17 @@ runMatchingTest lp@LedgerParties{userAdmin = operator; btcIssuer = issuer; ..} =
     tradeSides <- filter (\(_, ts) -> ts.orderId `elem` [aliceOrderId, bobOrderId]) <$> query @TradeSide exchange
     return $ (length tradeSides) == 2
 
+  bobTokenId2 <- setupExchangeAccount DepositDirect lp custodian testTokenId 10.0 bob
+
+  debug "Submitting Bob's order to cancel..."
+
+  (bobOrderCid, _) <- waitQuery 10.0 (queryContractKey @Order exchange (exchange, bobOrderId))
+
+  bob `submit` exerciseCmd bobOrderCid Order_RequestCancel
+
+  debug "Waiting for cancel..."
+  waitUntil 10.0 $ do
+    orders <- query @Order exchange
+    return $ (length orders) == 0
+
   debug "Test passed!"
