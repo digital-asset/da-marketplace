@@ -134,6 +134,6 @@ setup = do
   createBiddingService operator cm1 investor4
 
   -- Lifecycling
-  createLifecycleService operator issuer bondRegistrar cashProvider
+  createLifecycleService operator issuer bondRegistrar cashProvider payingAgent
 
   pure Parties with ..

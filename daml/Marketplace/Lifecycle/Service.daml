@@ -18,19 +18,20 @@ template Service
     issuer : Party
     bondRegistrar : Party
     cashProvider : Party
+    payingAgent : Party
   where
-    signatory operator, issuer, bondRegistrar
+    signatory operator, issuer, bondRegistrar, payingAgent
 
-    key (operator, issuer, bondRegistrar) : (Party, Party, Party)
+    key (operator, issuer, bondRegistrar, payingAgent) : (Party, Party, Party, Party)
     maintainer key._1
 
-    controller bondRegistrar can
-      nonconsuming CalculateEffect : Optional (ContractId Effect)
+    controller payingAgent can
+      nonconsuming CalculateEffect : Optional (ContractId Effect, ContractId AssetDescriptionUpdateRequest)
         with
           assetId : Id
           election : Optional Claims
         do
-          (_, today) <- fetchByKey @Today (operator, bondRegistrar)
+          (_, today) <- fetchByKey @Today (operator, payingAgent)
           (_, description) <- fetchByKey @AssetDescription.T assetId
           let obs label date = do
               (_, observation) <- fetchByKey @Observation (operator, bondRegistrar, label, date)
@@ -45,8 +46,9 @@ template Service
             let newVersion = assetId.version + 1
             let lifecycleId = "Lifecycle-" <> show today.date <> "-" <> assetId.label <> "(v" <> show assetId.version <> ")"
             let expired = serializedRemaining == Zero
-            create description with assetId.version = newVersion; claims = serializedRemaining
-            Some <$> create Effect with operator; issuer; bondRegistrar; cashProvider; lifecycleId; assetId; newVersion; date = today.date; payouts = pending; expired
+            requestCid <- create AssetDescriptionUpdateRequest with claims = serializedRemaining; ..
+            effectCid <- create Effect with operator; issuer; bondRegistrar; cashProvider; payingAgent; lifecycleId; assetId; newVersion; date = today.date; payouts = pending; expired
+            pure $ Some (effectCid, requestCid)
           else
             pure None
 
@@ -60,10 +62,11 @@ template Offer
     issuer : Party
     bondRegistrar : Party
     cashProvider : Party
+    payingAgent : Party
   where
     signatory operator, issuer
 
-    controller bondRegistrar can
+    controller bondRegistrar, payingAgent can
       Accept : ContractId Service
         do
           createOrLookup Service with ..
@@ -78,8 +81,9 @@ template Request
     operator : Party
     bondRegistrar : Party
     cashProvider : Party
+    payingAgent : Party
   where
-    signatory bondRegistrar
+    signatory bondRegistrar, payingAgent
 
     controller operator, issuer can
       Approve : ContractId Service
@@ -89,3 +93,20 @@ template Request
       Reject : ()
         do
           return ()
+
+template AssetDescriptionUpdateRequest 
+  with
+    issuer : Party
+    payingAgent : Party
+    bondRegistrar : Party
+    assetId : Id
+    description : AssetDescription.AssetDescription
+    newVersion : Int
+    claims : Claims
+  where 
+    signatory payingAgent, bondRegistrar, issuer
+    
+    controller bondRegistrar can 
+      ApproveUpdate : ContractId AssetDescription.AssetDescription
+        do
+          create description with assetId.version = newVersion; claims
