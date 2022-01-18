@@ -15,6 +15,7 @@ import DA.Set (empty)
 import Marketplace.Operator.Role qualified as Operator
 import Marketplace.Custody.Role qualified as Custodian
 import Marketplace.Custody.Service qualified as Custody
+import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Issuance.AssetDescription (AssetDescription)
 import Marketplace.Issuance.CFI qualified as CFI
 import Marketplace.Issuance.Instrument.Model qualified as Instrument
@@ -157,7 +158,7 @@ issue operator provider customer issuanceId quantity assetId = do
 deposit : Party -> Party -> Party -> Decimal -> Id -> Script (ContractId AssetDeposit)
 deposit operator provider customer quantity assetId = do
   let asset = Asset with id = assetId; quantity
-  depositRequestCid <- submitMulti [customer] [] do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.RequestDeposit with asset
+  depositRequestCid <- submitMulti [customer] [] do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.RequestDeposit with asset, depositChannel = Custody.ONLEDGER
   submit provider do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.Deposit with depositRequestCid
 
 createDeal : Party -> Party -> Party -> Party -> Party -> Party -> Party -> Text -> Script (ContractId Structuring.Deal)

@@ -26,12 +26,15 @@ template Service
       nonconsuming RequestDeposit : ContractId Custody.DepositRequest
         with
           asset : Asset
+          depositChannel: Custody.Channel
         do
           create Custody.DepositRequest with ..
+        
 
       nonconsuming RequestWithdrawal : ContractId Custody.WithdrawalRequest
         with
           depositCid : ContractId AssetDeposit
+          withdrawalChannel: Custody.Channel
         do
           create Custody.WithdrawalRequest with ..
 
@@ -48,20 +51,40 @@ template Service
         with
           depositRequestCid : ContractId Custody.DepositRequest
         do
-          Custody.DepositRequest{asset} <- fetchAndArchive depositRequestCid
-          -- (_, AssetDescription{issuer}) <- fetchByKey @AssetDescription asset.id
-
+          Custody.DepositRequest{asset, depositChannel} <- fetchAndArchive depositRequestCid
+          assertMsg "only handle onledger deposit request" (depositChannel == Custody.ONLEDGER)
           create AssetDeposit with asset; account; lockers = empty; observers = empty --fromList [ issuer ]
+      
+      nonconsuming ExternalDeposit : (ContractId AssetDeposit, ContractId Custody.DepositConfirmed)
+        with
+          depositRequestAcknowledgedCid:  ContractId Custody.DepositRequestAcknowledged
+        do 
+          Custody.DepositRequestAcknowledged{asset, depositChannel, referenceId} <- fetchAndArchive depositRequestAcknowledgedCid
+          assetDepsositCid <- create AssetDeposit with asset; account; lockers = empty; observers = empty 
+          confirmedCid <- create Custody.DepositConfirmed with ..
+          return (assetDepsositCid, confirmedCid)
+
 
       nonconsuming Withdrawal : ()
         with
           withdrawalRequestCid : ContractId Custody.WithdrawalRequest
         do
-          Custody.WithdrawalRequest{depositCid} <- fetchAndArchive withdrawalRequestCid
+          Custody.WithdrawalRequest{depositCid, withdrawalChannel} <- fetchAndArchive withdrawalRequestCid
+          assertMsg "only handle onledger deposit request" (withdrawalChannel == Custody.ONLEDGER)
           deposit <- fetch depositCid
           assertMsg "Deposit account provider and service provider do not match" $ deposit.account.provider == provider
 
           archive depositCid
+
+      nonconsuming ExternalWithdrawal : ContractId Custody.WithdrawalConfirmed
+        with
+          withdrawalRequestAcknowledgedCid : ContractId Custody.WithdrawalRequestAcknowledged
+        do
+          Custody.WithdrawalRequestAcknowledged{depositCid, referenceId, withdrawalChannel} <- fetchAndArchive withdrawalRequestAcknowledgedCid
+          deposit <- fetch depositCid
+          assertMsg "Deposit account provider and service provider do not match" $ deposit.account.provider == provider
+          archive depositCid
+          create Custody.WithdrawalConfirmed with ..
 
       nonconsuming Lifecycle : (ContractId AssetDeposit, [ContractId SettlementInstruction])
         with
@@ -78,7 +101,6 @@ template Service
         ctrl : Party
       controller ctrl
       do pure ()
-
 template Offer
   with
     operator : Party
