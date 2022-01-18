@@ -68,6 +68,6 @@ origination Parties{..} = do
   (bond1Desc, _) <- originateBond operator bondRegistrar issuer [public, payingAgent] bond1
   (bond2Desc, _) <- originateBond operator bondRegistrar issuer [public, payingAgent] bond2
   (bond3Desc, _) <- originateBond operator bondRegistrar issuer [public, payingAgent] bond3
-  (swap1Desc, _) <- originateSwap operator bondRegistrar issuer public swap1
+  (swap1Desc, _) <- originateSwap operator bondRegistrar issuer [public, payingAgent] swap1
 
   pure Origination with ..

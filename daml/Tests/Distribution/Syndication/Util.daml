@@ -91,10 +91,10 @@ createBiddingService operator provider customer = do
   offerCid <- submit provider do exerciseByKeyCmd @Distributor.Role (operator, provider) Distributor.OfferBiddingService with ..
   submit customer do exerciseCmd offerCid Bidding.Accept
 
-createLifecycleService : Party -> Party -> Party -> Party -> Script (ContractId Lifecycle.Service)
-createLifecycleService operator issuer bondRegistrar cashProvider  = do
+createLifecycleService : Party -> Party -> Party -> Party -> Party -> Script (ContractId Lifecycle.Service)
+createLifecycleService operator issuer bondRegistrar cashProvider payingAgent = do
   offerCid <- submit issuer do exerciseByKeyCmd @Issuer.Role (operator, issuer) Issuer.OfferLifecycleService with ..
-  submit bondRegistrar do exerciseCmd offerCid Lifecycle.Accept
+  submitMulti [bondRegistrar, payingAgent] [] do exerciseCmd offerCid Lifecycle.Accept
 
 createTradingService : Party -> Party -> Script (ContractId Trading.Service)
 createTradingService operator customer  = do
@@ -136,15 +136,15 @@ createSwap : Id -> Id -> Id -> Date -> Date -> Instrument.InterestStream -> Inst
 createSwap id payCurrencyId receiveCurrencyId issueDate maturityDate pay receive isTradeable observers =
   Instrument.Swap with id; payCurrencyId; receiveCurrencyId; issueDate; maturityDate; pay; receive; isTradeable; observers
 
-originateBond : Party -> Party -> Party -> Party -> Instrument.Bond -> Script (AssetDescription, ContractId Instrument.Bond)
-originateBond operator provider customer public bond = do
-  (requestCid, bondCid) <- submit customer do exerciseByKeyCmd @Instrument.Service (operator, provider, customer) Instrument.RequestBond with bond
+originateBond : Party -> Party -> Party -> [Party] -> Instrument.Bond -> Script (AssetDescription, ContractId Instrument.Bond)
+originateBond operator provider customer observers bond = do
+  (requestCid, bondCid) <- submit customer do exerciseByKeyCmd @Instrument.Service (operator, provider, customer) Instrument.RequestBond with ..
   desc <- snd <$> submit provider do exerciseByKeyCmd @Issuance.Service (operator, provider, customer) Issuance.Originate with createOriginationCid = requestCid
   pure (desc, bondCid)
 
-originateSwap : Party -> Party -> Party -> Party -> Instrument.Swap -> Script (AssetDescription, ContractId Instrument.Swap)
-originateSwap operator provider customer public swap = do
-  (requestCid, swapCid) <- submit customer do exerciseByKeyCmd @Instrument.Service (operator, provider, customer) Instrument.RequestSwap with swap
+originateSwap : Party -> Party -> Party -> [Party] -> Instrument.Swap -> Script (AssetDescription, ContractId Instrument.Swap)
+originateSwap operator provider customer observers swap = do
+  (requestCid, swapCid) <- submit customer do exerciseByKeyCmd @Instrument.Service (operator, provider, customer) Instrument.RequestSwap with ..
   desc <- snd <$> submit provider do exerciseByKeyCmd @Issuance.Service (operator, provider, customer) Issuance.Originate with createOriginationCid = requestCid
   pure (desc, swapCid)
 

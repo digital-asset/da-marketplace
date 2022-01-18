@@ -33,13 +33,14 @@ template Service
       nonconsuming RequestSwap : (ContractId Issuance.OriginationRequest, ContractId Swap)
         with
           swap : Swap
+          observers : [Party]
         do
           let cfi = CFI with code = "SRXXXX"
           pay <- getClaims operator provider (Some swap.pay) swap.payCurrencyId swap.maturityDate False
           receive <- getClaims operator provider (Some swap.receive) swap.receiveCurrencyId swap.maturityDate False
           let claims = And [ Give pay, receive ]
           swapCid <- create swap
-          assetCid <- exerciseByKey @Issuance.Service (operator, provider, customer) Issuance.RequestOrigination with assetLabel = swap.id.label; cfi; description = swap.id.label; claims; observers = []
+          assetCid <- exerciseByKey @Issuance.Service (operator, provider, customer) Issuance.RequestOrigination with assetLabel = swap.id.label; cfi; description = swap.id.label; claims; observers = observers
           pure (assetCid, swapCid)
 
 template Offer
