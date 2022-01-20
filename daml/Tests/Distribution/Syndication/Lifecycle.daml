@@ -15,10 +15,10 @@ import Tests.Distribution.Syndication.Issuance (issuance)
 import Tests.Distribution.Syndication.Origination (origination, Origination(..))
 import Tests.Distribution.Syndication.Util
 
-requestSnapshot : Party -> Id -> Date -> Script (ContractId Lifecycle.SnapshotRequest)
-requestSnapshot payingAgent assetId date = do
+requestSnapshot : Party -> Party -> Id -> Date -> Script (ContractId Lifecycle.SnapshotRequest)
+requestSnapshot payingAgent bondRegistrar assetId date = do
   [(effectCid, effect)] <- queryFilter @Lifecycle.Effect payingAgent (\e -> e.payingAgent == payingAgent && e.assetId == assetId && e.date == date)
-  submit payingAgent do exerciseCmd effectCid Lifecycle.RequestSnapshot
+  submit bondRegistrar do exerciseCmd effectCid Lifecycle.RequestSnapshot
 
 forwardRequest : Party -> Id -> Date -> Script [ContractId Lifecycle.SnapshotRequest]
 forwardRequest custodian assetId date = do
@@ -79,7 +79,7 @@ lifecycle Parties{..} date assetId = do
   h :: t <- map snd <$> queryFilter @AssetDescription payingAgent (\ad -> ad.assetId.signatories == assetId.signatories && ad.assetId.label == assetId.label)
   let maxId = foldl (\id desc -> if desc.assetId.version > id.version then desc.assetId else id) h.assetId t
   submit payingAgent do exerciseByKeyCmd @Lifecycle.Today (operator, payingAgent) Lifecycle.SetDate with newDate = date
-  effectCidOpt <- submit payingAgent do exerciseByKeyCmd @Lifecycle.Service (operator, issuer, bondRegistrar, payingAgent) Lifecycle.CalculateEffect with assetId = maxId; election = None
+  effectCidOpt <- submit payingAgent do exerciseByKeyCmd @Lifecycle.Service (operator, issuer, payingAgent) Lifecycle.CalculateEffect with assetId = maxId; election = None
   
   case effectCidOpt of
     Some (effectCid, requestCid) -> do
@@ -87,7 +87,7 @@ lifecycle Parties{..} date assetId = do
       Some effect <- queryContractId payingAgent effectCid
       debug $ "[" <> show date <> "][" <> maxId.label <> "(v" <> show maxId.version <> ")] " <> "Event with " <> show (length effect.payouts) <> " payouts"
       
-      requestSnapshot payingAgent maxId date
+      requestSnapshot payingAgent bondRegistrar maxId date
       forwardRequest bondRegistrar maxId date
       provideSnapshot custodian1 maxId date
       provideSnapshot custodian2 maxId date

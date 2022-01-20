@@ -20,9 +20,10 @@ template Service
     cashProvider : Party
     payingAgent : Party
   where
-    signatory operator, issuer, bondRegistrar, payingAgent
-
-    key (operator, issuer, bondRegistrar, payingAgent) : (Party, Party, Party, Party)
+    signatory operator, issuer, payingAgent
+    observer bondRegistrar
+    
+    key (operator, issuer, payingAgent) : (Party, Party, Party)
     maintainer key._1
 
     controller payingAgent can
@@ -34,7 +35,7 @@ template Service
           (_, today) <- fetchByKey @Today (operator, payingAgent)
           (_, description) <- fetchByKey @AssetDescription.T assetId
           let obs label date = do
-              (_, observation) <- fetchByKey @Observation (operator, bondRegistrar, label, date)
+              (_, observation) <- fetchByKey @Observation (operator, payingAgent, label, date)
               pure observation.value
           remaining <-
             case election of
@@ -66,7 +67,7 @@ template Offer
   where
     signatory operator, issuer
 
-    controller bondRegistrar, payingAgent can
+    controller payingAgent can
       Accept : ContractId Service
         do
           createOrLookup Service with ..
@@ -83,7 +84,7 @@ template Request
     cashProvider : Party
     payingAgent : Party
   where
-    signatory bondRegistrar, payingAgent
+    signatory payingAgent
 
     controller operator, issuer can
       Approve : ContractId Service
@@ -104,7 +105,7 @@ template AssetDescriptionUpdateRequest
     newVersion : Int
     claims : Claims
   where 
-    signatory payingAgent, bondRegistrar, issuer
+    signatory issuer, payingAgent
     
     controller bondRegistrar can 
       ApproveUpdate : ContractId AssetDescription.AssetDescription

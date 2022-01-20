@@ -95,7 +95,7 @@ createBiddingService operator provider customer = do
 createLifecycleService : Party -> Party -> Party -> Party -> Party -> Script (ContractId Lifecycle.Service)
 createLifecycleService operator issuer bondRegistrar cashProvider payingAgent = do
   offerCid <- submit issuer do exerciseByKeyCmd @Issuer.Role (operator, issuer) Issuer.OfferLifecycleService with ..
-  submitMulti [bondRegistrar, payingAgent] [] do exerciseCmd offerCid Lifecycle.Accept
+  submit payingAgent do exerciseCmd offerCid Lifecycle.Accept
 
 createTradingService : Party -> Party -> Script (ContractId Trading.Service)
 createTradingService operator customer  = do

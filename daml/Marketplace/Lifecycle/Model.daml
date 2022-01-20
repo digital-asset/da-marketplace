@@ -32,20 +32,12 @@ template Observation
     label : Text
     date : Date
     value : Decimal
-    observers : [Party]
   where
     signatory operator, provider
-    observer observers
 
     key (operator, provider, label, date) : (Party, Party, Text, Date)
     maintainer key._1
     
-    controller operator can 
-      AddObservers : ContractId Observation
-        with newObservers : [Party]
-        do 
-          create this with observers = newObservers <> observers
-
 template SnapshotRequest
   with
     operator : Party
@@ -96,7 +88,7 @@ template Snapshot
     observer payingAgent
 
     choice Delete : ()
-      controller bondRegistrar
+      controller operator
       do pure ()
 
 template Effect
@@ -113,10 +105,11 @@ template Effect
     payouts : [(Decimal, Id)]
     expired : Bool
   where
-    signatory operator, issuer, bondRegistrar, payingAgent
+    signatory operator, issuer, payingAgent
+    observer bondRegistrar
 
     nonconsuming choice RequestSnapshot : ContractId SnapshotRequest
-      controller payingAgent
+      controller bondRegistrar
       do
         create SnapshotRequest with custodian = bondRegistrar; ..
 
