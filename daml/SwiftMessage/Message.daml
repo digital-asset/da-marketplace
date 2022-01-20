@@ -32,11 +32,13 @@ template SwiftOutboundMessage
     maintainer key._1
 
     controller consumer can
-      Response : ContractId SwiftOutboundMessageResponse
-        with
-          response : ConsumerResponse
-          timeStamp : Time
-        do create SwiftOutboundMessageResponse with ..
+      RespondSuccess : ContractId SwiftOutboundMessage
+        do create this with status = Processed
+
+    controller consumer can 
+      RespondFailed : ContractId SwiftOutboundMessage
+        with failedMessage : String
+          do create this with status = Failed failedMessage
     
     controller observers can
       Finalize : ContractId SwiftOutboundMessage
@@ -50,14 +52,4 @@ template SwiftOutboundMessage
       AddObservers : ContractId SwiftOutboundMessage
         with 
           newObserver : Set Party 
-            do create this with observers = newObserver <> observers  
-template SwiftOutboundMessageResponse
-    with 
-      referenceId : Text
-      provider : Party 
-      consumer : Party
-      swiftMessage : SwiftMessage
-      response : ConsumerResponse
-      timeStamp : Time
-    where
-      signatory provider, consumer
+            do create this with observers = newObserver <> observers 
