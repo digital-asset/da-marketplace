@@ -35,7 +35,6 @@ template SwiftOutboundMessage
       RespondSuccess : ContractId SwiftOutboundMessage
         do create this with status = Processed
 
-    controller consumer can 
       RespondFailed : ContractId SwiftOutboundMessage
         with failedMessage : String
           do create this with status = Failed failedMessage
