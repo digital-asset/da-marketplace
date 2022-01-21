@@ -1,7 +1,7 @@
 module Marketplace.Distribution.Syndication.Investor where
 
 import DA.Finance.Types (Account)
-import Marketplace.Settlement.Hierarchical qualified as Settlement
+import Marketplace.Custody.Model qualified as Custody
 
 template Role
   with
@@ -15,15 +15,14 @@ template Role
 
     controller investor can
 
-      nonconsuming UpdateAccountInfo : ContractId Settlement.AccountInfo
+      nonconsuming SelectSettlementAccounts : ContractId Custody.SettlementInfo
         with
-          ownAccount : Optional Account
-          cashAccount : Optional Account
-          securitiesAccount : Optional Account
+          cashAccountCid : ContractId Custody.AccountInfo
+          securitiesAccountCid : ContractId Custody.AccountInfo
+          settlementInfoCid : ContractId Custody.SettlementInfo
         do
-          (infoCid, _) <- fetchByKey @Settlement.AccountInfo (operator, investor)
-          archive infoCid
-          create Settlement.AccountInfo with party = investor; ..
+          siCid <- exercise settlementInfoCid Custody.SelectCashAccount with newCashAccountCid = cashAccountCid
+          exercise siCid Custody.SelectSecuritiesAccount with newSecuritiesAccountCid = securitiesAccountCid
 
     controller operator can
       TerminateRole: ()
@@ -38,12 +37,9 @@ template Offer
     signatory operator
 
     controller investor can
-      Accept : (ContractId Role, ContractId Settlement.AccountInfo)
-        with
-          cashAccount : Optional Account
-          securitiesAccount : Optional Account
+      Accept : (ContractId Role, ContractId Custody.SettlementInfo)
         do
-          infoCid <- create Settlement.AccountInfo with party = investor; ownAccount = None; ..
+          infoCid <- create Custody.SettlementInfo with operator; party = investor; ownAccount = None; cashAccount = None; securitiesAccount = None
           roleCid <- create Role with ..
           pure (roleCid, infoCid)
 
@@ -61,9 +57,9 @@ template Request
     signatory investor
 
     controller operator can
-      Approve : (ContractId Role, ContractId Settlement.AccountInfo)
+      Approve : (ContractId Role, ContractId Custody.SettlementInfo)
         do
-          infoCid <- create Settlement.AccountInfo with party = investor; ownAccount = None; ..
+          infoCid <- create Custody.SettlementInfo with operator; party = investor; ownAccount = None; cashAccount = None; securitiesAccount = None
           roleCid <- create Role with ..
           pure (roleCid, infoCid)
 

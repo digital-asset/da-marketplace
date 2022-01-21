@@ -19,3 +19,6 @@ createAccount provider customer =
     id = Id with signatories = fromList [provider, customer]; label = partyToText customer <> "@" <> partyToText provider; version = 0
     owner = customer
   in Account with id; owner; provider
+
+createLabel : Party -> Party -> Text
+createLabel provider customer = partyToText customer <> "@" <> partyToText provider

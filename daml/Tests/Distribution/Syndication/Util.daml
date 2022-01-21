@@ -7,7 +7,7 @@ import DA.Finance.Asset (AssetDeposit(..), AssetDeposit_Split(..), AssetDeposit_
 import DA.Finance.Base.DayCount (DayCountConvention)
 import DA.Finance.Base.HolidayCalendar (BusinessDayConventionEnum)
 import DA.Finance.Base.RollConvention (PeriodEnum, RollConventionEnum)
-import DA.Finance.Types (Account, Asset(..), Id(..))
+import DA.Finance.Types (Asset(..), Id(..))
 import DA.Foldable (forA_)
 import DA.List (head, dedup)
 import DA.Optional (isNone, isSome, mapOptional)
@@ -32,20 +32,18 @@ import Marketplace.Distribution.Syndication.Investor qualified as Investor
 import Marketplace.Distribution.Syndication.Structuring.Model qualified as Structuring
 import Marketplace.Distribution.Syndication.Structuring.Service qualified as Structuring
 import Marketplace.Lifecycle.Service qualified as Lifecycle
-import Marketplace.Settlement.Hierarchical (AccountInfo, SettlementInstruction, Allocate(..), Sign(..), Settle(..), Trade, Delivery, SettleDelivery(..))
+import Marketplace.Settlement.Hierarchical (SettlementInstruction, Allocate(..), Sign(..), Settle(..), Trade, Delivery, SettleDelivery(..))
 import Marketplace.Trading.Otc.Service qualified as Trading
 
-createCustodianRole : Party -> Party -> Optional Account -> Optional Account -> Script (ContractId Custodian.Role, ContractId AccountInfo)
-createCustodianRole operator provider cashAccount securitiesAccount = do
+createCustodianRole : Party -> Party -> Script (ContractId Custodian.Role, ContractId Custody.SettlementInfo)
+createCustodianRole operator provider = do
   offerCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferCustodianRole with provider
-  submit provider do exerciseCmd offerCid Custodian.Accept with ..
+  submit provider do exerciseCmd offerCid Custodian.Accept
 
-createCustodyService : Party -> Party -> Party -> Script (ContractId Custody.Service, Account)
+createCustodyService : Party -> Party -> Party -> Script (ContractId Custody.Service)
 createCustodyService operator provider customer = do
   offerCid <- submit provider do exerciseByKeyCmd @Custodian.Role (operator, provider) Custodian.OfferCustodyService with ..
-  serviceCid <- submit customer do exerciseCmd offerCid Custody.Accept
-  Some service <- queryContractId customer serviceCid
-  pure (serviceCid, service.account)
+  submit customer do exerciseCmd offerCid Custody.Accept
 
 createIssuanceService : Party -> Party -> Party -> Script (ContractId Issuance.Service)
 createIssuanceService operator provider customer = do
@@ -67,15 +65,15 @@ createDistributorRole operator provider = do
   offerCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferSyndicationDistributorRole with provider
   submit provider do exerciseCmd offerCid Distributor.Accept
 
-createInvestorRole : Party -> Party -> Account -> Account -> Script (ContractId Investor.Role, ContractId AccountInfo)
-createInvestorRole operator investor cashAccount securitiesAccount = do
+createInvestorRole : Party -> Party -> Script (ContractId Investor.Role, ContractId Custody.SettlementInfo)
+createInvestorRole operator investor = do
   offerCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferInvestorRole with investor
-  submit investor do exerciseCmd offerCid Investor.Accept with cashAccount = Some cashAccount; securitiesAccount = Some securitiesAccount
+  submit investor do exerciseCmd offerCid Investor.Accept
 
-createIssuerRole : Party -> Party -> Account -> Account -> Script (ContractId Issuer.Role, ContractId AccountInfo)
-createIssuerRole operator issuer cashAccount securitiesAccount = do
+createIssuerRole : Party -> Party -> Script (ContractId Issuer.Role, ContractId Custody.SettlementInfo)
+createIssuerRole operator issuer = do
   offerCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferIssuerRole with issuer
-  submit issuer do exerciseCmd offerCid Issuer.Accept with cashAccount = Some cashAccount; securitiesAccount = Some securitiesAccount
+  submit issuer do exerciseCmd offerCid Issuer.Accept
 
 createStructuringService : Party -> Party -> Party -> Script (ContractId Structuring.Service)
 createStructuringService operator provider customer = do
@@ -101,6 +99,19 @@ createTradingService : Party -> Party -> Script (ContractId Trading.Service)
 createTradingService operator customer  = do
   offerCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferTradingService with ..
   submit customer do exerciseCmd offerCid Trading.Accept
+
+openAccount : Party -> Party -> Party -> Text -> Script (ContractId Custody.AccountInfo)
+openAccount operator provider customer label = do
+  requestCid <- submit customer do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.RequestOpenAccount with label
+  submit provider do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.OpenAccount with ..
+
+selectCashAccount : Party -> Party -> ContractId Custody.AccountInfo -> Script (ContractId Custody.SettlementInfo)
+selectCashAccount operator party newCashAccountCid = do
+  submit party do exerciseByKeyCmd @Custody.SettlementInfo (operator, party) Custody.SelectCashAccount with newCashAccountCid
+
+selectSecuritiesAccount : Party -> Party -> ContractId Custody.AccountInfo -> Script (ContractId Custody.SettlementInfo)
+selectSecuritiesAccount operator party newSecuritiesAccountCid = do
+  submit party do exerciseByKeyCmd @Custody.SettlementInfo (operator, party) Custody.SelectSecuritiesAccount with newSecuritiesAccountCid
 
 originate : Party -> Party -> Party -> Party -> Text -> Claim Observation Date Decimal Id -> Script (ContractId AssetDescription, AssetDescription)
 originate operator provider customer public assetLabel claims = do
@@ -151,14 +162,15 @@ originateSwap operator provider customer observers swap = do
 
 issue : Party -> Party -> Party -> Text -> ContractId Structuring.Tranche -> Script (ContractId AssetDeposit)
 issue operator provider customer issuanceId trancheCid = do
-  (_, Custody.Service{account}) <- head <$> queryFilter @Custody.Service customer (\s -> s.provider == provider)
+  (_, Custody.AccountInfo{account}) <- head <$> queryFilter @Custody.AccountInfo customer (\info -> info.provider == provider && info.customer == customer)
   createIssuanceRequestCid <- submit customer do exerciseByKeyCmd @Issuance.Service (operator, provider, customer) Issuance.RequestCreateIssuance with ..
   snd <$> submit provider do exerciseByKeyCmd @Issuance.Service (operator, provider, customer) Issuance.CreateIssuance with createIssuanceRequestCid
 
 deposit : Party -> Party -> Party -> Decimal -> Id -> Script (ContractId AssetDeposit)
 deposit operator provider customer quantity assetId = do
   let asset = Asset with id = assetId; quantity
-  depositRequestCid <- submitMulti [customer] [] do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.RequestDeposit with asset, depositChannel = Custody.ONLEDGER
+  (_, Custody.AccountInfo{account}) <- head <$> queryFilter @Custody.AccountInfo customer (\info -> info.provider == provider && info.customer == customer)
+  depositRequestCid <- submitMulti [customer] [] do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.RequestDeposit with asset; account; depositChannel = Custody.ONLEDGER
   submit provider do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.Deposit with depositRequestCid
 
 createDeal : Party -> Party -> Party -> Text -> Script (ContractId Structuring.Deal)

@@ -26,8 +26,8 @@ testClearingTransfers = do
     cashAsset = usd with quantity = 20000.0
     observers = Set.fromList [ clearinghouse ]
 
-  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id observers
-  bobDepositCid   <- depositAsset providers bob cashAsset bob.mainAccount.id observers
+  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount observers
+  bobDepositCid   <- depositAsset providers bob cashAsset bob.mainAccount observers
 
   marginDepositWithRemaining <- submit clearinghouse $
     exerciseCmd alice.clearingServiceCid Clearing.TransferToMargin
@@ -64,7 +64,7 @@ testMarginCalls = do
   let cashAsset = usd with quantity = 20000.0
       observers = Set.fromList [ clearinghouse ]
 
-  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id observers
+  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount observers
   calculationCid <- submit clearinghouse $
     exerciseCmd alice.clearingServiceCid Clearing.CreateMarginCalculation with
       currency = usd.id; targetAmount = 4000.0; calculationId = "123456"; ..
@@ -114,8 +114,8 @@ testMarkToMarket = do
   let cashAsset = usd with quantity = 20000.0
       observers = Set.fromList [ clearinghouse ]
 
-  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id observers
-  bobDepositCid   <- depositAsset providers bob cashAsset bob.mainAccount.id observers
+  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount observers
+  bobDepositCid   <- depositAsset providers bob cashAsset bob.mainAccount observers
 
   calculationCid <- submit clearinghouse $
     exerciseCmd alice.clearingServiceCid Clearing.CreateMarkToMarket with

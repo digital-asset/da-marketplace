@@ -31,8 +31,8 @@ fullExecutionTest = do
     cashAsset = usd with quantity = 20000.0
     priceAsset = usd with quantity = 100.0
 
-  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id empty
-  bobDepositCid <- depositAsset providers bob shareAsset bob.mainAccount.id empty
+  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount empty
+  bobDepositCid <- depositAsset providers bob shareAsset bob.mainAccount empty
 
   -- List a Security to trade
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
@@ -124,8 +124,8 @@ partialExecutionsTest = do
     cashAsset = usd with quantity = 20000.0
     priceAsset = usd with quantity = 100.0
 
-  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id empty
-  bobDepositCid <- depositAsset providers bob shareAsset bob.mainAccount.id empty
+  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount empty
+  bobDepositCid <- depositAsset providers bob shareAsset bob.mainAccount empty
 
   -- List a Security to trade
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
@@ -261,8 +261,8 @@ overCollateralizedTest = do
     cashAsset = usd with quantity = 1000000.0
     priceAsset = usd with quantity = 100.0
 
-  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id empty
-  bobDepositCid <- depositAsset providers bob shareAsset bob.mainAccount.id empty
+  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount empty
+  bobDepositCid <- depositAsset providers bob shareAsset bob.mainAccount empty
 
   -- List a Security to trade
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer

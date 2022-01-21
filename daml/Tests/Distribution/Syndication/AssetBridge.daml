@@ -1,12 +1,13 @@
 module Tests.Distribution.Syndication.AssetBridge where
 
-import Tests.Distribution.Syndication.Setup (setup, Parties(..))
+import ContingentClaims.Claim (Claim(Zero))
+import Daml.Script
 import DA.Finance.Types (Asset(..))
+import DA.Optional (fromSome)
 import Marketplace.Custody.Model
 import Marketplace.Custody.Service qualified as Custody
-import Daml.Script
+import Tests.Distribution.Syndication.Setup (setup, Parties(..))
 import Tests.Distribution.Syndication.Util
-import ContingentClaims.Claim (Claim(Zero))
 
 test : Script ()
 test = do
@@ -18,14 +19,20 @@ test = do
 assetBridgeDeposit : Parties  -> Script ()
 assetBridgeDeposit Parties{..} = do
   (_, usd)  <- originate operator cashProvider cashProvider public "USD" Zero
-  let asset = Asset with id =usd.assetId; quantity = 14_000_000.0
-  --deposit
-  depositRequestCid <- submitMulti [lm1] [] do exerciseByKeyCmd @Custody.Service (operator, cashProvider, lm1) Custody.RequestDeposit with asset, depositChannel = ETH with coin = "USDP", address = "0x515e34F4760c7fdcd61d9cAa278f80C15AC7ECdB"
+  let asset = Asset with id = usd.assetId; quantity = 14_000_000.0
+
+  -- Open Account
+  requestCid <- submitMulti [lm1] [] do exerciseByKeyCmd @Custody.Service (operator, cashProvider, lm1) Custody.RequestOpenAccount with label = partyToText lm1 <> "@" <> partyToText cashProvider
+  accountInfoCid <- submitMulti [cashProvider] [] do exerciseByKeyCmd @Custody.Service (operator, cashProvider, lm1) Custody.OpenAccount with requestCid
+  account <- (.account) . fromSome <$> queryContractId lm1 accountInfoCid
+
+  -- Deposit
+  depositRequestCid <- submitMulti [lm1] [] do exerciseByKeyCmd @Custody.Service (operator, cashProvider, lm1) Custody.RequestDeposit with asset; account; depositChannel = ETH with coin = "USDP", address = "0x515e34F4760c7fdcd61d9cAa278f80C15AC7ECdB"
   submitMustFail cashProvider do exerciseByKeyCmd @Custody.Service (operator, cashProvider, lm1) Custody.Deposit with depositRequestCid
   depositRequestAcknowledgedCid <- submit cashProvider do exerciseCmd depositRequestCid AckExternalDepositRequest with referenceId = "00112233"
   (assetDepositCid , confirmedCid ) <- submit cashProvider do exerciseByKeyCmd @Custody.Service (operator, cashProvider, lm1) Custody.ExternalDeposit with depositRequestAcknowledgedCid
 
-  --withdraw
+  -- Withdraw
   withdrawalRequestCid <- submitMulti [lm1] [] do exerciseByKeyCmd @Custody.Service (operator, cashProvider, lm1) Custody.RequestWithdrawal with depositCid = assetDepositCid, withdrawalChannel = ETH with coin = "USDP", address = "0x515e34F4760c7fdcd61d9cAa278f80C15AC7ECdB"
   submitMustFail cashProvider do exerciseByKeyCmd @Custody.Service (operator, cashProvider, lm1) Custody.Withdrawal with withdrawalRequestCid
   withdrawalRequestAcknowledgedCid <- submit cashProvider do exerciseCmd withdrawalRequestCid AckExternalWithdrawRequest with referenceId = "00112233"
