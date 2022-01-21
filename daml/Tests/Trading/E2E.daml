@@ -1,7 +1,7 @@
 module Tests.Trading.E2E where
 
 import Daml.Script
-import Common
+import Tests.Common
 import DA.Assert ((===))
 import DA.List
 import DA.Foldable

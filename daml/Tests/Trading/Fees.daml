@@ -1,6 +1,6 @@
 module Tests.Trading.Fees where
 
-import Common
+import Tests.Common
 import Tests.Utils
 import Daml.Script
 import DA.Set qualified as Set

@@ -31,8 +31,8 @@ issuance Parties{..} Origination{..} = do
   deposit operator lm3           investor3  60_000_000.0 (usd.assetId with signatories = singleton lm3)
   deposit operator lm3           investor4  80_000_000.0 (usd.assetId with signatories = singleton lm3)
 
-  issue operator bondRegistrar issuer "BOND1-Issuance" 100_000_000.0 bond1.id
-  issue operator bondRegistrar issuer "BOND2-Issuance" 100_000_000.0 bond2.id
+  issue operator bondRegistrar issuer "BOND1-Issuance" tranche1Cid
+  issue operator bondRegistrar issuer "BOND2-Issuance" tranche2Cid
 
   bookBuildingRequest11Cid <- requestBookBuilding operator lm1 issuer tranche1Cid
   bookBuildingRequest12Cid <- requestBookBuilding operator lm1 issuer tranche2Cid

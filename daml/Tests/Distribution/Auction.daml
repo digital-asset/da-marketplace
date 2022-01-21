@@ -9,7 +9,7 @@ import DA.Finance.Types
 import DA.Optional
 import DA.Set (empty)
 import Daml.Script
-import Common
+import Tests.Common
 import Marketplace.Distribution.Auction.Distributor qualified as Distributor
 import Marketplace.Distribution.Auction.Model qualified as Auction
 import Marketplace.Distribution.Auction.Service qualified as Auction

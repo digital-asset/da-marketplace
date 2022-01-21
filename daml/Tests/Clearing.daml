@@ -5,7 +5,7 @@ import Marketplace.Clearing.Model
 import Marketplace.Clearing.Service (DepositWithRemaining(..),CalculationResult(..))
 import Marketplace.Clearing.Service qualified as Clearing
 
-import Common
+import Tests.Common
 import Tests.Utils
 import DA.Action (void)
 import DA.Set qualified as Set

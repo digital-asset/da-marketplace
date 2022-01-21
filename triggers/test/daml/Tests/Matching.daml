@@ -1,7 +1,7 @@
 module Tests.Matching where
 
 import Daml.Script
-import Common
+import Tests.Common
 import DA.Assert ((===))
 import DA.List
 import DA.Set (empty)

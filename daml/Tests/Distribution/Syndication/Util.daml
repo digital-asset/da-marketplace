@@ -149,8 +149,8 @@ originateSwap operator provider customer observers swap = do
   desc <- snd <$> submit provider do exerciseByKeyCmd @Issuance.Service (operator, provider, customer) Issuance.Originate with createOriginationCid = requestCid
   pure (desc, swapCid)
 
-issue : Party -> Party -> Party -> Text -> Decimal -> Id -> Script (ContractId AssetDeposit)
-issue operator provider customer issuanceId quantity assetId = do
+issue : Party -> Party -> Party -> Text -> ContractId Structuring.Tranche -> Script (ContractId AssetDeposit)
+issue operator provider customer issuanceId trancheCid = do
   (_, Custody.Service{account}) <- head <$> queryFilter @Custody.Service customer (\s -> s.provider == provider)
   createIssuanceRequestCid <- submit customer do exerciseByKeyCmd @Issuance.Service (operator, provider, customer) Issuance.RequestCreateIssuance with ..
   snd <$> submit provider do exerciseByKeyCmd @Issuance.Service (operator, provider, customer) Issuance.CreateIssuance with createIssuanceRequestCid
