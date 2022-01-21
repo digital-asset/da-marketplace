@@ -1,6 +1,6 @@
 module SwiftMessage.Util where
 
-data MessageStatus = Pending | Finalized
+data MessageStatus = Pending | Finalized | Processed | Failed String
   deriving (Eq, Show)
 
 data MessageType = 
@@ -10,9 +10,4 @@ data MessageType =
   | REPE
   | REPL
   | RMDR
-  deriving (Eq, Show)
-
-data ConsumerResponse = 
-  COMPLETED
-  | FAILED with errorMessage: Text
   deriving (Eq, Show)

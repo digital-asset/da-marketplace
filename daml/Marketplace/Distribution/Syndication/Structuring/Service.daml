@@ -31,6 +31,7 @@ template Service
           bndBank : Party
           cashProvider : Party
           bondRegistrar : Party
+          payingAgent : Party
           dealId : Text
           trancheId : Text
           deliveryId : Id

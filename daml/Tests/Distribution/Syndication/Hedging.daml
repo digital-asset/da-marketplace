@@ -25,11 +25,11 @@ test = do
   deposit operator bondRegistrar custodian1 100_000_000.0 swap1.id
   deposit operator custodian1    investor1  100_000_000.0 (swap1.id with signatories = singleton custodian1)
 
-  submitMulti [operator, bondRegistrar] [] do createCmd Lifecycle.Today with operator; provider = bondRegistrar; date = date 2021 Jan 15
-  submitMulti [operator, bondRegistrar] [] do createCmd Lifecycle.Observation with operator; provider = bondRegistrar; label = libor6m.label; date = date 2022 Jun 21; value = 0.003
-  submitMulti [operator, bondRegistrar] [] do createCmd Lifecycle.Observation with operator; provider = bondRegistrar; label = libor6m.label; date = date 2022 Dec 20; value = 0.002
-  submitMulti [operator, bondRegistrar] [] do createCmd Lifecycle.Observation with operator; provider = bondRegistrar; label = libor6m.label; date = date 2023 Jun 20; value = 0.004
-  submitMulti [operator, bondRegistrar] [] do createCmd Lifecycle.Observation with operator; provider = bondRegistrar; label = libor6m.label; date = date 2023 Dec 20; value = 0.001
+  submitMulti [operator, payingAgent] [] do createCmd Lifecycle.Today with operator; provider = payingAgent; date = date 2021 Jan 15
+  submitMulti [operator, payingAgent] [] do createCmd Lifecycle.Observation with operator; provider = payingAgent; label = libor6m.label; date = date 2022 Jun 21; value = 0.003
+  submitMulti [operator, payingAgent] [] do createCmd Lifecycle.Observation with operator; provider = payingAgent; label = libor6m.label; date = date 2022 Dec 20; value = 0.002
+  submitMulti [operator, payingAgent] [] do createCmd Lifecycle.Observation with operator; provider = payingAgent; label = libor6m.label; date = date 2023 Jun 20; value = 0.004
+  submitMulti [operator, payingAgent] [] do createCmd Lifecycle.Observation with operator; provider = payingAgent; label = libor6m.label; date = date 2023 Dec 20; value = 0.001
 
   let dates = [ date 2022 Jun 21, date 2022 Dec 20, date 2023 Jun 20, date 2023 Dec 20 ]
 

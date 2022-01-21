@@ -22,23 +22,25 @@ template Service
       nonconsuming RequestBond : (ContractId Issuance.OriginationRequest, ContractId Bond)
         with
           bond : Bond
+          observers : [Party]
         do
           let cfi = CFI with code = "DBXXXX"
           claims <- getClaims operator provider bond.stream bond.currencyId bond.maturityDate True
           bondCid <- create bond
-          assetCid <- exerciseByKey @Issuance.Service (operator, provider, customer) Issuance.RequestOrigination with assetLabel = bond.id.label; cfi; description = bond.id.label; claims; observers = []
+          assetCid <- exerciseByKey @Issuance.Service (operator, provider, customer) Issuance.RequestOrigination with assetLabel = bond.id.label; cfi; description = bond.id.label; claims; observers = observers
           pure (assetCid, bondCid)
 
       nonconsuming RequestSwap : (ContractId Issuance.OriginationRequest, ContractId Swap)
         with
           swap : Swap
+          observers : [Party]
         do
           let cfi = CFI with code = "SRXXXX"
           pay <- getClaims operator provider (Some swap.pay) swap.payCurrencyId swap.maturityDate False
           receive <- getClaims operator provider (Some swap.receive) swap.receiveCurrencyId swap.maturityDate False
           let claims = And [ Give pay, receive ]
           swapCid <- create swap
-          assetCid <- exerciseByKey @Issuance.Service (operator, provider, customer) Issuance.RequestOrigination with assetLabel = swap.id.label; cfi; description = swap.id.label; claims; observers = []
+          assetCid <- exerciseByKey @Issuance.Service (operator, provider, customer) Issuance.RequestOrigination with assetLabel = swap.id.label; cfi; description = swap.id.label; claims; observers = observers
           pure (assetCid, swapCid)
 
 template Offer

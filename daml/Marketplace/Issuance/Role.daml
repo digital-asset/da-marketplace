@@ -30,6 +30,7 @@ template Role
         with
           bondRegistrar : Party
           cashProvider : Party
+          payingAgent : Party
         do
           create Lifecycle.Offer with ..
 
