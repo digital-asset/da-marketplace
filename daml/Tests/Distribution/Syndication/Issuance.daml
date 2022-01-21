@@ -78,15 +78,15 @@ issuance Parties{..} Origination{..} = do
     dateOfTrade = dateOfSettlement
 
   -- Step 1
-  dvpCid11 <- submit operator do exerciseCmd tranche1Cid Structuring.InstructIssuerSettlement with confirmationCids; price; dateOfSettlement; dateOfTrade
-  dvpCid12 <- submit operator do exerciseCmd tranche2Cid Structuring.InstructIssuerSettlement with confirmationCids; price; dateOfSettlement; dateOfTrade
+  dvpCid11 <- submit operator do exerciseCmd tranche1Cid Structuring.InstructIssuerSettlement with price; dateOfSettlement; dateOfTrade
+  dvpCid12 <- submit operator do exerciseCmd tranche2Cid Structuring.InstructIssuerSettlement with price; dateOfSettlement; dateOfTrade
   allocateInstructions [ issuer, custodian2, settlementBank ]
   signInstructions [ issuer, custodian2, settlementBank ]
   settleTrades bondRegistrar [ dvpCid11, dvpCid12 ]
 
   -- Step 2
-  dvpCid21 <- submit operator do exerciseCmd tranche1Cid Structuring.InstructBndSettlement with confirmationCids; price; dateOfSettlement; dateOfTrade
-  dvpCid22 <- submit operator do exerciseCmd tranche2Cid Structuring.InstructBndSettlement with confirmationCids; price; dateOfSettlement; dateOfTrade
+  dvpCid21 <- submit operator do exerciseCmd tranche1Cid Structuring.InstructBndSettlement with price; dateOfSettlement; dateOfTrade
+  dvpCid22 <- submit operator do exerciseCmd tranche2Cid Structuring.InstructBndSettlement with price; dateOfSettlement; dateOfTrade
   allocateInstructions [ settlementBank, custodian2, custodian3, bndBank ]
   signInstructions [ settlementBank, custodian2, custodian3, bndBank ]
   settleTrades bondRegistrar [ dvpCid21, dvpCid22 ]
