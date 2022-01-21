@@ -37,6 +37,8 @@ template Bid
           offeredPrice : Decimal
           offeredQuantity : Decimal
         do
+          assertMsg "Offered price is higher than price limit" $ offeredPrice <= price.quantity
+          assertMsg "Offered quantity is higher than quantity limit" $ offeredQuantity <= asset.quantity
           create Allocation with asset = (asset with quantity = offeredQuantity); price = (price with quantity = offeredPrice); ..
 
 template Allocation
