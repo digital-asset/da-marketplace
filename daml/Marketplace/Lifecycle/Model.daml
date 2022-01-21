@@ -142,7 +142,7 @@ template Effect
                   asset = snapshot.deposit.asset with id.signatories = fromList [bondRegistrar, issuer]; id.version = newVersion
                 instructionCids <- createInstructions False operator payingAgent bondRegistrar snapshot.deposit.account.owner bondRegistrar settlementId 0 asset
                 instructionIds <- map (.instructionId) <$> mapA fetch instructionCids
-                dCid <- create Delivery with operator; agent = payingAgent; sender = snapshot.deposit.account.owner; receiver = issuer; settlementId; instructionIds; asset; status = Instructed
+                dCid <- create Delivery with operator; agent = payingAgent; sender = snapshot.deposit.account.owner; receiver = bondRegistrar; settlementId; instructionIds; asset; status = Instructed
                 dCids <- mapA (createInstructionsForPayout snapshot) indexedPayouts
                 pure $ dCid :: dCids
               else
@@ -150,3 +150,55 @@ template Effect
             exercise snapshotCid Delete
             pure deliveryCids
         concat <$> mapA createInstructionsForSnapshot snapshotCids
+
+template EarlyRedemptionRequest
+  with
+    operator : Party
+    investor : Party
+    issuer : Party
+    bondRegistrar : Party
+    cashProvider : Party
+    payingAgent : Party
+    asset : Asset
+  where
+    signatory operator, investor
+    observer bondRegistrar, issuer
+
+    choice Approve : ContractId EarlyRedemption
+      with
+        price : Asset
+      controller issuer
+      do
+        create EarlyRedemption with ..
+
+template EarlyRedemption
+  with
+    operator : Party
+    investor : Party
+    issuer : Party
+    bondRegistrar : Party
+    cashProvider : Party
+    payingAgent : Party
+    asset : Asset
+    price : Asset
+  where
+    signatory operator, investor, issuer
+    observer bondRegistrar
+
+    choice InstructRedemption : (ContractId Delivery, ContractId Delivery)
+      controller operator
+      do
+        now <- getTime
+        let
+          settlementIdCash = "EarlyRedemption" <> "-" <> asset.id.label <> "-" <> partyToText investor <> "-" <> "Cash" <> show now
+          settlementIdBond = "EarlyRedemption" <> "-" <> asset.id.label <> "-" <> partyToText investor <> "-" <> "Bond" <> show now
+          payout = price with quantity = price.quantity * asset.quantity
+        instructionCids <- createInstructions True operator payingAgent cashProvider issuer investor settlementIdCash 0 payout
+        instructionIds <- map (.instructionId) <$> mapA fetch instructionCids
+        cashDeliveryCid <- create Delivery with operator; agent = payingAgent; sender = issuer; receiver = investor; settlementId = settlementIdCash; instructionIds; asset = payout; status = Instructed
+        instructionCids <- createInstructions False operator payingAgent bondRegistrar investor bondRegistrar settlementIdBond (length instructionIds) asset
+        instructionIds <- map (.instructionId) <$> mapA fetch instructionCids
+        bondDeliveryCid <-create Delivery with operator; agent = payingAgent; sender = investor; receiver = issuer; settlementId = settlementIdBond; instructionIds; asset; status = Instructed
+        pure (cashDeliveryCid, bondDeliveryCid)
+
+
