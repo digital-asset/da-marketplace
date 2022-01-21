@@ -80,13 +80,13 @@ lifecycle Parties{..} date assetId = do
   let maxId = foldl (\id desc -> if desc.assetId.version > id.version then desc.assetId else id) h.assetId t
   submit payingAgent do exerciseByKeyCmd @Lifecycle.Today (operator, payingAgent) Lifecycle.SetDate with newDate = date
   effectCidOpt <- submit payingAgent do exerciseByKeyCmd @Lifecycle.Service (operator, issuer, payingAgent) Lifecycle.CalculateEffect with assetId = maxId; election = None
-  
+
   case effectCidOpt of
     Some (effectCid, requestCid) -> do
       submit bondRegistrar do exerciseCmd requestCid Lifecycle.ApproveUpdate -- update asset description after lifecylcing
       Some effect <- queryContractId payingAgent effectCid
       debug $ "[" <> show date <> "][" <> maxId.label <> "(v" <> show maxId.version <> ")] " <> "Event with " <> show (length effect.payouts) <> " payouts"
-      
+
       requestSnapshot payingAgent bondRegistrar maxId date
       forwardRequest bondRegistrar maxId date
       provideSnapshot custodian1 maxId date
@@ -95,10 +95,10 @@ lifecycle Parties{..} date assetId = do
       provideSnapshot custodian5 maxId date
       paymentCids <- instructLifecycle operator payingAgent maxId date
 
-      allocateInstructions [ issuer, lm1, lm2, lm3, custodian1, custodian2, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
-      signInstructions [ issuer, lm1, lm2, lm3, custodian1, custodian2, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
+      allocateInstructions [ issuer, bondRegistrar, lm1, lm2, lm3, custodian1, custodian2, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
+      signInstructions [ issuer, bondRegistrar, lm1, lm2, lm3, custodian1, custodian2, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
       settleDeliveries payingAgent paymentCids
-      consolidate [ issuer, lm1, lm2, lm3, custodian1, custodian2, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
+      consolidate [ issuer, bondRegistrar, lm1, lm2, lm3, custodian1, custodian2, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
 
     None -> do
       debug $ "[" <> show date <> "][" <> maxId.label <> "(v" <> show maxId.version <> ")] " <> "No event"

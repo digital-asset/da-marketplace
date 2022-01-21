@@ -29,7 +29,7 @@ template Service
           depositChannel: Custody.Channel
         do
           create Custody.DepositRequest with ..
-        
+
 
       nonconsuming RequestWithdrawal : ContractId Custody.WithdrawalRequest
         with
@@ -54,13 +54,13 @@ template Service
           Custody.DepositRequest{asset, depositChannel} <- fetchAndArchive depositRequestCid
           assertMsg "only handle onledger deposit request" (depositChannel == Custody.ONLEDGER)
           create AssetDeposit with asset; account; lockers = empty; observers = empty --fromList [ issuer ]
-      
+
       nonconsuming ExternalDeposit : (ContractId AssetDeposit, ContractId Custody.DepositConfirmed)
         with
           depositRequestAcknowledgedCid:  ContractId Custody.DepositRequestAcknowledged
-        do 
+        do
           Custody.DepositRequestAcknowledged{asset, depositChannel, referenceId} <- fetchAndArchive depositRequestAcknowledgedCid
-          assetDepsositCid <- create AssetDeposit with asset; account; lockers = empty; observers = empty 
+          assetDepsositCid <- create AssetDeposit with asset; account; lockers = empty; observers = empty
           confirmedCid <- create Custody.DepositConfirmed with ..
           return (assetDepsositCid, confirmedCid)
 
@@ -95,12 +95,12 @@ template Service
         do
           exercise lifecycleRequestCid Custody.Process with investor = customer; ..
 
-
     choice Terminate : ()
       with
         ctrl : Party
       controller ctrl
       do pure ()
+
 template Offer
   with
     operator : Party
@@ -145,9 +145,3 @@ template Request
       do
         let account = createAccount provider customer
         createOrLookup Service with ..
-
-createAccount : Party -> Party -> Account
-createAccount provider customer = do
-  let id = Id with signatories = fromList [customer, provider]; label = partyToText customer <> "@" <> partyToText provider; version = 0
-      owner = customer
-  Account with id; owner; provider
