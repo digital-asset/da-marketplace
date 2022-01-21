@@ -20,10 +20,20 @@ template Order
     signatory operator, provider, customer
     observer counterparty
 
-    nonconsuming choice Accept : ContractId Match
+    choice Accept : ContractId Match
       controller counterparty
       do
         create Match with ..
+
+    choice Reject : ()
+      controller counterparty
+      do
+        pure ()
+
+    choice Cancel : ()
+      controller customer
+      do
+        pure ()
 
 template Match
   with
