@@ -1,5 +1,7 @@
 module Marketplace.Issuance.Role where
 
+import DA.Finance.Types (Asset, Id)
+import Marketplace.Lifecycle.Redemption qualified as Lifecycle
 import Marketplace.Lifecycle.Service qualified as Lifecycle
 import Marketplace.Custody.Model qualified as Custody
 
@@ -28,6 +30,16 @@ template Role
           requestCid : ContractId Lifecycle.Request
         do
           exercise requestCid Lifecycle.Approve
+
+      nonconsuming RequestRedemption : ContractId Lifecycle.IssuerRedemptionRequest
+        with
+          bondRegistrar : Party
+          cashProvider : Party
+          payingAgent : Party
+          assetId : Id
+          price : Asset
+        do
+          create Lifecycle.IssuerRedemptionRequest with operator; issuer; bondRegistrar; cashProvider; payingAgent; assetId; price
 
     controller operator can
       TerminateRole: ()

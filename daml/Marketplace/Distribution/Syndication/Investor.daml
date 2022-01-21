@@ -2,7 +2,7 @@ module Marketplace.Distribution.Syndication.Investor where
 
 import DA.Finance.Types (Account, Asset)
 import Marketplace.Custody.Model qualified as Custody
-import Marketplace.Lifecycle.Model qualified as Lifecycle
+import Marketplace.Lifecycle.Redemption qualified as Lifecycle
 
 template Role
   with
@@ -25,7 +25,7 @@ template Role
           siCid <- exercise settlementInfoCid Custody.SelectCashAccount with newCashAccountCid = cashAccountCid
           exercise siCid Custody.SelectSecuritiesAccount with newSecuritiesAccountCid = securitiesAccountCid
 
-      nonconsuming RequestEarlyRedemption : ContractId Lifecycle.EarlyRedemptionRequest
+      nonconsuming RequestRedemption : ContractId Lifecycle.InvestorRedemptionRequest
         with
           issuer : Party
           bondRegistrar : Party
@@ -33,7 +33,7 @@ template Role
           payingAgent : Party
           asset : Asset
         do
-          create Lifecycle.EarlyRedemptionRequest with operator; investor; issuer; bondRegistrar; cashProvider; payingAgent; asset
+          create Lifecycle.InvestorRedemptionRequest with operator; investor; issuer; bondRegistrar; cashProvider; payingAgent; asset
 
     controller operator can
       TerminateRole: ()

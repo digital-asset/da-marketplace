@@ -22,7 +22,7 @@ requestSnapshot payingAgent bondRegistrar assetId date = do
 
 forwardRequest : Party -> Id -> Date -> Script [ContractId Lifecycle.SnapshotRequest]
 forwardRequest custodian assetId date = do
-  srs <- queryFilter @Lifecycle.SnapshotRequest custodian (\sr -> sr.custodian == custodian && sr.assetId == assetId && sr.date == date)
+  srs <- queryFilter @Lifecycle.SnapshotRequest custodian (\sr -> sr.custodian == custodian && sr.assetId == assetId)
   case srs of
     [(srCid, sr)] -> do
       depositCids <- map fst <$> queryFilter @AssetDeposit custodian (\ad -> ad.account.provider == custodian && ad.asset.id.label == assetId.label && ad.asset.id.version == assetId.version)
@@ -33,7 +33,7 @@ forwardRequest custodian assetId date = do
 
 provideSnapshot : Party -> Id -> Date -> Script [ContractId Lifecycle.Snapshot]
 provideSnapshot custodian assetId date = do
-  srs <- queryFilter @Lifecycle.SnapshotRequest custodian (\sr -> sr.custodian == custodian && sr.assetId == assetId && sr.date == date)
+  srs <- queryFilter @Lifecycle.SnapshotRequest custodian (\sr -> sr.custodian == custodian && sr.assetId == assetId)
   case srs of
     [(srCid, sr)] -> do
       depositCids <- map fst <$> queryFilter @AssetDeposit custodian (\ad -> ad.account.provider == custodian && ad.asset.id.label == assetId.label && ad.asset.id.version == assetId.version)
@@ -44,7 +44,7 @@ provideSnapshot custodian assetId date = do
 instructLifecycle : Party -> Party -> Id -> Date -> Script [ContractId Delivery]
 instructLifecycle operator payingAgent assetId date = do
   [(effectCid, effect)] <- queryFilter @Lifecycle.Effect payingAgent (\e -> e.payingAgent == payingAgent && e.assetId == assetId && e.date == date)
-  snapshotCids <- map fst <$> queryFilter @Lifecycle.Snapshot payingAgent (\s -> s.payingAgent == payingAgent && s.deposit.asset.id.label == assetId.label && s.deposit.asset.id.version == assetId.version && s.date == date)
+  snapshotCids <- map fst <$> queryFilter @Lifecycle.Snapshot payingAgent (\s -> s.payingAgent == payingAgent && s.deposit.asset.id.label == assetId.label && s.deposit.asset.id.version == assetId.version)
   submit operator do exerciseCmd effectCid Lifecycle.Instruct with snapshotCids
 
 test : Script ()

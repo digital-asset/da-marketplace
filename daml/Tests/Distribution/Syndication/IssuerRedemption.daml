@@ -1,0 +1,81 @@
+module Tests.Distribution.Syndication.IssuerRedemption where
+
+import Daml.Script
+import DA.Assert ((===))
+import DA.Finance.Asset (AssetDeposit)
+import DA.Finance.Types (Asset(..), Id)
+import Marketplace.Issuance.Role qualified as Issuer
+import Marketplace.Lifecycle.Redemption qualified as Lifecycle
+import Marketplace.Settlement.Hierarchical (Delivery)
+import Tests.Distribution.Syndication.Setup (setup, Parties(..))
+import Tests.Distribution.Syndication.Issuance (issuance)
+import Tests.Distribution.Syndication.Origination (origination, Origination(..))
+import Tests.Distribution.Syndication.Util
+
+requestSnapshot : Party -> Party -> Id -> Script (ContractId Lifecycle.SnapshotRequest)
+requestSnapshot payingAgent bondRegistrar assetId = do
+  [(requestCid, _)] <- queryFilter @Lifecycle.IssuerRedemptionRequest bondRegistrar (\e -> e.bondRegistrar == bondRegistrar && e.assetId == assetId)
+  submit bondRegistrar do exerciseCmd requestCid Lifecycle.RequestSnapshot
+
+forwardRequest : Party -> Id -> Script [ContractId Lifecycle.SnapshotRequest]
+forwardRequest custodian assetId = do
+  srs <- queryFilter @Lifecycle.SnapshotRequest custodian (\sr -> sr.custodian == custodian && sr.assetId == assetId)
+  case srs of
+    [(srCid, sr)] -> do
+      depositCids <- map fst <$> queryFilter @AssetDeposit custodian (\ad -> ad.account.provider == custodian && ad.asset.id.label == assetId.label && ad.asset.id.version == assetId.version)
+      -- debug $ "[" <> show date <> "] " <> partyToText custodian <> " forwarding snapshot request for " <> assetId.label <> "(v" <> show assetId.version <> ") to " <> show (length depositCids) <> " custodians"
+      submit custodian do exerciseCmd srCid Lifecycle.Forward with depositCids
+    [] -> pure []
+    _ -> fail "More than one snapshot request received"
+
+provideSnapshot : Party -> Id -> Script [ContractId Lifecycle.Snapshot]
+provideSnapshot custodian assetId = do
+  srs <- queryFilter @Lifecycle.SnapshotRequest custodian (\sr -> sr.custodian == custodian && sr.assetId == assetId)
+  case srs of
+    [(srCid, sr)] -> do
+      depositCids <- map fst <$> queryFilter @AssetDeposit custodian (\ad -> ad.account.provider == custodian && ad.asset.id.label == assetId.label && ad.asset.id.version == assetId.version)
+      submit custodian do exerciseCmd srCid Lifecycle.Provide with depositCids
+    [] -> pure []
+    _ -> fail "More than one snapshot request received"
+
+instructLifecycle : Party -> Party -> Id -> Script [ContractId Delivery]
+instructLifecycle operator payingAgent assetId = do
+  [(requestCid, _)] <- queryFilter @Lifecycle.IssuerRedemptionRequest operator (\e -> e.payingAgent == payingAgent && e.assetId == assetId)
+  snapshotCids <- map fst <$> queryFilter @Lifecycle.Snapshot operator (\s -> s.payingAgent == payingAgent && s.deposit.asset.id.label == assetId.label && s.deposit.asset.id.version == assetId.version)
+  submit operator do exerciseCmd requestCid Lifecycle.InstructIssuerRedemption with snapshotCids
+
+test : Script ()
+test = do
+  parties@Parties{..} <- setup
+  orig@Origination{..} <- origination parties
+  issuance parties orig
+
+  let
+    assetId = bond1Desc.assetId
+    redemptionPrice1 = Asset with id = usd.assetId; quantity = 1.1
+
+  submit issuer do exerciseByKeyCmd @Issuer.Role (operator, issuer) Issuer.RequestRedemption with assetId = bond1Desc.assetId; price = redemptionPrice1; ..
+  requestSnapshot payingAgent bondRegistrar assetId
+  forwardRequest bondRegistrar assetId
+  provideSnapshot custodian1 assetId
+  provideSnapshot custodian2 assetId
+  forwardRequest custodian4 assetId
+  provideSnapshot custodian5 assetId
+  paymentCids <- instructLifecycle operator payingAgent assetId
+
+  allocateInstructions [ issuer, bondRegistrar, lm1, lm2, lm3, custodian1, custodian2, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
+  signInstructions [ issuer, bondRegistrar, lm1, lm2, lm3, custodian1, custodian2, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
+  settleDeliveries payingAgent paymentCids
+  consolidate [ issuer, bondRegistrar, lm1, lm2, lm3, custodian1, custodian2, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
+
+  [(_, ad1)] <- queryFilter @AssetDeposit investor1 (\ad -> ad.asset.id.label == usd.assetId.label)
+  [(_, ad2)] <- queryFilter @AssetDeposit investor2 (\ad -> ad.asset.id.label == usd.assetId.label)
+  [(_, ad3)] <- queryFilter @AssetDeposit investor3 (\ad -> ad.asset.id.label == usd.assetId.label)
+  [(_, ad4)] <- queryFilter @AssetDeposit investor4 (\ad -> ad.asset.id.label == usd.assetId.label)
+  ad1.asset.quantity === 11_000_000.0
+  ad2.asset.quantity === 22_000_000.0
+  ad3.asset.quantity === 33_000_000.0
+  ad4.asset.quantity === 44_000_000.0
+
+  pure ()
+
