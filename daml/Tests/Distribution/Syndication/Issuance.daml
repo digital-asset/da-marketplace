@@ -43,14 +43,14 @@ issuance Parties{..} Origination{..} = do
   bookBuildingRequest41Cid <- requestBookBuilding operator cm1 lm3 tranche1Cid
   bookBuildingRequest42Cid <- requestBookBuilding operator cm1 lm3 tranche2Cid
 
-  bid11Cid <- bid operator lm1 investor1 bookBuildingRequest11Cid 10_000_000.0 1.001
-  bid12Cid <- bid operator lm1 investor1 bookBuildingRequest12Cid 10_000_000.0 1.002
-  bid21Cid <- bid operator lm2 investor2 bookBuildingRequest21Cid 20_000_000.0 0.997
-  bid22Cid <- bid operator lm2 investor2 bookBuildingRequest22Cid 20_000_000.0 0.998
-  bid31Cid <- bid operator cm1 investor3 bookBuildingRequest41Cid 30_000_000.0 0.995
-  bid32Cid <- bid operator cm1 investor3 bookBuildingRequest42Cid 30_000_000.0 0.996
-  bid41Cid <- bid operator cm1 investor4 bookBuildingRequest41Cid 40_000_000.0 0.993
-  bid42Cid <- bid operator cm1 investor4 bookBuildingRequest42Cid 40_000_000.0 0.994
+  bid11Cid <- bid operator lm1 investor1 bookBuildingRequest11Cid 10_000_000.0 1.009
+  bid12Cid <- bid operator lm1 investor1 bookBuildingRequest12Cid 10_000_000.0 1.008
+  bid21Cid <- bid operator lm2 investor2 bookBuildingRequest21Cid 20_000_000.0 1.007
+  bid22Cid <- bid operator lm2 investor2 bookBuildingRequest22Cid 20_000_000.0 1.008
+  bid31Cid <- bid operator cm1 investor3 bookBuildingRequest41Cid 30_000_000.0 1.005
+  bid32Cid <- bid operator cm1 investor3 bookBuildingRequest42Cid 30_000_000.0 1.006
+  bid41Cid <- bid operator cm1 investor4 bookBuildingRequest41Cid 40_000_000.0 1.003
+  bid42Cid <- bid operator cm1 investor4 bookBuildingRequest42Cid 40_000_000.0 1.004
 
   let offeredPrice = 1.0
   allocation11Cid <- allocate issuer bid11Cid 10_000_000.0 offeredPrice
@@ -84,8 +84,8 @@ issuance Parties{..} Origination{..} = do
   signInstructions [ issuer, custodian2, settlementBank ]
   settleTrades bondRegistrar [ dvpCid11, dvpCid12 ]
 
-  -- Step 2 
-  dvpCid21 <- submit operator do exerciseCmd tranche1Cid Structuring.InstructBndSettlement with confirmationCids; price; dateOfSettlement; dateOfTrade 
+  -- Step 2
+  dvpCid21 <- submit operator do exerciseCmd tranche1Cid Structuring.InstructBndSettlement with confirmationCids; price; dateOfSettlement; dateOfTrade
   dvpCid22 <- submit operator do exerciseCmd tranche2Cid Structuring.InstructBndSettlement with confirmationCids; price; dateOfSettlement; dateOfTrade
   allocateInstructions [ settlementBank, custodian2, custodian3, bndBank ]
   signInstructions [ settlementBank, custodian2, custodian3, bndBank ]
