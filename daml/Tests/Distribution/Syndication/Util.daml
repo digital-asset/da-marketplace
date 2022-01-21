@@ -187,22 +187,21 @@ requestBookBuilding : Party -> Party -> Party -> ContractId Structuring.Tranche 
 requestBookBuilding operator provider customer trancheCid = do
   submit customer do exerciseByKeyCmd @BookBuilding.Service (operator, provider, customer) BookBuilding.RequestBookBuilding with ..
 
-bid : Party -> Party -> Party -> ContractId BookBuilding.BuildRequest -> Decimal -> Decimal -> Script (ContractId Bidding.Bid)
-bid operator provider customer bookBuildingRequestCid quantity price = do
-  Some BookBuilding.BuildRequest{issuer, dealId, trancheId, deliveryId, paymentId, size} <- queryContractId provider bookBuildingRequestCid
-  bidRequestCid <- submit provider do exerciseByKeyCmd @Bidding.Service (operator, provider, customer) Bidding.RequestBid with ..
+bid : Party -> Party -> Party -> Text -> Text -> Decimal -> Decimal -> Script (ContractId Bidding.Bid)
+bid operator provider customer dealId trancheId quantity price = do
+  [(buildRequestCid, _)] <- queryFilter @BookBuilding.BuildRequest provider (\r -> r.dealId == dealId && r.trancheId == trancheId)
+  bidRequestCid <- submit provider do exerciseByKeyCmd @Bidding.Service (operator, provider, customer) Bidding.RequestBid with buildRequestCid
   submit customer do exerciseByKeyCmd @Bidding.Service (operator, provider, customer) Bidding.SubmitBid with ..
 
--- lifecycle : Party -> Party -> Party -> Id -> Script (Optional (ContractId Lifecycle.Effect))
--- lifecycle operator issuer provider assetId = do
---   submit provider do exerciseByKeyCmd @Lifecycle.Service (operator, issuer, provider) Lifecycle.CalculateEffect with assetId; election = None
+closeBook : Party -> Party -> Party -> Text -> Text -> [(Party, Decimal)] -> Decimal -> Script [ContractId Bidding.Allocation]
+closeBook operator provider customer dealId trancheId allocations offeredPrice = do
+  buildRequestCids <- map fst <$> queryFilter @BookBuilding.BuildRequest customer (\r -> r.dealId == dealId && r.trancheId == trancheId)
+  bidCids <- map fst <$> queryFilter @Bidding.Bid customer (\r -> r.dealId == dealId && r.trancheId == trancheId)
+  submit customer do exerciseByKeyCmd @Structuring.Service (operator, provider, customer) Structuring.CloseBook with ..
 
-allocate : Party -> ContractId Bidding.Bid -> Decimal -> Decimal -> Script (ContractId Bidding.Allocation)
-allocate bookRunner bidCid offeredQuantity offeredPrice = do
-  submit bookRunner do exerciseCmd bidCid Bidding.Allocate with ..
-
-confirm : Party -> ContractId Bidding.Allocation -> Script (ContractId Bidding.Confirmation)
-confirm investor allocationCid = do
+confirm : Party -> Text -> Text -> Script (ContractId Bidding.Confirmation)
+confirm investor dealId trancheId = do
+  [(allocationCid, _)] <- queryFilter @Bidding.Allocation investor (\a -> a.dealId == dealId && a.trancheId == trancheId)
   submit investor do exerciseCmd allocationCid Bidding.Confirm
 
 allocateSi : Party -> (ContractId SettlementInstruction, SettlementInstruction) -> Script ()

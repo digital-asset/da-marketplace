@@ -155,10 +155,10 @@ template Tranche
           dateOfTrade : Date
           dateOfSettlement : Date
         do
-          confirmations <- mapA fetch confirmationCids
+          confirmations <- zip confirmationCids <$> mapA fetch confirmationCids
           let
-            filtered = filter (\c -> c.asset.id == deliveryId) confirmations
-            settleConfirmation conf = do
+            filtered = filter (\(_, c) -> c.asset.id == deliveryId) confirmations
+            settleConfirmation (confCid, conf) = do
               let
                 aggregate = conf.asset.quantity
                 settledAmount = conf.price.quantity * conf.asset.quantity
@@ -169,5 +169,6 @@ template Tranche
               cashSis <- createInstructions True operator bondRegistrar cashProvider conf.investor bndBank settlementId (length bondSis) aggregatePrice
               instructionIds <- map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
               sendSwiftMessage settlementBank bndBank aggregate settledAmount paymentId settlementId dateOfTrade dateOfSettlement dateOfSettlement
+              exercise confCid Bidding.Delete
               create Trade with operator; agent = bondRegistrar; deliverer = bndBank; payer = conf.investor; settlementId; instructionIds; delivery = conf.asset; payment = aggregatePrice; status = Instructed
           mapA settleConfirmation filtered

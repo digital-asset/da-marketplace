@@ -41,6 +41,10 @@ template Bid
           assertMsg "Offered quantity is higher than quantity limit" $ offeredQuantity <= asset.quantity
           create Allocation with asset = (asset with quantity = offeredQuantity); price = (price with quantity = offeredPrice); ..
 
+      Reject : ()
+        do
+          pure ()
+
 template Allocation
   with
     operator : Party
@@ -48,6 +52,7 @@ template Allocation
     investor : Party
     issuer : Party
     dealId : Text
+    trancheId : Text
     asset : Asset
     price : Asset
   where
@@ -73,3 +78,8 @@ template Confirmation
     signatory operator, provider, investor
     observer issuer
     ensure asset.quantity > 0.0 && price.quantity > 0.0
+
+    choice Delete : ()
+      controller operator
+      do
+        pure ()

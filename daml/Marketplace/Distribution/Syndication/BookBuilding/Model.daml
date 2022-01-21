@@ -15,6 +15,12 @@ template BuildRequest
     size : Decimal
   where
     signatory operator, provider, customer
+    observer issuer
 
     key (operator, provider, customer, dealId, trancheId) : (Party, Party, Party, Text, Text)
     maintainer key._1
+
+    choice Delete : ()
+      controller issuer
+      do
+        pure ()
