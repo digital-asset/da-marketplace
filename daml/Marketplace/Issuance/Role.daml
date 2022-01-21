@@ -1,6 +1,7 @@
 module Marketplace.Issuance.Role where
 
 import DA.Finance.Types (Asset, Id)
+import Marketplace.Issuance.Instrument.Model qualified as Instrument
 import Marketplace.Lifecycle.Redemption qualified as Lifecycle
 import Marketplace.Lifecycle.Service qualified as Lifecycle
 import Marketplace.Custody.Model qualified as Custody
@@ -39,6 +40,8 @@ template Role
           assetId : Id
           price : Asset
         do
+          (_, bond) <- fetchByKey @Instrument.Bond (assetId.signatories, assetId.label)
+          assertMsg "Bond is not callable" bond.isCallable
           create Lifecycle.IssuerRedemptionRequest with operator; issuer; bondRegistrar; cashProvider; payingAgent; assetId; price
 
     controller operator can

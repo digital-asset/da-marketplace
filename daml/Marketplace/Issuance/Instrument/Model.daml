@@ -45,6 +45,7 @@ template Bond
     stream : Optional InterestStream
     isTradeable : Bool
     isPricedDirty : Bool
+    isCallable : Bool
     observers : [Party]
   where
     signatory id.signatories
