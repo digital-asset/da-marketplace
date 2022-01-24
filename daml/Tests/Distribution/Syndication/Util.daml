@@ -181,6 +181,13 @@ deposit operator provider customer quantity assetId = do
   depositRequestCid <- submitMulti [customer] [] do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.RequestDeposit with asset; account; depositChannel = Custody.ONLEDGER
   submit provider do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.Deposit with depositRequestCid
 
+depositToAccount : Party -> Party -> Party -> Text -> Decimal -> Id -> Script (ContractId AssetDeposit)
+depositToAccount operator provider customer accountLabel quantity assetId = do
+  let asset = Asset with id = assetId; quantity
+  (_, Custody.AccountInfo{account}) <- head <$> queryFilter @Custody.AccountInfo customer (\info -> info.provider == provider && info.customer == customer && info.account.id.label == accountLabel)
+  depositRequestCid <- submitMulti [customer] [] do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.RequestDeposit with asset; account; depositChannel = Custody.ONLEDGER
+  submit provider do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.Deposit with depositRequestCid
+
 createDeal : Party -> Party -> Party -> Text -> Script (ContractId Structuring.Deal)
 createDeal operator provider customer dealId = do
   createDealRequestCid <- submit customer do exerciseByKeyCmd @Structuring.Service (operator, provider, customer) Structuring.RequestCreateDeal with ..
