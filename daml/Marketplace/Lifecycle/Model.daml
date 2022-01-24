@@ -5,7 +5,8 @@ import DA.Finance.Types (Asset(..), Id)
 import DA.Foldable (forA_)
 import DA.List (dedup)
 import DA.Set (fromList)
-import Marketplace.Settlement.Hierarchical (createInstructions, Delivery(..), Status(..))
+import Marketplace.Custody.Model qualified as Custody
+import Marketplace.Settlement.Hierarchical (createInstructions, getAccount, Delivery(..), Status(..))
 
 template Today
   with
@@ -126,7 +127,12 @@ template Effect
               asset = Asset with id; quantity = (abs amount) * snapshot.deposit.asset.quantity
               sender = if amount > 0.0 then issuer else snapshot.deposit.account.owner
               receiver = if amount > 0.0 then snapshot.deposit.account.owner else issuer
-            instructionCids <- createInstructions True operator payingAgent cashProvider sender receiver settlementId instructionIdx asset
+            (_, senderSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, sender)
+            (_, receiverSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, receiver)
+            let
+              senderAccount = getAccount True senderSettlementInfo sender
+              receiverAccount = getAccount True receiverSettlementInfo receiver
+            instructionCids <- createInstructions True operator payingAgent cashProvider senderAccount receiverAccount settlementId instructionIdx asset
             instructionIds <- map (.instructionId) <$> mapA fetch instructionCids
             create Delivery with operator; agent = payingAgent; sender; receiver; settlementId; instructionIds; asset; status = Instructed
           createInstructionsForSnapshot : ContractId Snapshot -> Update [ContractId Delivery]
@@ -138,9 +144,16 @@ template Effect
                 let
                   settlementId = lifecycleId <> "-" <> partyToText snapshot.deposit.account.owner <> "-Expiry"
                   asset = snapshot.deposit.asset with id.signatories = fromList [bondRegistrar, issuer]; id.version = newVersion
-                instructionCids <- createInstructions False operator payingAgent bondRegistrar snapshot.deposit.account.owner bondRegistrar settlementId 0 asset
+                  sender = snapshot.deposit.account.owner
+                  receiver = bondRegistrar
+                (_, senderSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, sender)
+                (_, receiverSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, receiver)
+                let
+                  senderAccount = getAccount False senderSettlementInfo sender
+                  receiverAccount = getAccount False receiverSettlementInfo receiver
+                instructionCids <- createInstructions False operator payingAgent bondRegistrar senderAccount receiverAccount settlementId 0 asset
                 instructionIds <- map (.instructionId) <$> mapA fetch instructionCids
-                dCid <- create Delivery with operator; agent = payingAgent; sender = snapshot.deposit.account.owner; receiver = bondRegistrar; settlementId; instructionIds; asset; status = Instructed
+                dCid <- create Delivery with operator; agent = payingAgent; sender; receiver; settlementId; instructionIds; asset; status = Instructed
                 dCids <- mapA (createInstructionsForPayout snapshot) indexedPayouts
                 pure $ dCid :: dCids
               else

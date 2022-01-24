@@ -1,6 +1,7 @@
 module Marketplace.Issuance.Role where
 
 import DA.Finance.Types (Asset, Id)
+import DA.Map (empty)
 import Marketplace.Issuance.Instrument.Model qualified as Instrument
 import Marketplace.Lifecycle.Redemption qualified as Lifecycle
 import Marketplace.Lifecycle.Service qualified as Lifecycle
@@ -59,7 +60,7 @@ template Offer
     controller issuer can
       Accept : (ContractId Role, ContractId Custody.SettlementInfo)
         do
-          infoCid <- create Custody.SettlementInfo with operator; party = issuer; ownAccount = None; cashAccount = None; securitiesAccount = None
+          infoCid <- create Custody.SettlementInfo with operator; party = issuer; ownAccount = None; omnibusCashAccount = None; omnibusSecuritiesAccount = None; cashAccounts = empty; securitiesAccounts = empty
           roleCid <- create Role with ..
           pure (roleCid, infoCid)
 
@@ -77,7 +78,7 @@ template Request
     controller operator can
       Approve : (ContractId Role, ContractId Custody.SettlementInfo)
         do
-          infoCid <- create Custody.SettlementInfo with operator; party = issuer; ownAccount = None; cashAccount = None; securitiesAccount = None
+          infoCid <- create Custody.SettlementInfo with operator; party = issuer; ownAccount = None; omnibusCashAccount = None; omnibusSecuritiesAccount = None; cashAccounts = empty; securitiesAccounts = empty
           roleCid <- create Role with ..
           pure (roleCid, infoCid)
 

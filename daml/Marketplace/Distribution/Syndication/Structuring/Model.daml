@@ -1,11 +1,10 @@
 module Marketplace.Distribution.Syndication.Structuring.Model where
 
 import DA.Finance.Types (Id, Asset(..))
-import DA.Optional (fromSomeNote)
 import DA.Set (fromList)
 import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Distribution.Syndication.Bidding.Model qualified as Bidding
-import Marketplace.Settlement.Hierarchical (createInstructions, Trade(..), Status(..))
+import Marketplace.Settlement.Hierarchical (createInstructions, getAccount, Trade(..), Status(..))
 import Marketplace.Issuance.Instrument.Model(Bond(..))
 import SwiftMessage.Model.MT545
 import SwiftMessage.Model.MT547
@@ -95,21 +94,20 @@ template Tranche
     let
       sendSwiftMessage : Party -> Party -> Decimal -> Decimal -> Id -> Text -> Date -> Date -> Date -> Update (ContractId SwiftOutboundMessage)
       sendSwiftMessage seller buyer settledQty settledAmount settledCurrency settlementId dateOfTrade dateOfSettlement effDateOfSettlement = do
-        (_, sellerAccountInfo) <- fetchByKey @Custody.SettlementInfo (operator, seller)
-        (_, receiverAccountInfo) <- fetchByKey @Custody.SettlementInfo (operator, buyer)
+        (_, sellerSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, seller)
+        (_, receiverSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, buyer)
         (_, bond) <- fetchByKey @Bond (fromList [bondRegistrar, issuer], deliveryId.label)
         let
-          getSecurityAcc accInfo = fromSomeNote "current party has not security account" accInfo.securitiesAccount
           instrumentId = bond.isin <> "-" <> deliveryId.label
-          buyerSafekeepingAcc = getSecurityAcc receiverAccountInfo
-          sellerSafkeepingAcc = getSecurityAcc sellerAccountInfo
+          buyerSafekeepingAcc = getAccount False receiverSettlementInfo buyer
+          sellerSafekeepingAcc = getAccount False sellerSettlementInfo seller
           mt545 = createMT545Details instrumentId settledQty buyerSafekeepingAcc.provider seller settledAmount settledCurrency
                     dateOfTrade dateOfSettlement effDateOfSettlement
-                    settlementId settlementId buyerSafekeepingAcc (getSecurityAcc sellerAccountInfo) "safekeepingPlace" "placeOfSettlement"
+                    settlementId settlementId buyerSafekeepingAcc sellerSafekeepingAcc "safekeepingPlace" "placeOfSettlement"
 
-          mt547 = createMT547Details instrumentId settledQty sellerSafkeepingAcc.provider seller settledAmount settledCurrency
+          mt547 = createMT547Details instrumentId settledQty sellerSafekeepingAcc.provider seller settledAmount settledCurrency
                     dateOfTrade dateOfSettlement effDateOfSettlement dateOfSettlement
-                    settlementId settlementId buyerSafekeepingAcc (getSecurityAcc sellerAccountInfo) "safekeepingPlace" "placeOfSettlement"
+                    settlementId settlementId buyerSafekeepingAcc sellerSafekeepingAcc "safekeepingPlace" "placeOfSettlement"
         create SwiftOutboundMessage with referenceId = settlementId; provider = operator ; consumer = operator; swiftMessage=MT545 (mt545); swiftMessageType=MT545_t; status=Pending; observers= fromList [bondRegistrar]
         create SwiftOutboundMessage with referenceId = settlementId; provider = operator ; consumer = operator; swiftMessage=MT547 (mt547); swiftMessageType=MT547_t; status=Pending; observers=fromList [bondRegistrar]
 
@@ -125,8 +123,15 @@ template Tranche
             totalAsset = Asset with id = deliveryId; quantity = size
             totalPrice = Asset with id = paymentId; quantity = settledAmount
             settlementId = deliveryId.label <> "-" <> partyToText issuer <> "-" <> partyToText settlementBank
-          bondSis <- createInstructions False operator bondRegistrar bondRegistrar issuer settlementBank settlementId 0 totalAsset
-          cashSis <- createInstructions True operator bondRegistrar cashProvider settlementBank issuer settlementId (length bondSis) totalPrice
+          (_, issuerSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, issuer)
+          (_, settlementBankSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, settlementBank)
+          let
+            issuerCashAccount = getAccount True issuerSettlementInfo issuer
+            settlementBankCashAccount = getAccount True settlementBankSettlementInfo settlementBank
+            issuerSecuritiesAccount = getAccount False issuerSettlementInfo issuer
+            settlementBankSecuritiesAccount = getAccount False settlementBankSettlementInfo settlementBank
+          bondSis <- createInstructions False operator bondRegistrar bondRegistrar issuerSecuritiesAccount settlementBankSecuritiesAccount settlementId 0 totalAsset
+          cashSis <- createInstructions True operator bondRegistrar cashProvider settlementBankCashAccount issuerCashAccount settlementId (length bondSis) totalPrice
           instructionIds <- map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
           sendSwiftMessage issuer settlementBank size settledAmount paymentId settlementId dateOfTrade dateOfSettlement dateOfSettlement
           create Trade with operator; agent = bondRegistrar; deliverer = issuer; payer = settlementBank; settlementId; instructionIds; delivery = totalAsset; payment = totalPrice; status = Instructed
@@ -142,8 +147,15 @@ template Tranche
             totalAsset = Asset with id = deliveryId; quantity = size
             totalPrice = Asset with id = paymentId; quantity = settledAmount
             settlementId = deliveryId.label <> "-" <> partyToText settlementBank <> "-" <> partyToText bndBank
-          bondSis <- createInstructions False operator bondRegistrar bondRegistrar settlementBank bndBank settlementId 0 totalAsset
-          cashSis <- createInstructions True operator bondRegistrar cashProvider bndBank settlementBank settlementId (length bondSis) totalPrice
+          (_, bndBankSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, bndBank)
+          (_, settlementBankSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, settlementBank)
+          let
+            bndBankCashAccount = getAccount True bndBankSettlementInfo bndBank
+            settlementBankCashAccount = getAccount True settlementBankSettlementInfo settlementBank
+            bndBankSecuritiesAccount = getAccount False bndBankSettlementInfo bndBank
+            settlementBankSecuritiesAccount = getAccount False settlementBankSettlementInfo settlementBank
+          bondSis <- createInstructions False operator bondRegistrar bondRegistrar settlementBankSecuritiesAccount bndBankSecuritiesAccount settlementId 0 totalAsset
+          cashSis <- createInstructions True operator bondRegistrar cashProvider bndBankCashAccount settlementBankCashAccount settlementId (length bondSis) totalPrice
           instructionIds <- map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
           sendSwiftMessage settlementBank bndBank size settledAmount paymentId settlementId dateOfTrade dateOfSettlement dateOfSettlement
           create Trade with operator; agent = bondRegistrar; deliverer = settlementBank; payer = bndBank; settlementId; instructionIds; delivery = totalAsset; payment = totalPrice; status = Instructed
@@ -164,9 +176,16 @@ template Tranche
                 settledAmount = conf.price.quantity * conf.asset.quantity
                 aggregatePrice = conf.price with quantity = settledAmount
                 settlementId = deliveryId.label <> "-" <> partyToText bndBank <> "-" <> partyToText conf.investor
+              (_, bndBankSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, bndBank)
+              (_, investorSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, conf.investor)
+              let
+                bndBankCashAccount = getAccount True bndBankSettlementInfo bndBank
+                investorCashAccount = getAccount True investorSettlementInfo conf.investor
+                bndBankSecuritiesAccount = getAccount False bndBankSettlementInfo bndBank
+                investorSecuritiesAccount = getAccount False investorSettlementInfo conf.investor
               assertMsg "Total confirmed amount is larger than available quantity" $ aggregate <= size
-              bondSis <- createInstructions False operator bondRegistrar bondRegistrar bndBank conf.investor settlementId 0 conf.asset
-              cashSis <- createInstructions True operator bondRegistrar cashProvider conf.investor bndBank settlementId (length bondSis) aggregatePrice
+              bondSis <- createInstructions False operator bondRegistrar bondRegistrar bndBankSecuritiesAccount investorSecuritiesAccount settlementId 0 conf.asset
+              cashSis <- createInstructions True operator bondRegistrar cashProvider investorCashAccount bndBankCashAccount settlementId (length bondSis) aggregatePrice
               instructionIds <- map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
               sendSwiftMessage settlementBank bndBank aggregate settledAmount paymentId settlementId dateOfTrade dateOfSettlement dateOfSettlement
               exercise confCid Bidding.Delete

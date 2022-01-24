@@ -109,10 +109,10 @@ setup = do
   aiCid2 <- openAccount operator cashProvider lm1 $ createLabel cashProvider lm1
   aiCid3 <- openAccount operator cashProvider lm2 $ createLabel cashProvider lm2
   aiCid4 <- openAccount operator cashProvider lm3 $ createLabel cashProvider lm3
-  selectCashAccount operator issuer aiCid1
-  selectCashAccount operator lm1 aiCid2
-  selectCashAccount operator lm2 aiCid3
-  selectCashAccount operator lm3 aiCid4
+  setOmnibusCashAccount operator issuer aiCid1
+  setOmnibusCashAccount operator lm1 aiCid2
+  setOmnibusCashAccount operator lm2 aiCid3
+  setOmnibusCashAccount operator lm3 aiCid4
 
   createCustodyService operator bondRegistrar bondRegistrar
   createCustodyService operator bondRegistrar issuer
@@ -123,60 +123,62 @@ setup = do
   aiCid1 <- openAccount operator bondRegistrar bondRegistrar $ createLabel bondRegistrar bondRegistrar
   aiCid2 <- openAccount operator bondRegistrar issuer $ createLabel bondRegistrar issuer
   aiCid3 <- openAccount operator bondRegistrar custodian1 $ createLabel bondRegistrar custodian1
+  aiCid3a <- openAccount operator bondRegistrar custodian1 $ "Segregated-" <> partyToText investor1 <> "@" <> partyToText custodian1 <> "@" <> partyToText bondRegistrar
   aiCid4 <- openAccount operator bondRegistrar custodian2 $ createLabel bondRegistrar custodian2
   aiCid5 <- openAccount operator bondRegistrar custodian3 $ createLabel bondRegistrar custodian3
   aiCid6 <- openAccount operator bondRegistrar custodian4 $ createLabel bondRegistrar custodian4
-  selectSecuritiesAccount operator bondRegistrar aiCid1
-  selectSecuritiesAccount operator issuer aiCid2
-  selectSecuritiesAccount operator custodian1 aiCid3
-  selectSecuritiesAccount operator custodian2 aiCid4
-  selectSecuritiesAccount operator custodian3 aiCid5
-  selectSecuritiesAccount operator custodian4 aiCid6
+  setOmnibusSecuritiesAccount operator bondRegistrar aiCid1
+  setOmnibusSecuritiesAccount operator issuer aiCid2
+  setOmnibusSecuritiesAccount operator custodian1 aiCid3
+  setSecuritiesAccountForParty operator custodian1 investor1 aiCid3a
+  setOmnibusSecuritiesAccount operator custodian2 aiCid4
+  setOmnibusSecuritiesAccount operator custodian3 aiCid5
+  setOmnibusSecuritiesAccount operator custodian4 aiCid6
 
   -- 2nd level
   createCustodyService operator custodian1 lm1
   createCustodyService operator custodian1 investor1
   aiCid1 <- openAccount operator custodian1 lm1 $ createLabel custodian1 lm1
   aiCid2 <- openAccount operator custodian1 investor1 $ createLabel custodian1 investor1
-  selectSecuritiesAccount operator lm1 aiCid1
-  selectSecuritiesAccount operator investor1 aiCid2
+  setOmnibusSecuritiesAccount operator lm1 aiCid1
+  setOmnibusSecuritiesAccount operator investor1 aiCid2
 
   createCustodyService operator custodian2 lm2
   createCustodyService operator custodian2 investor2
   aiCid1 <- openAccount operator custodian2 lm2 $ createLabel custodian2 lm2
   aiCid2 <- openAccount operator custodian2 investor2 $ createLabel custodian2 investor2
-  selectSecuritiesAccount operator lm2 aiCid1
-  selectSecuritiesAccount operator investor2 aiCid2
+  setOmnibusSecuritiesAccount operator lm2 aiCid1
+  setOmnibusSecuritiesAccount operator investor2 aiCid2
 
   createCustodyService operator custodian3 lm3
   aiCid1 <- openAccount operator custodian3 lm3 $ createLabel custodian3 lm3
-  selectSecuritiesAccount operator lm3 aiCid1
+  setOmnibusSecuritiesAccount operator lm3 aiCid1
   createCustodyService operator custodian4 custodian5
   aiCid1 <- openAccount operator custodian4 custodian5 $ createLabel custodian4 custodian5
-  selectSecuritiesAccount operator custodian5 aiCid1
+  setOmnibusSecuritiesAccount operator custodian5 aiCid1
 
   -- 3rd level
   createCustodyService operator custodian5 investor3
   createCustodyService operator custodian5 investor4
   aiCid1 <- openAccount operator custodian5 investor3 $ createLabel custodian5 investor3
   aiCid2 <- openAccount operator custodian5 investor4 $ createLabel custodian5 investor4
-  selectSecuritiesAccount operator investor3 aiCid1
-  selectSecuritiesAccount operator investor4 aiCid2
+  setOmnibusSecuritiesAccount operator investor3 aiCid1
+  setOmnibusSecuritiesAccount operator investor4 aiCid2
 
   createCustodyService operator lm1 investor1
   aiCid1 <- openAccount operator lm1 investor1 $ createLabel lm1 investor1
-  selectCashAccount operator investor1 aiCid1
+  setOmnibusCashAccount operator investor1 aiCid1
 
   createCustodyService operator lm2 investor2
   aiCid1 <- openAccount operator lm2 investor2 $ createLabel lm2 investor2
-  selectCashAccount operator investor2 aiCid1
+  setOmnibusCashAccount operator investor2 aiCid1
 
   createCustodyService operator lm3 investor3
   createCustodyService operator lm3 investor4
   aiCid1 <- openAccount operator lm3 investor3 $ createLabel lm3 investor3
   aiCid2 <- openAccount operator lm3 investor4 $ createLabel lm3 investor4
-  selectCashAccount operator investor3 aiCid1
-  selectCashAccount operator investor4 aiCid2
+  setOmnibusCashAccount operator investor3 aiCid1
+  setOmnibusCashAccount operator investor4 aiCid2
 
   -- Distribution services
   createBookBuildingService operator lm1 issuer

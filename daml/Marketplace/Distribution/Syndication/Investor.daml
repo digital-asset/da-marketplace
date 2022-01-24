@@ -1,6 +1,7 @@
 module Marketplace.Distribution.Syndication.Investor where
 
 import DA.Finance.Types (Account, Asset)
+import DA.Map (empty)
 import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Lifecycle.Redemption qualified as Lifecycle
 
@@ -15,15 +16,6 @@ template Role
     maintainer key._1
 
     controller investor can
-
-      nonconsuming SelectSettlementAccounts : ContractId Custody.SettlementInfo
-        with
-          cashAccountCid : ContractId Custody.AccountInfo
-          securitiesAccountCid : ContractId Custody.AccountInfo
-          settlementInfoCid : ContractId Custody.SettlementInfo
-        do
-          siCid <- exercise settlementInfoCid Custody.SelectCashAccount with newCashAccountCid = cashAccountCid
-          exercise siCid Custody.SelectSecuritiesAccount with newSecuritiesAccountCid = securitiesAccountCid
 
       nonconsuming RequestRedemption : ContractId Lifecycle.InvestorRedemptionRequest
         with
@@ -50,7 +42,7 @@ template Offer
     controller investor can
       Accept : (ContractId Role, ContractId Custody.SettlementInfo)
         do
-          infoCid <- create Custody.SettlementInfo with operator; party = investor; ownAccount = None; cashAccount = None; securitiesAccount = None
+          infoCid <- create Custody.SettlementInfo with operator; party = investor; ownAccount = None; omnibusCashAccount = None; omnibusSecuritiesAccount = None; cashAccounts = empty; securitiesAccounts = empty
           roleCid <- create Role with ..
           pure (roleCid, infoCid)
 
@@ -70,7 +62,7 @@ template Request
     controller operator can
       Approve : (ContractId Role, ContractId Custody.SettlementInfo)
         do
-          infoCid <- create Custody.SettlementInfo with operator; party = investor; ownAccount = None; cashAccount = None; securitiesAccount = None
+          infoCid <- create Custody.SettlementInfo with operator; party = investor; ownAccount = None; omnibusCashAccount = None; omnibusSecuritiesAccount = None; cashAccounts = empty; securitiesAccounts = empty
           roleCid <- create Role with ..
           pure (roleCid, infoCid)
 

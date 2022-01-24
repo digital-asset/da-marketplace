@@ -105,13 +105,21 @@ openAccount operator provider customer label = do
   requestCid <- submit customer do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.RequestOpenAccount with label
   submit provider do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.OpenAccount with ..
 
-selectCashAccount : Party -> Party -> ContractId Custody.AccountInfo -> Script (ContractId Custody.SettlementInfo)
-selectCashAccount operator party newCashAccountCid = do
-  submit party do exerciseByKeyCmd @Custody.SettlementInfo (operator, party) Custody.SelectCashAccount with newCashAccountCid
+setOmnibusCashAccount : Party -> Party -> ContractId Custody.AccountInfo -> Script (ContractId Custody.SettlementInfo)
+setOmnibusCashAccount operator party accountInfoCid = do
+  submit party do exerciseByKeyCmd @Custody.SettlementInfo (operator, party) Custody.SetOmnibusCashAccount with accountInfoCid
 
-selectSecuritiesAccount : Party -> Party -> ContractId Custody.AccountInfo -> Script (ContractId Custody.SettlementInfo)
-selectSecuritiesAccount operator party newSecuritiesAccountCid = do
-  submit party do exerciseByKeyCmd @Custody.SettlementInfo (operator, party) Custody.SelectSecuritiesAccount with newSecuritiesAccountCid
+setOmnibusSecuritiesAccount : Party -> Party -> ContractId Custody.AccountInfo -> Script (ContractId Custody.SettlementInfo)
+setOmnibusSecuritiesAccount operator party accountInfoCid = do
+  submit party do exerciseByKeyCmd @Custody.SettlementInfo (operator, party) Custody.SetOmnibusSecuritiesAccount with accountInfoCid
+
+setCashAccountForParty : Party -> Party -> Party -> ContractId Custody.AccountInfo -> Script (ContractId Custody.SettlementInfo)
+setCashAccountForParty operator party beneficiary accountInfoCid = do
+  submit party do exerciseByKeyCmd @Custody.SettlementInfo (operator, party) Custody.SetCashAccount with beneficiary; accountInfoCid
+
+setSecuritiesAccountForParty : Party -> Party -> Party -> ContractId Custody.AccountInfo -> Script (ContractId Custody.SettlementInfo)
+setSecuritiesAccountForParty operator party beneficiary accountInfoCid = do
+  submit party do exerciseByKeyCmd @Custody.SettlementInfo (operator, party) Custody.SetSecuritiesAccount with beneficiary; accountInfoCid
 
 originate : Party -> Party -> Party -> Party -> Text -> Claim Observation Date Decimal Id -> Script (ContractId AssetDescription, AssetDescription)
 originate operator provider customer public assetLabel claims = do

@@ -2,6 +2,7 @@ module Marketplace.Custody.Model where
 
 import DA.Finance.Asset
 import DA.Finance.Types
+import DA.Map (Map, insert, delete)
 
 data Channel =
   ETH with coin: Text , address: Text
@@ -15,29 +16,63 @@ template SettlementInfo
     operator : Party
     party : Party
     ownAccount : Optional Account
-    cashAccount : Optional Account
-    securitiesAccount : Optional Account
+    omnibusCashAccount : Optional Account
+    omnibusSecuritiesAccount : Optional Account
+    cashAccounts : Map Party Account
+    securitiesAccounts : Map Party Account
   where
     signatory operator, party
 
     key (operator, party) : (Party, Party)
     maintainer key._1
 
-    choice SelectCashAccount : ContractId SettlementInfo
+    choice SetOmnibusCashAccount : ContractId SettlementInfo
       with
-        newCashAccountCid : ContractId AccountInfo
+        accountInfoCid : ContractId AccountInfo
       controller party
       do
-        newCashAccount <- fetch newCashAccountCid
-        create this with cashAccount = Some newCashAccount.account
+        accountInfo <- fetch accountInfoCid
+        create this with omnibusCashAccount = Some accountInfo.account
 
-    choice SelectSecuritiesAccount : ContractId SettlementInfo
+    choice SetOmnibusSecuritiesAccount : ContractId SettlementInfo
       with
-        newSecuritiesAccountCid : ContractId AccountInfo
+        accountInfoCid : ContractId AccountInfo
       controller party
       do
-        newSecuritiesAccount <- fetch newSecuritiesAccountCid
-        create this with securitiesAccount = Some newSecuritiesAccount.account
+        accountInfo <- fetch accountInfoCid
+        create this with omnibusSecuritiesAccount = Some accountInfo.account
+
+    choice SetCashAccount : ContractId SettlementInfo
+      with
+        beneficiary : Party
+        accountInfoCid : ContractId AccountInfo
+      controller party
+      do
+        accountInfo <- fetch accountInfoCid
+        create this with cashAccounts = insert beneficiary accountInfo.account cashAccounts
+
+    choice SetSecuritiesAccount : ContractId SettlementInfo
+      with
+        beneficiary : Party
+        accountInfoCid : ContractId AccountInfo
+      controller party
+      do
+        accountInfo <- fetch accountInfoCid
+        create this with securitiesAccounts = insert beneficiary accountInfo.account securitiesAccounts
+
+    choice RemoveCashAccount : ContractId SettlementInfo
+      with
+        beneficiary : Party
+      controller party
+      do
+        create this with cashAccounts = delete beneficiary cashAccounts
+
+    choice RemoveSecuritiesAccount : ContractId SettlementInfo
+      with
+        beneficiary : Party
+      controller party
+      do
+        create this with securitiesAccounts = delete beneficiary securitiesAccounts
 
 template AccountInfo
   with

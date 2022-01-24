@@ -1,6 +1,7 @@
 module Marketplace.Custody.Role where
 
 import DA.Set (Set)
+import DA.Map (empty)
 import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Custody.Service qualified as Custody
 import Marketplace.Issuance.Service qualified as Issuance
@@ -82,8 +83,8 @@ template Offer
     controller provider can
       Accept : (ContractId Role, ContractId Custody.SettlementInfo)
         do
-          let ownAccount = createAccount provider provider
-          infoCid <- create Custody.SettlementInfo with operator; party = provider; ownAccount = Some ownAccount; cashAccount = None; securitiesAccount = None
+          let ownAccount = Some $ createAccount provider provider
+          infoCid <- create Custody.SettlementInfo with operator; party = provider; ownAccount; omnibusCashAccount = None; omnibusSecuritiesAccount = None; cashAccounts = empty; securitiesAccounts = empty
           roleCid <- create Role with ..
           pure (roleCid, infoCid)
 
@@ -104,7 +105,7 @@ template Request
           observers : Set Party
         do
           let ownAccount = Some $ createAccount provider provider
-          infoCid <- create Custody.SettlementInfo with operator; party = provider; ownAccount; cashAccount = None; securitiesAccount = None
+          infoCid <- create Custody.SettlementInfo with operator; party = provider; ownAccount; omnibusCashAccount = None; omnibusSecuritiesAccount = None; cashAccounts = empty; securitiesAccounts = empty
           roleCid <- create Role with ..
           pure (roleCid, infoCid)
 

@@ -3,7 +3,8 @@ module Marketplace.Custody.Service where
 import DA.Finance.Asset
 import DA.Finance.Types
 import DA.Finance.Utils (fetchAndArchive)
-import DA.Set
+import DA.Map qualified as M
+import DA.Set (empty, fromList)
 import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Utils
 
@@ -60,8 +61,10 @@ template Service
           accountInfo <- fetch accountInfoCid
           settlementInfo <- fetch settlementInfoCid
           assertMsg "Cannot close account used as own settlement account" $ Some accountInfo.account /= settlementInfo.ownAccount
-          assertMsg "Cannot close account used as cash settlement account" $ Some accountInfo.account /= settlementInfo.cashAccount
-          assertMsg "Cannot close account used as securities settlement account" $ Some accountInfo.account /= settlementInfo.securitiesAccount
+          assertMsg "Cannot close account used as omnibus cash settlement account" $ Some accountInfo.account /= settlementInfo.omnibusCashAccount
+          assertMsg "Cannot close account used as omnibus securities settlement account" $ Some accountInfo.account /= settlementInfo.omnibusSecuritiesAccount
+          assertMsg "Cannot close account used as cash settlement account" $ notElem accountInfo.account (M.values settlementInfo.cashAccounts)
+          assertMsg "Cannot close account used as securities settlement account" $ notElem accountInfo.account (M.values settlementInfo.securitiesAccounts)
           archive accountInfoCid
 
       nonconsuming Deposit : ContractId AssetDeposit
