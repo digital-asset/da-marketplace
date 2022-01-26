@@ -40,8 +40,8 @@ runMatchingTest parties@Parties{userAdmin = operator; ..} = do
   let
     shareAsset = tsla with quantity = 200.0
     cashAsset = usd with quantity = 30000.0
-  aliceDepositCid <- depositAsset providers alice shareAsset alice.mainAccount empty
-  bobDepositCid <- depositAsset providers bob cashAsset bob.mainAccount empty
+  aliceDepositCid <- depositAsset providers alice shareAsset alice.mainAccount.id empty
+  bobDepositCid <- depositAsset providers bob cashAsset bob.mainAccount.id empty
 
   listingTestNumber <- getRandom 1 5000
   let listingId = "TSLAUSDTEST" <> show listingTestNumber

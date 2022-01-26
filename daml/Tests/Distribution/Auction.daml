@@ -51,10 +51,10 @@ setup = do
   Assets{usd} <- onboardAssets providers issuer
 
   -- Create our Investors/Bidders
-  aliceDepositCid    <- depositAsset providers alice     (usd with quantity = 10000.0) alice.mainAccount empty
-  bobDepositCid      <- depositAsset providers bob       (usd with quantity = 5000.0) bob.mainAccount empty
-  charlieDepositCid  <- depositAsset providers charlie   (usd with quantity = 2000.0) charlie.mainAccount empty
-  danaDepositCid     <- depositAsset providers dana      (usd with quantity = 1000.0) dana.mainAccount empty
+  aliceDepositCid    <- depositAsset providers alice     (usd with quantity = 10000.0) alice.mainAccount.id empty
+  bobDepositCid      <- depositAsset providers bob       (usd with quantity = 5000.0) bob.mainAccount.id empty
+  charlieDepositCid  <- depositAsset providers charlie   (usd with quantity = 2000.0) charlie.mainAccount.id empty
+  danaDepositCid     <- depositAsset providers dana      (usd with quantity = 1000.0) dana.mainAccount.id empty
 
   Some aliceDeposit   <- queryContractId alice.customer aliceDepositCid
   Some bobDeposit     <- queryContractId bob.customer bobDepositCid
@@ -67,7 +67,7 @@ setup = do
   let
     auctionAssetId = auctionAssetDesc.assetId
     auctionAsset = Asset with id = auctionAssetId; quantity = 1000.0
-  issuerAsset <- depositAsset providers issuer auctionAsset issuer.mainAccount empty
+  issuerAsset <- depositAsset providers issuer auctionAsset issuer.mainAccount.id empty
   auctionOfferCid <- bank `submit` exerciseCmd distributorRoleCid Distributor.OfferAuctionService with customer = issuer.customer; ..
   auctionServiceCid <- issuer.customer `submit` exerciseCmd auctionOfferCid Auction.Accept
 

@@ -10,70 +10,12 @@ data Channel =
   | ONLEDGER
     deriving (Eq, Show)
 
-template SettlementInfo
-  with
-    operator : Party
-    party : Party
-    ownAccount : Optional Account
-    cashAccount : Optional Account
-    securitiesAccount : Optional Account
-  where
-    signatory operator, party
-
-    key (operator, party) : (Party, Party)
-    maintainer key._1
-
-    choice SelectCashAccount : ContractId SettlementInfo
-      with
-        newCashAccountCid : ContractId AccountInfo
-      controller party
-      do
-        newCashAccount <- fetch newCashAccountCid
-        create this with cashAccount = Some newCashAccount.account
-
-    choice SelectSecuritiesAccount : ContractId SettlementInfo
-      with
-        newSecuritiesAccountCid : ContractId AccountInfo
-      controller party
-      do
-        newSecuritiesAccount <- fetch newSecuritiesAccountCid
-        create this with securitiesAccount = Some newSecuritiesAccount.account
-
-template AccountInfo
-  with
-    operator : Party
-    provider : Party
-    customer : Party
-    account : Account
-  where
-    signatory operator, provider, customer
-
-template OpenAccountRequest
-  with
-    operator : Party
-    provider : Party
-    customer : Party
-    label : Text
-  where
-    signatory operator, provider, customer
-
-template CloseAccountRequest
-  with
-    operator : Party
-    provider : Party
-    customer : Party
-    accountInfoCid : ContractId AccountInfo
-    settlementInfoCid : ContractId SettlementInfo
-  where
-    signatory operator, provider, customer
-
 template DepositRequest
   with
     operator : Party
     provider : Party
     customer : Party
     asset : Asset
-    account : Account
     depositChannel: Channel
   where
     signatory operator, provider, customer
@@ -92,7 +34,6 @@ template DepositRequestAcknowledged
     provider : Party
     customer : Party
     asset : Asset
-    account : Account
     depositChannel: Channel
     referenceId: Text
   where

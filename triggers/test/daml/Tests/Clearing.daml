@@ -31,7 +31,7 @@ runMarginTest parties@Parties{userAdmin = operator; ..} = do
   let cashAsset = usd with quantity = 20000.0
 
   debug "Performing first margin calculation..."
-  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount $ fromList [ clearinghouse ]
+  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id $ fromList [ clearinghouse ]
   calculationCid <- submit clearinghouse $
     exerciseCmd alice.clearingServiceCid Clearing.CreateMarginCalculation with
       currency = usd.id; targetAmount = 4000.0; calculationId = "123456"; ..
@@ -81,8 +81,8 @@ runMarkToMarketTest parties@Parties{userAdmin = operator; ..} = do
   -- Assets
   let cashAsset = usd with quantity = 20000.0
 
-  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount $ fromList [ clearinghouse ]
-  bobDepositCid   <- depositAsset providers bob cashAsset bob.mainAccount $ fromList [ clearinghouse ]
+  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id $ fromList [ clearinghouse ]
+  bobDepositCid   <- depositAsset providers bob cashAsset bob.mainAccount.id $ fromList [ clearinghouse ]
 
   debug "Testing Mark to Markets..."
   calculationCid <- submit clearinghouse $

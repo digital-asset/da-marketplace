@@ -33,7 +33,7 @@ setupClearingCustomer providers@Providers{clearinghouse} Assets{..} name party =
     cashAsset = usd with quantity = 2000000.0
     observers = fromList [ clearinghouse ]
 
-  depositCid <- depositAsset providers customer cashAsset customer.mainAccount observers
+  depositCid <- depositAsset providers customer cashAsset customer.mainAccount.id observers
 
   calculationCid <- submit clearinghouse $
     exerciseCmd customer.clearingServiceCid Clearing.CreateMarginCalculation with

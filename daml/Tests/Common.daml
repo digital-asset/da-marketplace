@@ -106,7 +106,7 @@ onboardProviders Parties{userAdmin = operator; ..} = do
   operatorRoleCid <- submit operator  do createCmd Operator.Role with observers = fromList [public]; ..
 
   custodianRoleOfferCid  <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferCustodianRole with provider = bank
-  (custodianRoleCid, _)  <- submit bank do exerciseCmd custodianRoleOfferCid Custodian.Accept
+  (custodianRoleCid, _)  <- submit bank do exerciseCmd custodianRoleOfferCid Custodian.Accept with cashAccount = None; securitiesAccount = None
 
   exchangeRoleOfferCid  <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferExchangeRole with provider = exchange
   (exchangeRoleCid, matchingServiceCid, listingServiceCid, settlementServiceCid) <- submit exchange  do exerciseCmd exchangeRoleOfferCid Exchange.Accept
@@ -163,9 +163,7 @@ onboardCustomer Providers{..} party customer = do
   issuanceServiceCid <- submit customer do exerciseCmd issuanceServiceOfferCid Issuance.Accept
 
   -- Clearing Service
-  requestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with label = partyToText customer <> "@" <> partyToText bank
-  accountInfoCid <- submit bank do exerciseCmd custodyServiceCid Custody.OpenAccount with requestCid
-  mainAccount <- (.account) . fromSome <$> queryContractId customer accountInfoCid
+  mainAccount <- (.account) . fromSome <$> queryContractId customer custodyServiceCid
   clearingServiceOfferCid  <- submit clearinghouse do exerciseCmd clearingRoleCid Clearinghouse.OfferClearingService with ..
   clearingServiceCid       <- submit customer do exerciseCmd clearingServiceOfferCid Clearing.Accept with clearingAccount = mainAccount
 
@@ -204,10 +202,10 @@ onboardAssets providers issuer = do
 
   pure Assets with ..
 
-depositAsset : Providers -> Customer -> Asset -> Account -> Set Party -> Script (ContractId AssetDeposit)
-depositAsset Providers{..} Customer{..} asset account observers = do
+depositAsset : Providers -> Customer -> Asset -> Id -> Set Party -> Script (ContractId AssetDeposit)
+depositAsset Providers{..} Customer{..} asset accountId observers = do
   -- Assets
-  depositRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestDeposit with asset; account; depositChannel = Custody.ONLEDGER
+  depositRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestDeposit with asset, depositChannel = Custody.ONLEDGER
   depositCid <- submit bank do exerciseCmd custodyServiceCid Custody.Deposit with ..
   (Some deposit) <- queryContractId bank depositCid
   submit customer do exerciseCmd depositCid AssetDeposit.AssetDeposit_SetObservers with newObservers = deposit.observers `union` observers
