@@ -115,22 +115,22 @@ createSchedule : Date -> Date -> PeriodEnum -> Int -> [Text] -> BusinessDayConve
 createSchedule startDate endDate period periodMultiplier calendarIds businessDayConvention dayCountConvention rollConvention =
   Instrument.InterestSchedule with ..
 
-createFixedRateBond : Id -> Text -> Id -> Date -> Date -> Instrument.InterestSchedule -> Decimal -> Bool -> Bool -> [Party] -> Instrument.Bond
-createFixedRateBond id isin currencyId issueDate maturityDate schedule annualRate isTradeable isPricedDirty observers =
+createFixedRateBond : Id -> Text -> Id -> Date -> Date -> Instrument.InterestSchedule -> Decimal -> Bool -> Bool -> Bool -> [Party] -> Instrument.Bond
+createFixedRateBond id isin currencyId issueDate maturityDate schedule annualRate isTradeable isPricedDirty isCallable observers =
   let
     amount = Instrument.Fixed with annualRate
     stream = Some Instrument.InterestStream with schedule; amount
   in Instrument.Bond with ..
 
-createFloatingRateBond : Id -> Text -> Id -> Date -> Date -> Instrument.InterestSchedule -> Id -> Decimal -> Bool -> Bool -> [Party] -> Instrument.Bond
-createFloatingRateBond id isin currencyId issueDate maturityDate schedule rateId periodSpread isTradeable isPricedDirty observers =
+createFloatingRateBond : Id -> Text -> Id -> Date -> Date -> Instrument.InterestSchedule -> Id -> Decimal -> Bool -> Bool -> Bool -> [Party] -> Instrument.Bond
+createFloatingRateBond id isin currencyId issueDate maturityDate schedule rateId periodSpread isTradeable isPricedDirty isCallable observers =
   let
     amount = Instrument.Float with rateId; periodSpread
     stream = Some Instrument.InterestStream with schedule; amount
   in Instrument.Bond with ..
 
-createZeroCouponBond : Id -> Text -> Id -> Date -> Date -> Bool -> Bool -> [Party] -> Instrument.Bond
-createZeroCouponBond id isin currencyId issueDate maturityDate isTradeable isPricedDirty observers =
+createZeroCouponBond : Id -> Text -> Id -> Date -> Date -> Bool -> Bool -> Bool -> [Party] -> Instrument.Bond
+createZeroCouponBond id isin currencyId issueDate maturityDate isTradeable isPricedDirty isCallable observers =
   Instrument.Bond with stream = None; ..
 
 createSwap : Id -> Id -> Id -> Date -> Date -> Instrument.InterestStream -> Instrument.InterestStream -> Bool -> [Party] -> Instrument.Swap
@@ -149,8 +149,8 @@ originateSwap operator provider customer observers swap = do
   desc <- snd <$> submit provider do exerciseByKeyCmd @Issuance.Service (operator, provider, customer) Issuance.Originate with createOriginationCid = requestCid
   pure (desc, swapCid)
 
-issue : Party -> Party -> Party -> Text -> Decimal -> Id -> Script (ContractId AssetDeposit)
-issue operator provider customer issuanceId quantity assetId = do
+issue : Party -> Party -> Party -> Text -> ContractId Structuring.Tranche -> Script (ContractId AssetDeposit)
+issue operator provider customer issuanceId trancheCid = do
   (_, Custody.Service{account}) <- head <$> queryFilter @Custody.Service customer (\s -> s.provider == provider)
   createIssuanceRequestCid <- submit customer do exerciseByKeyCmd @Issuance.Service (operator, provider, customer) Issuance.RequestCreateIssuance with ..
   snd <$> submit provider do exerciseByKeyCmd @Issuance.Service (operator, provider, customer) Issuance.CreateIssuance with createIssuanceRequestCid
@@ -175,22 +175,21 @@ requestBookBuilding : Party -> Party -> Party -> ContractId Structuring.Tranche 
 requestBookBuilding operator provider customer trancheCid = do
   submit customer do exerciseByKeyCmd @BookBuilding.Service (operator, provider, customer) BookBuilding.RequestBookBuilding with ..
 
-bid : Party -> Party -> Party -> ContractId BookBuilding.BuildRequest -> Decimal -> Decimal -> Script (ContractId Bidding.Bid)
-bid operator provider customer bookBuildingRequestCid quantity price = do
-  Some BookBuilding.BuildRequest{issuer, dealId, trancheId, deliveryId, paymentId, size} <- queryContractId provider bookBuildingRequestCid
-  bidRequestCid <- submit provider do exerciseByKeyCmd @Bidding.Service (operator, provider, customer) Bidding.RequestBid with ..
+bid : Party -> Party -> Party -> Text -> Text -> Decimal -> Decimal -> Script (ContractId Bidding.Bid)
+bid operator provider customer dealId trancheId quantity price = do
+  [(buildRequestCid, _)] <- queryFilter @BookBuilding.BuildRequest provider (\r -> r.dealId == dealId && r.trancheId == trancheId)
+  bidRequestCid <- submit provider do exerciseByKeyCmd @Bidding.Service (operator, provider, customer) Bidding.RequestBid with buildRequestCid
   submit customer do exerciseByKeyCmd @Bidding.Service (operator, provider, customer) Bidding.SubmitBid with ..
 
--- lifecycle : Party -> Party -> Party -> Id -> Script (Optional (ContractId Lifecycle.Effect))
--- lifecycle operator issuer provider assetId = do
---   submit provider do exerciseByKeyCmd @Lifecycle.Service (operator, issuer, provider) Lifecycle.CalculateEffect with assetId; election = None
+closeBook : Party -> Party -> Party -> Text -> Text -> [(Party, Decimal)] -> Decimal -> Script [ContractId Bidding.Allocation]
+closeBook operator provider customer dealId trancheId allocations offeredPrice = do
+  buildRequestCids <- map fst <$> queryFilter @BookBuilding.BuildRequest customer (\r -> r.dealId == dealId && r.trancheId == trancheId)
+  bidCids <- map fst <$> queryFilter @Bidding.Bid customer (\r -> r.dealId == dealId && r.trancheId == trancheId)
+  submit customer do exerciseByKeyCmd @Structuring.Service (operator, provider, customer) Structuring.CloseBook with ..
 
-allocate : Party -> ContractId Bidding.Bid -> Decimal -> Decimal -> Script (ContractId Bidding.Allocation)
-allocate bookRunner bidCid offeredQuantity offeredPrice = do
-  submit bookRunner do exerciseCmd bidCid Bidding.Allocate with ..
-
-confirm : Party -> ContractId Bidding.Allocation -> Script (ContractId Bidding.Confirmation)
-confirm investor allocationCid = do
+confirm : Party -> Text -> Text -> Script (ContractId Bidding.Confirmation)
+confirm investor dealId trancheId = do
+  [(allocationCid, _)] <- queryFilter @Bidding.Allocation investor (\a -> a.dealId == dealId && a.trancheId == trancheId)
   submit investor do exerciseCmd allocationCid Bidding.Confirm
 
 allocateSi : Party -> (ContractId SettlementInstruction, SettlementInstruction) -> Script ()

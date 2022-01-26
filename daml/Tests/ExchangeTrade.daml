@@ -1,6 +1,6 @@
 module Tests.ExchangeTrade where
 
-import Common
+import Tests.Common
 import Daml.Script
 import DA.Assert ((===))
 import DA.Finance.Asset (AssetDeposit_Split(..), AssetDeposit)

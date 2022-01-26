@@ -3,11 +3,8 @@ module Marketplace.Custody.Service where
 import DA.Finance.Asset
 import DA.Finance.Types
 import DA.Finance.Utils (fetchAndArchive)
-import DA.Map (Map)
 import DA.Set
-import Marketplace.Issuance.AssetDescription (Claims)
 import Marketplace.Custody.Model qualified as Custody
-import Marketplace.Settlement.Model (SettlementInstruction)
 import Marketplace.Utils
 
 template Service
@@ -29,7 +26,6 @@ template Service
           depositChannel: Custody.Channel
         do
           create Custody.DepositRequest with ..
-        
 
       nonconsuming RequestWithdrawal : ContractId Custody.WithdrawalRequest
         with
@@ -37,13 +33,6 @@ template Service
           withdrawalChannel: Custody.Channel
         do
           create Custody.WithdrawalRequest with ..
-
-      nonconsuming RequestLifecycle: ContractId Custody.LifecycleRequest
-        with
-          assetDepositCid: ContractId AssetDeposit
-          choice: Claims
-        do
-          create Custody.LifecycleRequest with ..
 
     controller provider can
 
@@ -54,16 +43,15 @@ template Service
           Custody.DepositRequest{asset, depositChannel} <- fetchAndArchive depositRequestCid
           assertMsg "only handle onledger deposit request" (depositChannel == Custody.ONLEDGER)
           create AssetDeposit with asset; account; lockers = empty; observers = empty --fromList [ issuer ]
-      
+
       nonconsuming ExternalDeposit : (ContractId AssetDeposit, ContractId Custody.DepositConfirmed)
         with
           depositRequestAcknowledgedCid:  ContractId Custody.DepositRequestAcknowledged
-        do 
+        do
           Custody.DepositRequestAcknowledged{asset, depositChannel, referenceId} <- fetchAndArchive depositRequestAcknowledgedCid
-          assetDepsositCid <- create AssetDeposit with asset; account; lockers = empty; observers = empty 
+          assetDepsositCid <- create AssetDeposit with asset; account; lockers = empty; observers = empty
           confirmedCid <- create Custody.DepositConfirmed with ..
           return (assetDepsositCid, confirmedCid)
-
 
       nonconsuming Withdrawal : ()
         with
@@ -86,21 +74,12 @@ template Service
           archive depositCid
           create Custody.WithdrawalConfirmed with ..
 
-      nonconsuming Lifecycle : (ContractId AssetDeposit, [ContractId SettlementInstruction])
-        with
-          lifecycleRequestCid : ContractId Custody.LifecycleRequest
-          safekeepingDepositCid : ContractId AssetDeposit
-          fixings : Map Text (Map Date Decimal) --TODO these should be looked up from a contract on-ledger, not provided by the custodian!
-          uniquePayoutId : Text
-        do
-          exercise lifecycleRequestCid Custody.Process with investor = customer; ..
-
-
     choice Terminate : ()
       with
         ctrl : Party
       controller ctrl
       do pure ()
+
 template Offer
   with
     operator : Party
@@ -145,9 +124,3 @@ template Request
       do
         let account = createAccount provider customer
         createOrLookup Service with ..
-
-createAccount : Party -> Party -> Account
-createAccount provider customer = do
-  let id = Id with signatories = fromList [customer, provider]; label = partyToText customer <> "@" <> partyToText provider; version = 0
-      owner = customer
-  Account with id; owner; provider

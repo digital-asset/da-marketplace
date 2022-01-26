@@ -4,6 +4,7 @@ import Daml.Script
 import DA.Set (empty)
 import Marketplace.Operator.Role qualified as Operator
 import Tests.Distribution.Syndication.Util
+import Marketplace.Utils (createAccount)
 
 data Parties = Parties
   with
@@ -64,7 +65,7 @@ setup = do
   (_, lm1CashAccount)           <- createCustodyService operator cashProvider lm1
   (_, lm2CashAccount)           <- createCustodyService operator cashProvider lm2
   (_, lm3CashAccount)           <- createCustodyService operator cashProvider lm3
-  createCustodianRole operator bondRegistrar None None
+  createCustodianRole operator bondRegistrar None (Some $ createAccount bondRegistrar bondRegistrar)
   (_, issuerBondAccount)        <- createCustodyService operator bondRegistrar issuer
   (_, custodian1BondAccount)    <- createCustodyService operator bondRegistrar custodian1
   (_, custodian2BondAccount)    <- createCustodyService operator bondRegistrar custodian2

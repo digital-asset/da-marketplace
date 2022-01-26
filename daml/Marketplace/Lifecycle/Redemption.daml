@@ -1,0 +1,150 @@
+module Marketplace.Lifecycle.Redemption where
+
+import DA.Finance.Asset (AssetDeposit)
+import DA.Finance.Types (Asset(..), Id)
+import DA.List (dedup)
+import DA.Set (fromList)
+import Marketplace.Settlement.Hierarchical (createInstructions, Delivery(..), Status(..))
+
+template SnapshotRequest
+  with
+    operator : Party
+    bondRegistrar : Party
+    custodian : Party
+    payingAgent : Party
+    assetId : Id
+  where
+    signatory operator, bondRegistrar
+    observer custodian
+
+    choice Forward : [ContractId SnapshotRequest]
+      with
+        depositCids : [ContractId AssetDeposit]
+      controller custodian
+      do
+        deposits <- zip depositCids <$> mapA fetch depositCids
+        let
+          filtered = filter (\(_, d) -> d.asset.id.label == assetId.label && d.asset.id.version == assetId.version) deposits
+          holders = dedup $ map ((.account.owner) . snd) filtered
+        mapA (\c -> create this with custodian = c) holders
+
+    choice Provide : [ContractId Snapshot]
+      with
+        depositCids : [ContractId AssetDeposit]
+      controller custodian
+      do
+        deposits <- zip depositCids <$> mapA fetch depositCids
+        let filtered = filter (\(_, d) -> d.asset.id.label == assetId.label && d.asset.id.version == assetId.version) deposits
+        let snapshots = map (\(_, deposit) -> Snapshot with ..) filtered
+        mapA create snapshots
+
+template Snapshot
+  with
+    operator : Party
+    bondRegistrar : Party
+    custodian : Party
+    payingAgent : Party
+    assetId : Id
+    deposit : AssetDeposit
+  where
+    signatory operator, bondRegistrar, custodian
+    observer payingAgent
+
+    choice Delete : ()
+      controller operator
+      do pure ()
+
+template InvestorRedemptionRequest
+  with
+    operator : Party
+    investor : Party
+    issuer : Party
+    bondRegistrar : Party
+    cashProvider : Party
+    payingAgent : Party
+    asset : Asset
+  where
+    signatory operator, investor
+    observer bondRegistrar, issuer
+
+    choice Accept : ContractId InvestorRedemption
+      with
+        price : Asset
+      controller issuer
+      do
+        create InvestorRedemption with ..
+
+template InvestorRedemption
+  with
+    operator : Party
+    investor : Party
+    issuer : Party
+    bondRegistrar : Party
+    cashProvider : Party
+    payingAgent : Party
+    asset : Asset
+    price : Asset
+  where
+    signatory operator, investor, issuer
+    observer bondRegistrar
+
+    choice InstructInvestorRedemption : (ContractId Delivery, ContractId Delivery)
+      controller operator
+      do
+        now <- getTime
+        let
+          settlementIdCash = "InvestorRedemption" <> "-" <> asset.id.label <> "-" <> partyToText investor <> "-" <> "Cash" <> show now
+          settlementIdBond = "InvestorRedemption" <> "-" <> asset.id.label <> "-" <> partyToText investor <> "-" <> "Bond" <> show now
+          payout = price with quantity = price.quantity * asset.quantity
+        instructionCids <- createInstructions True operator payingAgent cashProvider issuer investor settlementIdCash 0 payout
+        instructionIds <- map (.instructionId) <$> mapA fetch instructionCids
+        cashDeliveryCid <- create Delivery with operator; agent = payingAgent; sender = issuer; receiver = investor; settlementId = settlementIdCash; instructionIds; asset = payout; status = Instructed
+        instructionCids <- createInstructions False operator payingAgent bondRegistrar investor bondRegistrar settlementIdBond (length instructionIds) asset
+        instructionIds <- map (.instructionId) <$> mapA fetch instructionCids
+        bondDeliveryCid <- create Delivery with operator; agent = payingAgent; sender = investor; receiver = bondRegistrar; settlementId = settlementIdBond; instructionIds; asset; status = Instructed
+        pure (cashDeliveryCid, bondDeliveryCid)
+
+template IssuerRedemptionRequest
+  with
+    operator : Party
+    issuer : Party
+    bondRegistrar : Party
+    cashProvider : Party
+    payingAgent : Party
+    assetId : Id
+    price : Asset
+  where
+    signatory operator, issuer
+    observer bondRegistrar
+
+    nonconsuming choice RequestSnapshot : ContractId SnapshotRequest
+      controller bondRegistrar
+      do
+        create SnapshotRequest with custodian = bondRegistrar; ..
+
+    choice InstructIssuerRedemption : [ContractId Delivery]
+      with
+        snapshotCids : [ContractId Snapshot]
+      controller operator
+      do
+        now <- getTime
+        let
+          createInstructionsForSnapshot : ContractId Snapshot -> Update [ContractId Delivery]
+          createInstructionsForSnapshot snapshotCid = do
+            snapshot <- fetch snapshotCid
+            let
+              payout = price with quantity = price.quantity * snapshot.deposit.asset.quantity
+              investor = snapshot.deposit.account.owner
+              settlementIdCash = "IssuerRedemption" <> "-" <> snapshot.deposit.asset.id.label <> "-" <> partyToText investor <> "-" <> "Cash" <> show now
+              settlementIdBond = "IssuerRedemption" <> "-" <> snapshot.deposit.asset.id.label <> "-" <> partyToText investor <> "-" <> "Bond" <> show now
+              asset = snapshot.deposit.asset with id.signatories = fromList [bondRegistrar, issuer]
+            instructionCids <- createInstructions True operator payingAgent cashProvider issuer investor settlementIdCash 0 payout
+            instructionIds <- map (.instructionId) <$> mapA fetch instructionCids
+            cashDeliveryCid <- create Delivery with operator; agent = payingAgent; sender = issuer; receiver = investor; settlementId = settlementIdCash; instructionIds; asset = payout; status = Instructed
+            instructionCids <- createInstructions False operator payingAgent bondRegistrar investor bondRegistrar settlementIdBond (length instructionIds) asset
+            instructionIds <- map (.instructionId) <$> mapA fetch instructionCids
+            bondDeliveryCid <-create Delivery with operator; agent = payingAgent; sender = investor; receiver = bondRegistrar; settlementId = settlementIdBond; instructionIds; asset; status = Instructed
+            exercise snapshotCid Delete
+            pure [cashDeliveryCid, bondDeliveryCid]
+        concat <$> mapA createInstructionsForSnapshot snapshotCids
+

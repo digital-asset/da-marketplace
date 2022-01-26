@@ -1,0 +1,49 @@
+module Tests.Distribution.Syndication.InvestorRedemption where
+
+import Daml.Script
+import DA.Assert ((===))
+import DA.Finance.Asset (AssetDeposit)
+import DA.Finance.Types (Asset(..))
+import Marketplace.Distribution.Syndication.Investor qualified as Investor
+import Marketplace.Lifecycle.Redemption qualified as Lifecycle
+import Tests.Distribution.Syndication.Setup (setup, Parties(..))
+import Tests.Distribution.Syndication.Issuance (issuance)
+import Tests.Distribution.Syndication.Origination (origination, Origination(..))
+import Tests.Distribution.Syndication.Util
+
+test : Script ()
+test = do
+  parties@Parties{..} <- setup
+  orig@Origination{..} <- origination parties
+  issuance parties orig
+
+  let
+    redemptionAsset1 = Asset with id = bond1Desc.assetId; quantity = 5_000_000.0
+    redemptionAsset2 = Asset with id = bond2Desc.assetId; quantity = 10_000_000.0
+    redemptionPrice1 = Asset with id = usd.assetId; quantity = 1.0
+    redemptionPrice2 = Asset with id = usd.assetId; quantity = 1.1
+
+  requestCid <- submit investor1 do exerciseByKeyCmd @Investor.Role (operator, investor1) Investor.RequestRedemption with issuer; bondRegistrar; cashProvider; payingAgent; asset = redemptionAsset1
+  erCid <- submit issuer do exerciseCmd requestCid Lifecycle.Accept with price = redemptionPrice1
+  (dCid1, dCid2) <- submit operator do exerciseCmd erCid Lifecycle.InstructInvestorRedemption
+
+  requestCid <- submit investor2 do exerciseByKeyCmd @Investor.Role (operator, investor2) Investor.RequestRedemption with issuer; bondRegistrar; cashProvider; payingAgent; asset = redemptionAsset2
+  erCid <- submit issuer do exerciseCmd requestCid Lifecycle.Accept with price = redemptionPrice2
+  (dCid3, dCid4) <- submit operator do exerciseCmd erCid Lifecycle.InstructInvestorRedemption
+
+  allocateInstructions [ issuer, bondRegistrar, lm1, lm2, lm3, custodian1, custodian2, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
+  signInstructions [ issuer, bondRegistrar, lm1, lm2, lm3, custodian1, custodian2, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
+  settleDeliveries payingAgent [ dCid1, dCid2, dCid3, dCid4 ]
+  consolidate [ issuer, bondRegistrar, lm1, lm2, lm3, custodian1, custodian2, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
+
+  [(_, ad1)] <- queryFilter @AssetDeposit investor1 (\ad -> ad.asset.id.label == usd.assetId.label)
+  [(_, ad2)] <- queryFilter @AssetDeposit investor1 (\ad -> ad.asset.id.label == bond1Desc.assetId.label)
+  [(_, ad3)] <- queryFilter @AssetDeposit investor2 (\ad -> ad.asset.id.label == usd.assetId.label)
+  [(_, ad4)] <- queryFilter @AssetDeposit investor2 (\ad -> ad.asset.id.label == bond2Desc.assetId.label)
+  ad1.asset.quantity === 5_000_000.0
+  ad2.asset.quantity === 5_000_000.0
+  ad3.asset.quantity === 11_000_000.0
+  ad4.asset.quantity === 10_000_000.0
+
+  pure ()
+

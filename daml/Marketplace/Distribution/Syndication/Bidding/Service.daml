@@ -1,8 +1,9 @@
 module Marketplace.Distribution.Syndication.Bidding.Service where
 
-import DA.Finance.Types (Asset(..), Id)
+import DA.Finance.Types (Asset(..))
 import DA.Finance.Utils (fetchAndArchive)
 import Marketplace.Distribution.Syndication.Bidding.Model qualified as Bidding
+import Marketplace.Distribution.Syndication.BookBuilding.Model qualified as BookBuilding
 import Marketplace.Utils
 
 type S = Service
@@ -31,13 +32,9 @@ template Service
     controller provider can
       nonconsuming RequestBid : ContractId Bidding.BidRequest
         with
-          issuer : Party
-          dealId : Text
-          trancheId : Text
-          deliveryId : Id
-          paymentId : Id
-          size : Decimal
+          buildRequestCid : ContractId BookBuilding.BuildRequest
         do
+          BookBuilding.BuildRequest{issuer, dealId, trancheId, deliveryId, paymentId, size} <- fetch buildRequestCid
           create Bidding.BidRequest with investor = customer; ..
 
 template Offer

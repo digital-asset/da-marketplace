@@ -2,7 +2,7 @@ module Tests.Clearing where
 
 import Daml.Script
 
-import Common
+import Tests.Common
 import DA.Set (empty, fromList)
 
 import DA.Finance.Asset

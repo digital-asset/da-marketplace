@@ -37,7 +37,7 @@ template Observation
 
     key (operator, provider, label, date) : (Party, Party, Text, Date)
     maintainer key._1
-    
+
 template SnapshotRequest
   with
     operator : Party
@@ -45,7 +45,6 @@ template SnapshotRequest
     custodian : Party
     payingAgent : Party
     assetId : Id
-    date : Date
     newVersion : Int
   where
     signatory operator, bondRegistrar
@@ -81,7 +80,6 @@ template Snapshot
     custodian : Party
     payingAgent : Party
     assetId : Id
-    date : Date
     deposit : AssetDeposit
   where
     signatory operator, bondRegistrar, custodian
@@ -140,9 +138,9 @@ template Effect
                 let
                   settlementId = lifecycleId <> "-" <> partyToText snapshot.deposit.account.owner <> "-Expiry"
                   asset = snapshot.deposit.asset with id.signatories = fromList [bondRegistrar, issuer]; id.version = newVersion
-                instructionCids <- createInstructions False operator payingAgent bondRegistrar snapshot.deposit.account.owner issuer settlementId 0 asset
+                instructionCids <- createInstructions False operator payingAgent bondRegistrar snapshot.deposit.account.owner bondRegistrar settlementId 0 asset
                 instructionIds <- map (.instructionId) <$> mapA fetch instructionCids
-                dCid <- create Delivery with operator; agent = payingAgent; sender = snapshot.deposit.account.owner; receiver = issuer; settlementId; instructionIds; asset; status = Instructed
+                dCid <- create Delivery with operator; agent = payingAgent; sender = snapshot.deposit.account.owner; receiver = bondRegistrar; settlementId; instructionIds; asset; status = Instructed
                 dCids <- mapA (createInstructionsForPayout snapshot) indexedPayouts
                 pure $ dCid :: dCids
               else

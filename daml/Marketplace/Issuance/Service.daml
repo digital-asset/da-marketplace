@@ -8,7 +8,7 @@ import DA.Set (Set, fromList, empty)
 import Marketplace.Issuance.Model (Issuance(..))
 import Marketplace.Issuance.CFI
 import Marketplace.Issuance.AssetDescription (AssetDescription(..), Claims)
--- import Marketplace.Issuance.AssetDescription qualified as AssetDescription
+import Marketplace.Distribution.Syndication.Structuring.Model qualified as Structuring
 
 template Service
   with
@@ -36,10 +36,10 @@ template Service
         with
           issuanceId : Text
           account : Account
-          assetId : Id
-          quantity : Decimal
+          trancheCid : ContractId Structuring.Tranche
         do
-          create CreateIssuanceRequest with ..
+          Structuring.Tranche{deliveryId, size} <- fetch trancheCid
+          create CreateIssuanceRequest with assetId = deliveryId; quantity = size; ..
 
       nonconsuming RequestReduceIssuance : ContractId ReduceIssuanceRequest
         with

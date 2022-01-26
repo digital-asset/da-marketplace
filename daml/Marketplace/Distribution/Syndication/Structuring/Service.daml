@@ -2,7 +2,11 @@ module Marketplace.Distribution.Syndication.Structuring.Service where
 
 import DA.Finance.Types (Id)
 import DA.Finance.Utils (fetchAndArchive)
+import DA.Foldable (forA_)
+import DA.Optional (catOptionals)
 import Marketplace.Distribution.Syndication.Structuring.Model (Deal(..), CreateTranche(..), Tranche, CreateDealRequest(..), AddTrancheRequest(..))
+import Marketplace.Distribution.Syndication.Bidding.Model qualified as Bidding
+import Marketplace.Distribution.Syndication.BookBuilding.Model qualified as BookBuilding
 import Marketplace.Utils
 
 type S = Service
@@ -39,6 +43,25 @@ template Service
           size : Decimal
         do
           create AddTrancheRequest with ..
+
+      nonconsuming CloseBook : [ContractId Bidding.Allocation]
+        with
+          buildRequestCids : [ContractId BookBuilding.BuildRequest]
+          bidCids : [ContractId Bidding.Bid]
+          allocations : [(Party, Decimal)]
+          offeredPrice : Decimal
+        do
+          let
+            allocate bidCid = do
+              bid <- fetch bidCid
+              case find (\(p, _) -> p == bid.investor) allocations of
+                Some (_, offeredQuantity) -> do
+                  Some <$> exercise bidCid Bidding.Allocate with offeredPrice; offeredQuantity
+                None -> do
+                  exercise bidCid Bidding.Reject
+                  pure None
+          forA_ buildRequestCids (`exercise` BookBuilding.Delete)
+          catOptionals <$> mapA allocate bidCids
 
     controller provider can
       nonconsuming CreateDeal : ContractId Deal

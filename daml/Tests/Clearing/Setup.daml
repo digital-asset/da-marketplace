@@ -1,7 +1,7 @@
 module Tests.Clearing.Setup where
 
 import Daml.Script
-import Common
+import Tests.Common
 import ContingentClaims.Claim (Claim(Zero))
 import DA.Assert ((===))
 import DA.Finance.Types

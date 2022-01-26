@@ -1,7 +1,7 @@
 module Tests.Trading.Cleared where
 
 import Daml.Script
-import Common
+import Tests.Common
 import DA.Assert ((===))
 import DA.List (head)
 import Marketplace.Trading.Service qualified as Trading

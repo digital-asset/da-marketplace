@@ -1,6 +1,7 @@
 module Marketplace.Distribution.Syndication.Investor where
 
-import DA.Finance.Types (Account)
+import DA.Finance.Types (Account, Asset)
+import Marketplace.Lifecycle.Redemption qualified as Lifecycle
 import Marketplace.Settlement.Hierarchical qualified as Settlement
 
 template Role
@@ -24,6 +25,16 @@ template Role
           (infoCid, _) <- fetchByKey @Settlement.AccountInfo (operator, investor)
           archive infoCid
           create Settlement.AccountInfo with party = investor; ..
+
+      nonconsuming RequestRedemption : ContractId Lifecycle.InvestorRedemptionRequest
+        with
+          issuer : Party
+          bondRegistrar : Party
+          cashProvider : Party
+          payingAgent : Party
+          asset : Asset
+        do
+          create Lifecycle.InvestorRedemptionRequest with operator; investor; issuer; bondRegistrar; cashProvider; payingAgent; asset
 
     controller operator can
       TerminateRole: ()

@@ -1,22 +1,13 @@
 module Marketplace.Custody.Model where
 
-import ContingentClaims.Claim (Claim(Zero), deserialize, serialize)
-import ContingentClaims.Lifecycle qualified as Lifecycle
-import DA.Date (toDateUTC)
 import DA.Finance.Asset
 import DA.Finance.Types
-import DA.Map qualified as M
-import DA.Optional (fromSomeNote)
-import Marketplace.Issuance.AssetDescription (AssetDescription, Claims)
-import Marketplace.Issuance.AssetDescription qualified as AssetDescription
-import Marketplace.Settlement.Model (SettlementInstruction(..), SettlementDetails(..))
-import DA.List (init)
-import DA.Action (void, when, foldlA)
+
 data Channel =
   ETH with coin: Text , address: Text
   | POLY with coin: Text , address: Text
   | SWIFT with remark: Text
-  | ONLEDGER 
+  | ONLEDGER
     deriving (Eq, Show)
 
 template DepositRequest
@@ -37,7 +28,6 @@ template DepositRequest
           assertMsg "only off-ledger request required acknowledge" (depositChannel /= ONLEDGER)
           create DepositRequestAcknowledged with ..
 
-
 template DepositRequestAcknowledged
   with
     operator: Party
@@ -48,7 +38,6 @@ template DepositRequestAcknowledged
     referenceId: Text
   where
     signatory operator, provider, customer
-
 
 template DepositConfirmed
   with
@@ -61,7 +50,6 @@ template DepositConfirmed
     account: Account
   where
     signatory operator, provider, customer
-
 
 template WithdrawalRequest
   with
@@ -82,7 +70,6 @@ template WithdrawalRequest
           assertMsg "only off-ledger request required acknowledge" (withdrawalChannel /= ONLEDGER)
           create WithdrawalRequestAcknowledged with ..
 
-
 template WithdrawalRequestAcknowledged
   with
     operator : Party
@@ -94,7 +81,6 @@ template WithdrawalRequestAcknowledged
   where
     signatory operator, provider, customer
 
-
 template WithdrawalConfirmed
   with
     operator : Party
@@ -104,78 +90,3 @@ template WithdrawalConfirmed
     referenceId: Text
   where
     signatory operator, provider, customer
-
-template LifecycleRequest
-  with
-    operator : Party
-    provider : Party
-    customer : Party
-    assetDepositCid: ContractId AssetDeposit
-    choice: Claims
-  where
-    signatory operator, provider, customer
-
-    -- TODO: this shouldn't be exported; it's only called from CustodyService.Lifecycle
-    choice Process : (ContractId AssetDeposit, [ContractId SettlementInstruction])
-      with
-          investor: Party
-          safekeepingDepositCid: ContractId AssetDeposit
-          fixings: M.Map Text (M.Map Date Decimal) --TODO these should be looked up from a contract on-ledger, not provided by the custodian!
-          uniquePayoutId: Text
-      controller investor
-        do
-          t <- toDateUTC <$> getTime
-          assetDeposit <- fetch assetDepositCid
-          (_, description) <- fetchByKey @AssetDescription assetDeposit.asset.id
-          (AssetDeposit{account = safekeepingAccount}) <- fetch safekeepingDepositCid
-          -- (versionsCid, versions) <- fetchByKey @AssetDescription.Index (fromList . signatory $ description, assetDeposit.asset.id.label)
-          let spot : Text -> Date -> Update Decimal
-              spot label dt = pure $ fromSomeNote
-                ("Lifecycle: Underlying data '" <> label <> "' missing on " <> show dt)
-                (M.lookup label fixings >>= M.lookup dt)
-              election = (True, deserialize choice)
-          remaining <- if election._2 /= Zero
-            then Lifecycle.exercise spot election (deserialize description.claims) t
-            else pure (deserialize description.claims)
-          Lifecycle.Result{remaining, pending} <- Lifecycle.lifecycle spot remaining t
-          let serializedRemaining = serialize remaining
-          -- (_, postAssetVersion) <- exercise versionsCid AssetDescription.LookupOrInsert with claims = serializedRemaining
-          let postAssetVersion = if serializedRemaining == description.claims then description.assetId.version else description.assetId.version + 1
-          when (postAssetVersion /= assetDeposit.asset.id.version) $
-            createNewVersionOfDescription description postAssetVersion serializedRemaining
-          let payoutSplitQuantities = (\(qty, _) -> qty * assetDeposit.asset.quantity) <$> pending
-          splitResultDeposits <- exercise safekeepingDepositCid AssetDeposit_Split with quantities = payoutSplitQuantities
-          let payoutCids = init splitResultDeposits
-              masterAgreementSignatories = [provider, customer, investor]
-          payoutInstructions <- createPayoutInstructions payoutCids uniquePayoutId safekeepingAccount assetDeposit operator provider
-          assetDepositCid' <- create assetDeposit with asset = (assetDeposit.asset with id = (assetDeposit.asset.id with version = postAssetVersion))
-          archive assetDepositCid
-          return (assetDepositCid', payoutInstructions)
-
-createPayoutInstructions : [ContractId AssetDeposit] -> Text -> Account -> AssetDeposit -> Party -> Party -> Update [ContractId SettlementInstruction]
-createPayoutInstructions payoutCids uniqueId safekeepingAccount assetDeposit operator provider =
-    snd <$> foldlA createSI (1, []) payoutCids
-  where
-    createSettlementDetails payoutDepositCid =
-      SettlementDetails with
-        senderAccount = safekeepingAccount
-        receiverAccount = assetDeposit.account
-        depositCid = payoutDepositCid
-    createSI (index, accumulator) payoutDepositCid = do
-      siCid <- create SettlementInstruction with operator; provider; details = [ createSettlementDetails payoutDepositCid ]
-      pure (index + 1, siCid :: accumulator)
-
-createNewVersionOfDescription : AssetDescription -> AssetDescription.Version -> Claims -> Update ()
-createNewVersionOfDescription description postAssetVersion serializedRemainingClaims =
-  void $ create description with
-    assetId = adjustedId
-    claims = serializedRemainingClaims
- where
-  adjustedId = description.assetId with version = postAssetVersion
-
-createTradeId : Id -> Int -> Text -> Id
-createTradeId assetId transferNumber uniqueId =
-  Id with
-    signatories = assetId.signatories
-    label = assetId.label <> " " <> show transferNumber <> "th transfer, ID: " <> uniqueId
-    version = assetId.version

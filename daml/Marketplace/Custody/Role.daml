@@ -6,6 +6,7 @@ import Marketplace.Custody.Service qualified as Custody
 import Marketplace.Issuance.Service qualified as Issuance
 import Marketplace.Issuance.Instrument.Service qualified as Instrument
 import Marketplace.Settlement.Hierarchical qualified as Settlement
+import Marketplace.Utils (createAccount)
 
 template Role
   with
@@ -85,7 +86,7 @@ template Offer
           cashAccount : Optional Account
           securitiesAccount : Optional Account
         do
-          let ownAccount = Some $ Custody.createAccount provider provider
+          let ownAccount = Some $ createAccount provider provider
           infoCid <- create Settlement.AccountInfo with party = provider; ..
           roleCid <- create Role with ..
           pure (roleCid, infoCid)
@@ -108,7 +109,7 @@ template Request
         with
           observers : Set Party
         do
-          let ownAccount = Some $ Custody.createAccount provider provider
+          let ownAccount = Some $ createAccount provider provider
           infoCid <- create Settlement.AccountInfo with party = provider; ..
           roleCid <- create Role with ..
           pure (roleCid, infoCid)
