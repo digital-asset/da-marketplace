@@ -1,13 +1,20 @@
 module Marketplace.Lifecycle.Model where
 
+import ContingentClaims.Claim.Serializable (Claim(..))
 import DA.Finance.Asset (AssetDeposit, AssetDeposit_Upgrade(..))
-import DA.Finance.Types (Asset(..), Id)
+import DA.Finance.Types (Account, Asset(..), Id)
 import DA.Foldable (forA_)
 import DA.List (dedup)
 import DA.Set (fromList)
 import Marketplace.Custody.Model qualified as Custody
+import Marketplace.Issuance.Instrument.Model qualified as Instrument
 import Marketplace.Settlement.Hierarchical (createInstructions, getAccount, Delivery(..), Status(..))
+import SwiftMessage.Message (SwiftMessage(MT566), SwiftMessageType(..), SwiftOutboundMessage(..))
+import SwiftMessage.Model.MT566
+import SwiftMessage.Util
+import DA.Text (isInfixOf)
 
+type Claims = Claim Date Decimal Id
 template Today
   with
     operator : Party
@@ -118,6 +125,26 @@ template Effect
       controller operator
       do
         let
+          sendSwiftMessage : Text -> Account -> Asset -> Update ()
+          sendSwiftMessage settlementId buyerSafekeepingAcc asset = do
+            let              
+              getRedemptionDate : Date -> Date -> Optional Date
+              getRedemptionDate maturityDate payoutDate = if payoutDate == maturityDate then Some payoutDate else Nothing
+            if "BOND" `isInfixOf` assetId.label then do -- todo this is a temporary hack
+              (_, bond) <- fetchByKey @Instrument.Bond (fromList [issuer, bondRegistrar], assetId.label)
+            
+              let
+                instrumentId = bond.isin <> assetId.label
+                faceAmount = asset.quantity
+                currency = asset.id
+                maturityDate = bond.maturityDate
+                payoutDate = date
+                redemptionDate = getRedemptionDate maturityDate payoutDate
+                mt566 = createMT566Details instrumentId buyerSafekeepingAcc CR faceAmount currency maturityDate payoutDate redemptionDate
+              create SwiftOutboundMessage with referenceId = settlementId; provider = operator ; consumer = operator; swiftMessage=MT566 (mt566); swiftMessageType=MT566_t; status=Pending; observers=fromList [payingAgent]
+              pure ()
+            else pure ()
+          
           indexedPayouts = zip [0 .. length payouts - 1] payouts
           createInstructionsForPayout : Snapshot -> (Int, (Decimal, Id)) -> Update (ContractId Delivery)
           createInstructionsForPayout snapshot (index, (amount, id)) = do
@@ -134,6 +161,7 @@ template Effect
               receiverAccount = getAccount True receiverSettlementInfo receiver
             instructionCids <- createInstructions True operator payingAgent cashProvider senderAccount receiverAccount settlementId instructionIdx asset
             instructionIds <- map (.instructionId) <$> mapA fetch instructionCids
+            sendSwiftMessage settlementId receiverAccount asset
             create Delivery with operator; agent = payingAgent; sender; receiver; settlementId; instructionIds; asset; status = Instructed
           createInstructionsForSnapshot : ContractId Snapshot -> Update [ContractId Delivery]
           createInstructionsForSnapshot snapshotCid = do

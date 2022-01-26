@@ -6,6 +6,7 @@ import SwiftMessage.Model.MT547
 import SwiftMessage.Model.MT564
 import SwiftMessage.Model.MT566
 import DA.Set (Set)
+import DA.Optional (whenSome)
 
 data SwiftMessage = 
       MT545 (MT545Details)
@@ -56,3 +57,7 @@ template SwiftOutboundMessage
         with 
           newObserver : Set Party 
             do create this with observers = newObserver <> observers 
+
+finalizeSwiftMessage k = do
+  cidOpt <- lookupByKey @SwiftOutboundMessage k
+  whenSome cidOpt (\cid -> do exercise cid Finalize; pure ())
