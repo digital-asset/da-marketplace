@@ -11,3 +11,5 @@ data MessageType =
   | REPL
   | RMDR
   deriving (Eq, Show)
+
+data CRDB = CR | DB deriving (Eq, Show)

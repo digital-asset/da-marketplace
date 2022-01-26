@@ -3,14 +3,18 @@ module SwiftMessage.Message where
 import SwiftMessage.Util
 import SwiftMessage.Model.MT545
 import SwiftMessage.Model.MT547
+import SwiftMessage.Model.MT564
+import SwiftMessage.Model.MT566
 import DA.Set (Set)
 
 data SwiftMessage = 
       MT545 (MT545Details)
     | MT547 (MT547Details)
+    | MT564 (MT564Details)
+    | MT566 (MT566Details)
   deriving (Eq, Show)
 
-data SwiftMessageType = MT545_t | MT547_t 
+data SwiftMessageType = MT545_t | MT547_t | MT564_t | MT566_t
   deriving (Eq, Show)
 
 
