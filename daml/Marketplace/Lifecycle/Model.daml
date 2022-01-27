@@ -7,12 +7,13 @@ import DA.Foldable (forA_)
 import DA.List (dedup)
 import DA.Set (fromList)
 import Marketplace.Custody.Model qualified as Custody
+import Marketplace.Issuance.AssetDescription
+import Marketplace.Issuance.CFI qualified as CFI
 import Marketplace.Issuance.Instrument.Model qualified as Instrument
 import Marketplace.Settlement.Hierarchical (createInstructions, getAccount, Delivery(..), Status(..))
 import SwiftMessage.Message (SwiftMessage(MT566), SwiftMessageType(..), SwiftOutboundMessage(..))
 import SwiftMessage.Model.MT566
 import SwiftMessage.Util
-import DA.Text (isInfixOf)
 
 type Claims = Claim Date Decimal Id
 template Today
@@ -130,7 +131,9 @@ template Effect
             let              
               getRedemptionDate : Date -> Date -> Optional Date
               getRedemptionDate maturityDate payoutDate = if payoutDate == maturityDate then Some payoutDate else Nothing
-            if "BOND" `isInfixOf` assetId.label then do -- todo this is a temporary hack
+              
+            (_, description) <- fetchByKey @AssetDescription assetId
+            if (description.cfi == CFI.bond) then do
               (_, bond) <- fetchByKey @Instrument.Bond (fromList [issuer, bondRegistrar], assetId.label)
             
               let
