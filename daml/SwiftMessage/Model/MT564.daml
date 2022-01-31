@@ -5,27 +5,12 @@ import SwiftMessage.Util
 import DA.Optional (isSome)
 
 data MT564Details = MT564Details with
-    instrumentId : Text -- ISIN + bond id
-    buyerSafekeepingAcc : Account -- buyer's/investor's cash account
-    
-    crdb : CRDB -- credit or debit indicator
-    faceAmount : Decimal
-    payoutCurrency : Id -- currency option
-    settledCurrency : Id -- currency denominator
-    
-    maturityDate : Date
-    payoutDate : Date -- payment date for dividend payout
-    redemptionDate : Optional Date -- payment date for coupon redemption
-    payoutType : PayoutType
-  deriving (Eq, Show)
-
-data PayoutType = 
-  REDM -- for redemption 
-  | INTR -- for dividend payout
+    payoutDetails : PayoutDetails
   deriving (Eq, Show)
 
 createMT564Details : Text -> Account -> CRDB -> Decimal -> Id -> Date -> Date -> Optional Date -> MT564Details
 createMT564Details instrumentId buyerSafekeepingAcc crdb faceAmount 
   currency maturityDate payoutDate redemptionDate = 
     let payoutType = if isSome redemptionDate then REDM else INTR in
-    MT564Details with payoutCurrency = currency; settledCurrency = currency; ..
+    let payoutDetails = PayoutDetails with payoutCurrency = currency; settledCurrency = currency; .. in
+    MT564Details with ..

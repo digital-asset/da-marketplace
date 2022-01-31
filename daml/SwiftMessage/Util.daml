@@ -1,5 +1,7 @@
 module SwiftMessage.Util where
 
+import DA.Finance.Types (Id(..), Account(..))
+
 data MessageStatus = Pending | Finalized | Processed | Failed String
   deriving (Eq, Show)
 
@@ -13,3 +15,23 @@ data MessageType =
   deriving (Eq, Show)
 
 data CRDB = CR | DB deriving (Eq, Show)
+
+data PayoutDetails = PayoutDetails with
+    instrumentId : Text -- ISIN + bond id
+    buyerSafekeepingAcc : Account -- buyer's/investor's cash account
+
+    crdb : CRDB -- credit or debit indicator
+    faceAmount : Decimal
+    payoutCurrency : Id -- currency option
+    settledCurrency : Id -- currency denominator
+
+    maturityDate : Date
+    payoutDate : Date -- payment date for dividend payout
+    redemptionDate : Optional Date -- payment date for coupon redemption
+    payoutType : PayoutType
+  deriving (Eq, Show)
+
+data PayoutType = 
+    REDM -- for redemption 
+    | INTR -- for dividend payout
+  deriving (Eq, Show)
