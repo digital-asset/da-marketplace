@@ -9,6 +9,7 @@ import DA.Action
 import DA.Foldable hiding (elem, null)
 import DA.Next.Set (fromList)
 import DA.List
+import DA.Optional
 import DA.Map (Map)
 import DA.Map qualified as Map
 import Daml.Trigger
@@ -59,11 +60,16 @@ handleMatchingRule party = do
 
   -- Acknowledge all 'OrderRequest' and update current ID
   orderRequests <- query @OrderRequest
-  forA_ orderRequests \(cid,_) -> do
+  forA_ orderRequests \(cid,or) -> do
     state <- get
-    emitExerciseCmd cid OrderRequest_Ack with orderId = state.currentOrderId
+
+    let orderId = case or.optOrderId of
+          (Some x) -> x
+          None     -> state.currentOrderId
+
+    emitExerciseCmd cid OrderRequest_Ack with ..
+    when (isNone or.optOrderId) $ put $ state with currentOrderId = state.currentOrderId + 1
     debug "Acknowledging order"
-    put $ state with currentOrderId = state.currentOrderId + 1
 
   -- Acknowledge all 'OrderCancelRequest'
   orderCancelRequests <- query @OrderCancelRequest
