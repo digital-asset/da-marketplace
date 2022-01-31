@@ -52,7 +52,7 @@ runMatchingTest lp@LedgerParties{userAdmin = operator; btcIssuer = issuer; ..} =
   aliceUsdId1 <- setupExchangeAccount DepositDirect lp custodian usdTokenId 15.0 alice
   aliceUsdId2 <- setupExchangeAccount DepositDirect lp custodian usdTokenId 20.0 alice
   aliceUsdId3 <- setupExchangeAccount DepositDirect lp custodian usdTokenId 30.0 alice
-  bobTokenId <- setupExchangeAccount DepositDirect lp custodian testTokenId 3.0 bob
+  bobTokenId  <- setupExchangeAccount DepositDirect lp custodian testTokenId 3.0 bob
 
   sleep (seconds 5)
 

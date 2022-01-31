@@ -56,9 +56,6 @@ runMatchingTest lp@LedgerParties{userAdmin = operator; btcIssuer = issuer; ..} =
   let aliceOrderId = testNumber + 1
   bidOrderRequestCid <- alice `submit` exerciseByKeyCmd @ExchangeParticipant (exchange, operator, alice) ExchangeParticipant_PlaceBid
       with depositCids = [aliceUsdId], amount = 10000.0, pair = (testTokenId, usdTokenId), price = 10000.00, optOrderId = Some aliceOrderId
-  --
-  -- aliceOrderCid <- exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_ApproveOrderRequest
-  --     with orderRequestCid = bidOrderRequestCid, orderId = 1
 
   (aliceOrderCid, aliceOrder) <- waitQuery 10.0 (queryContractKey @Order exchange (exchange, aliceOrderId))
 
