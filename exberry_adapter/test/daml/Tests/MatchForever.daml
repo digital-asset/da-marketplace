@@ -40,7 +40,7 @@ runMatchingTest lp@LedgerParties{userAdmin = operator; btcIssuer = issuer; ..} =
 
   debug "Adding marketpair..."
   testTokenId <- createToken operator issuer ("DATEST" <> show testNumber) "Testing Coin" 2 observers
-  usdTokenId <- createToken operator issuer "USD" "US Dollars" 2 observers
+  usdTokenId  <- createToken operator issuer "USD" "US Dollars" 2 observers
 
   let testPair = (testTokenId, usdTokenId)
 
@@ -64,6 +64,7 @@ runMatchingTest lp@LedgerParties{userAdmin = operator; btcIssuer = issuer; ..} =
 
   debug "Test passed!"
 
+-- |Create N matched orders after pre-allocating funds
 runAllocatedOrders : LedgerParties -> (Id, Id) -> Int -> Int -> Script Int
 runAllocatedOrders lp@LedgerParties{userAdmin = operator; ..} (testTokenId, usdTokenId) n testNumber = do
   debug "Setting up accounts..."
@@ -80,6 +81,7 @@ runAllocatedOrders' lp@LedgerParties{userAdmin = operator; ..} idPair (a::as) (b
   nextId <- doOrder lp idPair a b currentId
   runAllocatedOrders' lp idPair as bs (n - 1) nextId
 
+-- |Create N matched orders
 runOrders : LedgerParties -> (Id, Id) -> Int -> Int -> Script Int
 runOrders _ _ 0 currentId = return currentId
 
@@ -90,7 +92,6 @@ runOrders lp@LedgerParties{userAdmin = operator; ..} idPair n currentId = do
   nextId <- doOrder lp idPair aliceUsdCid bobTokenCid currentId
   runOrders lp idPair (n - 1) nextId
 
-
 doOrder : LedgerParties -> IdPair -> ContractId AssetDeposit -> ContractId AssetDeposit -> Int -> Script Int
 doOrder lp@LedgerParties{userAdmin = operator; ..} (testTokenId, usdTokenId) aliceUsdCid bobTokenCid testNumber = do
 
@@ -98,8 +99,6 @@ doOrder lp@LedgerParties{userAdmin = operator; ..} (testTokenId, usdTokenId) ali
   let aliceOrderId = testNumber + 1
   _ <- alice `submit` exerciseByKeyCmd @ExchangeParticipant (exchange, operator, alice) ExchangeParticipant_PlaceBid
       with depositCids = [aliceUsdCid], amount = 1.0, pair = (testTokenId, usdTokenId), price = 1.00, optOrderId = None
-
-  -- (_, aliceOrder) <- waitQuery 10.0 (queryContractKey @Order exchange (exchange, aliceOrderId))
 
   debug "Submitting Bob's order..."
   let bobOrderId = aliceOrderId + 1
