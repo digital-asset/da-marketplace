@@ -193,4 +193,6 @@ setup = do
   -- Lifecycling services
   createLifecycleService operator issuer bondRegistrar cashProvider payingAgent
 
+  -- Snapshot services
+  createSnapshotService operator payingAgent
   pure Parties with ..
