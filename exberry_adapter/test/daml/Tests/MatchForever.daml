@@ -1,0 +1,109 @@
+module Tests.MatchForever where
+
+import Tests.ExchangeTrade
+import Setup
+
+import Daml.Script
+import DA.Optional
+
+import Marketplace.Exchange
+import Marketplace.ExchangeParticipant
+import Marketplace.Utils
+
+import DA.Action
+import DA.Finance.Types
+import Utils
+import DA.Time (seconds)
+import DA.Finance.Asset (AssetDeposit)
+import Marketplace.Trading (TradeSide)
+
+matchingTest : Script ()
+matchingTest = getExistingParties >>= runMatchingTest
+
+runMatchingTest : LedgerParties -> Script ()
+runMatchingTest lp@LedgerParties{userAdmin = operator; btcIssuer = issuer; ..} = do
+  -- Onboard and create relationships
+  handleOnboarding lp
+
+  -- Onboard investors
+  onboardInvestor lp alice "Alice the Investor"
+  onboardInvestor lp bob "Bob the Investor"
+
+  let observers = [operator, public, custodian, exchange, issuer, alice, bob]
+
+  testNumber <- getRandom 1000 10000
+
+  debug $ "Setting ExberrySID to " <> show testNumber
+  sidCid <- exchange `submit` createCmd ExberrySID with sid = testNumber, ..
+
+  waitUntil 10.0 (isNone <$> queryContractId exchange sidCid)
+
+  debug "Adding marketpair..."
+  testTokenId <- createToken operator issuer ("DATEST" <> show testNumber) "Testing Coin" 2 observers
+  usdTokenId  <- createToken operator issuer "USD" "US Dollars" 2 observers
+
+  let testPair = (testTokenId, usdTokenId)
+
+  exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_AddPair
+      with baseTokenId = testTokenId, baseType = TokenAsset, quoteTokenId = usdTokenId, quoteType = TokenAsset
+           minQuantity = 0.01, maxQuantity = 10000.0, clearedMarket = False, defaultCCP = None
+
+  sleep (seconds 8)
+
+  nextId <- runOrders lp testPair 150 testNumber
+
+  debug "Checking tradesides..."
+
+  waitUntil 2000.0 $ do
+    tradeSides <- query @TradeSide exchange
+    return $ (length tradeSides) == 300
+
+  exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_ResetMarket with pair = testPair; clearedMarket = False
+
+  sleep (seconds 4)
+
+  debug "Test passed!"
+
+-- |Create N matched orders after pre-allocating funds
+runAllocatedOrders : LedgerParties -> (Id, Id) -> Int -> Int -> Script Int
+runAllocatedOrders lp@LedgerParties{userAdmin = operator; ..} (testTokenId, usdTokenId) n testNumber = do
+  debug "Setting up accounts..."
+  aliceDepositCids <- replicateA n (setupExchangeAccount DepositDirect lp custodian usdTokenId 1.0 alice)
+  bobDepositCids   <- replicateA n (setupExchangeAccount DepositDirect lp custodian testTokenId 1.0 bob)
+  runAllocatedOrders' lp (testTokenId, usdTokenId) aliceDepositCids bobDepositCids n testNumber
+
+runAllocatedOrders' : LedgerParties -> (Id, Id) -> [ContractId AssetDeposit] -> [ContractId AssetDeposit] -> Int -> Int -> Script Int
+runAllocatedOrders' _ _ _ [] _  currentId = return currentId
+runAllocatedOrders' _ _ [] _ _  currentId = return currentId
+runAllocatedOrders' _ _ _ _   0 currentId = return currentId
+
+runAllocatedOrders' lp@LedgerParties{userAdmin = operator; ..} idPair (a::as) (b::bs) n currentId = do
+  nextId <- doOrder lp idPair a b currentId
+  runAllocatedOrders' lp idPair as bs (n - 1) nextId
+
+-- |Create N matched orders
+runOrders : LedgerParties -> (Id, Id) -> Int -> Int -> Script Int
+runOrders _ _ 0 currentId = return currentId
+
+runOrders lp@LedgerParties{userAdmin = operator; ..} idPair n currentId = do
+  debug "Setting up accounts..."
+  aliceUsdCid <- setupExchangeAccount DepositDirect lp custodian idPair._2 1.0 alice
+  bobTokenCid <- setupExchangeAccount DepositDirect lp custodian idPair._1 1.0 bob
+  nextId <- doOrder lp idPair aliceUsdCid bobTokenCid currentId
+  runOrders lp idPair (n - 1) nextId
+
+doOrder : LedgerParties -> IdPair -> ContractId AssetDeposit -> ContractId AssetDeposit -> Int -> Script Int
+doOrder lp@LedgerParties{userAdmin = operator; ..} (testTokenId, usdTokenId) aliceUsdCid bobTokenCid testNumber = do
+
+  debug "Submitting Alice's order..."
+  let aliceOrderId = testNumber + 1
+  _ <- alice `submit` exerciseByKeyCmd @ExchangeParticipant (exchange, operator, alice) ExchangeParticipant_PlaceBid
+      with depositCids = [aliceUsdCid], amount = 1.0, pair = (testTokenId, usdTokenId), price = 1.00, optOrderId = None
+
+  debug "Submitting Bob's order..."
+  let bobOrderId = aliceOrderId + 1
+  _ <- bob `submit` exerciseByKeyCmd @ExchangeParticipant (exchange, operator, bob) ExchangeParticipant_PlaceOffer
+      with depositCids = [bobTokenCid], amount = 1.0, pair = (testTokenId, usdTokenId), price = 1.00, optOrderId = None
+
+  return $ bobOrderId
+

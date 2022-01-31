@@ -94,6 +94,7 @@ template CCPCustomer
           pair : IdPair
           quoteType : AssetType
           price : Decimal
+          optOrderId : Optional Int
         do
           quantityPrecision <- (.quantityPrecision) <$> tokenOrUnderlying quoteType pair._2
           assertMsg ("price should be rounded to at most " <> show quantityPrecision <> " decimal places")

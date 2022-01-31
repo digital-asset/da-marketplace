@@ -54,6 +54,7 @@ template ExchangeParticipant
           price : Decimal
           qty : Decimal
           isBid : Bool
+          optOrderId : Optional Int
         do
           deposit <- fetch depositCid
           assertMsg "deposit is not allocated to the exchange"
@@ -83,6 +84,7 @@ template ExchangeParticipant
           pair : IdPair
           amount : Decimal
           price : Decimal
+          optOrderId : Optional Int
         do
           aggregateQty <- getDepositQuantities depositCids
 
@@ -103,7 +105,7 @@ template ExchangeParticipant
           (_, baseToken) <- fetchByKey @Token pair._1
           let qty = roundBankers baseToken.quantityPrecision $ newDeposit.asset.quantity / price
 
-          exercise self ExchangeParticipant_MakeOrder with depositCid = newDepositCid, pair, price, qty, isBid = True
+          exercise self ExchangeParticipant_MakeOrder with depositCid = newDepositCid, pair, price, qty, isBid = True, ..
 
       nonconsuming ExchangeParticipant_PlaceOffer : ContractId OrderRequest
         with
@@ -111,6 +113,7 @@ template ExchangeParticipant
           pair : IdPair
           amount : Decimal
           price : Decimal
+          optOrderId : Optional Int
         do
           aggregateQty <- getDepositQuantities depositCids
 
@@ -131,7 +134,7 @@ template ExchangeParticipant
           (_, baseToken) <- fetchByKey @Token pair._1
           let qty = roundBankers baseToken.quantityPrecision newDeposit.asset.quantity
 
-          exercise self ExchangeParticipant_MakeOrder with depositCid = newDepositCid, pair, price, qty, isBid = False
+          exercise self ExchangeParticipant_MakeOrder with depositCid = newDepositCid, pair, price, qty, isBid = False, ..
 
       nonconsuming ExchangeParticipant_MakeOrder : ContractId OrderRequest
         with
@@ -140,6 +143,7 @@ template ExchangeParticipant
           price : Decimal
           qty : Decimal
           isBid : Bool
+          optOrderId : Optional Int
         do
           deposit <- fetch depositCid
           assertMsg "Deposit must be signed by Exchange operator!" $ Set.member operator deposit.account.id.signatories
@@ -167,6 +171,7 @@ template ExchangeParticipant
           quoteType: AssetType
           amount : Decimal
           price : Decimal
+          optOrderId : Optional Int
         do
           quantityPrecision <- (.quantityPrecision) <$> tokenOrUnderlying baseType pair._1
 
@@ -187,6 +192,7 @@ template ExchangeParticipant
           quoteType: AssetType
           amount : Decimal
           price : Decimal
+          optOrderId : Optional Int
         do
           quantityPrecision <- (.quantityPrecision) <$> tokenOrUnderlying baseType pair._1
 

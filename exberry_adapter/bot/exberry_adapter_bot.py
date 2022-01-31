@@ -143,7 +143,7 @@ def main():
         ])
 
     @client.ledger_created(MARKETPLACE.ResetMarketRequest)
-    def handle_clear_market(event):
+    async def handle_clear_market(event):
         logging.info('running clear market...')
         sid = get_sid()
         pair = event.cdata['pair']
@@ -153,57 +153,61 @@ def main():
             orders = client.find_active(MARKETPLACE.ClearedOrder)
             for (order_cid, order) in orders.items():
                 if order['pair'] == pair:
-                    client.submit_exercise(order_cid, "ClearedOrder_Cancel")
+                    await client.exercise(order_cid, "ClearedOrder_Cancel")
 
             cancel_requests = client.find_active(MARKETPLACE.ClearedOrderCancelRequest)
             for (req_cid, req) in cancel_requests.items():
                 if req['order']['pair'] == pair:
-                    client.submit_exercise(req_cid, "ClearedOrderCancel_Reject")
+                    await client.exercise(req_cid, "ClearedOrderCancel_Reject")
 
             order_requests = client.find_active(MARKETPLACE.ClearedOrderRequest)
             for (req_cid, req) in order_requests.items():
                 if req['order']['pair'] == pair:
-                    client.submit_exercise(req_cid, "ClearedOrderRequest_Reject")
+                    await client.exercise(req_cid, "ClearedOrderRequest_Reject")
             instrument = make_instrument(pair, True)
         else:
             logging.info(f"resetting regular market...")
             orders = client.find_active(MARKETPLACE.Order)
             for (order_cid, order) in orders.items():
                 if order['pair'] == pair:
-                    client.submit_exercise(order_cid, "Order_Cancel")
+                    await client.exercise(order_cid, "Order_Cancel")
 
             cancel_requests = client.find_active(MARKETPLACE.OrderCancelRequest)
             for (req_cid, req) in cancel_requests.items():
                 if req['order']['pair'] == pair:
-                    client.submit_exercise(req_cid, "OrderCancel_Reject")
+                    await client.exercise(req_cid, "OrderCancel_Reject")
 
             order_requests = client.find_active(MARKETPLACE.OrderRequest)
             for (req_cid, req) in order_requests.items():
                 if req['order']['pair'] == pair:
-                    client.submit_exercise(req_cid, "OrderRequest_Reject")
+                    await client.exercise(req_cid, "OrderRequest_Reject")
             instrument = make_instrument(pair)
-        client.submit_create(EXBERRY.MassCancelRequest, {
+        await client.create(EXBERRY.MassCancelRequest, {
             'integrationParty': client.party,
             'sid': sid,
             'instrument': instrument
         })
-        client.submit_exercise(event.cid, "ResetMarketRequest_Ack")
+        await client.exercise(event.cid, "ResetMarketRequest_Ack")
         return []
 
 
     @client.ledger_created(MARKETPLACE.ExberrySID)
-    def handle_exberry_SID(event):
+    async def handle_exberry_SID(event):
         logging.info(f"Handling new Exberry SID")
         global SID
         SID = event.cdata['sid']
         logging.info(f'Changed current SID to {SID}')
-        client.submit_exercise(event.cid, 'ExberrySID_Ack', {})
+        await client.exercise(event.cid, 'ExberrySID_Ack', {})
 
     # Marketplace --> Exberry
     @client.ledger_created(MARKETPLACE.ClearedOrderRequest)
-    def handle_cleared_order_request(event):
+    async def handle_cleared_order_request(event):
         logging.info(f"Handling new ClearedOrderRequest")
-        sid = get_sid()
+
+        if event.cdata['optOrderId']:
+            sid = event.cdata['optOrderId']
+        else:
+            sid = get_sid()
 
         order = event.cdata['order']
         order['isCleared'] = True
@@ -213,7 +217,7 @@ def main():
         instrument = make_instrument(order['pair'], True)
         logging.info(f"Instrument label is: {instrument}")
 
-        client.submit_create(EXBERRY.NewOrderRequest, {
+        await client.create(EXBERRY.NewOrderRequest, {
             'order': {
                 'orderType': 'Limit',
                 'instrument': instrument,
@@ -230,17 +234,20 @@ def main():
 
     # Marketplace --> Exberry
     @client.ledger_created(MARKETPLACE.OrderRequest)
-    def handle_order_request(event):
-        logging.info(f"Handling new OrderRequest")
+    async def handle_order_request(event):
+        logging.info(f"Handling new OrderRequest: {event.cdata}")
 
-        sid = get_sid()
+        if event.cdata['optOrderId']:
+            sid = event.cdata['optOrderId']
+        else:
+            sid = get_sid()
 
         order = event.cdata['order']
         order['isCleared'] = False
 
         sid_to_order[sid] = order
 
-        client.submit_create(EXBERRY.NewOrderRequest, {
+        await client.create(EXBERRY.NewOrderRequest, {
             'order': {
                 'orderType': 'Limit',
                 'instrument': make_instrument(order['pair']),
@@ -262,21 +269,37 @@ def main():
 
         event_sid = event.cdata['sid']
 
-        if not event_sid in sid_to_order:
-            logging.error(f'Order {event.cdata} not found in adapter state')
-            client.submit_exercise(event.cid, 'Archive', {})
+        requests = client.find(MARKETPLACE.OrderRequest, { 'optOrderId': event_sid })
+        cleared_requests = client.find(MARKETPLACE.ClearedOrderRequest, { 'optOrderId': event_sid })
 
-        order = sid_to_order.pop(event_sid)
+        order = None
+
+        if len(requests) > 0:
+            order = requests[0].cdata['order']
+            order['isCleared'] = False
+        elif len(cleared_requests) > 0:
+            order = cleared_requests[0].cdata['order']
+            order['isCleared'] = True
+        else:
+            if event_sid in sid_to_order:
+                order = sid_to_order.pop(event_sid)
+
+        # if event_sid in sid_to_order: del sid_to_order[event_sid]
+
+        if order == None:
+            logging.error(f'Order {event.cdata} not found in adapter state or order requests')
+            await client.exercise(event.cid, 'Archive', {})
+            return []
 
         sid_is_cleared[event_sid] = order['isCleared']
 
         query = { 'order': order }
-        client.submit_exercise(event.cid, 'Archive', {})
+        await client.exercise(event.cid, 'Archive', {})
         if order['isCleared']:
             logging.info(f"Acknowledging Cleared Order Success")
             try:
                 req_cid, _ = find_first(MARKETPLACE.ClearedOrderRequest, query)
-                client.submit_exercise(req_cid, 'ClearedOrderRequest_Ack', {
+                await client.exercise(req_cid, 'ClearedOrderRequest_Ack', {
                     'orderId': event_sid
                 })
             except: logging.error(f'Cleared Order request not found for {order}')
@@ -284,7 +307,7 @@ def main():
             logging.info(f"Acknowledging Order Success")
             try:
                 req_cid, _ = find_first(MARKETPLACE.OrderRequest, query)
-                client.submit_exercise(req_cid, 'OrderRequest_Ack', {
+                await client.exercise(req_cid, 'OrderRequest_Ack', {
                     'orderId': event_sid
                 })
             except: logging.error(f'Order request not found for {order}')
@@ -296,32 +319,47 @@ def main():
         logging.info(f"Handling NewOrderFailure")
 
         event_sid = event.cdata['sid']
-        if not event_sid in sid_to_order:
-            logging.warning(f'Order for {event_sid} not found')
+
+        requests = client.find(MARKETPLACE.OrderRequest, { 'optOrderId': event_sid })
+        cleared_requests = client.find(MARKETPLACE.ClearedOrderRequest, { 'optOrderId': event_sid })
+
+        order = None
+
+        if len(requests) > 0:
+            order = requests[0].cdata['order']
+            order['isCleared'] = False
+        elif len(cleared_requests) > 0:
+            order = cleared_requests[0].cdata['order']
+            order['isCleared'] = True
+        else:
+            if event_sid in sid_to_order:
+                order = sid_to_order.pop(event_sid)
+
+        if order == None:
+            logging.error(f'Order {event.cdata} not found in adapter state or order requests')
+            await client.exercise(event.cid, 'Archive', {})
             return []
 
-        order = sid_to_order.pop(event_sid)
-
         query = { 'order': order }
-        client.submit_exercise(event.cid, 'Archive', {})
+        await client.exercise(event.cid, 'Archive', {})
 
         if order['isCleared']:
             logging.info(f"Acknowledging Cleared Order Failure")
             try:
                 req_cid, _ = find_first(MARKETPLACE.ClearedOrderRequest, query)
-                client.submit_exercise(req_cid, 'ClearedOrderRequest_Reject', {})
+                await client.exercise(req_cid, 'ClearedOrderRequest_Reject', {})
             except: logging.warning(f'Cleared order request not found for: {order}')
         else:
             logging.info(f"Acknowledging Order Failure")
             try:
                 req_cid, _ = find_first(MARKETPLACE.OrderRequest, query)
-                client.submit_exercise(req_cid, 'OrderRequest_Reject', {})
+                await client.exercise(req_cid, 'OrderRequest_Reject', {})
             except: logging.warning(f'Order request not found for: {order}')
         return []
 
     # Marketplace --> Exberry
     @client.ledger_created(MARKETPLACE.MarketPair)
-    def handle_new_market_pair(event):
+    async def handle_new_market_pair(event):
         logging.info(f"Handling new MarketPair")
 
         pair = event.cdata
@@ -337,7 +375,7 @@ def main():
 
         market_pairs[symbol] = pair
 
-        client.submit_create(EXBERRY.CreateInstrumentRequest, {
+        await client.create(EXBERRY.CreateInstrumentRequest, {
             'integrationParty': client.party,
             'symbol': symbol,
             'quoteCurrency': quote_currency,
@@ -353,11 +391,11 @@ def main():
 
     # Marketplace --> Exberry
     @client.ledger_created(MARKETPLACE.OrderCancelRequest)
-    def handle_order_cancel_request(event):
+    async def handle_order_cancel_request(event):
         logging.info(f"Handling OrderCancelRequest")
 
         order = event.cdata['order']
-        client.submit_create(EXBERRY.CancelOrderRequest, {
+        await client.create(EXBERRY.CancelOrderRequest, {
             'integrationParty': client.party,
             'instrument': make_instrument(order['pair']),
             'mpOrderId': order['orderId'],
@@ -367,11 +405,11 @@ def main():
 
     # Marketplace --> Exberry
     @client.ledger_created(MARKETPLACE.ClearedOrderCancelRequest)
-    def handle_cleared_order_cancel_request(event):
+    async def handle_cleared_order_cancel_request(event):
         logging.info(f"Handling ClearedOrderCancelRequest")
 
         order = event.cdata['order']
-        client.submit_create(EXBERRY.CancelOrderRequest, {
+        await client.create(EXBERRY.CancelOrderRequest, {
             'integrationParty': client.party,
             'instrument': make_instrument(order['pair'], True),
             'mpOrderId': order['orderId'],
@@ -385,26 +423,26 @@ def main():
         logging.info(f"Handling CancelOrderSuccess")
 
         if event.cdata['sid'] in sid_is_cleared and sid_is_cleared[event.cdata['sid']]:
-            client.submit_exercise_by_key(MARKETPLACE.ClearedOrderCancelRequest,
-                                {'_1': client.party, '_2': event.cdata['sid']},
-                                'ClearedOrderCancel_Ack', {})
-            client.submit_exercise(event.cid, 'Archive', {})
+            await client.exercise_by_key(MARKETPLACE.ClearedOrderCancelRequest,
+                                'ClearedOrderCancel_Ack',
+                                {'_1': client.party, '_2': event.cdata['sid']}, {})
+            await client.exercise(event.cid, 'Archive', {})
             return []
         else:
-            client.submit_exercise_by_key(MARKETPLACE.OrderCancelRequest,
-                                {'_1': client.party, '_2': event.cdata['sid']},
-                                'OrderCancel_Ack', {})
-            client.submit_exercise(event.cid, 'Archive', {})
+            await client.exercise_by_key(MARKETPLACE.OrderCancelRequest,
+                                'OrderCancel_Ack',
+                                {'_1': client.party, '_2': event.cdata['sid']}, {})
+            await client.exercise(event.cid, 'Archive', {})
 
     # Marketplace <-- Exberry
     @client.ledger_created(EXBERRY.CancelOrderFailure)
     async def handle_cancel_order_failure(event):
         logging.info(f"Handling CancelOrderFailure")
 
-        return [exercise_by_key(MARKETPLACE.OrderCancelRequest,
-                                {'_1': client.party, '_2': event.cdata['sid']},
-                                'OrderCancel_Ack', {}),
-                exercise(event.cid, 'Archive', {})]
+        await client.exercise_by_key(MARKETPLACE.OrderCancelRequest,
+                                'OrderCancel_Ack',
+                                {'_1': client.party, '_2': event.cdata['sid']}, {})
+        await client.exercise(event.cid, 'Archive', {})
 
     # Marketplace <-- Exberry
     @client.ledger_created(EXBERRY.ExecutionReport)
@@ -413,7 +451,7 @@ def main():
 
         execution = event.cdata
         instrument_name = execution['instrument']
-        client.submit_exercise(event.cid, 'Archive', {})
+        await client.exercise(event.cid, 'Archive', {})
         if instrument_name in market_pairs:
             cleared_market = market_pairs[instrument_name]['clearedMarket']
             base_token_id = market_pairs[instrument_name]['baseTokenId']
@@ -429,10 +467,10 @@ def main():
                 try:
                     taker_cid, taker = await find_one_timeout(MARKETPLACE.ClearedOrder, {
                         'orderId': execution['takerMpOrderId']
-                    }, 5)
+                    }, 8)
                     maker_cid, maker = await find_one_timeout(MARKETPLACE.ClearedOrder, {
                         'orderId': execution['makerMpOrderId']
-                    }, 5)
+                    }, 8)
 
                     ccp = taker['ccp'] if (taker['ccp'] == maker['ccp']) else None
 
@@ -443,7 +481,7 @@ def main():
                     pair = market_pairs[execution['instrument']]
                     (buyer, seller) = determine_participants(maker, taker)
 
-                    client.submit_create(MARKETPLACE.ClearedTrade, {
+                    await client.create(MARKETPLACE.ClearedTrade, {
                         'ccp': ccp,
                         'exchange': client.party,
                         'eventId': execution['eventId'],
@@ -459,11 +497,11 @@ def main():
                         'executedQuantity': execution['executedQuantity'],
                         'executedPrice': execution['executedPrice']
                         })
-                    client.submit_exercise(taker_cid, 'ClearedOrder_Fill', {
+                    await client.exercise(taker_cid, 'ClearedOrder_Fill', {
                         'fillQty': execution['executedQuantity'],
                         'fillPrice': execution['executedPrice']
                         })
-                    client.submit_exercise(maker_cid, 'ClearedOrder_Fill', {
+                    await client.exercise(maker_cid, 'ClearedOrder_Fill', {
                         'fillQty': execution['executedQuantity'],
                         'fillPrice': execution['executedPrice']
                         })
@@ -473,26 +511,26 @@ def main():
                 try:
                     taker_cid, taker = await find_one_timeout(MARKETPLACE.Order, {
                         'orderId': execution['takerMpOrderId']
-                    }, 5)
+                    }, 8)
                     maker_cid, maker = await find_one_timeout(MARKETPLACE.Order, {
                         'orderId': execution['makerMpOrderId']
-                    }, 5)
+                    }, 8)
 
-                    client.submit_exercise(taker_cid, 'Order_Fill', {
+                    await client.exercise(taker_cid, 'Order_Fill', {
                         'fillQty': execution['executedQuantity'],
                         'fillPrice': execution['executedPrice'],
                         'counterOrderId': maker['orderId'],
                         'counterParty': maker['exchParticipant'],
                         'timeMatched': execution['eventTimestamp']
                         })
-                    client.submit_exercise(maker_cid, 'Order_Fill', {
+                    await client.exercise(maker_cid, 'Order_Fill', {
                         'fillQty': execution['executedQuantity'],
                         'fillPrice': execution['executedPrice'],
                         'counterParty': taker['exchParticipant'],
                         'counterOrderId': taker['orderId'],
                         'timeMatched': execution['eventTimestamp']
                         })
-                except: logging.error(f'Could not find orders for execution: {execution}')
+                except Exception as e: logging.error(f'Could not find orders for execution: {execution}: {e}')
         else:
             logging.info(f"Instrument: {instrument_name} does not exist, ignoring ExecutionReport.")
         return []

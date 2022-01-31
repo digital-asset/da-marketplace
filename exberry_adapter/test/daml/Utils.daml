@@ -3,7 +3,6 @@ module Utils where
 import Daml.Script
 import DA.Time
 import DA.Date
-import DA.Optional
 
 getTimestamp : Script Int
 getTimestamp = convertRelTimeToMicroseconds . (flip subTime) (datetime 1970 Jan 1 0 0 0) <$> getTime

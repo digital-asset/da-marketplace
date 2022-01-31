@@ -1,0 +1,86 @@
+module Tests.Partial where
+
+import Tests.ExchangeTrade
+import Setup
+
+import Daml.Script
+import DA.Optional
+
+import Marketplace.Exchange
+import Marketplace.ExchangeParticipant
+import Marketplace.Trading
+import Marketplace.Utils
+
+import Utils
+import DA.Time (seconds)
+
+matchingTest : Script ()
+matchingTest = getExistingParties >>= runMatchingTest
+
+getIds : Int -> Int -> [Int]
+getIds n from = [from + 1 .. from + n]
+
+runMatchingTest : LedgerParties -> Script ()
+runMatchingTest lp@LedgerParties{userAdmin = operator; btcIssuer = issuer; ..} = do
+  -- Onboard and create relationships
+  handleOnboarding lp
+
+  -- Onboard investors
+  onboardInvestor lp alice "Alice the Investor"
+  onboardInvestor lp bob "Bob the Investor"
+
+  let observers = [operator, public, custodian, exchange, issuer, alice, bob]
+
+  testNumber <- getRandom 1000 10000
+
+  debug $ "Setting ExberrySID to " <> show testNumber
+  sidCid <- exchange `submit` createCmd ExberrySID with sid = testNumber, ..
+
+  waitUntil 10.0 (isNone <$> queryContractId exchange sidCid)
+
+  debug "Adding marketpair..."
+  testTokenId <- createToken operator issuer ("DATEST" <> show testNumber) "Testing Coin" 2 observers
+  usdTokenId <- createToken operator issuer "USD" "US Dollars" 2 observers
+
+  let testPair = (testTokenId, usdTokenId)
+
+  exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_AddPair
+      with baseTokenId = testTokenId, baseType = TokenAsset, quoteTokenId = usdTokenId, quoteType = TokenAsset
+           minQuantity = 0.01, maxQuantity = 10000.0, clearedMarket = False, defaultCCP = None
+
+  debug "Setting up accounts..."
+  aliceUsdId1 <- setupExchangeAccount DepositDirect lp custodian usdTokenId 15.0 alice
+  aliceUsdId2 <- setupExchangeAccount DepositDirect lp custodian usdTokenId 20.0 alice
+  aliceUsdId3 <- setupExchangeAccount DepositDirect lp custodian usdTokenId 30.0 alice
+  bobTokenId  <- setupExchangeAccount DepositDirect lp custodian testTokenId 3.0 bob
+
+  sleep (seconds 5)
+
+  debug "Submitting Alice's orders..."
+  let [aliceOrderId1, aliceOrderId2, aliceOrderId3, bobOrderId] = getIds 4 testNumber
+
+  alice `submit` exerciseByKeyCmd @ExchangeParticipant (exchange, operator, alice) ExchangeParticipant_PlaceBid
+      with depositCids = [aliceUsdId1], amount = 15.0, pair = (testTokenId, usdTokenId), price = 15.00, optOrderId = None
+
+  (_, aliceOrder1) <- waitQuery 10.0 (queryContractKey @Order exchange (exchange, aliceOrderId1))
+
+  alice `submit` exerciseByKeyCmd @ExchangeParticipant (exchange, operator, alice) ExchangeParticipant_PlaceBid
+      with depositCids = [aliceUsdId2], amount = 20.0, pair = (testTokenId, usdTokenId), price = 20.00, optOrderId = None
+
+  (_, aliceOrder2) <- waitQuery 10.0 (queryContractKey @Order exchange (exchange, aliceOrderId2))
+
+  alice `submit` exerciseByKeyCmd @ExchangeParticipant (exchange, operator, alice) ExchangeParticipant_PlaceBid
+      with depositCids = [aliceUsdId3], amount = 30.0, pair = (testTokenId, usdTokenId), price = 30.00, optOrderId = None
+
+  (_, aliceOrder3) <- waitQuery 10.0 (queryContractKey @Order exchange (exchange, aliceOrderId3))
+
+  debug "Submitting Bob's order..."
+  bob `submit` exerciseByKeyCmd @ExchangeParticipant (exchange, operator, bob) ExchangeParticipant_PlaceOffer
+      with depositCids = [bobTokenId], amount = 3.0, pair = (testTokenId, usdTokenId), price = 15.00, optOrderId = None
+
+  debug "Waiting for execution..."
+  waitUntil 10.0 $ do
+    orders <- query @Order exchange
+    return $ (length orders) == 0
+
+  debug "Test passed!"

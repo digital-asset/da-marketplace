@@ -1,10 +1,12 @@
-module Tests.Matching where
+module Tests.Cancel where
+
+import DA.Optional
+import DA.Time (seconds)
 
 import Tests.ExchangeTrade
 import Setup
 
 import Daml.Script
-import DA.Optional
 
 import Marketplace.Exchange
 import Marketplace.ExchangeParticipant
@@ -12,7 +14,6 @@ import Marketplace.Trading
 import Marketplace.Utils
 
 import Utils
-import DA.Time (seconds)
 
 matchingTest : Script ()
 matchingTest = getExistingParties >>= runMatchingTest
@@ -45,37 +46,20 @@ runMatchingTest lp@LedgerParties{userAdmin = operator; btcIssuer = issuer; ..} =
       with baseTokenId = testTokenId, baseType = TokenAsset, quoteTokenId = usdTokenId, quoteType = TokenAsset
            minQuantity = 0.01, maxQuantity = 10000.0, clearedMarket = False, defaultCCP = None
 
-  sleep (seconds 10)
+  sleep (seconds 5)
 
   debug "Setting up accounts..."
   aliceUsdId <- setupExchangeAccount DepositDirect lp custodian usdTokenId 10000.0 alice
   bobTokenId <- setupExchangeAccount DepositDirect lp custodian testTokenId 10.0 bob
 
   debug "Submitting Alice's order..."
-  let aliceOrderId = 1 -- testNumber + 1
-
-  alice `submit` exerciseByKeyCmd @ExchangeParticipant (exchange, operator, alice) ExchangeParticipant_PlaceBid
+  let aliceOrderId = testNumber + 1
+  bidOrderRequestCid <- alice `submit` exerciseByKeyCmd @ExchangeParticipant (exchange, operator, alice) ExchangeParticipant_PlaceBid
       with depositCids = [aliceUsdId], amount = 10000.0, pair = (testTokenId, usdTokenId), price = 10000.00, optOrderId = Some aliceOrderId
 
-  (_, aliceOrder) <- waitQuery 10.0 (queryContractKey @Order exchange (exchange, aliceOrderId))
+  (aliceOrderCid, aliceOrder) <- waitQuery 10.0 (queryContractKey @Order exchange (exchange, aliceOrderId))
 
-  debug "Submitting Bob's order..."
-  let bobOrderId = aliceOrderId + 1
-  bob `submit` exerciseByKeyCmd @ExchangeParticipant (exchange, operator, bob) ExchangeParticipant_PlaceOffer
-      with depositCids = [bobTokenId], amount = 10.0, pair = (testTokenId, usdTokenId), price = 10000.00, optOrderId = Some bobOrderId
-
-  debug "Waiting for execution..."
-  waitUntil 10.0 $ do
-    tradeSides <- filter (\(_, ts) -> ts.orderId `elem` [aliceOrderId, bobOrderId]) <$> query @TradeSide exchange
-    return $ (length tradeSides) == 2
-
-  bobTokenId2 <- setupExchangeAccount DepositDirect lp custodian testTokenId 10.0 bob
-
-  debug "Submitting Bob's order to cancel..."
-
-  (bobOrderCid, _) <- waitQuery 10.0 (queryContractKey @Order exchange (exchange, bobOrderId))
-
-  bob `submit` exerciseCmd bobOrderCid Order_RequestCancel
+  alice `submit` exerciseCmd aliceOrderCid Order_RequestCancel
 
   debug "Waiting for cancel..."
   waitUntil 10.0 $ do

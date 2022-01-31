@@ -70,22 +70,24 @@ doSetupTransfer lp@(LedgerParties operator public custodian exchange issuer _ al
 handleTrade : LedgerParties -> Id -> Id -> ContractId AssetDeposit -> ContractId AssetDeposit -> Int -> Script ()
 handleTrade lp@LedgerParties{userAdmin = operator, exchange, bob, alice} btcTokenId usdTokenId aliceUsdId bobBtcId orderId = do
 
+  let optOrderId = None
+
   -- > alice places a bid for BTC
   bidOrderRequestCid <- alice `submit` exerciseByKeyCmd @ExchangeParticipant (exchange, operator, alice) ExchangeParticipant_PlaceBid
-      with depositCids = [aliceUsdId], amount = 150.0, pair = (btcTokenId, usdTokenId), price = 50.00
+      with depositCids = [aliceUsdId], amount = 150.0, pair = (btcTokenId, usdTokenId), price = 50.00, ..
 
   -- > exchange rejects bid
   aliceUsdId <- exchange `submit` exerciseCmd bidOrderRequestCid OrderRequest_Reject
 
   -- > alice places a new bid for BTC
   bidOrderRequestCid <- alice `submit` exerciseByKeyCmd @ExchangeParticipant (exchange, operator, alice) ExchangeParticipant_PlaceBid
-      with depositCids = [aliceUsdId], amount = 150.0, pair = (btcTokenId, usdTokenId), price = 50.00
+      with depositCids = [aliceUsdId], amount = 150.0, pair = (btcTokenId, usdTokenId), price = 50.00, ..
   bidOrderCid <- exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_ApproveOrderRequest
       with orderRequestCid = bidOrderRequestCid, orderId = orderId
 
   -- > bob places a new offer for BTC
   offerOrderRequestCid <- bob `submit` exerciseByKeyCmd @ExchangeParticipant (exchange, operator, bob) ExchangeParticipant_PlaceOffer
-      with depositCids = [bobBtcId], amount = 1.0, pair = (btcTokenId, usdTokenId), price = 40.00
+      with depositCids = [bobBtcId], amount = 1.0, pair = (btcTokenId, usdTokenId), price = 40.00, ..
   offerOrderCid <- exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_ApproveOrderRequest
       with orderRequestCid = offerOrderRequestCid, orderId = orderId + 1
 
