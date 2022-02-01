@@ -17,13 +17,18 @@ This is an initial example of how to setup a marketplace where digital tokens
 can be issued and exchanged.
 
 # Requirements
-To run the marketplace locally or to build to be deployed on DABL, the following requirements are necessary:
-1. DAML SDK (1.7)
-2. `python` (3.x)
-3. `yarn` (1.22.x)
-4. `pipenv` (2020.x.x)
-5. `make` (3.x)
-6. `yq` (3.x)
+
+1. Install DAML SDK as described in [Install the SDK](https://docs.daml.com/getting-started/installation.html)
+2. This repository uses Nix and direnv to manage required tools and their versions, so you should first install these tools.  Once they are installed you do not need to individually manage the required tools listed below as they are managed by Nix. Install Nix by running:
+`bash <(curl -sSfL https://nixos.org/nix/install)`
+3. Install [direnv](https://direnv.net/docs/installation.html). This repo already provides a `.envrc` file.
+
+To run the marketplace locally or to build to be deployed on DABL, the following requirements are necessary and will be setup by Nix:
+4. `python` (3.x)
+5. `yarn` (1.22.x)
+6. `pipenv` (2020.x.x)
+7. `make` (3.x)
+8. `yq` (3.x)
 
 # Setup
 
