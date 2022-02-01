@@ -1,7 +1,9 @@
-BASENAME=$(shell yq -r '.catalog.name' < dabl-meta.yaml 2> /dev/null || yq r dabl-meta.yaml 'catalog.name')
-VERSION=$(shell yq -r '.catalog.version' < dabl-meta.yaml 2> /dev/null || yq r dabl-meta.yaml 'catalog.version')
-SUBDEPLOYMENTS=$(shell yq -r '.subdeployments' < dabl-meta.yaml 2> /dev/null | sed 's/\[//g' | sed 's/\]//g' | sed 's/,//g' \
-	       || yq r dabl-meta.yaml 'subdeployments' | sed 's/\[//g' | sed 's/\]//g' | sed 's/,//g')
+# try with yq4 syntax, then yq3, then yq2
+BASENAME=$(shell yq e '.catalog.name' < dabl-meta.yaml 2> /dev/null || yq -r '.catalog.name' < dabl-meta.yaml 2> /dev/null || yq r dabl-meta.yaml 'catalog.name')
+VERSION=$(shell yq e '.catalog.version' < dabl-meta.yaml 2> /dev/null || yq -r '.catalog.version' < dabl-meta.yaml 2> /dev/null || yq r dabl-meta.yaml 'catalog.version')
+SUBDEPLOYMENTS=$(shell yq e '.subdeployments' < dabl-meta.yaml 2> /dev/null | sed 's/\[//g' | sed 's/\]//g' | sed 's/,//g' \
+			|| yq -r '.subdeployments' < dabl-meta.yaml 2> /dev/null | sed 's/\[//g' | sed 's/\]//g' | sed 's/,//g' \
+	       	|| yq r dabl-meta.yaml 'subdeployments' | sed 's/\[//g' | sed 's/\]//g' | sed 's/,//g')
 
 TAG_NAME=${BASENAME}-v${VERSION}
 NAME=${BASENAME}-${VERSION}
