@@ -23,6 +23,11 @@ in rec {
   inherit pkgs;
   tools = pkgs.lib.mapAttrs (_: pkg: selectBin pkg) (rec {
 
+
+    # to find the particular shas for specific versions of libraries, this looks to be a reasonably useful search tool
+    # https://lazamar.co.uk/nix-versions/?channel=nixpkgs-unstable&package=<package-name>
+    # example : https://lazamar.co.uk/nix-versions/?channel=nixpkgs-unstable&package=yq-go
+
     # tools
     make            = pkgs.gnumake;
 
@@ -42,13 +47,21 @@ in rec {
         
     # String mangling tooling.
     jq   = pkgs.jq;
-    yq   = pkgs.yq-go;
-    
-    # Web Development
-    node        = pkgs.nodejs;
-    npm         = pkgs.nodejs;
-      # version = "16.13.2";
-    yarn        = pkgs.yarn;
+
+    # version: 3.4.1
+    yq3pkgs = import (builtins.fetchTarball {
+        url = "https://github.com/NixOS/nixpkgs/archive/559cf76fa3642106d9f23c9e845baf4d354be682.tar.gz";
+    }) {};
+    yq = yq3pkgs.yq-go;
+
+    # version = "16.13.1";
+    nodePkgs16 = import (builtins.fetchTarball {
+        url = "https://github.com/NixOS/nixpkgs/archive/c82b46413401efa740a0b994f52e9903a4f6dcd5.tar.gz";
+    }) {};
+
+    node        = nodePkgs16.nodejs;
+    npm         = nodePkgs16.nodejs;
+    yarn        = nodePkgs16.yarn;
   });
 
 }
