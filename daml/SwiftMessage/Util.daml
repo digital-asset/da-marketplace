@@ -35,3 +35,6 @@ data PayoutType =
     REDM -- for redemption 
     | INTR -- for dividend payout
   deriving (Eq, Show)
+
+getRedemptionDate : Date -> Date -> Optional Date
+getRedemptionDate maturityDate payoutDate = if payoutDate == maturityDate then Some payoutDate else Nothing

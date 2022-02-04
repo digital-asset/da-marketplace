@@ -306,6 +306,11 @@ merge party deposits id = do
   let (adCid, _) :: t = filter (\(_, ad) -> ad.asset.id == id) deposits
   submit party do exerciseCmd adCid AssetDeposit_Merge with depositCids = map fst t
 
+getMaxId : Party -> Id -> Script Id 
+getMaxId payingAgent assetId = do 
+  h :: t <- map snd <$> queryFilter @AssetDescription payingAgent (\ad -> ad.assetId.signatories == assetId.signatories && ad.assetId.label == assetId.label)
+  pure $ foldl (\id desc -> if desc.assetId.version > id.version then desc.assetId else id) h.assetId t
+
 upgradeVersion : [Party] -> Id -> Script ()
 upgradeVersion parties maxId = do
   let upgradeVersionForParty party = do 

@@ -129,10 +129,6 @@ createInstructions isCash operator agent rootProvider senderAccount receiverAcco
     createInstruction sending receiving sAcc rAcc siAsset instIdx = do
       let si = SettlementInstruction with operator; agent; sender = sending; receiver = receiving; settlementId; senderAccount = sAcc; receiverAccount = rAcc; asset = siAsset; signed = []; depositCid = None; instructionId = show instIdx
       if sending == receiving then pure [] else singleton <$> create si
-  debug isCash
-  debug senderAccount
-  debug receiverAccount
-  debug rootProvider
   if senderAccount.provider == rootProvider && receiverAccount.provider == rootProvider then do -- TODO: Could shortcut this if common custodian is found earlier below in the hierarchy
     createInstruction senderAccount.owner receiverAccount.owner senderAccount receiverAccount asset instructionIdx
   else if senderAccount.provider == rootProvider then do

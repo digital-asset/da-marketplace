@@ -71,10 +71,6 @@ template Effect
         let
           sendSwiftMessage : Text -> Account -> Asset -> Update ()
           sendSwiftMessage settlementId buyerSafekeepingAcc asset = do
-            let              
-              getRedemptionDate : Date -> Date -> Optional Date
-              getRedemptionDate maturityDate payoutDate = if payoutDate == maturityDate then Some payoutDate else Nothing
-              
             (_, description) <- fetchByKey @AssetDescription assetId
             if (description.cfi == CFI.bond) then do
               (_, bond) <- fetchByKey @Instrument.Bond (fromList [issuer, bondRegistrar], assetId.label)
