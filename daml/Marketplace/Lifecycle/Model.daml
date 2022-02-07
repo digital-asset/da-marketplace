@@ -1,13 +1,19 @@
 module Marketplace.Lifecycle.Model where
 
-import DA.Finance.Asset (AssetDeposit, AssetDeposit_Upgrade(..))
-import DA.Finance.Types (Asset(..), Id)
-import DA.Foldable (forA_)
-import DA.List (dedup)
+import ContingentClaims.Claim.Serializable (Claim(..))
+import DA.Finance.Types (Account, Asset(..), Id)
 import DA.Set (fromList)
 import Marketplace.Custody.Model qualified as Custody
+import Marketplace.Issuance.AssetDescription
+import Marketplace.Issuance.CFI qualified as CFI
+import Marketplace.Issuance.Instrument.Model qualified as Instrument
+import Marketplace.Lifecycle.Snapshot.Model
 import Marketplace.Settlement.Hierarchical (createInstructions, getAccount, Delivery(..), Status(..))
+import SwiftMessage.Message (SwiftMessage(MT566), SwiftMessageType(..), SwiftOutboundMessage(..))
+import SwiftMessage.Model.MT566
+import SwiftMessage.Util
 
+type Claims = Claim Date Decimal Id
 template Today
   with
     operator : Party
@@ -39,57 +45,6 @@ template Observation
     key (operator, provider, label, date) : (Party, Party, Text, Date)
     maintainer key._1
 
-template SnapshotRequest
-  with
-    operator : Party
-    bondRegistrar : Party
-    custodian : Party
-    payingAgent : Party
-    assetId : Id
-    newVersion : Int
-  where
-    signatory operator, bondRegistrar
-    observer custodian
-
-    choice Forward : [ContractId SnapshotRequest]
-      with
-        depositCids : [ContractId AssetDeposit]
-      controller custodian
-      do
-        deposits <- zip depositCids <$> mapA fetch depositCids
-        let
-          filtered = filter (\(_, d) -> d.asset.id.label == assetId.label && d.asset.id.version == assetId.version) deposits
-          holders = dedup $ map ((.account.owner) . snd) filtered
-        forA_ filtered $ (\(cid, _) -> exercise cid AssetDeposit_Upgrade with newVersion)
-        mapA (\c -> create this with custodian = c) holders
-
-    choice Provide : [ContractId Snapshot]
-      with
-        depositCids : [ContractId AssetDeposit]
-      controller custodian
-      do
-        deposits <- zip depositCids <$> mapA fetch depositCids
-        let filtered = filter (\(_, d) -> d.asset.id.label == assetId.label && d.asset.id.version == assetId.version) deposits
-        forA_ filtered (\(cid, _) -> exercise cid AssetDeposit_Upgrade with newVersion)
-        let snapshots = map (\(_, deposit) -> Snapshot with ..) filtered
-        mapA create snapshots
-
-template Snapshot
-  with
-    operator : Party
-    bondRegistrar : Party
-    custodian : Party
-    payingAgent : Party
-    assetId : Id
-    deposit : AssetDeposit
-  where
-    signatory operator, bondRegistrar, custodian
-    observer payingAgent
-
-    choice Delete : ()
-      controller operator
-      do pure ()
-
 template Effect
   with
     operator : Party
@@ -107,10 +62,6 @@ template Effect
     signatory operator, issuer, payingAgent
     observer bondRegistrar
 
-    nonconsuming choice RequestSnapshot : ContractId SnapshotRequest
-      controller bondRegistrar
-      do
-        create SnapshotRequest with custodian = bondRegistrar; ..
 
     choice Instruct : [ContractId Delivery]
       with
@@ -118,6 +69,24 @@ template Effect
       controller operator
       do
         let
+          sendSwiftMessage : Text -> Account -> Asset -> Update ()
+          sendSwiftMessage settlementId buyerSafekeepingAcc asset = do
+            (_, description) <- fetchByKey @AssetDescription assetId
+            if (description.cfi == CFI.bond) then do
+              (_, bond) <- fetchByKey @Instrument.Bond (fromList [issuer, bondRegistrar], assetId.label)
+            
+              let
+                instrumentId = bond.isin <> assetId.label
+                faceAmount = asset.quantity
+                currency = asset.id
+                maturityDate = bond.maturityDate
+                payoutDate = date
+                redemptionDate = getRedemptionDate maturityDate payoutDate
+                mt566 = createMT566Details instrumentId buyerSafekeepingAcc CR faceAmount currency maturityDate payoutDate redemptionDate
+              create SwiftOutboundMessage with referenceId = settlementId; provider = operator ; consumer = operator; swiftMessage=MT566 (mt566); swiftMessageType=MT566_t; status=Pending; observers=fromList [payingAgent]
+              pure ()
+            else pure ()
+          
           indexedPayouts = zip [0 .. length payouts - 1] payouts
           createInstructionsForPayout : Snapshot -> (Int, (Decimal, Id)) -> Update (ContractId Delivery)
           createInstructionsForPayout snapshot (index, (amount, id)) = do
@@ -134,7 +103,9 @@ template Effect
               receiverAccount = getAccount True receiverSettlementInfo receiver
             instructionCids <- createInstructions True operator payingAgent cashProvider senderAccount receiverAccount settlementId instructionIdx asset
             instructionIds <- map (.instructionId) <$> mapA fetch instructionCids
+            sendSwiftMessage settlementId receiverAccount asset
             create Delivery with operator; agent = payingAgent; sender; receiver; settlementId; instructionIds; asset; status = Instructed
+          
           createInstructionsForSnapshot : ContractId Snapshot -> Update [ContractId Delivery]
           createInstructionsForSnapshot snapshotCid = do
             snapshot <- fetch snapshotCid

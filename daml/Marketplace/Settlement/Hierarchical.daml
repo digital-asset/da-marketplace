@@ -5,7 +5,7 @@ import DA.Finance.Types (Account, Asset)
 import DA.Finance.Asset (AssetDeposit(..), AssetDeposit_Transfer(..), AssetDeposit_SetObservers(..))
 import DA.List (singleton)
 import DA.Map qualified as M
-import DA.Optional (whenSome, fromSome, fromSomeNote)
+import DA.Optional (fromSome, fromSomeNote)
 import DA.Set (fromList)
 import Marketplace.Custody.Model qualified as Custody
 import SwiftMessage.Message
@@ -33,9 +33,6 @@ template Trade
     key (operator, settlementId) : (Party, Text)
     maintainer key._1
 
-    let finalizeSwiftMessage k = do
-        cidOpt <- lookupByKey @SwiftOutboundMessage k
-        whenSome cidOpt (\cid -> do exercise cid Finalize; pure ())
     controller agent can
       Settle : (ContractId Trade, [ContractId AssetDeposit])
         do
@@ -80,6 +77,7 @@ template Delivery
               exercise siCid SettleInstruction
           adCids <- mapA settle instructionIds
           deliveryCid <- create this with status = Settled
+          finalizeSwiftMessage (operator, settlementId, MT566_t)
           pure (deliveryCid, adCids)
 
 template SettlementInstruction
@@ -131,10 +129,6 @@ createInstructions isCash operator agent rootProvider senderAccount receiverAcco
     createInstruction sending receiving sAcc rAcc siAsset instIdx = do
       let si = SettlementInstruction with operator; agent; sender = sending; receiver = receiving; settlementId; senderAccount = sAcc; receiverAccount = rAcc; asset = siAsset; signed = []; depositCid = None; instructionId = show instIdx
       if sending == receiving then pure [] else singleton <$> create si
-  debug isCash
-  debug senderAccount
-  debug receiverAccount
-  debug rootProvider
   if senderAccount.provider == rootProvider && receiverAccount.provider == rootProvider then do -- TODO: Could shortcut this if common custodian is found earlier below in the hierarchy
     createInstruction senderAccount.owner receiverAccount.owner senderAccount receiverAccount asset instructionIdx
   else if senderAccount.provider == rootProvider then do

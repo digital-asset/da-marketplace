@@ -6,42 +6,43 @@ import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Asset(..), Id)
 import Marketplace.Issuance.Role qualified as Issuer
 import Marketplace.Lifecycle.Redemption qualified as Lifecycle
+import Marketplace.Lifecycle.Snapshot.Model qualified as Snapshot
+import Marketplace.Lifecycle.Snapshot.Service qualified as Snapshot
 import Marketplace.Settlement.Hierarchical (Delivery)
 import Tests.Distribution.Syndication.Setup (setup, Parties(..))
 import Tests.Distribution.Syndication.Issuance (issuance)
 import Tests.Distribution.Syndication.Origination (origination, Origination(..))
 import Tests.Distribution.Syndication.Util
 
-requestSnapshot : Party -> Party -> Id -> Script (ContractId Lifecycle.SnapshotRequest)
-requestSnapshot payingAgent bondRegistrar assetId = do
-  [(requestCid, _)] <- queryFilter @Lifecycle.IssuerRedemptionRequest bondRegistrar (\e -> e.bondRegistrar == bondRegistrar && e.assetId == assetId)
-  submit bondRegistrar do exerciseCmd requestCid Lifecycle.RequestSnapshot
+requestSnapshot : Party -> Party -> Party -> Id -> Script (ContractId Snapshot.SnapshotRequest)
+requestSnapshot operator payingAgent bondRegistrar assetId = do
+  submit payingAgent do exerciseByKeyCmd @Snapshot.Service (operator, payingAgent) Snapshot.RequestSnapshot with custodian = bondRegistrar; ..
 
-forwardRequest : Party -> Id -> Script [ContractId Lifecycle.SnapshotRequest]
+forwardRequest : Party -> Id -> Script [ContractId Snapshot.SnapshotRequest]
 forwardRequest custodian assetId = do
-  srs <- queryFilter @Lifecycle.SnapshotRequest custodian (\sr -> sr.custodian == custodian && sr.assetId == assetId)
+  srs <- queryFilter @Snapshot.SnapshotRequest custodian (\sr -> sr.custodian == custodian && sr.assetId == assetId)
   case srs of
     [(srCid, sr)] -> do
       depositCids <- map fst <$> queryFilter @AssetDeposit custodian (\ad -> ad.account.provider == custodian && ad.asset.id.label == assetId.label && ad.asset.id.version == assetId.version)
       -- debug $ "[" <> show date <> "] " <> partyToText custodian <> " forwarding snapshot request for " <> assetId.label <> "(v" <> show assetId.version <> ") to " <> show (length depositCids) <> " custodians"
-      submit custodian do exerciseCmd srCid Lifecycle.Forward with depositCids
+      submit custodian do exerciseCmd srCid Snapshot.Forward with depositCids
     [] -> pure []
     _ -> fail "More than one snapshot request received"
 
-provideSnapshot : Party -> Id -> Script [ContractId Lifecycle.Snapshot]
+provideSnapshot : Party -> Id -> Script [ContractId Snapshot.Snapshot]
 provideSnapshot custodian assetId = do
-  srs <- queryFilter @Lifecycle.SnapshotRequest custodian (\sr -> sr.custodian == custodian && sr.assetId == assetId)
+  srs <- queryFilter @Snapshot.SnapshotRequest custodian (\sr -> sr.custodian == custodian && sr.assetId == assetId)
   case srs of
     [(srCid, sr)] -> do
       depositCids <- map fst <$> queryFilter @AssetDeposit custodian (\ad -> ad.account.provider == custodian && ad.asset.id.label == assetId.label && ad.asset.id.version == assetId.version)
-      submit custodian do exerciseCmd srCid Lifecycle.Provide with depositCids
+      submit custodian do exerciseCmd srCid Snapshot.Provide with depositCids
     [] -> pure []
     _ -> fail "More than one snapshot request received"
 
 instructLifecycle : Party -> Party -> Id -> Script [ContractId Delivery]
 instructLifecycle operator payingAgent assetId = do
   [(requestCid, _)] <- queryFilter @Lifecycle.IssuerRedemptionRequest operator (\e -> e.payingAgent == payingAgent && e.assetId == assetId)
-  snapshotCids <- map fst <$> queryFilter @Lifecycle.Snapshot operator (\s -> s.payingAgent == payingAgent && s.deposit.asset.id.label == assetId.label && s.deposit.asset.id.version == assetId.version)
+  snapshotCids <- map fst <$> queryFilter @Snapshot.Snapshot operator (\s -> s.requester == payingAgent && s.deposit.asset.id.label == assetId.label && s.deposit.asset.id.version == assetId.version)
   submit operator do exerciseCmd requestCid Lifecycle.InstructIssuerRedemption with snapshotCids
 
 test : Script ()
@@ -55,7 +56,7 @@ test = do
     redemptionPrice1 = Asset with id = usd.assetId; quantity = 1.1
 
   submit issuer do exerciseByKeyCmd @Issuer.Role (operator, issuer) Issuer.RequestRedemption with assetId = bond1Desc.assetId; price = redemptionPrice1; ..
-  requestSnapshot payingAgent bondRegistrar assetId
+  requestSnapshot operator payingAgent bondRegistrar assetId
   forwardRequest bondRegistrar assetId
   provideSnapshot custodian1 assetId
   provideSnapshot custodian2 assetId
