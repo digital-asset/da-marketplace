@@ -9,8 +9,8 @@ data MT564Details = MT564Details with
     exDivDate : Date
   deriving (Eq, Show)
 
-createMT564Details : Text -> Account -> CRDB -> Decimal -> Id -> Date -> Date -> Optional Date -> Date -> MT564Details
-createMT564Details instrumentId buyerSafekeepingAcc crdb faceAmount 
+createMT564Details : Text -> Id -> Account -> CRDB -> Decimal -> Id -> Date -> Date -> Optional Date -> Date -> MT564Details
+createMT564Details instrumentId assetId buyerSafekeepingAcc crdb faceAmount 
   currency maturityDate payoutDate redemptionDate exDivDate = 
     let payoutType = if isSome redemptionDate then REDM else INTR in
     let payoutDetails = PayoutDetails with payoutCurrency = currency; settledCurrency = currency; .. in

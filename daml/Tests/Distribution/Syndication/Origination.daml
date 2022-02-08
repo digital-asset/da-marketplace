@@ -58,10 +58,10 @@ origination Parties{..} = do
     swapRecAmount = Instrument.Fixed with annualRate = 0.01
     swapPay = Instrument.InterestStream with schedule = swapPaySched; amount = swapPayAmount
     swapRec = Instrument.InterestStream with schedule = swapRecSched; amount = swapRecAmount
-    bond1 = createFixedRateBond     bond1Id "ISIN1" usd.assetId bondSched1.startDate bondSched1.endDate bondSched1 0.04 True True True [public, operator]
-    bond2 = createFixedRateBond     bond2Id "ISIN2" usd.assetId bondSched2.startDate bondSched2.endDate bondSched2 0.05 True True True [public, operator]
-    bond3 = createFloatingRateBond  bond3Id "ISIN3" usd.assetId bondSched3.startDate bondSched3.endDate bondSched3 libor6m 0.01 True True True [public, operator]
-    swap1 = createSwap              swap1Id usd.assetId usd.assetId swapPaySched.startDate swapPaySched.endDate swapPay swapRec True [public]
+    bond1 = createFixedRateBond     bond1Id "ISIN1" usd.assetId issuer bondSched1.startDate bondSched1.endDate bondSched1 0.04 True True True [public, operator]
+    bond2 = createFixedRateBond     bond2Id "ISIN2" usd.assetId issuer bondSched2.startDate bondSched2.endDate bondSched2 0.05 True True True [public, operator]
+    bond3 = createFloatingRateBond  bond3Id "ISIN3" usd.assetId issuer bondSched3.startDate bondSched3.endDate bondSched3 libor6m 0.01 True True True [public, operator]
+    swap1 = createSwap              swap1Id usd.assetId usd.assetId issuer swapPaySched.startDate swapPaySched.endDate swapPay swapRec True [public]
 
   submitMulti [operator, bondRegistrar] [] do createCmd HolidayCalendar with operator; provider = bondRegistrar; calendar = fedCalendar; observers = fromList [issuer]
 

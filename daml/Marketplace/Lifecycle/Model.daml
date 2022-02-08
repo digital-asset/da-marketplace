@@ -76,13 +76,13 @@ template Effect
               (_, bond) <- fetchByKey @Instrument.Bond (fromList [issuer, bondRegistrar], assetId.label)
             
               let
-                instrumentId = bond.isin <> assetId.label
+                instrumentId = bond.isin <> "-" <> assetId.label
                 faceAmount = asset.quantity
                 currency = asset.id
                 maturityDate = bond.maturityDate
                 payoutDate = date
                 redemptionDate = getRedemptionDate maturityDate payoutDate
-                mt566 = createMT566Details instrumentId buyerSafekeepingAcc CR faceAmount currency maturityDate payoutDate redemptionDate
+                mt566 = createMT566Details instrumentId assetId buyerSafekeepingAcc CR faceAmount currency maturityDate payoutDate redemptionDate
               create SwiftOutboundMessage with referenceId = settlementId; provider = operator ; consumer = operator; swiftMessage=MT566 (mt566); swiftMessageType=MT566_t; status=Pending; observers=fromList [payingAgent]
               pure ()
             else pure ()

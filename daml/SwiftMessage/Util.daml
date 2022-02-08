@@ -17,7 +17,8 @@ data MessageType =
 data CRDB = CR | DB deriving (Eq, Show)
 
 data PayoutDetails = PayoutDetails with
-    instrumentId : Text -- ISIN + bond id
+    instrumentId : Text -- ISIN + bond id label
+    assetId : Id -- bond id
     buyerSafekeepingAcc : Account -- buyer's/investor's cash account
 
     crdb : CRDB -- credit or debit indicator
