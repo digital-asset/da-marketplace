@@ -1,6 +1,7 @@
 module SwiftMessage.Util where
 
 import DA.Finance.Types (Id(..), Account(..))
+import Marketplace.Issuance.CFI
 
 data MessageStatus = Pending | Finalized | Processed | Failed String
   deriving (Eq, Show)
@@ -19,6 +20,8 @@ data CRDB = CR | DB deriving (Eq, Show)
 data PayoutDetails = PayoutDetails with
     instrumentId : Text -- ISIN + bond id label
     assetId : Id -- bond id
+    cfi : CFI
+    issuer : Party
     buyerSafekeepingAcc : Account -- buyer's/investor's cash account
 
     crdb : CRDB -- credit or debit indicator

@@ -1,15 +1,16 @@
 module SwiftMessage.Model.MT566 where
 
 import DA.Finance.Types (Id(..), Account(..))
-import SwiftMessage.Util
 import DA.Optional (isSome)
+import Marketplace.Issuance.CFI
+import SwiftMessage.Util
 
 data MT566Details = MT566Details with
     payoutDetails : PayoutDetails
   deriving (Eq, Show)
 
-createMT566Details : Text -> Id -> Account -> CRDB -> Decimal -> Id -> Date -> Date -> Optional Date -> MT566Details
-createMT566Details instrumentId assetId buyerSafekeepingAcc crdb faceAmount 
+createMT566Details : Text -> Id -> CFI -> Party -> Account -> CRDB -> Decimal -> Id -> Date -> Date -> Optional Date -> MT566Details
+createMT566Details instrumentId assetId cfi issuer buyerSafekeepingAcc crdb faceAmount 
   currency maturityDate payoutDate redemptionDate = 
     let payoutType = if isSome redemptionDate then REDM else INTR in
     let payoutDetails = PayoutDetails with payoutCurrency = currency; settledCurrency = currency; .. in
