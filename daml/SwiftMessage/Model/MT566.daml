@@ -9,8 +9,8 @@ data MT566Details = MT566Details with
     payoutDetails : PayoutDetails
   deriving (Eq, Show)
 
-createMT566Details : Text -> Id -> CFI -> Party -> Account -> CRDB -> Decimal -> Id -> Date -> Date -> Optional Date -> MT566Details
-createMT566Details instrumentId assetId cfi issuer buyerSafekeepingAcc crdb faceAmount 
+createMT566Details : Text -> Id -> CFI -> Party -> Account -> Account -> CRDB -> Decimal -> Id -> Date -> Date -> Optional Date -> MT566Details
+createMT566Details instrumentId assetId cfi issuer buyerSafekeepingAcc buyerCashAcc crdb faceAmount 
   currency maturityDate payoutDate redemptionDate = 
     let payoutType = if isSome redemptionDate then REDM else INTR in
     let payoutDetails = PayoutDetails with payoutCurrency = currency; settledCurrency = currency; .. in

@@ -22,7 +22,8 @@ data PayoutDetails = PayoutDetails with
     assetId : Id -- bond id
     cfi : CFI
     issuer : Party
-    buyerSafekeepingAcc : Account -- buyer's/investor's cash account
+    buyerSafekeepingAcc : Account -- buyer's/investor's security account
+    buyerCashAcc : Account -- buyer's/investor's cash account
 
     crdb : CRDB -- credit or debit indicator
     faceAmount : Decimal
