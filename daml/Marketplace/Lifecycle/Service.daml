@@ -99,9 +99,10 @@ template Service
                     payoutDate = getPayoutDate claims
                     redemptionDate = getRedemptionDate maturityDate payoutDate
                     faceAmount = asset.quantity * (getPayoutRate claims)
-                    buyerSafekeepingAcc = getAccount True settlementInfo buyer
-                    mt564 = createMT564Details instrumentId asset.id buyerSafekeepingAcc CR faceAmount currency maturityDate payoutDate redemptionDate exDivDate
-                    mt564_redempt = (\_ -> createMT564Details instrumentId asset.id buyerSafekeepingAcc CR asset.quantity currency maturityDate payoutDate redemptionDate exDivDate) <$> redemptionDate          
+                    buyerSafekeepingAcc = getAccount False settlementInfo buyer
+                    buyerCashAcc = getAccount True settlementInfo buyer
+                    mt564 = createMT564Details instrumentId asset.id description.cfi issuer buyerSafekeepingAcc buyerCashAcc CR faceAmount currency maturityDate payoutDate redemptionDate exDivDate
+                    mt564_redempt = (\_ -> createMT564Details instrumentId asset.id description.cfi issuer buyerSafekeepingAcc buyerCashAcc CR asset.quantity currency maturityDate payoutDate redemptionDate exDivDate) <$> redemptionDate          
                     notificationId = "Prenotification-" <> show exDivDate <> "-" <> assetId.label <> "(v" <> show assetId.version <> ")" <> "-" <> partyToText buyer
                   mapA_ (\mt564_r -> create SwiftOutboundMessage with referenceId = notificationId <> "-" <> "redempt"; provider = operator ; consumer = operator; swiftMessage=MT564 (mt564_r); swiftMessageType=MT564_t; status=Finalized; observers=empty) mt564_redempt
                   create SwiftOutboundMessage with referenceId = notificationId; provider = operator ; consumer = operator; swiftMessage=MT564 (mt564); swiftMessageType=MT564_t; status=Finalized; observers=empty
