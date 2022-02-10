@@ -13,7 +13,7 @@ import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Issuance.AssetDescription qualified as AssetDescription
 import Marketplace.Issuance.Instrument.Model qualified as Instrument
 import Marketplace.Lifecycle.Model (Observation, Today, Effect(..))
-import Marketplace.Lifecycle.Snapshot.Model
+import Marketplace.Snapshot.Model
 import Marketplace.Settlement.Hierarchical (getAccount)
 import Marketplace.Utils
 import SwiftMessage.Message (SwiftMessage(MT564), SwiftMessageType(..), SwiftOutboundMessage(..))

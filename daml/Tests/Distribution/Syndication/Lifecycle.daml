@@ -6,11 +6,11 @@ import DA.Date (date, Month(..))
 import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Id)
 import DA.Foldable (forA_)
-import Marketplace.Lifecycle.Reporting.Service as Reporting
+import Marketplace.Reporting.Service as Reporting
 import Marketplace.Lifecycle.Model qualified as Lifecycle
 import Marketplace.Lifecycle.Service qualified as Lifecycle
-import Marketplace.Lifecycle.Snapshot.Model as Snapshot
-import Marketplace.Lifecycle.Snapshot.Service qualified as Snapshot
+import Marketplace.Snapshot.Model as Snapshot
+import Marketplace.Snapshot.Service qualified as Snapshot
 import Marketplace.Settlement.Hierarchical (Delivery)
 import Tests.Distribution.Syndication.Setup (setup, Parties(..))
 import Tests.Distribution.Syndication.Issuance (issuance)

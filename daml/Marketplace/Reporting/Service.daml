@@ -1,4 +1,4 @@
-module Marketplace.Lifecycle.Reporting.Service where
+module Marketplace.Reporting.Service where
 
 import DA.Date (toDateUTC)
 import DA.Finance.Asset

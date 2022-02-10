@@ -7,7 +7,7 @@ import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Issuance.AssetDescription
 import Marketplace.Issuance.CFI qualified as CFI
 import Marketplace.Issuance.Instrument.Model qualified as Instrument
-import Marketplace.Lifecycle.Snapshot.Model
+import Marketplace.Snapshot.Model
 import Marketplace.Settlement.Hierarchical (createInstructions, getAccount, Delivery(..), Status(..))
 import SwiftMessage.Message (SwiftMessage(MT566), SwiftMessageType(..), SwiftOutboundMessage(..))
 import SwiftMessage.Model.MT566

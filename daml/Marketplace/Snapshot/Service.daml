@@ -1,6 +1,6 @@
-module Marketplace.Lifecycle.Snapshot.Service where
+module Marketplace.Snapshot.Service where
 
-import Marketplace.Lifecycle.Snapshot.Model
+import Marketplace.Snapshot.Model
 import DA.Finance.Types (Id)
 
 template Service 
