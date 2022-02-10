@@ -66,9 +66,8 @@ template Service
             pure None
 
     controller operator can
-      nonconsuming SendPrePayoutSwiftMessage : ()
-        with 
-          assetId : Id
+      nonconsuming SendPrePayoutSwiftMessage : [ContractId SwiftOutboundMessage]
+        with
           snapshotCids : [ContractId Snapshot]
           exDivDate : Date
         do
@@ -87,6 +86,7 @@ template Service
               sendMessageForSnapshot : Snapshot -> Update (ContractId SwiftOutboundMessage)
               sendMessageForSnapshot snapshot = do                
                   let buyer = snapshot.deposit.account.owner
+                  let assetId = snapshot.assetId
                   (_, bond) <- fetchByKey @Instrument.Bond (fromList [issuer, bondRegistrar], assetId.label)
                   (_, description) <- fetchByKey @AssetDescription.T assetId
                   (_, settlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, buyer)
@@ -101,14 +101,14 @@ template Service
                     faceAmount = asset.quantity * (getPayoutRate claims)
                     buyerSafekeepingAcc = getAccount False settlementInfo buyer
                     buyerCashAcc = getAccount True settlementInfo buyer
-                    mt564 = createMT564Details instrumentId asset.id description.cfi issuer buyerSafekeepingAcc buyerCashAcc CR faceAmount currency maturityDate payoutDate redemptionDate exDivDate
-                    mt564_redempt = (\_ -> createMT564Details instrumentId asset.id description.cfi issuer buyerSafekeepingAcc buyerCashAcc CR asset.quantity currency maturityDate payoutDate redemptionDate exDivDate) <$> redemptionDate          
+                    mt564 = createMT564Details instrumentId asset.id description.cfi issuer buyerSafekeepingAcc buyerCashAcc CRED faceAmount currency maturityDate payoutDate redemptionDate exDivDate
+                    mt564_redempt = (\_ -> createMT564Details instrumentId asset.id description.cfi issuer buyerSafekeepingAcc buyerCashAcc CRED asset.quantity currency maturityDate payoutDate redemptionDate exDivDate) <$> redemptionDate          
                     notificationId = "Prenotification-" <> show exDivDate <> "-" <> assetId.label <> "(v" <> show assetId.version <> ")" <> "-" <> partyToText buyer
                   mapA_ (\mt564_r -> create SwiftOutboundMessage with referenceId = notificationId <> "-" <> "redempt"; provider = operator ; consumer = operator; swiftMessage=MT564 (mt564_r); swiftMessageType=MT564_t; status=Finalized; observers=empty) mt564_redempt
                   create SwiftOutboundMessage with referenceId = notificationId; provider = operator ; consumer = operator; swiftMessage=MT564 (mt564); swiftMessageType=MT564_t; status=Finalized; observers=empty
           snapshots <- mapA fetch snapshotCids
-          mapA_ sendMessageForSnapshot snapshots
           mapA_ (`exercise` Delete) snapshotCids
+          mapA sendMessageForSnapshot snapshots
       Terminate : ()
         do return ()
 

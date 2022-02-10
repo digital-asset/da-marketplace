@@ -15,7 +15,7 @@ data MessageType =
   | RMDR
   deriving (Eq, Show)
 
-data CRDB = CR | DB deriving (Eq, Show)
+data CRDB = CRED | DEBT deriving (Eq, Show)
 
 data PayoutDetails = PayoutDetails with
     instrumentId : Text -- ISIN + bond id label

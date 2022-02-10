@@ -18,4 +18,4 @@ template Service
                 custodian : Party
                 assetId : Id
             controller customer
-            do create SnapshotRequest with requester = customer; ..        
+            do create SnapshotRequest with requester = customer; ..
