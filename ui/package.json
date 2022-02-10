@@ -5,9 +5,9 @@
     "dependencies": {
         "@daml.js/da-marketplace": "file:../daml.js/da-marketplace-0.1.22",
         "@daml/hub-react": "1.0.0-rc.4",
-        "@daml/ledger": "1.10.0",
-        "@daml/react": "1.10.0",
-        "@daml/types": "1.10.0",
+        "@daml/ledger": "1.18.1",
+        "@daml/react": "1.18.1",
+        "@daml/types": "1.18.1",
         "classnames": "^2.2.6",
         "dotenv": "^8.2.0",
         "jsonwebtoken": "^8.5.1",

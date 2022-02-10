@@ -41,13 +41,13 @@ fetchAndArchive cid = do
   return c
 
 -- | Checks that the ledger time is on or after the provided date.
-assertOnOrAfterDateMsg : (CanAbort m, HasTime m) => Text -> Date -> m ()
+assertOnOrAfterDateMsg : (CanAssert m, CanAbort m, HasTime m) => Text -> Date -> m ()
 assertOnOrAfterDateMsg msg date = do
   now <- getTime
   assertMsg msg $ date <= toDateUTC now
 
 -- | Checks that the ledger time is on or after the provided date.
-assertOnOrAfterMsg : (CanAbort m, HasTime m) => Text -> Time -> m ()
+assertOnOrAfterMsg : (CanAssert m, CanAbort m, HasTime m) => Text -> Time -> m ()
 assertOnOrAfterMsg msg time = do
   now <- getTime
   assertMsg msg $ time <= now
