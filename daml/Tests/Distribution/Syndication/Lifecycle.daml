@@ -177,6 +177,6 @@ preNotify parties@Parties{..} date assetId = do
 
 reporting : Party -> Party -> Bool -> Script ()
 reporting operator accountProvider isCashReporting = do 
-  depositCids <- map fst <$> query @AssetDeposit accountProvider
+  depositCids <- map fst <$> queryFilter @AssetDeposit accountProvider (\deposit -> deposit.account.provider == accountProvider)
   submit accountProvider do exerciseByKeyCmd @Reporting.Service (operator, accountProvider) Reporting.CreateReports with depositCids; isCashReporting
   pure ()

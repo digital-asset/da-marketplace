@@ -42,7 +42,7 @@ data PayoutType =
   deriving (Eq, Show)
 
 getRedemptionDate : Date -> Date -> Optional Date
-getRedemptionDate maturityDate payoutDate = if payoutDate == maturityDate then Some payoutDate else Nothing
+getRedemptionDate maturityDate payoutDate = if payoutDate == maturityDate then Some payoutDate else None
 
 data ReportDetail = ReportDetail with
     safekeepingAccount: Account
