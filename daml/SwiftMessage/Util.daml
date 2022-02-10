@@ -43,3 +43,9 @@ data PayoutType =
 
 getRedemptionDate : Date -> Date -> Optional Date
 getRedemptionDate maturityDate payoutDate = if payoutDate == maturityDate then Some payoutDate else Nothing
+
+data ReportDetail = ReportDetail with
+    safekeepingAccount: Account
+    assetId: Id
+    totalQuantity: Decimal
+  deriving (Eq, Show)

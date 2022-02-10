@@ -1,0 +1,67 @@
+module Marketplace.Lifecycle.Reporting.Service where
+
+import DA.Date (toDateUTC)
+import DA.Finance.Asset
+import DA.Finance.Types (Id, Account)
+import DA.List (sortOn, head, groupOn)
+import DA.Optional (whenSome)
+import DA.Set (empty)
+import SwiftMessage.Message
+import SwiftMessage.Model.MT535
+import SwiftMessage.Model.MT940
+import SwiftMessage.Util
+
+
+data ReportDetailKey = ReportDetailKey with
+    assetId: Id
+    account: Account
+  deriving (Show, Eq)
+
+template Service
+  with
+    operator: Party
+    accountProvider: Party
+  where 
+    signatory operator
+
+    key (operator, accountProvider) : (Party, Party)
+    maintainer key._1
+    
+    controller accountProvider can 
+      nonconsuming CreateReports: [ContractId SwiftOutboundMessage]
+        with
+          depositCids: [ContractId AssetDeposit]
+          isCashReporting: Bool -- is cash reporting or is security reporting
+        do
+          deposits <- filter (\deposit -> deposit.account.provider == accountProvider) <$> mapA (fetch @AssetDeposit) depositCids
+          date <- toDateUTC <$> getTime -- get today's as the reporting time
+          let 
+            extractKey : [AssetDeposit] -> ReportDetailKey
+            extractKey group = let deposit = head group in 
+              ReportDetailKey with assetId = deposit.asset.id; account = deposit.account
+
+            sumQuantity : [AssetDeposit] -> Decimal
+            sumQuantity deposits = sum $ map (.asset.quantity) deposits
+
+            createReportingId : ReportDetail -> Text
+            createReportingId reportDetail = show date <> "-" <> reportDetail.safekeepingAccount.id.label
+
+            createSwiftMessage : [(ReportDetailKey, Decimal)] -> (RefId, SwiftMessage, SwiftMessageType)
+            createSwiftMessage depositGroup = 
+              let 
+                reportDetails = map (\(ReportDetailKey{..}, totalQuantity) -> ReportDetail with safekeepingAccount = account; ..) depositGroup
+                refId = (createReportingId . head) reportDetails in
+              if isCashReporting then (refId, MT940 (createMT940Details reportDetails), MT940_t) else (refId, MT535 (createMT535Details reportDetails), MT535_t)
+            
+            groupSortOn f = (groupOn f . sortOn f)
+            groupedDeposits = groupSortOn (\deposit -> (deposit.account.owner, deposit.asset.id)) deposits
+            keyToQuantitys = map (\group -> (extractKey group, sumQuantity group)) groupedDeposits
+            despositGroupPerOwner = groupSortOn (\(k, _) -> k.account.owner) keyToQuantitys
+            swiftMessages = map createSwiftMessage despositGroupPerOwner
+
+          mapA (\(referenceId ,swiftMessage, swiftMessageType) -> do
+              -- archive current report if exist
+              currentReport <- (lookupByKey @SwiftOutboundMessage (accountProvider, referenceId, swiftMessageType))
+              whenSome currentReport archive
+              create SwiftOutboundMessage with 
+                referenceId; provider = accountProvider ; consumer = operator; swiftMessage; swiftMessageType; status=Finalized; observers=empty) swiftMessages

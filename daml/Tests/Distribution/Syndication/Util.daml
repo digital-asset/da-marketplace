@@ -33,6 +33,7 @@ import Marketplace.Distribution.Syndication.Structuring.Model qualified as Struc
 import Marketplace.Distribution.Syndication.Structuring.Service qualified as Structuring
 import Marketplace.Lifecycle.Service qualified as Lifecycle
 import Marketplace.Lifecycle.Snapshot.Service qualified as Snapshot
+import Marketplace.Lifecycle.Reporting.Service qualified as Reporting
 import Marketplace.Settlement.Hierarchical (SettlementInstruction, Allocate(..), Sign(..), Settle(..), Trade, Delivery, SettleDelivery(..))
 import Marketplace.Trading.Otc.Service qualified as Trading
 
@@ -99,6 +100,10 @@ createLifecycleService operator issuer bondRegistrar cashProvider payingAgent = 
 createSnapshotService : Party -> Party -> Script (ContractId Snapshot.Service)
 createSnapshotService operator customer = do
   submit operator do createCmd Snapshot.Service with ..
+
+createReportingService : Party -> Party -> Script (ContractId Reporting.Service)
+createReportingService operator accountProvider = do
+  submit operator do createCmd Reporting.Service with ..
 
 createTradingService : Party -> Party -> Script (ContractId Trading.Service)
 createTradingService operator customer  = do

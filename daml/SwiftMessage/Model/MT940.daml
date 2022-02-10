@@ -1,0 +1,12 @@
+module SwiftMessage.Model.MT940 where
+
+import SwiftMessage.Util(ReportDetail)
+
+-- Same as MT535 but for cash deposit
+data MT940Details = MT940Details with
+    reportDetails : [ReportDetail]
+  deriving (Eq, Show)
+
+createMT940Details : [ReportDetail] -> MT940Details
+createMT940Details reportDetails = 
+  MT940Details with ..
