@@ -3,7 +3,7 @@ module Marketplace.Lifecycle.Redemption where
 import DA.Finance.Types (Asset(..), Id)
 import DA.Set (fromList)
 import Marketplace.Custody.Model qualified as Custody
-import Marketplace.Lifecycle.Snapshot.Model
+import Marketplace.Snapshot.Model
 import Marketplace.Settlement.Hierarchical (createInstructions, getAccount, Delivery(..), Status(..))
 
 template InvestorRedemptionRequest

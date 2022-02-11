@@ -195,4 +195,19 @@ setup = do
 
   -- Snapshot services
   createSnapshotService operator payingAgent
+  
+
+  -- Reporting services
+  createReportingService operator bondRegistrar
+  createReportingService operator custodian1
+  createReportingService operator custodian2
+  createReportingService operator custodian3
+  createReportingService operator custodian4
+  createReportingService operator custodian5
+
+  createReportingService operator cashProvider
+  createReportingService operator lm1
+  createReportingService operator lm2
+  createReportingService operator lm3
+
   pure Parties with ..

@@ -6,15 +6,17 @@ import DA.Date (date, Month(..))
 import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Id)
 import DA.Foldable (forA_)
+import Marketplace.Reporting.Service as Reporting
 import Marketplace.Lifecycle.Model qualified as Lifecycle
 import Marketplace.Lifecycle.Service qualified as Lifecycle
-import Marketplace.Lifecycle.Snapshot.Model as Snapshot
-import Marketplace.Lifecycle.Snapshot.Service qualified as Snapshot
+import Marketplace.Snapshot.Model as Snapshot
+import Marketplace.Snapshot.Service qualified as Snapshot
 import Marketplace.Settlement.Hierarchical (Delivery)
 import Tests.Distribution.Syndication.Setup (setup, Parties(..))
 import Tests.Distribution.Syndication.Issuance (issuance)
 import Tests.Distribution.Syndication.Origination (origination, Origination(..))
 import Tests.Distribution.Syndication.Util
+import DA.Time (time)
 
 requestSnapshot : Party -> Party -> Party -> Id -> Script (ContractId Snapshot.SnapshotRequest)
 requestSnapshot operator payingAgent bondRegistrar assetId = do
@@ -47,6 +49,33 @@ instructLifecycle operator payingAgent assetId date = do
   snapshotCids <- map fst <$> queryFilter @Snapshot.Snapshot payingAgent (\s -> s.requester == payingAgent && s.deposit.asset.id.label == assetId.label && s.deposit.asset.id.version == assetId.version)
   submit operator do exerciseCmd effectCid Lifecycle.Instruct with snapshotCids
 
+testReporting : Script ()
+testReporting = script do
+  parties@Parties{..} <- setup
+  orig@Origination{..} <- origination parties
+  issuance parties orig
+
+  -- create report can be done at anytime
+  setTime (time (date 2021 Jan 1) 0 0 0)
+  
+  -- security report
+  reporting operator bondRegistrar False
+  reporting operator custodian1 False
+  reporting operator custodian2 False
+  reporting operator custodian3 False
+  reporting operator custodian4 False
+  reporting operator custodian5 False
+
+  -- cash report
+  reporting operator cashProvider True
+
+  -- make sure that we can submit reporting at the same date without failing
+  reporting operator bondRegistrar False
+  reporting operator cashProvider True
+
+  pure ()
+
+
 testBond1 : Script ()
 testBond1 = do
   parties@Parties{..} <- setup
@@ -58,8 +87,6 @@ testBond1 = do
       bond1Id = bond1Desc.assetId
       bond1PayoutDates = [ date 2022 Mar 21, date 2022 Jun 21, date 2022 Sep 20, date 2022 Dec 20 ]
 
-      
-  
   forA_ bond1PayoutDates (\date -> do preNotify parties date bond1Id 
                                       lifecycle parties date bond1Id)
                                     
@@ -73,6 +100,7 @@ testBond1 = do
   ad4.asset.quantity === 41_600_000.0
 
   pure ()
+
 
 testBond2 : Script ()
 testBond2 = do
@@ -144,4 +172,11 @@ preNotify parties@Parties{..} date assetId = do
   lifecycleSnapshot parties maxId
   snapshotCids <- map fst <$> queryFilter @Snapshot.Snapshot payingAgent (\s -> s.requester == payingAgent && s.deposit.asset.id.label == maxId.label && s.deposit.asset.id.version == maxId.version)
 
-  submit operator do exerciseByKeyCmd @Lifecycle.Service (operator, issuer, payingAgent) Lifecycle.SendPrePayoutSwiftMessage with assetId = maxId; exDivDate = date; ..
+  submit operator do exerciseByKeyCmd @Lifecycle.Service (operator, issuer, payingAgent) Lifecycle.SendPrePayoutSwiftMessage with exDivDate = date; ..
+  pure ()
+
+reporting : Party -> Party -> Bool -> Script ()
+reporting operator accountProvider isCashReporting = do 
+  depositCids <- map fst <$> queryFilter @AssetDeposit accountProvider (\deposit -> deposit.account.provider == accountProvider)
+  submit accountProvider do exerciseByKeyCmd @Reporting.Service (operator, accountProvider) Reporting.CreateReports with depositCids; isCashReporting
+  pure ()

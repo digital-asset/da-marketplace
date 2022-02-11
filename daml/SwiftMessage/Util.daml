@@ -15,7 +15,7 @@ data MessageType =
   | RMDR
   deriving (Eq, Show)
 
-data CRDB = CR | DB deriving (Eq, Show)
+data CRDB = CRED | DEBT deriving (Eq, Show)
 
 data PayoutDetails = PayoutDetails with
     instrumentId : Text -- ISIN + bond id label
@@ -42,4 +42,10 @@ data PayoutType =
   deriving (Eq, Show)
 
 getRedemptionDate : Date -> Date -> Optional Date
-getRedemptionDate maturityDate payoutDate = if payoutDate == maturityDate then Some payoutDate else Nothing
+getRedemptionDate maturityDate payoutDate = if payoutDate == maturityDate then Some payoutDate else None
+
+data ReportDetail = ReportDetail with
+    safekeepingAccount: Account
+    assetId: Id
+    totalQuantity: Decimal
+  deriving (Eq, Show)

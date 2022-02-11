@@ -1,4 +1,4 @@
-module Marketplace.Lifecycle.Snapshot.Model where
+module Marketplace.Snapshot.Model where
 
 import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Id)

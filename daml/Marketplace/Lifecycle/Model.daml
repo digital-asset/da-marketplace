@@ -7,7 +7,7 @@ import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Issuance.AssetDescription
 import Marketplace.Issuance.CFI qualified as CFI
 import Marketplace.Issuance.Instrument.Model qualified as Instrument
-import Marketplace.Lifecycle.Snapshot.Model
+import Marketplace.Snapshot.Model
 import Marketplace.Settlement.Hierarchical (createInstructions, getAccount, Delivery(..), Status(..))
 import SwiftMessage.Message (SwiftMessage(MT566), SwiftMessageType(..), SwiftOutboundMessage(..))
 import SwiftMessage.Model.MT566
@@ -82,7 +82,7 @@ template Effect
                 maturityDate = bond.maturityDate
                 payoutDate = date
                 redemptionDate = getRedemptionDate maturityDate payoutDate
-                mt566 = createMT566Details instrumentId assetId description.cfi issuer buyerSafekeepingAcc buyerCashAcc CR faceAmount currency maturityDate payoutDate redemptionDate
+                mt566 = createMT566Details instrumentId assetId description.cfi issuer buyerSafekeepingAcc buyerCashAcc CRED faceAmount currency maturityDate payoutDate redemptionDate
               create SwiftOutboundMessage with referenceId = settlementId; provider = operator ; consumer = operator; swiftMessage=MT566 (mt566); swiftMessageType=MT566_t; status=Pending; observers=fromList [payingAgent]
               pure ()
             else pure ()
