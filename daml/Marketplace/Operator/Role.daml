@@ -1,6 +1,7 @@
 module Marketplace.Operator.Role where
 
 import Marketplace.Regulator.Role qualified as Regulator
+import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Custody.Role qualified as Custodian
 import Marketplace.Clearing.Role qualified as Clearing
 import Marketplace.Clearing.Market.Service qualified as Market
@@ -9,7 +10,6 @@ import Marketplace.Distribution.Syndication.Distributor qualified as Syndication
 import Marketplace.Distribution.Syndication.Structurer qualified as SyndicationStructurer
 import Marketplace.Distribution.Syndication.Investor qualified as Investor
 import Marketplace.Issuance.Role qualified as Issuer
-import Marketplace.Settlement.Hierarchical qualified as Settlement
 import Marketplace.Settlement.Service qualified as Settlement
 import Marketplace.Trading.Role qualified as Exchange
 import Marketplace.Trading.Matching.Service qualified as Matching
@@ -36,7 +36,7 @@ template Role
         do
           create Custodian.Offer with ..
 
-      nonconsuming ApproveCustodianRequest : (ContractId Custodian.Role, ContractId Settlement.AccountInfo)
+      nonconsuming ApproveCustodianRequest : (ContractId Custodian.Role, ContractId Custody.SettlementInfo)
         with
           requestCid : ContractId Custodian.Request
         do
@@ -72,7 +72,7 @@ template Role
         do
           create Investor.Offer with ..
 
-      nonconsuming ApproveInvestorRequest : (ContractId Investor.Role, ContractId Settlement.AccountInfo)
+      nonconsuming ApproveInvestorRequest : (ContractId Investor.Role, ContractId Custody.SettlementInfo)
         with
           requestCid : ContractId Investor.Request
         do
@@ -84,7 +84,7 @@ template Role
         do
           create Issuer.Offer with ..
 
-      nonconsuming ApproveIssuerRequest : (ContractId Issuer.Role, ContractId Settlement.AccountInfo)
+      nonconsuming ApproveIssuerRequest : (ContractId Issuer.Role, ContractId Custody.SettlementInfo)
         with
           issuerRequestCid : ContractId Issuer.Request
         do

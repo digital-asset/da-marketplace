@@ -1,5 +1,8 @@
 module SwiftMessage.Util where
 
+import DA.Finance.Types (Id(..), Account(..))
+import Marketplace.Issuance.CFI
+
 data MessageStatus = Pending | Finalized | Processed | Failed String
   deriving (Eq, Show)
 
@@ -10,4 +13,39 @@ data MessageType =
   | REPE
   | REPL
   | RMDR
+  deriving (Eq, Show)
+
+data CRDB = CRED | DEBT deriving (Eq, Show)
+
+data PayoutDetails = PayoutDetails with
+    instrumentId : Text -- ISIN + bond id label
+    assetId : Id -- bond id
+    cfi : CFI
+    issuer : Party
+    buyerSafekeepingAcc : Account -- buyer's/investor's security account
+    buyerCashAcc : Account -- buyer's/investor's cash account
+
+    crdb : CRDB -- credit or debit indicator
+    faceAmount : Decimal
+    payoutCurrency : Id -- currency option
+    settledCurrency : Id -- currency denominator
+
+    maturityDate : Date
+    payoutDate : Date -- payment date for dividend payout
+    redemptionDate : Optional Date -- payment date for coupon redemption
+    payoutType : PayoutType
+  deriving (Eq, Show)
+
+data PayoutType = 
+    REDM -- for redemption 
+    | INTR -- for dividend payout
+  deriving (Eq, Show)
+
+getRedemptionDate : Date -> Date -> Optional Date
+getRedemptionDate maturityDate payoutDate = if payoutDate == maturityDate then Some payoutDate else None
+
+data ReportDetail = ReportDetail with
+    safekeepingAccount: Account
+    assetId: Id
+    totalQuantity: Decimal
   deriving (Eq, Show)

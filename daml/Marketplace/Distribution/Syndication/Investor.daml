@@ -1,8 +1,9 @@
 module Marketplace.Distribution.Syndication.Investor where
 
 import DA.Finance.Types (Account, Asset)
+import DA.Map (empty)
+import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Lifecycle.Redemption qualified as Lifecycle
-import Marketplace.Settlement.Hierarchical qualified as Settlement
 
 template Role
   with
@@ -15,16 +16,6 @@ template Role
     maintainer key._1
 
     controller investor can
-
-      nonconsuming UpdateAccountInfo : ContractId Settlement.AccountInfo
-        with
-          ownAccount : Optional Account
-          cashAccount : Optional Account
-          securitiesAccount : Optional Account
-        do
-          (infoCid, _) <- fetchByKey @Settlement.AccountInfo (operator, investor)
-          archive infoCid
-          create Settlement.AccountInfo with party = investor; ..
 
       nonconsuming RequestRedemption : ContractId Lifecycle.InvestorRedemptionRequest
         with
@@ -49,12 +40,9 @@ template Offer
     signatory operator
 
     controller investor can
-      Accept : (ContractId Role, ContractId Settlement.AccountInfo)
-        with
-          cashAccount : Optional Account
-          securitiesAccount : Optional Account
+      Accept : (ContractId Role, ContractId Custody.SettlementInfo)
         do
-          infoCid <- create Settlement.AccountInfo with party = investor; ownAccount = None; ..
+          infoCid <- create Custody.SettlementInfo with operator; party = investor; ownAccount = None; omnibusCashAccount = None; omnibusSecuritiesAccount = None; cashAccounts = empty; securitiesAccounts = empty
           roleCid <- create Role with ..
           pure (roleCid, infoCid)
 
@@ -72,9 +60,9 @@ template Request
     signatory investor
 
     controller operator can
-      Approve : (ContractId Role, ContractId Settlement.AccountInfo)
+      Approve : (ContractId Role, ContractId Custody.SettlementInfo)
         do
-          infoCid <- create Settlement.AccountInfo with party = investor; ownAccount = None; ..
+          infoCid <- create Custody.SettlementInfo with operator; party = investor; ownAccount = None; omnibusCashAccount = None; omnibusSecuritiesAccount = None; cashAccounts = empty; securitiesAccounts = empty
           roleCid <- create Role with ..
           pure (roleCid, infoCid)
 

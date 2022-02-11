@@ -40,6 +40,7 @@ template Bond
     id : Id
     isin : Text
     currencyId : Id
+    issuer : Party
     issueDate : Date
     maturityDate : Date
     stream : Optional InterestStream
@@ -58,6 +59,7 @@ template Swap
   with
     id : Id
     issueDate : Date
+    issuer : Party
     maturityDate : Date
     pay : InterestStream
     payCurrencyId : Id

@@ -4,7 +4,7 @@ import Daml.Script
 import DA.Set (empty)
 import Marketplace.Operator.Role qualified as Operator
 import Tests.Distribution.Syndication.Util
-import Marketplace.Utils (createAccount)
+import Marketplace.Utils (createLabel)
 
 data Parties = Parties
   with
@@ -57,84 +57,157 @@ setup = do
     settlementBank = lm2
     bndBank = lm3
 
+  -- Roles
   submit operator do createCmd Operator.Role with operator; observers = empty
 
-  -- 1st level
-  createCustodianRole operator cashProvider None None
-  (_, issuerCashAccount)        <- createCustodyService operator cashProvider issuer
-  (_, lm1CashAccount)           <- createCustodyService operator cashProvider lm1
-  (_, lm2CashAccount)           <- createCustodyService operator cashProvider lm2
-  (_, lm3CashAccount)           <- createCustodyService operator cashProvider lm3
-  createCustodianRole operator bondRegistrar None (Some $ createAccount bondRegistrar bondRegistrar)
-  (_, issuerBondAccount)        <- createCustodyService operator bondRegistrar issuer
-  (_, custodian1BondAccount)    <- createCustodyService operator bondRegistrar custodian1
-  (_, custodian2BondAccount)    <- createCustodyService operator bondRegistrar custodian2
-  (_, custodian3BondAccount)    <- createCustodyService operator bondRegistrar custodian3
-  (_, custodian4BondAccount)    <- createCustodyService operator bondRegistrar custodian4
-
-  -- 2nd level
-  createCustodianRole operator custodian1 None (Some custodian1BondAccount)
-  (_, lm1BondAccount)         <- createCustodyService operator custodian1 lm1
-  (_, investor1BondAccount)   <- createCustodyService operator custodian1 investor1
-  createCustodianRole operator custodian2 None (Some custodian2BondAccount)
-  (_, lm2BondAccount)         <- createCustodyService operator custodian2 lm2
-  (_, investor2BondAccount)   <- createCustodyService operator custodian2 investor2
-  createCustodianRole operator custodian3 None (Some custodian3BondAccount)
-  (_, lm3BondAccount)         <- createCustodyService operator custodian3 lm3
-  createCustodianRole operator custodian4 None (Some custodian4BondAccount)
-  (_, custodian5BondAccount)  <- createCustodyService operator custodian4 custodian5
-
-  -- 3rd level
-  createCustodianRole operator custodian5 None (Some custodian5BondAccount)
-  (_, investor3BondAccount)   <- createCustodyService operator custodian5 investor3
-  (_, investor4BondAccount)   <- createCustodyService operator custodian5 investor4
-  createCustodianRole operator lm1 (Some lm1CashAccount) (Some lm1BondAccount)
-  (_, investor1CashAccount)   <- createCustodyService operator lm1 investor1
-  createCustodianRole operator lm2 (Some lm2CashAccount) (Some lm2BondAccount)
-  (_, investor2CashAccount)   <- createCustodyService operator lm2 investor2
-  createCustodianRole operator lm3 (Some lm3CashAccount) (Some lm3BondAccount)
-  (_, investor3CashAccount)   <- createCustodyService operator lm3 investor3
-  (_, investor4CashAccount)   <- createCustodyService operator lm3 investor4
+  -- Custodian roles
+  createCustodianRole operator cashProvider
+  createCustodianRole operator bondRegistrar
+  createCustodianRole operator custodian1
+  createCustodianRole operator custodian2
+  createCustodianRole operator custodian3
+  createCustodianRole operator custodian4
+  createCustodianRole operator custodian5
+  createCustodianRole operator lm1
+  createCustodianRole operator lm2
+  createCustodianRole operator lm3
 
   -- Investor roles
-  createInvestorRole operator investor1 investor1CashAccount investor1BondAccount
-  createInvestorRole operator investor2 investor2CashAccount investor2BondAccount
-  createInvestorRole operator investor3 investor3CashAccount investor3BondAccount
-  createInvestorRole operator investor4 investor4CashAccount investor4BondAccount
+  createInvestorRole operator investor1
+  createInvestorRole operator investor2
+  createInvestorRole operator investor3
+  createInvestorRole operator investor4
   createTradingService operator investor1
   createTradingService operator investor2
   createTradingService operator investor3
   createTradingService operator investor4
 
-  -- Issuer role
-  createIssuerRole operator issuer issuerCashAccount issuerBondAccount
+  -- Issuer roles
+  createIssuerRole operator issuer
   createIssuanceService operator cashProvider cashProvider
   createIssuanceService operator bondRegistrar issuer
   createInstrumentService operator bondRegistrar issuer
 
-  -- Structurer role
+  -- Structurer roles
   createStructurerRole operator structurer
   createStructuringService operator structurer issuer
 
   -- Distributor roles
-  -- createDistributorRole operator issuer
   createDistributorRole operator lm1
+  createDistributorRole operator lm2
+  createDistributorRole operator lm3
+  createDistributorRole operator cm1
+
+  -- Services
+  -- Custody services and accounts
+  -- 1st level
+  createCustodyService operator cashProvider issuer
+  createCustodyService operator cashProvider lm1
+  createCustodyService operator cashProvider lm2
+  createCustodyService operator cashProvider lm3
+  aiCid1 <- openAccount operator cashProvider issuer $ createLabel cashProvider issuer
+  aiCid2 <- openAccount operator cashProvider lm1 $ createLabel cashProvider lm1
+  aiCid3 <- openAccount operator cashProvider lm2 $ createLabel cashProvider lm2
+  aiCid4 <- openAccount operator cashProvider lm3 $ createLabel cashProvider lm3
+  setOmnibusCashAccount operator issuer aiCid1
+  setOmnibusCashAccount operator lm1 aiCid2
+  setOmnibusCashAccount operator lm2 aiCid3
+  setOmnibusCashAccount operator lm3 aiCid4
+
+  createCustodyService operator bondRegistrar bondRegistrar
+  createCustodyService operator bondRegistrar issuer
+  createCustodyService operator bondRegistrar custodian1
+  createCustodyService operator bondRegistrar custodian2
+  createCustodyService operator bondRegistrar custodian3
+  createCustodyService operator bondRegistrar custodian4
+  aiCid1 <- openAccount operator bondRegistrar bondRegistrar $ createLabel bondRegistrar bondRegistrar
+  aiCid2 <- openAccount operator bondRegistrar issuer $ createLabel bondRegistrar issuer
+  aiCid3 <- openAccount operator bondRegistrar custodian1 $ createLabel bondRegistrar custodian1
+  aiCid3a <- openAccount operator bondRegistrar custodian1 $ "Segregated-" <> partyToText investor1 <> "@" <> partyToText custodian1 <> "@" <> partyToText bondRegistrar
+  aiCid4 <- openAccount operator bondRegistrar custodian2 $ createLabel bondRegistrar custodian2
+  aiCid5 <- openAccount operator bondRegistrar custodian3 $ createLabel bondRegistrar custodian3
+  aiCid6 <- openAccount operator bondRegistrar custodian4 $ createLabel bondRegistrar custodian4
+  setOmnibusSecuritiesAccount operator bondRegistrar aiCid1
+  setOmnibusSecuritiesAccount operator issuer aiCid2
+  setOmnibusSecuritiesAccount operator custodian1 aiCid3
+  setSecuritiesAccountForParty operator custodian1 investor1 aiCid3a
+  setOmnibusSecuritiesAccount operator custodian2 aiCid4
+  setOmnibusSecuritiesAccount operator custodian3 aiCid5
+  setOmnibusSecuritiesAccount operator custodian4 aiCid6
+
+  -- 2nd level
+  createCustodyService operator custodian1 lm1
+  createCustodyService operator custodian1 investor1
+  aiCid1 <- openAccount operator custodian1 lm1 $ createLabel custodian1 lm1
+  aiCid2 <- openAccount operator custodian1 investor1 $ createLabel custodian1 investor1
+  setOmnibusSecuritiesAccount operator lm1 aiCid1
+  setOmnibusSecuritiesAccount operator investor1 aiCid2
+
+  createCustodyService operator custodian2 lm2
+  createCustodyService operator custodian2 investor2
+  aiCid1 <- openAccount operator custodian2 lm2 $ createLabel custodian2 lm2
+  aiCid2 <- openAccount operator custodian2 investor2 $ createLabel custodian2 investor2
+  setOmnibusSecuritiesAccount operator lm2 aiCid1
+  setOmnibusSecuritiesAccount operator investor2 aiCid2
+
+  createCustodyService operator custodian3 lm3
+  aiCid1 <- openAccount operator custodian3 lm3 $ createLabel custodian3 lm3
+  setOmnibusSecuritiesAccount operator lm3 aiCid1
+  createCustodyService operator custodian4 custodian5
+  aiCid1 <- openAccount operator custodian4 custodian5 $ createLabel custodian4 custodian5
+  setOmnibusSecuritiesAccount operator custodian5 aiCid1
+
+  -- 3rd level
+  createCustodyService operator custodian5 investor3
+  createCustodyService operator custodian5 investor4
+  aiCid1 <- openAccount operator custodian5 investor3 $ createLabel custodian5 investor3
+  aiCid2 <- openAccount operator custodian5 investor4 $ createLabel custodian5 investor4
+  setOmnibusSecuritiesAccount operator investor3 aiCid1
+  setOmnibusSecuritiesAccount operator investor4 aiCid2
+
+  createCustodyService operator lm1 investor1
+  aiCid1 <- openAccount operator lm1 investor1 $ createLabel lm1 investor1
+  setOmnibusCashAccount operator investor1 aiCid1
+
+  createCustodyService operator lm2 investor2
+  aiCid1 <- openAccount operator lm2 investor2 $ createLabel lm2 investor2
+  setOmnibusCashAccount operator investor2 aiCid1
+
+  createCustodyService operator lm3 investor3
+  createCustodyService operator lm3 investor4
+  aiCid1 <- openAccount operator lm3 investor3 $ createLabel lm3 investor3
+  aiCid2 <- openAccount operator lm3 investor4 $ createLabel lm3 investor4
+  setOmnibusCashAccount operator investor3 aiCid1
+  setOmnibusCashAccount operator investor4 aiCid2
+
+  -- Distribution services
   createBookBuildingService operator lm1 issuer
   createBiddingService operator lm1 investor1
-
-  createDistributorRole operator lm2
   createBookBuildingService operator lm2 issuer
   createBiddingService operator lm2 investor2
-
-  createDistributorRole operator lm3
   createBookBuildingService operator lm3 issuer
-
-  createDistributorRole operator cm1
   createBookBuildingService operator cm1 lm3
   createBiddingService operator cm1 investor3
   createBiddingService operator cm1 investor4
 
-  -- Lifecycling
+  -- Lifecycling services
   createLifecycleService operator issuer bondRegistrar cashProvider payingAgent
+
+  -- Snapshot services
+  createSnapshotService operator payingAgent
+  
+
+  -- Reporting services
+  createReportingService operator bondRegistrar
+  createReportingService operator custodian1
+  createReportingService operator custodian2
+  createReportingService operator custodian3
+  createReportingService operator custodian4
+  createReportingService operator custodian5
+
+  createReportingService operator cashProvider
+  createReportingService operator lm1
+  createReportingService operator lm2
+  createReportingService operator lm3
 
   pure Parties with ..

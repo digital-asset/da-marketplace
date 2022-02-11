@@ -3,10 +3,22 @@ module Marketplace.Lifecycle.Service where
 import ContingentClaims.Claim (deserialize, serialize)
 import ContingentClaims.Lifecycle qualified as Lifecycle
 import ContingentClaims.Claim.Serializable (Claim(..))
+import ContingentClaims.Observation qualified as Ob
+import ContingentClaims.Util (fixings, payoffs)
 import DA.Finance.Types (Id)
+import DA.Foldable (mapA_)
+import DA.List (head)
+import DA.Set (empty, fromList)
+import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Issuance.AssetDescription qualified as AssetDescription
+import Marketplace.Issuance.Instrument.Model qualified as Instrument
 import Marketplace.Lifecycle.Model (Observation, Today, Effect(..))
+import Marketplace.Snapshot.Model
+import Marketplace.Settlement.Hierarchical (getAccount)
 import Marketplace.Utils
+import SwiftMessage.Message (SwiftMessage(MT564), SwiftMessageType(..), SwiftOutboundMessage(..))
+import SwiftMessage.Model.MT564
+import SwiftMessage.Util
 
 type Claims = Claim Date Decimal Id
 
@@ -54,6 +66,49 @@ template Service
             pure None
 
     controller operator can
+      nonconsuming SendPrePayoutSwiftMessage : [ContractId SwiftOutboundMessage]
+        with
+          snapshotCids : [ContractId Snapshot]
+          exDivDate : Date
+        do
+          let 
+              getPayoutDate : Claims -> Date 
+              getPayoutDate serializedClaims = 
+                head $ fixings $ deserialize serializedClaims
+            
+              getPayoutRate : Claims -> Decimal
+              getPayoutRate serializedClaims = 
+                let (comingPayout, id) = head $ payoffs $ deserialize serializedClaims in
+                case comingPayout of
+                  Ob.Const v -> v
+                  other  -> error $ "Cannot find payout rate: " <> show other 
+              
+              sendMessageForSnapshot : Snapshot -> Update (ContractId SwiftOutboundMessage)
+              sendMessageForSnapshot snapshot = do                
+                  let buyer = snapshot.deposit.account.owner
+                  let assetId = snapshot.assetId
+                  (_, bond) <- fetchByKey @Instrument.Bond (fromList [issuer, bondRegistrar], assetId.label)
+                  (_, description) <- fetchByKey @AssetDescription.T assetId
+                  (_, settlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, buyer)
+                  let                  
+                    claims = description.claims
+                    asset = snapshot.deposit.asset
+                    instrumentId = bond.isin <> "-" <> assetId.label        
+                    currency = bond.currencyId
+                    maturityDate = bond.maturityDate
+                    payoutDate = getPayoutDate claims
+                    redemptionDate = getRedemptionDate maturityDate payoutDate
+                    faceAmount = asset.quantity * (getPayoutRate claims)
+                    buyerSafekeepingAcc = getAccount False settlementInfo buyer
+                    buyerCashAcc = getAccount True settlementInfo buyer
+                    mt564 = createMT564Details instrumentId asset.id description.cfi issuer buyerSafekeepingAcc buyerCashAcc CRED faceAmount currency maturityDate payoutDate redemptionDate exDivDate
+                    mt564_redempt = (\_ -> createMT564Details instrumentId asset.id description.cfi issuer buyerSafekeepingAcc buyerCashAcc CRED asset.quantity currency maturityDate payoutDate redemptionDate exDivDate) <$> redemptionDate          
+                    notificationId = "Prenotification-" <> show exDivDate <> "-" <> assetId.label <> "(v" <> show assetId.version <> ")" <> "-" <> partyToText buyer
+                  mapA_ (\mt564_r -> create SwiftOutboundMessage with referenceId = notificationId <> "-" <> "redempt"; provider = operator ; consumer = operator; swiftMessage=MT564 (mt564_r); swiftMessageType=MT564_t; status=Finalized; observers=empty) mt564_redempt
+                  create SwiftOutboundMessage with referenceId = notificationId; provider = operator ; consumer = operator; swiftMessage=MT564 (mt564); swiftMessageType=MT564_t; status=Finalized; observers=empty
+          snapshots <- mapA fetch snapshotCids
+          mapA_ (`exercise` Delete) snapshotCids
+          mapA sendMessageForSnapshot snapshots
       Terminate : ()
         do return ()
 

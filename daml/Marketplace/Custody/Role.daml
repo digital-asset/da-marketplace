@@ -1,11 +1,11 @@
 module Marketplace.Custody.Role where
 
-import DA.Finance.Types (Account)
 import DA.Set (Set)
+import DA.Map (empty)
+import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Custody.Service qualified as Custody
 import Marketplace.Issuance.Service qualified as Issuance
 import Marketplace.Issuance.Instrument.Service qualified as Instrument
-import Marketplace.Settlement.Hierarchical qualified as Settlement
 import Marketplace.Utils (createAccount)
 
 template Role
@@ -62,7 +62,7 @@ template Role
         do
           create Instrument.Offer with ..
 
-      nonconsuming ApproveBondRequest : ContractId Instrument.Service
+      nonconsuming ApproveInstrumentRequest : ContractId Instrument.Service
         with
           requestCid : ContractId Instrument.Request
         do
@@ -81,13 +81,10 @@ template Offer
     signatory operator
 
     controller provider can
-      Accept : (ContractId Role, ContractId Settlement.AccountInfo)
-        with
-          cashAccount : Optional Account
-          securitiesAccount : Optional Account
+      Accept : (ContractId Role, ContractId Custody.SettlementInfo)
         do
           let ownAccount = Some $ createAccount provider provider
-          infoCid <- create Settlement.AccountInfo with party = provider; ..
+          infoCid <- create Custody.SettlementInfo with operator; party = provider; ownAccount; omnibusCashAccount = None; omnibusSecuritiesAccount = None; cashAccounts = empty; securitiesAccounts = empty
           roleCid <- create Role with ..
           pure (roleCid, infoCid)
 
@@ -99,18 +96,16 @@ template Request
   with
     provider : Party
     operator : Party
-    cashAccount : Optional Account
-    securitiesAccount : Optional Account
   where
     signatory provider
 
     controller operator can
-      Approve : (ContractId Role, ContractId Settlement.AccountInfo)
+      Approve : (ContractId Role, ContractId Custody.SettlementInfo)
         with
           observers : Set Party
         do
           let ownAccount = Some $ createAccount provider provider
-          infoCid <- create Settlement.AccountInfo with party = provider; ..
+          infoCid <- create Custody.SettlementInfo with operator; party = provider; ownAccount; omnibusCashAccount = None; omnibusSecuritiesAccount = None; cashAccounts = empty; securitiesAccounts = empty
           roleCid <- create Role with ..
           pure (roleCid, infoCid)
 

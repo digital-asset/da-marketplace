@@ -3,12 +3,12 @@ module Tests.Distribution.Syndication.Util where
 import ContingentClaims.Claim (Claim, serialize)
 import ContingentClaims.Observation (Observation)
 import Daml.Script
-import DA.Finance.Asset (AssetDeposit(..), AssetDeposit_Split(..), AssetDeposit_Merge(..))
+import DA.Finance.Asset (AssetDeposit_Upgrade(..), AssetDeposit(..), AssetDeposit_Split(..), AssetDeposit_Merge(..))
 import DA.Finance.Base.DayCount (DayCountConvention)
 import DA.Finance.Base.HolidayCalendar (BusinessDayConventionEnum)
 import DA.Finance.Base.RollConvention (PeriodEnum, RollConventionEnum)
-import DA.Finance.Types (Account, Asset(..), Id(..))
-import DA.Foldable (forA_)
+import DA.Finance.Types (Asset(..), Id(..))
+import DA.Foldable (mapA_, forA_)
 import DA.List (head, dedup)
 import DA.Optional (isNone, isSome, mapOptional)
 import DA.Set (empty)
@@ -32,20 +32,20 @@ import Marketplace.Distribution.Syndication.Investor qualified as Investor
 import Marketplace.Distribution.Syndication.Structuring.Model qualified as Structuring
 import Marketplace.Distribution.Syndication.Structuring.Service qualified as Structuring
 import Marketplace.Lifecycle.Service qualified as Lifecycle
-import Marketplace.Settlement.Hierarchical (AccountInfo, SettlementInstruction, Allocate(..), Sign(..), Settle(..), Trade, Delivery, SettleDelivery(..))
+import Marketplace.Snapshot.Service qualified as Snapshot
+import Marketplace.Reporting.Service qualified as Reporting
+import Marketplace.Settlement.Hierarchical (SettlementInstruction, Allocate(..), Sign(..), Settle(..), Trade, Delivery, SettleDelivery(..))
 import Marketplace.Trading.Otc.Service qualified as Trading
 
-createCustodianRole : Party -> Party -> Optional Account -> Optional Account -> Script (ContractId Custodian.Role, ContractId AccountInfo)
-createCustodianRole operator provider cashAccount securitiesAccount = do
+createCustodianRole : Party -> Party -> Script (ContractId Custodian.Role, ContractId Custody.SettlementInfo)
+createCustodianRole operator provider = do
   offerCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferCustodianRole with provider
-  submit provider do exerciseCmd offerCid Custodian.Accept with ..
+  submit provider do exerciseCmd offerCid Custodian.Accept
 
-createCustodyService : Party -> Party -> Party -> Script (ContractId Custody.Service, Account)
+createCustodyService : Party -> Party -> Party -> Script (ContractId Custody.Service)
 createCustodyService operator provider customer = do
   offerCid <- submit provider do exerciseByKeyCmd @Custodian.Role (operator, provider) Custodian.OfferCustodyService with ..
-  serviceCid <- submit customer do exerciseCmd offerCid Custody.Accept
-  Some service <- queryContractId customer serviceCid
-  pure (serviceCid, service.account)
+  submit customer do exerciseCmd offerCid Custody.Accept
 
 createIssuanceService : Party -> Party -> Party -> Script (ContractId Issuance.Service)
 createIssuanceService operator provider customer = do
@@ -67,15 +67,15 @@ createDistributorRole operator provider = do
   offerCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferSyndicationDistributorRole with provider
   submit provider do exerciseCmd offerCid Distributor.Accept
 
-createInvestorRole : Party -> Party -> Account -> Account -> Script (ContractId Investor.Role, ContractId AccountInfo)
-createInvestorRole operator investor cashAccount securitiesAccount = do
+createInvestorRole : Party -> Party -> Script (ContractId Investor.Role, ContractId Custody.SettlementInfo)
+createInvestorRole operator investor = do
   offerCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferInvestorRole with investor
-  submit investor do exerciseCmd offerCid Investor.Accept with cashAccount = Some cashAccount; securitiesAccount = Some securitiesAccount
+  submit investor do exerciseCmd offerCid Investor.Accept
 
-createIssuerRole : Party -> Party -> Account -> Account -> Script (ContractId Issuer.Role, ContractId AccountInfo)
-createIssuerRole operator issuer cashAccount securitiesAccount = do
+createIssuerRole : Party -> Party -> Script (ContractId Issuer.Role, ContractId Custody.SettlementInfo)
+createIssuerRole operator issuer = do
   offerCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferIssuerRole with issuer
-  submit issuer do exerciseCmd offerCid Issuer.Accept with cashAccount = Some cashAccount; securitiesAccount = Some securitiesAccount
+  submit issuer do exerciseCmd offerCid Issuer.Accept
 
 createStructuringService : Party -> Party -> Party -> Script (ContractId Structuring.Service)
 createStructuringService operator provider customer = do
@@ -97,10 +97,39 @@ createLifecycleService operator issuer bondRegistrar cashProvider payingAgent = 
   offerCid <- submit issuer do exerciseByKeyCmd @Issuer.Role (operator, issuer) Issuer.OfferLifecycleService with ..
   submit payingAgent do exerciseCmd offerCid Lifecycle.Accept
 
+createSnapshotService : Party -> Party -> Script (ContractId Snapshot.Service)
+createSnapshotService operator customer = do
+  submit operator do createCmd Snapshot.Service with ..
+
+createReportingService : Party -> Party -> Script (ContractId Reporting.Service)
+createReportingService operator accountProvider = do
+  submit operator do createCmd Reporting.Service with ..
+
 createTradingService : Party -> Party -> Script (ContractId Trading.Service)
 createTradingService operator customer  = do
   offerCid <- submit operator do exerciseByKeyCmd @Operator.Role operator Operator.OfferTradingService with ..
   submit customer do exerciseCmd offerCid Trading.Accept
+
+openAccount : Party -> Party -> Party -> Text -> Script (ContractId Custody.AccountInfo)
+openAccount operator provider customer label = do
+  requestCid <- submit customer do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.RequestOpenAccount with label
+  submit provider do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.OpenAccount with ..
+
+setOmnibusCashAccount : Party -> Party -> ContractId Custody.AccountInfo -> Script (ContractId Custody.SettlementInfo)
+setOmnibusCashAccount operator party accountInfoCid = do
+  submit party do exerciseByKeyCmd @Custody.SettlementInfo (operator, party) Custody.SetOmnibusCashAccount with accountInfoCid
+
+setOmnibusSecuritiesAccount : Party -> Party -> ContractId Custody.AccountInfo -> Script (ContractId Custody.SettlementInfo)
+setOmnibusSecuritiesAccount operator party accountInfoCid = do
+  submit party do exerciseByKeyCmd @Custody.SettlementInfo (operator, party) Custody.SetOmnibusSecuritiesAccount with accountInfoCid
+
+setCashAccountForParty : Party -> Party -> Party -> ContractId Custody.AccountInfo -> Script (ContractId Custody.SettlementInfo)
+setCashAccountForParty operator party beneficiary accountInfoCid = do
+  submit party do exerciseByKeyCmd @Custody.SettlementInfo (operator, party) Custody.SetCashAccount with beneficiary; accountInfoCid
+
+setSecuritiesAccountForParty : Party -> Party -> Party -> ContractId Custody.AccountInfo -> Script (ContractId Custody.SettlementInfo)
+setSecuritiesAccountForParty operator party beneficiary accountInfoCid = do
+  submit party do exerciseByKeyCmd @Custody.SettlementInfo (operator, party) Custody.SetSecuritiesAccount with beneficiary; accountInfoCid
 
 originate : Party -> Party -> Party -> Party -> Text -> Claim Observation Date Decimal Id -> Script (ContractId AssetDescription, AssetDescription)
 originate operator provider customer public assetLabel claims = do
@@ -115,27 +144,27 @@ createSchedule : Date -> Date -> PeriodEnum -> Int -> [Text] -> BusinessDayConve
 createSchedule startDate endDate period periodMultiplier calendarIds businessDayConvention dayCountConvention rollConvention =
   Instrument.InterestSchedule with ..
 
-createFixedRateBond : Id -> Text -> Id -> Date -> Date -> Instrument.InterestSchedule -> Decimal -> Bool -> Bool -> Bool -> [Party] -> Instrument.Bond
-createFixedRateBond id isin currencyId issueDate maturityDate schedule annualRate isTradeable isPricedDirty isCallable observers =
+createFixedRateBond : Id -> Text -> Id -> Party -> Date -> Date -> Instrument.InterestSchedule -> Decimal -> Bool -> Bool -> Bool -> [Party] -> Instrument.Bond
+createFixedRateBond id isin currencyId issuer issueDate maturityDate schedule annualRate isTradeable isPricedDirty isCallable observers =
   let
     amount = Instrument.Fixed with annualRate
     stream = Some Instrument.InterestStream with schedule; amount
   in Instrument.Bond with ..
 
-createFloatingRateBond : Id -> Text -> Id -> Date -> Date -> Instrument.InterestSchedule -> Id -> Decimal -> Bool -> Bool -> Bool -> [Party] -> Instrument.Bond
-createFloatingRateBond id isin currencyId issueDate maturityDate schedule rateId periodSpread isTradeable isPricedDirty isCallable observers =
+createFloatingRateBond : Id -> Text -> Id -> Party -> Date -> Date -> Instrument.InterestSchedule -> Id -> Decimal -> Bool -> Bool -> Bool -> [Party] -> Instrument.Bond
+createFloatingRateBond id isin currencyId issuer issueDate maturityDate schedule rateId periodSpread isTradeable isPricedDirty isCallable observers =
   let
     amount = Instrument.Float with rateId; periodSpread
     stream = Some Instrument.InterestStream with schedule; amount
   in Instrument.Bond with ..
 
-createZeroCouponBond : Id -> Text -> Id -> Date -> Date -> Bool -> Bool -> Bool -> [Party] -> Instrument.Bond
-createZeroCouponBond id isin currencyId issueDate maturityDate isTradeable isPricedDirty isCallable observers =
+createZeroCouponBond : Id -> Text -> Id -> Party -> Date -> Date -> Bool -> Bool -> Bool -> [Party] -> Instrument.Bond
+createZeroCouponBond id isin currencyId issuer issueDate maturityDate isTradeable isPricedDirty isCallable observers =
   Instrument.Bond with stream = None; ..
 
-createSwap : Id -> Id -> Id -> Date -> Date -> Instrument.InterestStream -> Instrument.InterestStream -> Bool -> [Party] -> Instrument.Swap
-createSwap id payCurrencyId receiveCurrencyId issueDate maturityDate pay receive isTradeable observers =
-  Instrument.Swap with id; payCurrencyId; receiveCurrencyId; issueDate; maturityDate; pay; receive; isTradeable; observers
+createSwap : Id -> Id -> Id -> Party -> Date -> Date -> Instrument.InterestStream -> Instrument.InterestStream -> Bool -> [Party] -> Instrument.Swap
+createSwap id payCurrencyId receiveCurrencyId issuer issueDate maturityDate pay receive isTradeable observers =
+  Instrument.Swap with ..
 
 originateBond : Party -> Party -> Party -> [Party] -> Instrument.Bond -> Script (AssetDescription, ContractId Instrument.Bond)
 originateBond operator provider customer observers bond = do
@@ -151,14 +180,22 @@ originateSwap operator provider customer observers swap = do
 
 issue : Party -> Party -> Party -> Text -> ContractId Structuring.Tranche -> Script (ContractId AssetDeposit)
 issue operator provider customer issuanceId trancheCid = do
-  (_, Custody.Service{account}) <- head <$> queryFilter @Custody.Service customer (\s -> s.provider == provider)
+  (_, Custody.AccountInfo{account}) <- head <$> queryFilter @Custody.AccountInfo customer (\info -> info.provider == provider && info.customer == customer)
   createIssuanceRequestCid <- submit customer do exerciseByKeyCmd @Issuance.Service (operator, provider, customer) Issuance.RequestCreateIssuance with ..
   snd <$> submit provider do exerciseByKeyCmd @Issuance.Service (operator, provider, customer) Issuance.CreateIssuance with createIssuanceRequestCid
 
 deposit : Party -> Party -> Party -> Decimal -> Id -> Script (ContractId AssetDeposit)
 deposit operator provider customer quantity assetId = do
   let asset = Asset with id = assetId; quantity
-  depositRequestCid <- submitMulti [customer] [] do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.RequestDeposit with asset, depositChannel = Custody.ONLEDGER
+  (_, Custody.AccountInfo{account}) <- head <$> queryFilter @Custody.AccountInfo customer (\info -> info.provider == provider && info.customer == customer)
+  depositRequestCid <- submitMulti [customer] [] do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.RequestDeposit with asset; account; depositChannel = Custody.ONLEDGER
+  submit provider do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.Deposit with depositRequestCid
+
+depositToAccount : Party -> Party -> Party -> Text -> Decimal -> Id -> Script (ContractId AssetDeposit)
+depositToAccount operator provider customer accountLabel quantity assetId = do
+  let asset = Asset with id = assetId; quantity
+  (_, Custody.AccountInfo{account}) <- head <$> queryFilter @Custody.AccountInfo customer (\info -> info.provider == provider && info.customer == customer && info.account.id.label == accountLabel)
+  depositRequestCid <- submitMulti [customer] [] do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.RequestDeposit with asset; account; depositChannel = Custody.ONLEDGER
   submit provider do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.Deposit with depositRequestCid
 
 createDeal : Party -> Party -> Party -> Text -> Script (ContractId Structuring.Deal)
@@ -273,3 +310,20 @@ merge : Party -> [(ContractId AssetDeposit, AssetDeposit)] -> Id -> Script (Cont
 merge party deposits id = do
   let (adCid, _) :: t = filter (\(_, ad) -> ad.asset.id == id) deposits
   submit party do exerciseCmd adCid AssetDeposit_Merge with depositCids = map fst t
+
+getMaxId : Party -> Id -> Script Id 
+getMaxId payingAgent assetId = do 
+  h :: t <- map snd <$> queryFilter @AssetDescription payingAgent (\ad -> ad.assetId.signatories == assetId.signatories && ad.assetId.label == assetId.label)
+  pure $ foldl (\id desc -> if desc.assetId.version > id.version then desc.assetId else id) h.assetId t
+
+upgradeVersion : [Party] -> Id -> Script ()
+upgradeVersion parties maxId = do
+  let upgradeVersionForParty party = do 
+        let
+          isTargetAsset : AssetDeposit -> Bool 
+          isTargetAsset deposit = (maxId.version == deposit.asset.id.version && maxId.label == deposit.asset.id.label)
+        ads <- queryFilter @AssetDeposit party (\ad -> ad.account.provider == party && isTargetAsset ad)
+        mapA_ (\(adCid, ad) -> submit party do
+          let newVersion = maxId.version + 1 
+          exerciseCmd adCid AssetDeposit_Upgrade with newVersion) ads
+  mapA_ upgradeVersionForParty parties

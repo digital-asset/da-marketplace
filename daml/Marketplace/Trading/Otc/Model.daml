@@ -1,7 +1,8 @@
 module Marketplace.Trading.Otc.Model where
 
 import DA.Finance.Types (Asset)
-import Marketplace.Settlement.Hierarchical (createInstructions, Trade(..), Status(..))
+import Marketplace.Custody.Model qualified as Custody
+import Marketplace.Settlement.Hierarchical (createInstructions, getAccount, Trade(..), Status(..))
 import Marketplace.Trading.Model (Side(..))
 
 template Order
@@ -57,7 +58,14 @@ template Match
           buyer = if side == Buy then customer else counterparty
           seller = if side == Buy then counterparty else customer
           settlementId = id <> "-" <> partyToText customer <> "-" <> partyToText counterparty
-        deliverySis <- createInstructions False operator operator deliveryRegistrar seller buyer settlementId 0 delivery
-        paymentSis <- createInstructions True operator operator paymentRegistrar buyer seller settlementId (length deliverySis) payment
+        (_, buyerSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, buyer)
+        (_, sellerSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, seller)
+        let
+          buyerCashAccount = getAccount True buyerSettlementInfo buyer
+          sellerCashAccount = getAccount True sellerSettlementInfo seller
+          buyerSecuritiesAccount = getAccount False buyerSettlementInfo buyer
+          sellerSecuritiesAccount = getAccount False sellerSettlementInfo seller
+        deliverySis <- createInstructions False operator operator deliveryRegistrar sellerSecuritiesAccount buyerSecuritiesAccount settlementId 0 delivery
+        paymentSis <- createInstructions True operator operator paymentRegistrar buyerCashAccount sellerCashAccount settlementId (length deliverySis) payment
         instructionIds <- map (.instructionId) <$> mapA fetch (deliverySis <> paymentSis)
         create Trade with operator; agent = operator; deliverer = seller; payer = buyer; settlementId; instructionIds; delivery; payment; status = Instructed

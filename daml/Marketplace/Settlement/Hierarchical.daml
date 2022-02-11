@@ -4,28 +4,16 @@ import DA.Assert ((===))
 import DA.Finance.Types (Account, Asset)
 import DA.Finance.Asset (AssetDeposit(..), AssetDeposit_Transfer(..), AssetDeposit_SetObservers(..))
 import DA.List (singleton)
-import DA.Optional (whenSome, fromSome, fromSomeNote)
+import DA.Map qualified as M
+import DA.Optional (fromSome, fromSomeNote)
 import DA.Set (fromList)
-import Prelude hiding (lookup)
+import Marketplace.Custody.Model qualified as Custody
 import SwiftMessage.Message
 
 data Status =
   Instructed
   | Settled
   deriving (Eq, Show)
-
-template AccountInfo
-  with
-    operator : Party
-    party : Party
-    ownAccount : Optional Account
-    cashAccount : Optional Account
-    securitiesAccount : Optional Account
-  where
-    signatory operator, party
-
-    key (operator, party) : (Party, Party)
-    maintainer key._1
 
 template Trade
   with
@@ -45,9 +33,6 @@ template Trade
     key (operator, settlementId) : (Party, Text)
     maintainer key._1
 
-    let finalizeSwiftMessage k = do
-        cidOpt <- lookupByKey @SwiftOutboundMessage k
-        whenSome cidOpt (\cid -> do exercise cid Finalize; pure ())
     controller agent can
       Settle : (ContractId Trade, [ContractId AssetDeposit])
         do
@@ -92,6 +77,7 @@ template Delivery
               exercise siCid SettleInstruction
           adCids <- mapA settle instructionIds
           deliveryCid <- create this with status = Settled
+          finalizeSwiftMessage (operator, settlementId, MT566_t)
           pure (deliveryCid, adCids)
 
 template SettlementInstruction
@@ -137,39 +123,44 @@ template SettlementInstruction
             Some cid -> exercise cid AssetDeposit_Transfer with receiverAccount
             None -> fail $ "Instruction [" <> instructionId <> "] of settlement [ " <> settlementId <> " ] is not allocated"
 
-createInstructions : Bool -> Party -> Party -> Party -> Party -> Party -> Text -> Int -> Asset -> Update [ContractId SettlementInstruction]
-createInstructions isCash operator agent rootProvider sender receiver settlementId instructionIdx asset = do
-  (_, senderAccountInfo) <- fetchByKey @AccountInfo (operator, sender)
-  (_, receiverAccountInfo) <- fetchByKey @AccountInfo (operator, receiver)
+createInstructions : Bool -> Party -> Party -> Party -> Account -> Account -> Text -> Int -> Asset -> Update [ContractId SettlementInstruction]
+createInstructions isCash operator agent rootProvider senderAccount receiverAccount settlementId instructionIdx asset = do
   let
     createInstruction sending receiving sAcc rAcc siAsset instIdx = do
       let si = SettlementInstruction with operator; agent; sender = sending; receiver = receiving; settlementId; senderAccount = sAcc; receiverAccount = rAcc; asset = siAsset; signed = []; depositCid = None; instructionId = show instIdx
       if sending == receiving then pure [] else singleton <$> create si
-    senderAccount =
-      if isCash
-      then fromSomeNote ("No cash account for party " <> partyToText sender <> " and asset " <> asset.id.label) senderAccountInfo.cashAccount
-      else fromSomeNote ("No securities account for party " <> partyToText sender <> " and asset " <> asset.id.label) senderAccountInfo.securitiesAccount
-    receiverAccount =
-      if isCash
-      then fromSomeNote ("No cash account for party " <> partyToText receiver <> " and asset " <> asset.id.label) receiverAccountInfo.cashAccount
-      else fromSomeNote ("No securities account for party " <> partyToText receiver <> " and asset " <> asset.id.label) receiverAccountInfo.securitiesAccount
   if senderAccount.provider == rootProvider && receiverAccount.provider == rootProvider then do -- TODO: Could shortcut this if common custodian is found earlier below in the hierarchy
     createInstruction senderAccount.owner receiverAccount.owner senderAccount receiverAccount asset instructionIdx
   else if senderAccount.provider == rootProvider then do
-    (_, providerAccountInfo) <- fetchByKey @AccountInfo (operator, receiverAccount.provider)
-    sis1 <- createInstruction receiverAccount.provider receiverAccount.owner (fromSome providerAccountInfo.ownAccount) receiverAccount (asset with id.signatories = fromList [providerAccountInfo.party]) instructionIdx
-    sis2 <- createInstructions isCash operator agent rootProvider sender receiverAccount.provider settlementId (instructionIdx + 1) asset
+    (_, providerSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, receiverAccount.provider)
+    let providerAccount = getAccount isCash providerSettlementInfo receiverAccount.owner
+    sis1 <- createInstruction receiverAccount.provider receiverAccount.owner (fromSome providerSettlementInfo.ownAccount) receiverAccount (asset with id.signatories = fromList [providerSettlementInfo.party]) instructionIdx
+    sis2 <- createInstructions isCash operator agent rootProvider senderAccount providerAccount settlementId (instructionIdx + 1) asset
     pure $ sis1 <> sis2
   else if receiverAccount.provider == rootProvider then do
-    (_, providerAccountInfo) <- fetchByKey @AccountInfo (operator, senderAccount.provider)
-    sis1 <- createInstruction senderAccount.owner senderAccount.provider senderAccount (fromSome providerAccountInfo.ownAccount) (asset with id.signatories = fromList [providerAccountInfo.party]) instructionIdx
-    sis2 <- createInstructions isCash operator agent rootProvider senderAccount.provider receiver settlementId (instructionIdx + 1) asset
+    (_, providerSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, senderAccount.provider)
+    let providerAccount = getAccount isCash providerSettlementInfo senderAccount.owner
+    sis1 <- createInstruction senderAccount.owner senderAccount.provider senderAccount (fromSome providerSettlementInfo.ownAccount) (asset with id.signatories = fromList [providerSettlementInfo.party]) instructionIdx
+    sis2 <- createInstructions isCash operator agent rootProvider providerAccount receiverAccount settlementId (instructionIdx + 1) asset
     pure $ sis1 <> sis2
   else do
-    (_, senderProviderAccountInfo) <- fetchByKey @AccountInfo (operator, senderAccount.provider)
-    sis1 <- createInstruction senderAccount.owner senderAccount.provider senderAccount (fromSome senderProviderAccountInfo.ownAccount) (asset with id.signatories = fromList [senderProviderAccountInfo.party]) instructionIdx
-    (_, receiverProviderAccountInfo) <- fetchByKey @AccountInfo (operator, receiverAccount.provider)
-    sis2 <- createInstruction receiverAccount.provider receiverAccount.owner (fromSome receiverProviderAccountInfo.ownAccount) receiverAccount (asset with id.signatories = fromList [receiverProviderAccountInfo.party]) (instructionIdx + 1)
-    sis3 <- createInstructions isCash operator agent rootProvider senderAccount.provider receiverAccount.provider settlementId (instructionIdx + 2) asset
+    (_, senderProviderSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, senderAccount.provider)
+    let senderProviderAccount = getAccount isCash senderProviderSettlementInfo senderAccount.owner
+    sis1 <- createInstruction senderAccount.owner senderAccount.provider senderAccount (fromSome senderProviderSettlementInfo.ownAccount) (asset with id.signatories = fromList [senderProviderSettlementInfo.party]) instructionIdx
+    (_, receiverProviderSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, receiverAccount.provider)
+    let receiverProviderAccount = getAccount isCash receiverProviderSettlementInfo receiverAccount.owner
+    sis2 <- createInstruction receiverAccount.provider receiverAccount.owner (fromSome receiverProviderSettlementInfo.ownAccount) receiverAccount (asset with id.signatories = fromList [receiverProviderSettlementInfo.party]) (instructionIdx + 1)
+    sis3 <- createInstructions isCash operator agent rootProvider senderProviderAccount receiverProviderAccount settlementId (instructionIdx + 2) asset
     pure $ sis1 <> sis2 <> sis3
 
+getAccount : Bool -> Custody.SettlementInfo -> Party -> Account
+getAccount isCash settlementInfo party =
+  if isCash
+  then
+    case M.lookup party settlementInfo.cashAccounts of
+      Some acc -> acc
+      None -> fromSomeNote ("No cash account for party " <> partyToText party <> " at " <> partyToText settlementInfo.party) settlementInfo.omnibusCashAccount
+  else
+    case M.lookup party settlementInfo.securitiesAccounts of
+      Some acc -> acc
+      None -> fromSomeNote ("No securities account for party " <> partyToText party <> " at " <> partyToText settlementInfo.party) settlementInfo.omnibusSecuritiesAccount

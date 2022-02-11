@@ -1,0 +1,21 @@
+module Marketplace.Snapshot.Service where
+
+import Marketplace.Snapshot.Model
+import DA.Finance.Types (Id)
+
+template Service 
+    with 
+        operator : Party
+        customer : Party
+    where
+        signatory operator
+        observer customer
+
+        key (operator, customer) : (Party, Party)
+        maintainer key._1
+        nonconsuming choice RequestSnapshot : ContractId SnapshotRequest
+            with 
+                custodian : Party
+                assetId : Id
+            controller customer
+            do create SnapshotRequest with requester = customer; ..

@@ -1,23 +1,33 @@
 module SwiftMessage.Message where
 
 import SwiftMessage.Util
+import SwiftMessage.Model.MT535
+import SwiftMessage.Model.MT940
 import SwiftMessage.Model.MT545
 import SwiftMessage.Model.MT547
+import SwiftMessage.Model.MT564
+import SwiftMessage.Model.MT566
 import DA.Set (Set)
+import DA.Optional (whenSome)
 
 data SwiftMessage = 
       MT545 (MT545Details)
     | MT547 (MT547Details)
+    | MT564 (MT564Details)
+    | MT566 (MT566Details)
+    | MT535 (MT535Details)
+    | MT940 (MT940Details)
   deriving (Eq, Show)
 
-data SwiftMessageType = MT545_t | MT547_t 
+data SwiftMessageType = MT545_t | MT547_t | MT564_t | MT566_t | MT535_t | MT940_t
   deriving (Eq, Show)
 
 
+type RefId = Text
 -- This is the message that will be published from daml side onto ledger and consumed by swift adaptor
 template SwiftOutboundMessage
   with 
-    referenceId : Text
+    referenceId : RefId
     provider : Party 
     consumer : Party
     observers : Set Party
@@ -28,7 +38,7 @@ template SwiftOutboundMessage
     signatory provider
     observer observers
 
-    key (provider, referenceId, swiftMessageType) : (Party, Text, SwiftMessageType)
+    key (provider, referenceId, swiftMessageType) : (Party, RefId, SwiftMessageType)
     maintainer key._1
 
     controller consumer can
@@ -52,3 +62,7 @@ template SwiftOutboundMessage
         with 
           newObserver : Set Party 
             do create this with observers = newObserver <> observers 
+
+finalizeSwiftMessage k = do
+  cidOpt <- lookupByKey @SwiftOutboundMessage k
+  whenSome cidOpt (\cid -> do exercise cid Finalize; pure ())

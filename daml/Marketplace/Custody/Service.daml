@@ -3,7 +3,8 @@ module Marketplace.Custody.Service where
 import DA.Finance.Asset
 import DA.Finance.Types
 import DA.Finance.Utils (fetchAndArchive)
-import DA.Set
+import DA.Map qualified as M
+import DA.Set (empty, fromList)
 import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Utils
 
@@ -12,7 +13,6 @@ template Service
     operator : Party
     provider : Party
     customer : Party
-    account : Account
   where
     signatory operator, provider, customer
 
@@ -20,9 +20,18 @@ template Service
     maintainer key._1
 
     controller customer can
+
+      nonconsuming RequestOpenAccount : ContractId Custody.OpenAccountRequest
+        with
+          label : Text
+        do
+          assertMsg "Account label cannot be empty" $ label /= ""
+          create Custody.OpenAccountRequest with ..
+
       nonconsuming RequestDeposit : ContractId Custody.DepositRequest
         with
           asset : Asset
+          account : Account
           depositChannel: Custody.Channel
         do
           create Custody.DepositRequest with ..
@@ -36,11 +45,33 @@ template Service
 
     controller provider can
 
+      nonconsuming OpenAccount : ContractId Custody.AccountInfo
+        with
+          requestCid : ContractId Custody.OpenAccountRequest
+        do
+          Custody.OpenAccountRequest{label} <- fetchAndArchive requestCid
+          let account = Account with id = (Id with signatories = fromList [provider, customer]; label; version = 0); provider; owner = customer
+          create Custody.AccountInfo with operator; provider; customer; account
+
+      nonconsuming CloseAccount : ()
+        with
+          requestCid : ContractId Custody.CloseAccountRequest
+        do
+          Custody.CloseAccountRequest{accountInfoCid, settlementInfoCid} <- fetchAndArchive requestCid
+          accountInfo <- fetch accountInfoCid
+          settlementInfo <- fetch settlementInfoCid
+          assertMsg "Cannot close account used as own settlement account" $ Some accountInfo.account /= settlementInfo.ownAccount
+          assertMsg "Cannot close account used as omnibus cash settlement account" $ Some accountInfo.account /= settlementInfo.omnibusCashAccount
+          assertMsg "Cannot close account used as omnibus securities settlement account" $ Some accountInfo.account /= settlementInfo.omnibusSecuritiesAccount
+          assertMsg "Cannot close account used as cash settlement account" $ notElem accountInfo.account (M.values settlementInfo.cashAccounts)
+          assertMsg "Cannot close account used as securities settlement account" $ notElem accountInfo.account (M.values settlementInfo.securitiesAccounts)
+          archive accountInfoCid
+
       nonconsuming Deposit : ContractId AssetDeposit
         with
           depositRequestCid : ContractId Custody.DepositRequest
         do
-          Custody.DepositRequest{asset, depositChannel} <- fetchAndArchive depositRequestCid
+          Custody.DepositRequest{asset, account, depositChannel} <- fetchAndArchive depositRequestCid
           assertMsg "only handle onledger deposit request" (depositChannel == Custody.ONLEDGER)
           create AssetDeposit with asset; account; lockers = empty; observers = empty --fromList [ issuer ]
 
@@ -48,7 +79,7 @@ template Service
         with
           depositRequestAcknowledgedCid:  ContractId Custody.DepositRequestAcknowledged
         do
-          Custody.DepositRequestAcknowledged{asset, depositChannel, referenceId} <- fetchAndArchive depositRequestAcknowledgedCid
+          Custody.DepositRequestAcknowledged{asset, account, depositChannel, referenceId} <- fetchAndArchive depositRequestAcknowledgedCid
           assetDepsositCid <- create AssetDeposit with asset; account; lockers = empty; observers = empty
           confirmedCid <- create Custody.DepositConfirmed with ..
           return (assetDepsositCid, confirmedCid)

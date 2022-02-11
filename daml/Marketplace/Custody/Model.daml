@@ -2,6 +2,7 @@ module Marketplace.Custody.Model where
 
 import DA.Finance.Asset
 import DA.Finance.Types
+import DA.Map (Map, insert, delete)
 
 data Channel =
   ETH with coin: Text , address: Text
@@ -10,12 +11,104 @@ data Channel =
   | ONLEDGER
     deriving (Eq, Show)
 
+template SettlementInfo
+  with
+    operator : Party
+    party : Party
+    ownAccount : Optional Account
+    omnibusCashAccount : Optional Account
+    omnibusSecuritiesAccount : Optional Account
+    cashAccounts : Map Party Account
+    securitiesAccounts : Map Party Account
+  where
+    signatory operator, party
+
+    key (operator, party) : (Party, Party)
+    maintainer key._1
+
+    choice SetOmnibusCashAccount : ContractId SettlementInfo
+      with
+        accountInfoCid : ContractId AccountInfo
+      controller party
+      do
+        accountInfo <- fetch accountInfoCid
+        create this with omnibusCashAccount = Some accountInfo.account
+
+    choice SetOmnibusSecuritiesAccount : ContractId SettlementInfo
+      with
+        accountInfoCid : ContractId AccountInfo
+      controller party
+      do
+        accountInfo <- fetch accountInfoCid
+        create this with omnibusSecuritiesAccount = Some accountInfo.account
+
+    choice SetCashAccount : ContractId SettlementInfo
+      with
+        beneficiary : Party
+        accountInfoCid : ContractId AccountInfo
+      controller party
+      do
+        accountInfo <- fetch accountInfoCid
+        create this with cashAccounts = insert beneficiary accountInfo.account cashAccounts
+
+    choice SetSecuritiesAccount : ContractId SettlementInfo
+      with
+        beneficiary : Party
+        accountInfoCid : ContractId AccountInfo
+      controller party
+      do
+        accountInfo <- fetch accountInfoCid
+        create this with securitiesAccounts = insert beneficiary accountInfo.account securitiesAccounts
+
+    choice RemoveCashAccount : ContractId SettlementInfo
+      with
+        beneficiary : Party
+      controller party
+      do
+        create this with cashAccounts = delete beneficiary cashAccounts
+
+    choice RemoveSecuritiesAccount : ContractId SettlementInfo
+      with
+        beneficiary : Party
+      controller party
+      do
+        create this with securitiesAccounts = delete beneficiary securitiesAccounts
+
+template AccountInfo
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    account : Account
+  where
+    signatory operator, provider, customer
+
+template OpenAccountRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    label : Text
+  where
+    signatory operator, provider, customer
+
+template CloseAccountRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    accountInfoCid : ContractId AccountInfo
+    settlementInfoCid : ContractId SettlementInfo
+  where
+    signatory operator, provider, customer
+
 template DepositRequest
   with
     operator : Party
     provider : Party
     customer : Party
     asset : Asset
+    account : Account
     depositChannel: Channel
   where
     signatory operator, provider, customer
@@ -34,6 +127,7 @@ template DepositRequestAcknowledged
     provider : Party
     customer : Party
     asset : Asset
+    account : Account
     depositChannel: Channel
     referenceId: Text
   where
