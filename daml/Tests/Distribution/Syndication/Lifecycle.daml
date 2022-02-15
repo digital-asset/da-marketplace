@@ -18,8 +18,8 @@ import Tests.Distribution.Syndication.Origination (origination, Origination(..))
 import Tests.Distribution.Syndication.Util
 import DA.Time (time)
 
-requestSnapshot : Party -> Party -> Party -> Id -> Script (ContractId Snapshot.SnapshotRequest)
-requestSnapshot operator payingAgent bondRegistrar assetId = do
+requestSnapshot : Party -> Party -> Party -> Id -> RefId -> Script (ContractId Snapshot.SnapshotRequest)
+requestSnapshot operator payingAgent bondRegistrar assetId referenceId = do
   submit payingAgent do exerciseByKeyCmd @Snapshot.Service (operator, payingAgent) Snapshot.RequestSnapshot with custodian = bondRegistrar; ..
 
 forwardRequest : Party -> Id -> Script [ContractId Snapshot.SnapshotRequest]
@@ -43,10 +43,13 @@ provideSnapshot custodian assetId = do
     [] -> pure []
     _ -> fail "More than one snapshot request received"
 
-instructLifecycle : Party -> Party -> Id -> Date -> Script [ContractId Delivery]
-instructLifecycle operator payingAgent assetId date = do
+instructLifecycle : Party -> Party -> Id -> RefId -> Date -> Script [ContractId Delivery]
+instructLifecycle operator payingAgent assetId snapshotRefId date = do
   [(effectCid, effect)] <- queryFilter @Lifecycle.Effect payingAgent (\e -> e.payingAgent == payingAgent && e.assetId == assetId && e.date == date)
-  snapshotCids <- map fst <$> queryFilter @Snapshot.Snapshot payingAgent (\s -> s.requester == payingAgent && s.deposit.asset.id.label == assetId.label && s.deposit.asset.id.version == assetId.version)
+  snapshotCids <- map fst <$> queryFilter @Snapshot.Snapshot payingAgent (\s -> s.requester == payingAgent 
+    && s.deposit.asset.id.label == assetId.label 
+    && s.deposit.asset.id.version == assetId.version
+    && s.referenceId == snapshotRefId)
   submit operator do exerciseCmd effectCid Lifecycle.Instruct with snapshotCids
 
 testReporting : Script ()
@@ -126,9 +129,9 @@ testBond2 = do
   ad4.asset.quantity === 44_000_000.0                                                      
   pure ()
 
-lifecycleSnapshot : Parties -> Id -> Script ()
-lifecycleSnapshot Parties{..} maxId = do
-  requestSnapshot operator payingAgent bondRegistrar maxId
+lifecycleSnapshot : Parties -> Id -> RefId -> Script ()
+lifecycleSnapshot Parties{..} maxId snapshotRefId = do
+  requestSnapshot operator payingAgent bondRegistrar maxId snapshotRefId
   forwardRequest bondRegistrar maxId
   provideSnapshot custodian1 maxId
   provideSnapshot custodian2 maxId
@@ -150,12 +153,13 @@ lifecycle parties@Parties{..} date assetId = do
 
   case effectCidOpt of
     Some (effectCid, requestCid) -> do
-      lifecycleSnapshot parties maxId
+      let snapshotRefId = "lifecycle-snapshot"
+      lifecycleSnapshot parties maxId snapshotRefId
       submit bondRegistrar do exerciseCmd requestCid Lifecycle.ApproveUpdate -- update asset description after calculating effect
       Some effect <- queryContractId payingAgent effectCid
       debug $ "[" <> show date <> "][" <> maxId.label <> "(v" <> show maxId.version <> ")] " <> "Event with " <> show (length effect.payouts) <> " payouts"
       upgradeVersion [bondRegistrar, custodian1, custodian2, custodian4, custodian5] maxId
-      paymentCids <- instructLifecycle operator payingAgent maxId date
+      paymentCids <- instructLifecycle operator payingAgent maxId snapshotRefId date
 
       allocateInstructions [ issuer, bondRegistrar, lm1, lm2, lm3, custodian1, custodian2, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
       signInstructions [ issuer, bondRegistrar, lm1, lm2, lm3, custodian1, custodian2, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
@@ -169,8 +173,12 @@ preNotify : Parties -> Date -> Id -> Script ()
 preNotify parties@Parties{..} date assetId = do
   -- before payout date
   maxId <- getMaxId payingAgent assetId
-  lifecycleSnapshot parties maxId
-  snapshotCids <- map fst <$> queryFilter @Snapshot.Snapshot payingAgent (\s -> s.requester == payingAgent && s.deposit.asset.id.label == maxId.label && s.deposit.asset.id.version == maxId.version)
+  let snapshotRefId = "prenotify-snapshot"
+  lifecycleSnapshot parties maxId snapshotRefId
+  snapshotCids <- map fst <$> queryFilter @Snapshot.Snapshot payingAgent (\s -> s.requester == payingAgent 
+    && s.deposit.asset.id.label == maxId.label 
+    && s.deposit.asset.id.version == maxId.version
+    && s.referenceId == snapshotRefId)
 
   submit operator do exerciseByKeyCmd @Lifecycle.Service (operator, issuer, payingAgent) Lifecycle.SendPrePayoutSwiftMessage with exDivDate = date; ..
   pure ()
