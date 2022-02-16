@@ -49,3 +49,8 @@ data ReportDetail = ReportDetail with
     assetId: Id
     totalQuantity: Decimal
   deriving (Eq, Show)
+
+data ReportDetails = ReportDetails with
+    reportDetails: [ReportDetail]
+    reportDate: Date
+  deriving (Eq, Show)
