@@ -1,3 +1,4 @@
+{-# LANGUAGE InstanceSigs #-}
 module SwiftMessage.Util where
 
 import DA.Finance.Types (Id(..), Account(..))
@@ -40,6 +41,17 @@ data PayoutType =
     REDM -- for redemption 
     | INTR -- for dividend payout
   deriving (Eq, Show)
+
+data PayoutRefId = PayoutRefId with
+    receiver: Party
+    assetId: Id
+    payoutDate: Date
+    isRedempt : Bool
+   deriving (Eq)
+
+instance Show PayoutRefId where
+  show: PayoutRefId -> Text
+  show PayoutRefId{..} = "Payout" <> "-" <> partyToText receiver <> "-" <> assetId.label <> "-" <> show payoutDate <> (if isRedempt then "-redempt" else "")
 
 getRedemptionDate : Date -> Date -> Optional Date
 getRedemptionDate maturityDate payoutDate = if payoutDate == maturityDate then Some payoutDate else None

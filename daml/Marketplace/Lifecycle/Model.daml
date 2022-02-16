@@ -69,8 +69,8 @@ template Effect
       controller operator
       do
         let
-          sendSwiftMessage : Text -> Account -> Account -> Asset -> Update ()
-          sendSwiftMessage settlementId buyerSafekeepingAcc buyerCashAcc asset = do
+          sendSwiftMessage : Party -> Account -> Account -> Asset -> Bool -> Update (Optional PayoutRefId)
+          sendSwiftMessage receiver buyerSafekeepingAcc buyerCashAcc asset isRedempt = do
             (_, description) <- fetchByKey @AssetDescription assetId
             if (description.cfi == CFI.bond) then do
               (_, bond) <- fetchByKey @Instrument.Bond (fromList [issuer, bondRegistrar], assetId.label)
@@ -83,9 +83,10 @@ template Effect
                 payoutDate = date
                 redemptionDate = getRedemptionDate maturityDate payoutDate
                 mt566 = createMT566Details instrumentId assetId description.cfi issuer buyerSafekeepingAcc buyerCashAcc CRED faceAmount currency maturityDate payoutDate redemptionDate
-              create SwiftOutboundMessage with referenceId = settlementId; provider = operator ; consumer = operator; swiftMessage=MT566 (mt566); swiftMessageType=MT566_t; status=Pending; observers=fromList [payingAgent]
-              pure ()
-            else pure ()
+                refId = PayoutRefId with ..
+              create SwiftOutboundMessage with referenceId = show refId; provider = operator ; consumer = operator; swiftMessage=MT566 (mt566); swiftMessageType=MT566_t; status=Pending; observers=fromList [payingAgent]
+              pure $ Some refId
+            else pure Nothing
           
           indexedPayouts = zip [0 .. length payouts - 1] payouts
           createInstructionsForPayout : Snapshot -> (Int, (Decimal, Id)) -> Update (ContractId Delivery)
@@ -105,8 +106,9 @@ template Effect
 
             instructionCids <- createInstructions True operator payingAgent cashProvider senderAccount receiverCashAccount settlementId instructionIdx asset
             instructionIds <- map (.instructionId) <$> mapA fetch instructionCids
-            sendSwiftMessage settlementId receiverSecAccount receiverCashAccount asset
-            create Delivery with operator; agent = payingAgent; sender; receiver; settlementId; instructionIds; asset; status = Instructed
+            payoutRefIdOpt <- sendSwiftMessage receiver receiverSecAccount receiverCashAccount asset (amount == 1.0)
+            let refIdOpt = show <$> payoutRefIdOpt
+            create Delivery with operator; agent = payingAgent; sender; receiver; settlementId; refIdOpt; instructionIds; asset; status = Instructed
           
           createInstructionsForSnapshot : ContractId Snapshot -> Update [ContractId Delivery]
           createInstructionsForSnapshot snapshotCid = do
@@ -126,7 +128,7 @@ template Effect
                   receiverAccount = getAccount False receiverSettlementInfo receiver
                 instructionCids <- createInstructions False operator payingAgent bondRegistrar senderAccount receiverAccount settlementId 0 asset
                 instructionIds <- map (.instructionId) <$> mapA fetch instructionCids
-                dCid <- create Delivery with operator; agent = payingAgent; sender; receiver; settlementId; instructionIds; asset; status = Instructed
+                dCid <- create Delivery with operator; agent = payingAgent; sender; receiver; settlementId; refIdOpt = Nothing; instructionIds; asset; status = Instructed
                 dCids <- mapA (createInstructionsForPayout snapshot) indexedPayouts
                 pure $ dCid :: dCids
               else
