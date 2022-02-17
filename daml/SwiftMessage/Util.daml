@@ -67,3 +67,4 @@ data ReportDetails = ReportDetails with
     reportDetails: [ReportDetail]
     reportDate: Date
   deriving (Eq, Show)
+  

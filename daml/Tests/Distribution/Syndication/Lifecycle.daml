@@ -4,8 +4,10 @@ import Daml.Script
 import DA.Assert ((===))
 import DA.Date (date, Month(..))
 import DA.Finance.Asset (AssetDeposit)
+import DA.Finance.Base.HolidayCalendar (HolidayCalendar)
 import DA.Finance.Types (Id)
 import DA.Foldable (forA_)
+import DA.Time (time)
 import Marketplace.Reporting.Service as Reporting
 import Marketplace.Lifecycle.Model qualified as Lifecycle
 import Marketplace.Lifecycle.Service qualified as Lifecycle
@@ -16,8 +18,6 @@ import Tests.Distribution.Syndication.Setup (setup, Parties(..))
 import Tests.Distribution.Syndication.Issuance (issuance)
 import Tests.Distribution.Syndication.Origination (origination, Origination(..))
 import Tests.Distribution.Syndication.Util
-import DA.Time (time)
-import DA.Finance.Base.HolidayCalendar (HolidayCalendar)
 
 requestSnapshot : Party -> Party -> Party -> Id -> RefId -> Script (ContractId Snapshot.SnapshotRequest)
 requestSnapshot operator payingAgent bondRegistrar assetId referenceId = do
@@ -192,3 +192,4 @@ reporting operator accountProvider calendar isCashReporting = do
   depositCids <- map fst <$> queryFilter @AssetDeposit accountProvider (\deposit -> deposit.account.provider == accountProvider)
   submit accountProvider do exerciseByKeyCmd @Reporting.Service (operator, accountProvider) Reporting.CreateReports with calendar; depositCids; isCashReporting
   pure ()
+  

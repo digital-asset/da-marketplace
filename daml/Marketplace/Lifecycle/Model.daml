@@ -86,7 +86,7 @@ template Effect
                 refId = PayoutRefId with ..
               create SwiftOutboundMessage with referenceId = show refId; provider = operator ; consumer = operator; swiftMessage=MT566 (mt566); swiftMessageType=MT566_t; status=Pending; observers=fromList [payingAgent]
               pure $ Some refId
-            else pure Nothing
+            else pure None
           
           indexedPayouts = zip [0 .. length payouts - 1] payouts
           createInstructionsForPayout : Snapshot -> (Int, (Decimal, Id)) -> Update (ContractId Delivery)
@@ -128,7 +128,7 @@ template Effect
                   receiverAccount = getAccount False receiverSettlementInfo receiver
                 instructionCids <- createInstructions False operator payingAgent bondRegistrar senderAccount receiverAccount settlementId 0 asset
                 instructionIds <- map (.instructionId) <$> mapA fetch instructionCids
-                dCid <- create Delivery with operator; agent = payingAgent; sender; receiver; settlementId; refIdOpt = Nothing; instructionIds; asset; status = Instructed
+                dCid <- create Delivery with operator; agent = payingAgent; sender; receiver; settlementId; refIdOpt = None; instructionIds; asset; status = Instructed
                 dCids <- mapA (createInstructionsForPayout snapshot) indexedPayouts
                 pure $ dCid :: dCids
               else

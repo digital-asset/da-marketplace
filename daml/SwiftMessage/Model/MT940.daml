@@ -10,3 +10,4 @@ data MT940Details = MT940Details with
 createMT940Details : [ReportDetail] -> Date -> MT940Details
 createMT940Details reportDetails reportDate = 
   MT940Details with reportDetails = ReportDetails with ..
+  
