@@ -4,11 +4,11 @@
 module Tests.Distribution.Syndication.Prepopulation where
 
 import Daml.Script
-import Marketplace.Snapshot.Model as Snapshot
 import Tests.Distribution.Syndication.Setup (setup, Parties(..))
 import Tests.Distribution.Syndication.Issuance (issuance)
 import Tests.Distribution.Syndication.Origination (origination, Origination(..))
 import Tests.Distribution.Syndication.Lifecycle
+import DA.Foldable (mapA_)
 
 
 snapshotsForMT564 : Script ()
@@ -18,6 +18,6 @@ snapshotsForMT564 = do
   issuance parties orig
 
   let assetId = bond1Desc.assetId
-  lifecycleSnapshot parties assetId "snapshot-refId"
-  snapshotCids <- map fst <$> queryFilter @Snapshot.Snapshot payingAgent (\s -> s.requester == payingAgent && s.deposit.asset.id.label == assetId.label && s.deposit.asset.id.version == assetId.version)
+      snapshotRefIds = map (\ind -> "snapshot-refId-" <> show ind) [0..100] 
+  mapA_ (lifecycleSnapshot parties assetId) snapshotRefIds
   pure ()
