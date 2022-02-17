@@ -60,6 +60,7 @@ data ReportDetail = ReportDetail with
     safekeepingAccount: Account
     assetId: Id
     totalQuantity: Decimal
+    prevDayTotalQuantity: Optional Decimal
   deriving (Eq, Show)
 
 data ReportDetails = ReportDetails with

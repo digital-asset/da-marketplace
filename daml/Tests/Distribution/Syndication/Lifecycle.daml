@@ -17,6 +17,7 @@ import Tests.Distribution.Syndication.Issuance (issuance)
 import Tests.Distribution.Syndication.Origination (origination, Origination(..))
 import Tests.Distribution.Syndication.Util
 import DA.Time (time)
+import DA.Finance.Base.HolidayCalendar (HolidayCalendar)
 
 requestSnapshot : Party -> Party -> Party -> Id -> RefId -> Script (ContractId Snapshot.SnapshotRequest)
 requestSnapshot operator payingAgent bondRegistrar assetId referenceId = do
@@ -59,23 +60,27 @@ testReporting = script do
   issuance parties orig
 
   -- create report can be done at anytime
-  setTime (time (date 2021 Jan 1) 0 0 0)
+  Some calendar <- queryContractId @HolidayCalendar operator calendarCid
+  setTime (time (date 2021 Jan 8) 0 0 0)
   
   -- security report
-  reporting operator bondRegistrar False
-  reporting operator custodian1 False
-  reporting operator custodian2 False
-  reporting operator custodian3 False
-  reporting operator custodian4 False
-  reporting operator custodian5 False
+  reporting operator bondRegistrar calendar False
+  reporting operator custodian1 calendar False
+  reporting operator custodian2 calendar False
+  reporting operator custodian3 calendar False
+  reporting operator custodian4 calendar False
+  reporting operator custodian5 calendar False
 
   -- cash report
-  reporting operator cashProvider True
+  reporting operator cashProvider calendar True
 
   -- make sure that we can submit reporting at the same date without failing
-  reporting operator bondRegistrar False
-  reporting operator cashProvider True
+  reporting operator bondRegistrar calendar False
+  reporting operator cashProvider calendar True
 
+  -- prev business day of Jan 11 2021 is Jan 8 2021
+  setTime (time (date 2021 Jan 11) 0 0 0)
+  reporting operator bondRegistrar calendar False
   pure ()
 
 
@@ -183,8 +188,8 @@ preNotify parties@Parties{..} date assetId = do
   submit operator do exerciseByKeyCmd @Lifecycle.Service (operator, issuer, payingAgent) Lifecycle.SendPrePayoutSwiftMessage with exDivDate = date; ..
   pure ()
 
-reporting : Party -> Party -> Bool -> Script ()
-reporting operator accountProvider isCashReporting = do 
+reporting : Party -> Party -> HolidayCalendar -> Bool -> Script ()
+reporting operator accountProvider calendar isCashReporting = do 
   depositCids <- map fst <$> queryFilter @AssetDeposit accountProvider (\deposit -> deposit.account.provider == accountProvider)
-  submit accountProvider do exerciseByKeyCmd @Reporting.Service (operator, accountProvider) Reporting.CreateReports with depositCids; isCashReporting
+  submit accountProvider do exerciseByKeyCmd @Reporting.Service (operator, accountProvider) Reporting.CreateReports with calendar; depositCids; isCashReporting
   pure ()
