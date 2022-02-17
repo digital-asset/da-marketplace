@@ -36,7 +36,7 @@ template Service
           isCashReporting: Bool -- is cash reporting or is security reporting
         do
           deposits <- filter (\deposit -> deposit.account.provider == accountProvider) <$> mapA (fetch @AssetDeposit) depositCids
-          assertMsg "no deposits found" (length deposits /= 0)
+          assertMsg ("no deposits found: for provider:" <> partyToText accountProvider) $ (not . null) deposits
           today <- toDateUTC <$> getTime -- get today's as the reporting time
           let 
             extractKey : [AssetDeposit] -> ReportDetailKey
@@ -53,11 +53,11 @@ template Service
             createSwiftMessage prevDate depositGroup = do
               let 
                 account = (fst $ head depositGroup).account
-                preRefId = createReportingId prevDate account
+                prevRefId = createReportingId prevDate account
                 refId = createReportingId today account
                 messageType = if isCashReporting then MT940_t else MT535_t
               
-              prevDaySwiftOutboundMsgOpt <- lookupByKey @SwiftOutboundMessage (accountProvider, preRefId, messageType) >>= \case 
+              prevDaySwiftOutboundMsgOpt <- lookupByKey @SwiftOutboundMessage (accountProvider, prevRefId, messageType) >>= \case 
                 Some cid -> Some <$> fetch @SwiftOutboundMessage cid 
                 None -> pure None  
               
@@ -65,15 +65,12 @@ template Service
                 prevDayReportDetailsOpt = (\swiftOutboundMsg -> case swiftOutboundMsg.swiftMessage of
                   MT535 mt535 -> mt535.reportDetails.reportDetails
                   MT940 mt940 -> mt940.reportDetails.reportDetails
-                  other -> error $ "error ..." <> show other) <$> prevDaySwiftOutboundMsgOpt
+                  other -> error $ "encounter non report swiftMessage: " <> show other) <$> prevDaySwiftOutboundMsgOpt
                 
                 reportDetails = map (\(ReportDetailKey{..}, totalQuantityToday) -> 
-                  let prevDayTotalQuantity = case prevDayReportDetailsOpt of 
-                                              Some preDayReportDetails -> totalQuantity <$> 
-                                                find (\preDayDetail -> preDayDetail.assetId == assetId && preDayDetail.safekeepingAccount == account) preDayReportDetails
-                                              None -> None
+                  let prevDayTotalQuantity : Optional Decimal = (fmap totalQuantity . find (\preDayDetail -> preDayDetail.assetId == assetId && preDayDetail.safekeepingAccount == account)) =<< prevDayReportDetailsOpt
                         in ReportDetail with safekeepingAccount = account; totalQuantity = totalQuantityToday; ..) depositGroup
-              pure $ if isCashReporting then (refId, MT940 (createMT940Details reportDetails today), MT940_t) else (refId, MT535 (createMT535Details reportDetails today), MT535_t)
+              pure $ if isCashReporting then (refId, MT940 (createMT940Details reportDetails today), messageType) else (refId, MT535 (createMT535Details reportDetails today), messageType)
             
             groupSortOn f = (groupOn f . sortOn f)
             groupedDeposits = groupSortOn (\deposit -> (deposit.account.owner, deposit.asset.id)) deposits
