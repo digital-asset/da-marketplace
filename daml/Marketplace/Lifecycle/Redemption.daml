@@ -58,10 +58,10 @@ template InvestorRedemption
           registrarSecuritiesAccount = getAccount False registrarSettlementInfo bondRegistrar
         instructionCids <- createInstructions True operator payingAgent cashProvider issuerAccount investorCashAccount settlementIdCash 0 payout
         instructionIds <- map (.instructionId) <$> mapA fetch instructionCids
-        cashDeliveryCid <- create Delivery with operator; agent = payingAgent; sender = issuer; receiver = investor; settlementId = settlementIdCash; instructionIds; asset = payout; status = Instructed
+        cashDeliveryCid <- create Delivery with operator; agent = payingAgent; sender = issuer; receiver = investor; settlementId = settlementIdCash; refIdOpt = None; instructionIds; asset = payout; status = Instructed
         instructionCids <- createInstructions False operator payingAgent bondRegistrar investorSecuritiesAccount registrarSecuritiesAccount settlementIdBond (length instructionIds) asset
         instructionIds <- map (.instructionId) <$> mapA fetch instructionCids
-        bondDeliveryCid <- create Delivery with operator; agent = payingAgent; sender = investor; receiver = bondRegistrar; settlementId = settlementIdBond; instructionIds; asset; status = Instructed
+        bondDeliveryCid <- create Delivery with operator; agent = payingAgent; sender = investor; receiver = bondRegistrar; settlementId = settlementIdBond; refIdOpt = None; instructionIds; asset; status = Instructed
         pure (cashDeliveryCid, bondDeliveryCid)
 
 template IssuerRedemptionRequest
@@ -104,10 +104,10 @@ template IssuerRedemptionRequest
               registrarSecuritiesAccount = getAccount False registrarSettlementInfo bondRegistrar
             instructionCids <- createInstructions True operator payingAgent cashProvider issuerAccount investorCashAccount settlementIdCash 0 payout
             instructionIds <- map (.instructionId) <$> mapA fetch instructionCids
-            cashDeliveryCid <- create Delivery with operator; agent = payingAgent; sender = issuer; receiver = investor; settlementId = settlementIdCash; instructionIds; asset = payout; status = Instructed
+            cashDeliveryCid <- create Delivery with operator; agent = payingAgent; sender = issuer; receiver = investor; settlementId = settlementIdCash; refIdOpt = None; instructionIds; asset = payout; status = Instructed
             instructionCids <- createInstructions False operator payingAgent bondRegistrar investorSecuritiesAccount registrarSecuritiesAccount settlementIdBond (length instructionIds) asset
             instructionIds <- map (.instructionId) <$> mapA fetch instructionCids
-            bondDeliveryCid <-create Delivery with operator; agent = payingAgent; sender = investor; receiver = bondRegistrar; settlementId = settlementIdBond; instructionIds; asset; status = Instructed
+            bondDeliveryCid <-create Delivery with operator; agent = payingAgent; sender = investor; receiver = bondRegistrar; settlementId = settlementIdBond; refIdOpt = None; instructionIds; asset; status = Instructed
             exercise snapshotCid Delete
             pure [cashDeliveryCid, bondDeliveryCid]
         concat <$> mapA createInstructionsForSnapshot snapshotCids
