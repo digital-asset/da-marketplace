@@ -10,6 +10,8 @@ import DA.Set (fromList)
 import Marketplace.Custody.Model qualified as Custody
 import SwiftMessage.Message
 
+data SettlementMode = Dvp | Fop deriving (Eq, Show)
+
 data Status =
   Instructed
   | Settled
@@ -26,6 +28,7 @@ template Trade
     payment : Asset
     delivery : Asset
     status : Status
+    settlementMode : SettlementMode
   where
     signatory operator
     observer agent

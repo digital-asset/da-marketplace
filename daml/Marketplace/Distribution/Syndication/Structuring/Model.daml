@@ -4,7 +4,7 @@ import DA.Finance.Types (Id, Asset(..))
 import DA.Set (fromList)
 import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Distribution.Syndication.Bidding.Model qualified as Bidding
-import Marketplace.Settlement.Hierarchical (createInstructions, getAccount, Trade(..), Status(..))
+import Marketplace.Settlement.Hierarchical (createInstructions, getAccount, Trade(..), Status(..), SettlementMode(..))
 import Marketplace.Issuance.Instrument.Model(Bond(..))
 import SwiftMessage.Model.MT545
 import SwiftMessage.Model.MT547
@@ -134,7 +134,7 @@ template Tranche
           cashSis <- createInstructions True operator bondRegistrar cashProvider settlementBankCashAccount issuerCashAccount settlementId (length bondSis) totalPrice
           instructionIds <- map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
           sendSwiftMessage issuer settlementBank size settledAmount paymentId settlementId dateOfTrade dateOfSettlement dateOfSettlement
-          create Trade with operator; agent = bondRegistrar; deliverer = issuer; payer = settlementBank; settlementId; instructionIds; delivery = totalAsset; payment = totalPrice; status = Instructed
+          create Trade with operator; agent = bondRegistrar; deliverer = issuer; payer = settlementBank; settlementId; instructionIds; delivery = totalAsset; payment = totalPrice; status = Instructed; settlementMode = Dvp
 
       nonconsuming InstructBndSettlement : ContractId Trade
         with
@@ -158,7 +158,7 @@ template Tranche
           cashSis <- createInstructions True operator bondRegistrar cashProvider bndBankCashAccount settlementBankCashAccount settlementId (length bondSis) totalPrice
           instructionIds <- map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
           sendSwiftMessage settlementBank bndBank size settledAmount paymentId settlementId dateOfTrade dateOfSettlement dateOfSettlement
-          create Trade with operator; agent = bondRegistrar; deliverer = settlementBank; payer = bndBank; settlementId; instructionIds; delivery = totalAsset; payment = totalPrice; status = Instructed
+          create Trade with operator; agent = bondRegistrar; deliverer = settlementBank; payer = bndBank; settlementId; instructionIds; delivery = totalAsset; payment = totalPrice; status = Instructed; settlementMode = Dvp
 
       nonconsuming InstructInvestorSettlement : [ContractId Trade]
         with
@@ -178,16 +178,26 @@ template Tranche
                 settlementId = deliveryId.label <> "-" <> partyToText bndBank <> "-" <> partyToText conf.investor
               (_, bndBankSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, bndBank)
               (_, investorSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, conf.investor)
-              let
-                bndBankCashAccount = getAccount True bndBankSettlementInfo bndBank
-                investorCashAccount = getAccount True investorSettlementInfo conf.investor
-                bndBankSecuritiesAccount = getAccount False bndBankSettlementInfo bndBank
-                investorSecuritiesAccount = getAccount False investorSettlementInfo conf.investor
-              assertMsg "Total confirmed amount is larger than available quantity" $ aggregate <= size
-              bondSis <- createInstructions False operator bondRegistrar bondRegistrar bndBankSecuritiesAccount investorSecuritiesAccount settlementId 0 conf.asset
-              cashSis <- createInstructions True operator bondRegistrar cashProvider investorCashAccount bndBankCashAccount settlementId (length bondSis) aggregatePrice
-              instructionIds <- map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
+              instructionIds <-
+                if conf.settlementMode == Dvp
+                then do
+                  let
+                    bndBankCashAccount = getAccount True bndBankSettlementInfo bndBank
+                    investorCashAccount = getAccount True investorSettlementInfo conf.investor
+                    bndBankSecuritiesAccount = getAccount False bndBankSettlementInfo bndBank
+                    investorSecuritiesAccount = getAccount False investorSettlementInfo conf.investor
+                  assertMsg "Total confirmed amount is larger than available quantity" $ aggregate <= size
+                  bondSis <- createInstructions False operator bondRegistrar bondRegistrar bndBankSecuritiesAccount investorSecuritiesAccount settlementId 0 conf.asset
+                  cashSis <- createInstructions True operator bondRegistrar cashProvider investorCashAccount bndBankCashAccount settlementId (length bondSis) aggregatePrice
+                  map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
+                else do
+                  let
+                    bndBankSecuritiesAccount = getAccount False bndBankSettlementInfo bndBank
+                    investorSecuritiesAccount = getAccount False investorSettlementInfo conf.investor
+                  assertMsg "Total confirmed amount is larger than available quantity" $ aggregate <= size
+                  bondSis <- createInstructions False operator bondRegistrar bondRegistrar bndBankSecuritiesAccount investorSecuritiesAccount settlementId 0 conf.asset
+                  map (.instructionId) <$> mapA fetch bondSis
               sendSwiftMessage settlementBank bndBank aggregate settledAmount paymentId settlementId dateOfTrade dateOfSettlement dateOfSettlement
               exercise confCid Bidding.Delete
-              create Trade with operator; agent = bondRegistrar; deliverer = bndBank; payer = conf.investor; settlementId; instructionIds; delivery = conf.asset; payment = aggregatePrice; status = Instructed
+              create Trade with operator; agent = bondRegistrar; deliverer = bndBank; payer = conf.investor; settlementId; instructionIds; delivery = conf.asset; payment = aggregatePrice; status = Instructed; settlementMode = conf.settlementMode
           mapA settleConfirmation filtered

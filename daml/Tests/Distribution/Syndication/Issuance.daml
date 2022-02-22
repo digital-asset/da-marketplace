@@ -3,6 +3,7 @@ module Tests.Distribution.Syndication.Issuance where
 import Daml.Script
 import DA.Set (singleton)
 import Marketplace.Distribution.Syndication.Structuring.Model qualified as Structuring
+import Marketplace.Settlement.Hierarchical (SettlementMode(..))
 import Tests.Distribution.Syndication.Origination (origination, Origination(..))
 import Tests.Distribution.Syndication.Setup (setup, Parties(..))
 import Tests.Distribution.Syndication.Util
@@ -58,14 +59,14 @@ issuance Parties{..} Origination{..} = do
   closeBook operator structurer issuer dealId "TRANCHE1" allocations offeredPrice
   closeBook operator structurer issuer dealId "TRANCHE2" allocations offeredPrice
 
-  confirmation11Cid <- confirm investor1 dealId "TRANCHE1"
-  confirmation12Cid <- confirm investor1 dealId "TRANCHE2"
-  confirmation21Cid <- confirm investor2 dealId "TRANCHE1"
-  confirmation22Cid <- confirm investor2 dealId "TRANCHE2"
-  confirmation31Cid <- confirm investor3 dealId "TRANCHE1"
-  confirmation32Cid <- confirm investor3 dealId "TRANCHE2"
-  confirmation41Cid <- confirm investor4 dealId "TRANCHE1"
-  confirmation42Cid <- confirm investor4 dealId "TRANCHE2"
+  confirmation11Cid <- confirm investor1 dealId "TRANCHE1" Dvp
+  confirmation12Cid <- confirm investor1 dealId "TRANCHE2" Dvp
+  confirmation21Cid <- confirm investor2 dealId "TRANCHE1" Dvp
+  confirmation22Cid <- confirm investor2 dealId "TRANCHE2" Dvp
+  confirmation31Cid <- confirm investor3 dealId "TRANCHE1" Dvp
+  confirmation32Cid <- confirm investor3 dealId "TRANCHE2" Dvp
+  confirmation41Cid <- confirm investor4 dealId "TRANCHE1" Dvp
+  confirmation42Cid <- confirm investor4 dealId "TRANCHE2" Dvp
 
   let
     confirmationCids1 = [ confirmation11Cid, confirmation21Cid, confirmation31Cid, confirmation41Cid ]

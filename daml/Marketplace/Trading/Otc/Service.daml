@@ -1,6 +1,7 @@
 module Marketplace.Trading.Otc.Service where
 
 import DA.Finance.Types (Asset)
+import Marketplace.Settlement.Hierarchical (SettlementMode)
 import Marketplace.Trading.Model (Side(..))
 import Marketplace.Trading.Otc.Model qualified as Trading
 
@@ -27,6 +28,7 @@ template Service
         payment : Asset
         paymentRegistrar : Party
         side : Side
+        settlementMode : SettlementMode
       controller customer
       do
         if not tradingAllowed
