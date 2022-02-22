@@ -35,6 +35,8 @@ template AddTrancheRequest
     deliveryId : Id
     paymentId : Id
     size : Decimal
+    issuerSettlementMode : SettlementMode
+    bndSettlementMode : SettlementMode
   where
     signatory operator, provider, customer
 
@@ -63,6 +65,8 @@ template Deal
           cashProvider : Party
           bondRegistrar : Party
           payingAgent : Party
+          issuerSettlementMode : SettlementMode
+          bndSettlementMode : SettlementMode
         do
           dealCid <- create this with trancheIds = trancheIds <> [trancheId]
           trancheCid <- create Tranche with trancheProvider = dealProvider; ..
@@ -83,6 +87,8 @@ template Tranche
     deliveryId : Id
     paymentId : Id
     size : Decimal
+    issuerSettlementMode : SettlementMode
+    bndSettlementMode : SettlementMode
   where
     signatory operator, trancheProvider, issuer
     observer settlementBank, bndBank
@@ -125,16 +131,25 @@ template Tranche
             settlementId = deliveryId.label <> "-" <> partyToText issuer <> "-" <> partyToText settlementBank
           (_, issuerSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, issuer)
           (_, settlementBankSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, settlementBank)
-          let
-            issuerCashAccount = getAccount True issuerSettlementInfo issuer
-            settlementBankCashAccount = getAccount True settlementBankSettlementInfo settlementBank
-            issuerSecuritiesAccount = getAccount False issuerSettlementInfo issuer
-            settlementBankSecuritiesAccount = getAccount False settlementBankSettlementInfo settlementBank
-          bondSis <- createInstructions False operator bondRegistrar bondRegistrar issuerSecuritiesAccount settlementBankSecuritiesAccount settlementId 0 totalAsset
-          cashSis <- createInstructions True operator bondRegistrar cashProvider settlementBankCashAccount issuerCashAccount settlementId (length bondSis) totalPrice
-          instructionIds <- map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
+          instructionIds <-
+            if issuerSettlementMode == Dvp
+            then do
+              let
+                issuerCashAccount = getAccount True issuerSettlementInfo issuer
+                settlementBankCashAccount = getAccount True settlementBankSettlementInfo settlementBank
+                issuerSecuritiesAccount = getAccount False issuerSettlementInfo issuer
+                settlementBankSecuritiesAccount = getAccount False settlementBankSettlementInfo settlementBank
+              bondSis <- createInstructions False operator bondRegistrar bondRegistrar issuerSecuritiesAccount settlementBankSecuritiesAccount settlementId 0 totalAsset
+              cashSis <- createInstructions True operator bondRegistrar cashProvider settlementBankCashAccount issuerCashAccount settlementId (length bondSis) totalPrice
+              map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
+            else do
+              let
+                issuerSecuritiesAccount = getAccount False issuerSettlementInfo issuer
+                settlementBankSecuritiesAccount = getAccount False settlementBankSettlementInfo settlementBank
+              bondSis <- createInstructions False operator bondRegistrar bondRegistrar issuerSecuritiesAccount settlementBankSecuritiesAccount settlementId 0 totalAsset
+              map (.instructionId) <$> mapA fetch bondSis
           sendSwiftMessage issuer settlementBank size settledAmount paymentId settlementId dateOfTrade dateOfSettlement dateOfSettlement
-          create Trade with operator; agent = bondRegistrar; deliverer = issuer; payer = settlementBank; settlementId; instructionIds; delivery = totalAsset; payment = totalPrice; status = Instructed; settlementMode = Dvp
+          create Trade with operator; agent = bondRegistrar; deliverer = issuer; payer = settlementBank; settlementId; instructionIds; delivery = totalAsset; payment = totalPrice; status = Instructed; settlementMode = issuerSettlementMode
 
       nonconsuming InstructBndSettlement : ContractId Trade
         with
@@ -149,16 +164,25 @@ template Tranche
             settlementId = deliveryId.label <> "-" <> partyToText settlementBank <> "-" <> partyToText bndBank
           (_, bndBankSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, bndBank)
           (_, settlementBankSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, settlementBank)
-          let
-            bndBankCashAccount = getAccount True bndBankSettlementInfo bndBank
-            settlementBankCashAccount = getAccount True settlementBankSettlementInfo settlementBank
-            bndBankSecuritiesAccount = getAccount False bndBankSettlementInfo bndBank
-            settlementBankSecuritiesAccount = getAccount False settlementBankSettlementInfo settlementBank
-          bondSis <- createInstructions False operator bondRegistrar bondRegistrar settlementBankSecuritiesAccount bndBankSecuritiesAccount settlementId 0 totalAsset
-          cashSis <- createInstructions True operator bondRegistrar cashProvider bndBankCashAccount settlementBankCashAccount settlementId (length bondSis) totalPrice
-          instructionIds <- map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
+          instructionIds <-
+            if bndSettlementMode == Dvp
+            then do
+              let
+                bndBankCashAccount = getAccount True bndBankSettlementInfo bndBank
+                settlementBankCashAccount = getAccount True settlementBankSettlementInfo settlementBank
+                bndBankSecuritiesAccount = getAccount False bndBankSettlementInfo bndBank
+                settlementBankSecuritiesAccount = getAccount False settlementBankSettlementInfo settlementBank
+              bondSis <- createInstructions False operator bondRegistrar bondRegistrar settlementBankSecuritiesAccount bndBankSecuritiesAccount settlementId 0 totalAsset
+              cashSis <- createInstructions True operator bondRegistrar cashProvider bndBankCashAccount settlementBankCashAccount settlementId (length bondSis) totalPrice
+              map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
+            else do
+              let
+                bndBankSecuritiesAccount = getAccount False bndBankSettlementInfo bndBank
+                settlementBankSecuritiesAccount = getAccount False settlementBankSettlementInfo settlementBank
+              bondSis <- createInstructions False operator bondRegistrar bondRegistrar settlementBankSecuritiesAccount bndBankSecuritiesAccount settlementId 0 totalAsset
+              map (.instructionId) <$> mapA fetch bondSis
           sendSwiftMessage settlementBank bndBank size settledAmount paymentId settlementId dateOfTrade dateOfSettlement dateOfSettlement
-          create Trade with operator; agent = bondRegistrar; deliverer = settlementBank; payer = bndBank; settlementId; instructionIds; delivery = totalAsset; payment = totalPrice; status = Instructed; settlementMode = Dvp
+          create Trade with operator; agent = bondRegistrar; deliverer = settlementBank; payer = bndBank; settlementId; instructionIds; delivery = totalAsset; payment = totalPrice; status = Instructed; settlementMode = bndSettlementMode
 
       nonconsuming InstructInvestorSettlement : [ContractId Trade]
         with

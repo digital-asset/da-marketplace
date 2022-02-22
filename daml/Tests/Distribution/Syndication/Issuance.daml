@@ -20,8 +20,8 @@ issuance Parties{..} Origination{..} = do
 
   let dealId = "DEAL1"
   dealCid     <- createDeal operator structurer issuer dealId
-  (dealCid, tranche1Cid) <- addTranche operator structurer issuer settlementBank bndBank bondRegistrar cashProvider payingAgent dealId "TRANCHE1" bond1.id usd.assetId 100_000_000.0
-  (dealCid, tranche2Cid) <- addTranche operator structurer issuer settlementBank bndBank bondRegistrar cashProvider payingAgent dealId "TRANCHE2" bond2.id usd.assetId 100_000_000.0
+  (dealCid, tranche1Cid) <- addTranche operator structurer issuer settlementBank bndBank bondRegistrar cashProvider payingAgent dealId "TRANCHE1" bond1.id usd.assetId 100_000_000.0 Dvp Dvp
+  (dealCid, tranche2Cid) <- addTranche operator structurer issuer settlementBank bndBank bondRegistrar cashProvider payingAgent dealId "TRANCHE2" bond2.id usd.assetId 100_000_000.0 Dvp Dvp
 
   deposit operator cashProvider  issuer     14_000_000.0 usd.assetId
   deposit operator cashProvider  lm1        20_000_000.0 usd.assetId
