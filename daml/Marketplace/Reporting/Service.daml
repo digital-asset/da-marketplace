@@ -68,9 +68,9 @@ template Service
                   other -> error $ "encounter non report swiftMessage: " <> show other) <$> prevDaySwiftOutboundMsgOpt
                 
                 reportDetails = map (\(ReportDetailKey{..}, totalQuantityToday) -> 
-                  let prevDayTotalQuantity : Optional Decimal = (fmap totalQuantity . find (\preDayDetail -> preDayDetail.assetId == assetId && preDayDetail.safekeepingAccount == account)) =<< prevDayReportDetailsOpt
-                        in ReportDetail with safekeepingAccount = account; totalQuantity = totalQuantityToday; ..) depositGroup
-              pure $ if isCashReporting then (refId, MT940 (createMT940Details reportDetails today), messageType) else (refId, MT535 (createMT535Details reportDetails today), messageType)
+                  let prevDayTotalQuantity : Optional Decimal = (fmap totalQuantity . find (\preDayDetail -> preDayDetail.assetId == assetId)) =<< prevDayReportDetailsOpt
+                        in ReportDetail with totalQuantity = totalQuantityToday; ..) depositGroup
+              pure $ if isCashReporting then (refId, MT940 (createMT940Details account reportDetails today), messageType) else (refId, MT535 (createMT535Details account reportDetails today), messageType)
             
             groupSortOn f = (groupOn f . sortOn f)
             groupedDeposits = groupSortOn (\deposit -> (deposit.account.id, deposit.asset.id)) deposits
