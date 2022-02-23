@@ -6,10 +6,10 @@ import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Distribution.Syndication.Bidding.Model qualified as Bidding
 import Marketplace.Settlement.Hierarchical (createInstructions, getAccount, Trade(..), Status(..), SettlementMode(..))
 import Marketplace.Issuance.Instrument.Model(Bond(..))
+import SwiftMessage.Message (SwiftMessage(MT547), SwiftMessage(MT545), SwiftMessageType(..), SwiftOutboundMessage(..))
 import SwiftMessage.Model.MT545
 import SwiftMessage.Model.MT547
 import SwiftMessage.Util
-import SwiftMessage.Message (SwiftMessage(MT547), SwiftMessage(MT545), SwiftMessageType(..), SwiftOutboundMessage(..))
 
 template CreateDealRequest
   with
@@ -131,22 +131,21 @@ template Tranche
             settlementId = deliveryId.label <> "-" <> partyToText issuer <> "-" <> partyToText settlementBank
           (_, issuerSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, issuer)
           (_, settlementBankSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, settlementBank)
+          
+          let 
+            issuerSecuritiesAccount = getAccount False issuerSettlementInfo issuer
+            settlementBankSecuritiesAccount = getAccount False settlementBankSettlementInfo settlementBank
+          bondSis <- createInstructions False operator bondRegistrar bondRegistrar issuerSecuritiesAccount settlementBankSecuritiesAccount settlementId 0 totalAsset
+          
           instructionIds <-
             if issuerSettlementMode == Dvp
             then do
               let
                 issuerCashAccount = getAccount True issuerSettlementInfo issuer
                 settlementBankCashAccount = getAccount True settlementBankSettlementInfo settlementBank
-                issuerSecuritiesAccount = getAccount False issuerSettlementInfo issuer
-                settlementBankSecuritiesAccount = getAccount False settlementBankSettlementInfo settlementBank
-              bondSis <- createInstructions False operator bondRegistrar bondRegistrar issuerSecuritiesAccount settlementBankSecuritiesAccount settlementId 0 totalAsset
               cashSis <- createInstructions True operator bondRegistrar cashProvider settlementBankCashAccount issuerCashAccount settlementId (length bondSis) totalPrice
               map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
             else do
-              let
-                issuerSecuritiesAccount = getAccount False issuerSettlementInfo issuer
-                settlementBankSecuritiesAccount = getAccount False settlementBankSettlementInfo settlementBank
-              bondSis <- createInstructions False operator bondRegistrar bondRegistrar issuerSecuritiesAccount settlementBankSecuritiesAccount settlementId 0 totalAsset
               map (.instructionId) <$> mapA fetch bondSis
           sendSwiftMessage issuer settlementBank size settledAmount paymentId settlementId dateOfTrade dateOfSettlement dateOfSettlement
           create Trade with operator; agent = bondRegistrar; deliverer = issuer; payer = settlementBank; settlementId; instructionIds; delivery = totalAsset; payment = totalPrice; status = Instructed; settlementMode = issuerSettlementMode

@@ -1,13 +1,13 @@
 module Tests.Distribution.Syndication.Issuance where
 
 import Daml.Script
+import DA.Date (Month(Dec), date)
 import DA.Set (singleton)
 import Marketplace.Distribution.Syndication.Structuring.Model qualified as Structuring
 import Marketplace.Settlement.Hierarchical (SettlementMode(..))
 import Tests.Distribution.Syndication.Origination (origination, Origination(..))
 import Tests.Distribution.Syndication.Setup (setup, Parties(..))
 import Tests.Distribution.Syndication.Util
-import DA.Date (Month(Dec), date)
 
 test : Script ()
 test = do
