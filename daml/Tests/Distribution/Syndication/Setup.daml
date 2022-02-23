@@ -140,6 +140,7 @@ setup = do
   createCustodyService operator custodian1 investor1
   aiCid1 <- openAccount operator custodian1 lm1 $ createLabel custodian1 lm1
   aiCid2 <- openAccount operator custodian1 investor1 $ createLabel custodian1 investor1
+  aiCid3 <- openAccount operator custodian1 investor1 $ createLabel custodian1 investor1 <> "-2"
   setOmnibusSecuritiesAccount operator lm1 aiCid1
   setOmnibusSecuritiesAccount operator investor1 aiCid2
 

@@ -3,17 +3,20 @@ module Tests.Distribution.Syndication.Lifecycle where
 import Daml.Script
 import DA.Assert ((===))
 import DA.Date (date, Month(..))
-import DA.Finance.Asset (AssetDeposit)
+import DA.Finance.Asset (AssetDeposit_Transfer(..), AssetDeposit_Split(..), AssetDeposit)
 import DA.Finance.Base.HolidayCalendar (HolidayCalendar)
 import DA.Finance.Types (Id)
 import DA.Foldable (forA_)
+import DA.List (head)
 import DA.Time (time)
+import Marketplace.Custody.Model (AccountInfo)
 import Marketplace.Reporting.Service as Reporting
 import Marketplace.Lifecycle.Model qualified as Lifecycle
 import Marketplace.Lifecycle.Service qualified as Lifecycle
 import Marketplace.Snapshot.Model as Snapshot
 import Marketplace.Snapshot.Service qualified as Snapshot
 import Marketplace.Settlement.Hierarchical (Delivery)
+import SwiftMessage.Message (SwiftOutboundMessage, SwiftMessageType(..), SwiftMessage(..))
 import Tests.Distribution.Syndication.Setup (setup, Parties(..))
 import Tests.Distribution.Syndication.Issuance (issuance)
 import Tests.Distribution.Syndication.Origination (origination, Origination(..))
@@ -63,6 +66,12 @@ testReporting = do
   Some calendar <- queryContractId @HolidayCalendar operator calendarCid
   setTime (time (date 2021 Jan 8) 0 0 0)
   
+  -- move part of BOND1 for investor1 into different account under the same provider to check report correctness
+  (depositBond1Cid, depositBond1) <- head <$> queryFilter @AssetDeposit investor1 (\deposit -> deposit.asset.id.label == "BOND1")
+  (accountInfoCid, accountInfo) <- head <$> queryFilter @AccountInfo investor1 (\accountInfo -> accountInfo.account.id.label == "Investor1@Custodian1-2")
+  splitResultCid <- head <$> submit investor1 do exerciseCmd depositBond1Cid AssetDeposit_Split with quantities = [500000.0]
+  submit investor1 do exerciseCmd splitResultCid AssetDeposit_Transfer with receiverAccount = accountInfo.account
+
   -- security report
   reporting operator bondRegistrar calendar False
   reporting operator custodian1 calendar False
@@ -80,6 +89,12 @@ testReporting = do
   -- prev business day of Jan 11 2021 is Jan 8 2021
   setTime (time (date 2021 Jan 11) 0 0 0)
   reporting operator bondRegistrar calendar False
+
+  -- check investor1's report under custodian1 has 3 entry (2* bond1) + (1 bond2)
+  Some (_, swiftOutboundMessage) <- queryContractKey @SwiftOutboundMessage custodian1 (custodian1, "2021-01-08-Investor1@Custodian1", MT535_t)
+  case swiftOutboundMessage.swiftMessage of 
+    MT535 mt535 -> length mt535.reportDetails.reportDetails === 3
+    _ -> error "type mismatch"
   pure ()
 
 
