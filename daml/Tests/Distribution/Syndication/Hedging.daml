@@ -38,4 +38,4 @@ test = do
   ad1.asset.quantity ===   1_000_000.0
   ad2.asset.quantity === 106_000_000.0
 
-  pure ()
+  error "display debug messages"

@@ -1,6 +1,8 @@
+-- {-# LANGUAGE UndecidableInstances #-}
 module Marketplace.Lifecycle.Service where
 
 import ContingentClaims.Claim (deserialize, serialize)
+import ContingentClaims.Claim qualified as Deserialized
 import ContingentClaims.Lifecycle qualified as Lifecycle
 import ContingentClaims.Claim.Serializable (Claim(..))
 import ContingentClaims.Observation qualified as Ob
@@ -21,6 +23,8 @@ import SwiftMessage.Model.MT564
 import SwiftMessage.Util
 
 type Claims = Claim Date Decimal Id
+
+deriving instance Show (Deserialized.Claim Ob.Observation Date Decimal Id)
 
 type T = Service
 
@@ -53,7 +57,11 @@ template Service
             case election of
             Some e -> Lifecycle.exercise obs (True, deserialize e) (deserialize description.claims) today.date
             _ -> pure (deserialize description.claims)
+          debug "LUCIANO BEFORE:"
+          debug $ deserialize description.claims
           Lifecycle.Result{remaining, pending} <- Lifecycle.lifecycle obs remaining today.date
+          debug "LUCIANO AFTER:"
+          debug $ remaining
           let serializedRemaining = serialize remaining
           if description.claims /= serialize remaining then do
             let newVersion = assetId.version + 1
