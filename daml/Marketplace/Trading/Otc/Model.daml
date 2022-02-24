@@ -2,7 +2,7 @@ module Marketplace.Trading.Otc.Model where
 
 import DA.Finance.Types (Asset)
 import Marketplace.Custody.Model qualified as Custody
-import Marketplace.Settlement.Hierarchical (createInstructions, getAccount, Trade(..), Status(..))
+import Marketplace.Settlement.Hierarchical (createInstructions, getAccount, Trade(..), Status(..), SettlementMode(..))
 import Marketplace.Trading.Model (Side(..))
 
 template Order
@@ -17,6 +17,7 @@ template Order
     delivery : Asset
     payment : Asset
     side : Side
+    settlementMode : SettlementMode
   where
     signatory operator, provider, customer
     observer counterparty
@@ -48,6 +49,7 @@ template Match
     delivery : Asset
     payment : Asset
     side : Side
+    settlementMode : SettlementMode
   where
     signatory operator, provider, customer, counterparty
 
@@ -60,12 +62,20 @@ template Match
           settlementId = id <> "-" <> partyToText customer <> "-" <> partyToText counterparty
         (_, buyerSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, buyer)
         (_, sellerSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, seller)
-        let
-          buyerCashAccount = getAccount True buyerSettlementInfo buyer
-          sellerCashAccount = getAccount True sellerSettlementInfo seller
+
+        let 
           buyerSecuritiesAccount = getAccount False buyerSettlementInfo buyer
           sellerSecuritiesAccount = getAccount False sellerSettlementInfo seller
         deliverySis <- createInstructions False operator operator deliveryRegistrar sellerSecuritiesAccount buyerSecuritiesAccount settlementId 0 delivery
-        paymentSis <- createInstructions True operator operator paymentRegistrar buyerCashAccount sellerCashAccount settlementId (length deliverySis) payment
-        instructionIds <- map (.instructionId) <$> mapA fetch (deliverySis <> paymentSis)
-        create Trade with operator; agent = operator; deliverer = seller; payer = buyer; settlementId; instructionIds; delivery; payment; status = Instructed
+        instructionIds <-
+            if settlementMode == Dvp
+            then do
+              let
+                buyerCashAccount = getAccount True buyerSettlementInfo buyer
+                sellerCashAccount = getAccount True sellerSettlementInfo seller      
+              paymentSis <- createInstructions True operator operator paymentRegistrar buyerCashAccount sellerCashAccount settlementId (length deliverySis) payment
+              map (.instructionId) <$> mapA fetch (deliverySis <> paymentSis)
+            else do
+              map (.instructionId) <$> mapA fetch deliverySis
+        create Trade with operator; agent = operator; deliverer = seller; payer = buyer; settlementId; instructionIds; delivery; payment; status = Instructed; settlementMode
+        
