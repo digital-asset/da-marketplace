@@ -1,6 +1,7 @@
 module Marketplace.Distribution.Syndication.Bidding.Model where
 
 import DA.Finance.Types (Asset, Id)
+import Marketplace.Settlement.Hierarchical (SettlementMode)
 
 template BidRequest
   with
@@ -62,6 +63,8 @@ template Allocation
 
     controller investor can
       Confirm : ContractId Confirmation
+        with
+          settlementMode : SettlementMode
         do
           create Confirmation with ..
 
@@ -74,6 +77,7 @@ template Confirmation
     dealId : Text
     asset : Asset
     price : Asset
+    settlementMode : SettlementMode
   where
     signatory operator, provider, investor
     observer issuer

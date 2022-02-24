@@ -34,7 +34,7 @@ import Marketplace.Distribution.Syndication.Structuring.Service qualified as Str
 import Marketplace.Lifecycle.Service qualified as Lifecycle
 import Marketplace.Snapshot.Service qualified as Snapshot
 import Marketplace.Reporting.Service qualified as Reporting
-import Marketplace.Settlement.Hierarchical (SettlementInstruction, Allocate(..), Sign(..), Settle(..), Trade, Delivery, SettleDelivery(..))
+import Marketplace.Settlement.Hierarchical (SettlementInstruction, Allocate(..), Sign(..), Settle(..), Trade, Delivery, SettleDelivery(..), SettlementMode)
 import Marketplace.Trading.Otc.Service qualified as Trading
 
 createCustodianRole : Party -> Party -> Script (ContractId Custodian.Role, ContractId Custody.SettlementInfo)
@@ -203,8 +203,8 @@ createDeal operator provider customer dealId = do
   createDealRequestCid <- submit customer do exerciseByKeyCmd @Structuring.Service (operator, provider, customer) Structuring.RequestCreateDeal with ..
   submit provider do exerciseByKeyCmd @Structuring.Service (operator, provider, customer) Structuring.CreateDeal with ..
 
-addTranche : Party -> Party -> Party -> Party -> Party -> Party -> Party -> Party -> Text -> Text -> Id -> Id -> Decimal -> Script (ContractId Structuring.Deal, ContractId Structuring.Tranche)
-addTranche operator provider customer settlementBank bndBank bondRegistrar cashProvider payingAgent dealId trancheId deliveryId paymentId size = do
+addTranche : Party -> Party -> Party -> Party -> Party -> Party -> Party -> Party -> Text -> Text -> Id -> Id -> Decimal -> SettlementMode -> SettlementMode -> Script (ContractId Structuring.Deal, ContractId Structuring.Tranche)
+addTranche operator provider customer settlementBank bndBank bondRegistrar cashProvider payingAgent dealId trancheId deliveryId paymentId size issuerSettlementMode bndSettlementMode = do
   addTrancheRequestCid <- submit customer do exerciseByKeyCmd @Structuring.Service (operator, provider, customer) Structuring.RequestAddTranche with ..
   submit provider do exerciseByKeyCmd @Structuring.Service (operator, provider, customer) Structuring.AddTranche with ..
 
@@ -224,10 +224,10 @@ closeBook operator provider customer dealId trancheId allocations offeredPrice =
   bidCids <- map fst <$> queryFilter @Bidding.Bid customer (\r -> r.dealId == dealId && r.trancheId == trancheId)
   submit customer do exerciseByKeyCmd @Structuring.Service (operator, provider, customer) Structuring.CloseBook with ..
 
-confirm : Party -> Text -> Text -> Script (ContractId Bidding.Confirmation)
-confirm investor dealId trancheId = do
+confirm : Party -> Text -> Text -> SettlementMode -> Script (ContractId Bidding.Confirmation)
+confirm investor dealId trancheId settlementMode = do
   [(allocationCid, _)] <- queryFilter @Bidding.Allocation investor (\a -> a.dealId == dealId && a.trancheId == trancheId)
-  submit investor do exerciseCmd allocationCid Bidding.Confirm
+  submit investor do exerciseCmd allocationCid Bidding.Confirm with settlementMode
 
 allocateSi : Party -> (ContractId SettlementInstruction, SettlementInstruction) -> Script ()
 allocateSi party (siCid, si) = do
@@ -311,19 +311,19 @@ merge party deposits id = do
   let (adCid, _) :: t = filter (\(_, ad) -> ad.asset.id == id) deposits
   submit party do exerciseCmd adCid AssetDeposit_Merge with depositCids = map fst t
 
-getMaxId : Party -> Id -> Script Id 
-getMaxId payingAgent assetId = do 
+getMaxId : Party -> Id -> Script Id
+getMaxId payingAgent assetId = do
   h :: t <- map snd <$> queryFilter @AssetDescription payingAgent (\ad -> ad.assetId.signatories == assetId.signatories && ad.assetId.label == assetId.label)
   pure $ foldl (\id desc -> if desc.assetId.version > id.version then desc.assetId else id) h.assetId t
 
 upgradeVersion : [Party] -> Id -> Script ()
 upgradeVersion parties maxId = do
-  let upgradeVersionForParty party = do 
+  let upgradeVersionForParty party = do
         let
-          isTargetAsset : AssetDeposit -> Bool 
+          isTargetAsset : AssetDeposit -> Bool
           isTargetAsset deposit = (maxId.version == deposit.asset.id.version && maxId.label == deposit.asset.id.label)
         ads <- queryFilter @AssetDeposit party (\ad -> ad.account.provider == party && isTargetAsset ad)
         mapA_ (\(adCid, ad) -> submit party do
-          let newVersion = maxId.version + 1 
+          let newVersion = maxId.version + 1
           exerciseCmd adCid AssetDeposit_Upgrade with newVersion) ads
   mapA_ upgradeVersionForParty parties
