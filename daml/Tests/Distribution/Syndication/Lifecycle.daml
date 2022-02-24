@@ -4,8 +4,10 @@ import Daml.Script
 import DA.Assert ((===))
 import DA.Date (date, Month(..))
 import DA.Finance.Asset (AssetDeposit)
+import DA.Finance.Base.HolidayCalendar (HolidayCalendar)
 import DA.Finance.Types (Id)
 import DA.Foldable (forA_)
+import DA.Time (time)
 import Marketplace.Reporting.Service as Reporting
 import Marketplace.Lifecycle.Model qualified as Lifecycle
 import Marketplace.Lifecycle.Service qualified as Lifecycle
@@ -16,10 +18,9 @@ import Tests.Distribution.Syndication.Setup (setup, Parties(..))
 import Tests.Distribution.Syndication.Issuance (issuance)
 import Tests.Distribution.Syndication.Origination (origination, Origination(..))
 import Tests.Distribution.Syndication.Util
-import DA.Time (time)
 
-requestSnapshot : Party -> Party -> Party -> Id -> Script (ContractId Snapshot.SnapshotRequest)
-requestSnapshot operator payingAgent bondRegistrar assetId = do
+requestSnapshot : Party -> Party -> Party -> Id -> RefId -> Script (ContractId Snapshot.SnapshotRequest)
+requestSnapshot operator payingAgent bondRegistrar assetId referenceId = do
   submit payingAgent do exerciseByKeyCmd @Snapshot.Service (operator, payingAgent) Snapshot.RequestSnapshot with custodian = bondRegistrar; ..
 
 forwardRequest : Party -> Id -> Script [ContractId Snapshot.SnapshotRequest]
@@ -43,36 +44,42 @@ provideSnapshot custodian assetId = do
     [] -> pure []
     _ -> fail "More than one snapshot request received"
 
-instructLifecycle : Party -> Party -> Id -> Date -> Script [ContractId Delivery]
-instructLifecycle operator payingAgent assetId date = do
+instructLifecycle : Party -> Party -> Id -> RefId -> Date -> Script [ContractId Delivery]
+instructLifecycle operator payingAgent assetId snapshotRefId date = do
   [(effectCid, effect)] <- queryFilter @Lifecycle.Effect payingAgent (\e -> e.payingAgent == payingAgent && e.assetId == assetId && e.date == date)
-  snapshotCids <- map fst <$> queryFilter @Snapshot.Snapshot payingAgent (\s -> s.requester == payingAgent && s.deposit.asset.id.label == assetId.label && s.deposit.asset.id.version == assetId.version)
+  snapshotCids <- map fst <$> queryFilter @Snapshot.Snapshot payingAgent (\s -> s.requester == payingAgent 
+    && s.deposit.asset.id.label == assetId.label 
+    && s.deposit.asset.id.version == assetId.version
+    && s.referenceId == snapshotRefId)
   submit operator do exerciseCmd effectCid Lifecycle.Instruct with snapshotCids
 
 testReporting : Script ()
-testReporting = script do
+testReporting = do
   parties@Parties{..} <- setup
   orig@Origination{..} <- origination parties
   issuance parties orig
 
   -- create report can be done at anytime
-  setTime (time (date 2021 Jan 1) 0 0 0)
+  Some calendar <- queryContractId @HolidayCalendar operator calendarCid
+  setTime (time (date 2021 Jan 8) 0 0 0)
   
   -- security report
-  reporting operator bondRegistrar False
-  reporting operator custodian1 False
-  reporting operator custodian2 False
-  reporting operator custodian3 False
-  reporting operator custodian4 False
-  reporting operator custodian5 False
+  reporting operator bondRegistrar calendar False
+  reporting operator custodian1 calendar False
+  reporting operator custodian2 calendar False
+  reporting operator custodian4 calendar False
+  reporting operator custodian5 calendar False
 
   -- cash report
-  reporting operator cashProvider True
+  reporting operator cashProvider calendar True
 
   -- make sure that we can submit reporting at the same date without failing
-  reporting operator bondRegistrar False
-  reporting operator cashProvider True
+  reporting operator bondRegistrar calendar False
+  reporting operator cashProvider calendar True
 
+  -- prev business day of Jan 11 2021 is Jan 8 2021
+  setTime (time (date 2021 Jan 11) 0 0 0)
+  reporting operator bondRegistrar calendar False
   pure ()
 
 
@@ -126,9 +133,9 @@ testBond2 = do
   ad4.asset.quantity === 44_000_000.0                                                      
   pure ()
 
-lifecycleSnapshot : Parties -> Id -> Script ()
-lifecycleSnapshot Parties{..} maxId = do
-  requestSnapshot operator payingAgent bondRegistrar maxId
+lifecycleSnapshot : Parties -> Id -> RefId -> Script ()
+lifecycleSnapshot Parties{..} maxId snapshotRefId = do
+  requestSnapshot operator payingAgent bondRegistrar maxId snapshotRefId
   forwardRequest bondRegistrar maxId
   provideSnapshot custodian1 maxId
   provideSnapshot custodian2 maxId
@@ -150,12 +157,13 @@ lifecycle parties@Parties{..} date assetId = do
 
   case effectCidOpt of
     Some (effectCid, requestCid) -> do
-      lifecycleSnapshot parties maxId
+      let snapshotRefId = "lifecycle-snapshot"
+      lifecycleSnapshot parties maxId snapshotRefId
       submit bondRegistrar do exerciseCmd requestCid Lifecycle.ApproveUpdate -- update asset description after calculating effect
       Some effect <- queryContractId payingAgent effectCid
       debug $ "[" <> show date <> "][" <> maxId.label <> "(v" <> show maxId.version <> ")] " <> "Event with " <> show (length effect.payouts) <> " payouts"
       upgradeVersion [bondRegistrar, custodian1, custodian2, custodian4, custodian5] maxId
-      paymentCids <- instructLifecycle operator payingAgent maxId date
+      paymentCids <- instructLifecycle operator payingAgent maxId snapshotRefId date
 
       allocateInstructions [ issuer, bondRegistrar, lm1, lm2, lm3, custodian1, custodian2, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
       signInstructions [ issuer, bondRegistrar, lm1, lm2, lm3, custodian1, custodian2, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
@@ -169,14 +177,19 @@ preNotify : Parties -> Date -> Id -> Script ()
 preNotify parties@Parties{..} date assetId = do
   -- before payout date
   maxId <- getMaxId payingAgent assetId
-  lifecycleSnapshot parties maxId
-  snapshotCids <- map fst <$> queryFilter @Snapshot.Snapshot payingAgent (\s -> s.requester == payingAgent && s.deposit.asset.id.label == maxId.label && s.deposit.asset.id.version == maxId.version)
+  let snapshotRefId = "prenotify-snapshot"
+  lifecycleSnapshot parties maxId snapshotRefId
+  snapshotCids <- map fst <$> queryFilter @Snapshot.Snapshot payingAgent (\s -> s.requester == payingAgent 
+    && s.deposit.asset.id.label == maxId.label 
+    && s.deposit.asset.id.version == maxId.version
+    && s.referenceId == snapshotRefId)
 
   submit operator do exerciseByKeyCmd @Lifecycle.Service (operator, issuer, payingAgent) Lifecycle.SendPrePayoutSwiftMessage with exDivDate = date; ..
   pure ()
 
-reporting : Party -> Party -> Bool -> Script ()
-reporting operator accountProvider isCashReporting = do 
+reporting : Party -> Party -> HolidayCalendar -> Bool -> Script ()
+reporting operator accountProvider calendar isCashReporting = do 
   depositCids <- map fst <$> queryFilter @AssetDeposit accountProvider (\deposit -> deposit.account.provider == accountProvider)
-  submit accountProvider do exerciseByKeyCmd @Reporting.Service (operator, accountProvider) Reporting.CreateReports with depositCids; isCashReporting
+  submit accountProvider do exerciseByKeyCmd @Reporting.Service (operator, accountProvider) Reporting.CreateReports with calendar; depositCids; isCashReporting
   pure ()
+  

@@ -1,12 +1,13 @@
 module Tests.Distribution.Syndication.Issuance where
 
 import Daml.Script
+import DA.Date (Month(Dec), date)
 import DA.Set (singleton)
 import Marketplace.Distribution.Syndication.Structuring.Model qualified as Structuring
+import Marketplace.Settlement.Hierarchical (SettlementMode(..))
 import Tests.Distribution.Syndication.Origination (origination, Origination(..))
 import Tests.Distribution.Syndication.Setup (setup, Parties(..))
 import Tests.Distribution.Syndication.Util
-import DA.Date (Month(Dec), date)
 
 test : Script ()
 test = do
@@ -19,8 +20,8 @@ issuance Parties{..} Origination{..} = do
 
   let dealId = "DEAL1"
   dealCid     <- createDeal operator structurer issuer dealId
-  (dealCid, tranche1Cid) <- addTranche operator structurer issuer settlementBank bndBank bondRegistrar cashProvider payingAgent dealId "TRANCHE1" bond1.id usd.assetId 100_000_000.0
-  (dealCid, tranche2Cid) <- addTranche operator structurer issuer settlementBank bndBank bondRegistrar cashProvider payingAgent dealId "TRANCHE2" bond2.id usd.assetId 100_000_000.0
+  (dealCid, tranche1Cid) <- addTranche operator structurer issuer settlementBank bndBank bondRegistrar cashProvider payingAgent dealId "TRANCHE1" bond1.id usd.assetId 100_000_000.0 Dvp Dvp
+  (dealCid, tranche2Cid) <- addTranche operator structurer issuer settlementBank bndBank bondRegistrar cashProvider payingAgent dealId "TRANCHE2" bond2.id usd.assetId 100_000_000.0 Dvp Dvp
 
   deposit operator cashProvider  issuer     14_000_000.0 usd.assetId
   deposit operator cashProvider  lm1        20_000_000.0 usd.assetId
@@ -58,14 +59,14 @@ issuance Parties{..} Origination{..} = do
   closeBook operator structurer issuer dealId "TRANCHE1" allocations offeredPrice
   closeBook operator structurer issuer dealId "TRANCHE2" allocations offeredPrice
 
-  confirmation11Cid <- confirm investor1 dealId "TRANCHE1"
-  confirmation12Cid <- confirm investor1 dealId "TRANCHE2"
-  confirmation21Cid <- confirm investor2 dealId "TRANCHE1"
-  confirmation22Cid <- confirm investor2 dealId "TRANCHE2"
-  confirmation31Cid <- confirm investor3 dealId "TRANCHE1"
-  confirmation32Cid <- confirm investor3 dealId "TRANCHE2"
-  confirmation41Cid <- confirm investor4 dealId "TRANCHE1"
-  confirmation42Cid <- confirm investor4 dealId "TRANCHE2"
+  confirmation11Cid <- confirm investor1 dealId "TRANCHE1" Dvp
+  confirmation12Cid <- confirm investor1 dealId "TRANCHE2" Dvp
+  confirmation21Cid <- confirm investor2 dealId "TRANCHE1" Dvp
+  confirmation22Cid <- confirm investor2 dealId "TRANCHE2" Dvp
+  confirmation31Cid <- confirm investor3 dealId "TRANCHE1" Dvp
+  confirmation32Cid <- confirm investor3 dealId "TRANCHE2" Dvp
+  confirmation41Cid <- confirm investor4 dealId "TRANCHE1" Dvp
+  confirmation42Cid <- confirm investor4 dealId "TRANCHE2" Dvp
 
   let
     confirmationCids1 = [ confirmation11Cid, confirmation21Cid, confirmation31Cid, confirmation41Cid ]

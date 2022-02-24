@@ -3,8 +3,10 @@ module Marketplace.Snapshot.Model where
 import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Id)
 
+type RefId = Text
 template SnapshotRequest
   with 
+    referenceId : RefId
     operator : Party
     requester : Party
     custodian : Party
@@ -33,6 +35,7 @@ template SnapshotRequest
 
 template Snapshot
   with 
+    referenceId : RefId
     operator : Party
     requester : Party
     custodian : Party

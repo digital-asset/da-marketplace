@@ -19,6 +19,7 @@ import Marketplace.Utils
 import SwiftMessage.Message (SwiftMessage(MT564), SwiftMessageType(..), SwiftOutboundMessage(..))
 import SwiftMessage.Model.MT564
 import SwiftMessage.Util
+import DA.Optional (whenSome)
 
 type Claims = Claim Date Decimal Id
 
@@ -81,7 +82,14 @@ template Service
                 let (comingPayout, id) = head $ payoffs $ deserialize serializedClaims in
                 case comingPayout of
                   Ob.Const v -> v
-                  other  -> error $ "Cannot find payout rate: " <> show other 
+                  other  -> error $ "Cannot find payout rate: " <> show other
+
+              createNewPrenotificationSwiftMessage : Text -> Party -> Party -> MT564Details -> Update (ContractId SwiftOutboundMessage)
+              createNewPrenotificationSwiftMessage referenceId provider consumer mt564 = do
+                let swiftMessageType = MT564_t
+                currentReport <- (lookupByKey @SwiftOutboundMessage (operator, referenceId, swiftMessageType))
+                whenSome currentReport archive
+                create SwiftOutboundMessage with swiftMessage=MT564 (mt564); status=Finalized; observers=empty; ..
               
               sendMessageForSnapshot : Snapshot -> Update (ContractId SwiftOutboundMessage)
               sendMessageForSnapshot snapshot = do                
@@ -103,9 +111,9 @@ template Service
                     buyerCashAcc = getAccount True settlementInfo buyer
                     mt564 = createMT564Details instrumentId asset.id description.cfi issuer buyerSafekeepingAcc buyerCashAcc CRED faceAmount currency maturityDate payoutDate redemptionDate exDivDate
                     mt564_redempt = (\_ -> createMT564Details instrumentId asset.id description.cfi issuer buyerSafekeepingAcc buyerCashAcc CRED asset.quantity currency maturityDate payoutDate redemptionDate exDivDate) <$> redemptionDate          
-                    notificationId = "Prenotification-" <> show exDivDate <> "-" <> assetId.label <> "(v" <> show assetId.version <> ")" <> "-" <> partyToText buyer
-                  mapA_ (\mt564_r -> create SwiftOutboundMessage with referenceId = notificationId <> "-" <> "redempt"; provider = operator ; consumer = operator; swiftMessage=MT564 (mt564_r); swiftMessageType=MT564_t; status=Finalized; observers=empty) mt564_redempt
-                  create SwiftOutboundMessage with referenceId = notificationId; provider = operator ; consumer = operator; swiftMessage=MT564 (mt564); swiftMessageType=MT564_t; status=Finalized; observers=empty
+                    createRefId isRedempt = PayoutRefId with receiver = buyer; ..
+                  mapA_ (\mt564_r -> createNewPrenotificationSwiftMessage (show $ createRefId True) operator operator mt564_r) mt564_redempt
+                  createNewPrenotificationSwiftMessage (show $ createRefId False) operator operator mt564
           snapshots <- mapA fetch snapshotCids
           mapA_ (`exercise` Delete) snapshotCids
           mapA sendMessageForSnapshot snapshots

@@ -1,0 +1,23 @@
+{-
+    This daml test script file is created for prepopulating data onto daml ledger to assist testing in Swift Adaptor (Java Application)
+-}
+module Tests.Distribution.Syndication.Prepopulation where
+
+import Daml.Script
+import Tests.Distribution.Syndication.Setup (setup, Parties(..))
+import Tests.Distribution.Syndication.Issuance (issuance)
+import Tests.Distribution.Syndication.Origination (origination, Origination(..))
+import Tests.Distribution.Syndication.Lifecycle
+import DA.Foldable (mapA_)
+
+
+snapshotsForMT564 : Script ()
+snapshotsForMT564 = do
+  parties@Parties{..} <- setup
+  orig@Origination{..} <- origination parties
+  issuance parties orig
+
+  let assetId = bond1Desc.assetId
+      snapshotRefIds = map (\ind -> "snapshot-refId-" <> show ind) [0..100] 
+  mapA_ (lifecycleSnapshot parties assetId) snapshotRefIds
+  pure ()

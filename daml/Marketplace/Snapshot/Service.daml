@@ -17,5 +17,6 @@ template Service
             with 
                 custodian : Party
                 assetId : Id
+                referenceId : RefId
             controller customer
             do create SnapshotRequest with requester = customer; ..
