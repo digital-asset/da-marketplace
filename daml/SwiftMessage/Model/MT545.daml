@@ -3,6 +3,7 @@ module SwiftMessage.Model.MT545 where
 import DA.Finance.Types (Id(..), Account(..))
 import SwiftMessage.Util
 
+-- DvP confirmation for buyer
 data MT545Details = MT545Details with
     messageType: MessageType -- NEWM
     

@@ -6,8 +6,10 @@ import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Distribution.Syndication.Bidding.Model qualified as Bidding
 import Marketplace.Settlement.Hierarchical (createInstructions, getAccount, Trade(..), Status(..), SettlementMode(..))
 import Marketplace.Issuance.Instrument.Model(Bond(..))
-import SwiftMessage.Message (SwiftMessage(MT547), SwiftMessage(MT545), SwiftMessageType(..), SwiftOutboundMessage(..))
+import SwiftMessage.Message (SwiftMessage(MT547), SwiftMessage(MT545), SwiftMessage(MT544), SwiftMessage(MT546), SwiftMessageType(..), SwiftOutboundMessage(..))
+import SwiftMessage.Model.MT544
 import SwiftMessage.Model.MT545
+import SwiftMessage.Model.MT546
 import SwiftMessage.Model.MT547
 import SwiftMessage.Util
 
@@ -98,8 +100,12 @@ template Tranche
 
     -- helper fuction to send swift message
     let
-      sendSwiftMessage : Party -> Party -> Decimal -> Decimal -> Id -> Text -> Date -> Date -> Date -> Update (ContractId SwiftOutboundMessage)
-      sendSwiftMessage seller buyer settledQty settledAmount settledCurrency settlementId dateOfTrade dateOfSettlement effDateOfSettlement = do
+      createNewSettlementMessage: Text -> SwiftMessage -> SwiftMessageType -> Update (ContractId SwiftOutboundMessage)
+      createNewSettlementMessage referenceId swiftMessage swiftMessageType = 
+        create SwiftOutboundMessage with provider = operator; consumer = operator; status = Pending; observers = fromList [bondRegistrar]; ..
+
+      sendSwiftMessage : Party -> Party -> Decimal -> Decimal -> Id -> Text -> Date -> Date -> Date -> SettlementMode -> Update ()
+      sendSwiftMessage seller buyer settledQty settledAmount settledCurrency settlementId dateOfTrade dateOfSettlement effDateOfSettlement settlementMode = do
         (_, sellerSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, seller)
         (_, receiverSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, buyer)
         (_, bond) <- fetchByKey @Bond (fromList [bondRegistrar, issuer], deliveryId.label)
@@ -107,15 +113,29 @@ template Tranche
           instrumentId = bond.isin <> "-" <> deliveryId.label
           buyerSafekeepingAcc = getAccount False receiverSettlementInfo buyer
           sellerSafekeepingAcc = getAccount False sellerSettlementInfo seller
-          mt545 = createMT545Details instrumentId settledQty buyerSafekeepingAcc.provider seller settledAmount settledCurrency
+        if settlementMode == Dvp then do
+          let 
+            mt545 = createMT545Details instrumentId settledQty buyerSafekeepingAcc.provider seller settledAmount settledCurrency
                     dateOfTrade dateOfSettlement effDateOfSettlement
                     settlementId settlementId buyerSafekeepingAcc sellerSafekeepingAcc "safekeepingPlace" "placeOfSettlement"
 
-          mt547 = createMT547Details instrumentId settledQty sellerSafekeepingAcc.provider seller settledAmount settledCurrency
+            mt547 = createMT547Details instrumentId settledQty sellerSafekeepingAcc.provider seller settledAmount settledCurrency
                     dateOfTrade dateOfSettlement effDateOfSettlement dateOfSettlement
                     settlementId settlementId buyerSafekeepingAcc sellerSafekeepingAcc "safekeepingPlace" "placeOfSettlement"
-        create SwiftOutboundMessage with referenceId = settlementId; provider = operator ; consumer = operator; swiftMessage=MT545 (mt545); swiftMessageType=MT545_t; status=Pending; observers= fromList [bondRegistrar]
-        create SwiftOutboundMessage with referenceId = settlementId; provider = operator ; consumer = operator; swiftMessage=MT547 (mt547); swiftMessageType=MT547_t; status=Pending; observers=fromList [bondRegistrar]
+          createNewSettlementMessage settlementId (MT545 mt545) MT545_t
+          createNewSettlementMessage settlementId (MT547 mt547) MT547_t
+        else do
+          let
+            mt544 = createMT544Details instrumentId settledQty buyerSafekeepingAcc.provider seller
+                    dateOfTrade dateOfSettlement effDateOfSettlement
+                    settlementId settlementId buyerSafekeepingAcc sellerSafekeepingAcc "safekeepingPlace" "placeOfSettlement"
+
+            mt546 = createMT546Details instrumentId settledQty sellerSafekeepingAcc.provider seller
+                    dateOfTrade dateOfSettlement effDateOfSettlement dateOfSettlement
+                    settlementId settlementId buyerSafekeepingAcc sellerSafekeepingAcc "safekeepingPlace" "placeOfSettlement"
+          createNewSettlementMessage settlementId (MT544 mt544) MT544_t
+          createNewSettlementMessage settlementId (MT546 mt546) MT546_t
+        pure ()
 
     controller operator can
       nonconsuming InstructIssuerSettlement : ContractId Trade
@@ -147,7 +167,7 @@ template Tranche
               map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
             else do
               map (.instructionId) <$> mapA fetch bondSis
-          sendSwiftMessage issuer settlementBank size settledAmount paymentId settlementId dateOfTrade dateOfSettlement dateOfSettlement
+          sendSwiftMessage issuer settlementBank size settledAmount paymentId settlementId dateOfTrade dateOfSettlement dateOfSettlement issuerSettlementMode
           create Trade with operator; agent = bondRegistrar; deliverer = issuer; payer = settlementBank; settlementId; instructionIds; delivery = totalAsset; payment = totalPrice; status = Instructed; settlementMode = issuerSettlementMode
 
       nonconsuming InstructBndSettlement : ContractId Trade
@@ -180,7 +200,7 @@ template Tranche
                 settlementBankSecuritiesAccount = getAccount False settlementBankSettlementInfo settlementBank
               bondSis <- createInstructions False operator bondRegistrar bondRegistrar settlementBankSecuritiesAccount bndBankSecuritiesAccount settlementId 0 totalAsset
               map (.instructionId) <$> mapA fetch bondSis
-          sendSwiftMessage settlementBank bndBank size settledAmount paymentId settlementId dateOfTrade dateOfSettlement dateOfSettlement
+          sendSwiftMessage settlementBank bndBank size settledAmount paymentId settlementId dateOfTrade dateOfSettlement dateOfSettlement bndSettlementMode
           create Trade with operator; agent = bondRegistrar; deliverer = settlementBank; payer = bndBank; settlementId; instructionIds; delivery = totalAsset; payment = totalPrice; status = Instructed; settlementMode = bndSettlementMode
 
       nonconsuming InstructInvestorSettlement : [ContractId Trade]
@@ -220,7 +240,7 @@ template Tranche
                   assertMsg "Total confirmed amount is larger than available quantity" $ aggregate <= size
                   bondSis <- createInstructions False operator bondRegistrar bondRegistrar bndBankSecuritiesAccount investorSecuritiesAccount settlementId 0 conf.asset
                   map (.instructionId) <$> mapA fetch bondSis
-              sendSwiftMessage settlementBank bndBank aggregate settledAmount paymentId settlementId dateOfTrade dateOfSettlement dateOfSettlement
+              sendSwiftMessage settlementBank bndBank aggregate settledAmount paymentId settlementId dateOfTrade dateOfSettlement dateOfSettlement conf.settlementMode
               exercise confCid Bidding.Delete
               create Trade with operator; agent = bondRegistrar; deliverer = bndBank; payer = conf.investor; settlementId; instructionIds; delivery = conf.asset; payment = aggregatePrice; status = Instructed; settlementMode = conf.settlementMode
           mapA settleConfirmation filtered
