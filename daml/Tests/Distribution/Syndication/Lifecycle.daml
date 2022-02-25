@@ -133,6 +133,32 @@ testBond2 = do
   ad4.asset.quantity === 44_000_000.0                                                      
   pure ()
 
+testBond3 : Script ()
+testBond3 = do
+  parties@Parties{..} <- setup
+  orig@Origination{..} <- origination parties
+  issuance parties orig
+  submitMulti [operator, payingAgent] [] do createCmd Lifecycle.Today with operator; provider = payingAgent; date = date 2021 Jan 15
+
+  let 
+    bond3Id = bond3Desc.assetId
+    bond3PayoutDates = [ date 2022 Jun 21, date 2022 Dec 20, date 2023 Jun 20, date 2023 Dec 20 ]
+
+  forA_ (zip bond3PayoutDates [1..length bond3PayoutDates]) (\(date, i) -> 
+    submitMulti [operator, payingAgent] [] do createCmd Lifecycle.Observation with provider = payingAgent; label = libor6m.label; value = 0.001 * intToDecimal i; ..)
+  forA_ bond3PayoutDates (\date -> do preNotify parties date bond3Id -- note that for floating rate bond pre-notification, we assume that the observables are alr created on exDivDate
+                                      lifecycle parties date bond3Id)
+
+  [(_, ad1)] <- queryFilter @AssetDeposit investor1 (\ad -> ad.asset.id.label == usd.assetId.label)
+  [(_, ad2)] <- queryFilter @AssetDeposit investor2 (\ad -> ad.asset.id.label == usd.assetId.label)
+  [(_, ad3)] <- queryFilter @AssetDeposit investor3 (\ad -> ad.asset.id.label == usd.assetId.label)
+  [(_, ad4)] <- queryFilter @AssetDeposit investor4 (\ad -> ad.asset.id.label == usd.assetId.label)
+  ad1.asset.quantity === 10_500_000.0
+  ad2.asset.quantity === 21_000_000.0
+  ad3.asset.quantity === 31_500_000.0
+  ad4.asset.quantity === 42_000_000.0                                      
+  pure ()
+
 lifecycleSnapshot : Parties -> Id -> RefId -> Script ()
 lifecycleSnapshot Parties{..} maxId snapshotRefId = do
   requestSnapshot operator payingAgent bondRegistrar maxId snapshotRefId
