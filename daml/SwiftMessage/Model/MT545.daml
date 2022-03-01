@@ -6,7 +6,7 @@ import SwiftMessage.Util
 -- DvP confirmation for buyer
 data MT545Details = MT545Details with
     messageType: MessageType -- NEWM    
-    settlementDetails: DvPSettlementDetails
+    dvpSettlementDetails: DvPSettlementDetails
   deriving (Eq, Show)
 
   
@@ -18,4 +18,4 @@ createMT545Details instrumentId qtyOfInstrument deliveringAgent receivingAgent s
   settledAmount settledCurrency 
   dateOfTrade dateOfSettlement effDateOfSettlement 
   senderMsgRef relatedMsgRef buyerSafekeepingAcc sellerSafekeepingAcc safekeepingPlace placeOfSettlement =
-    MT545Details with messageType = NEWM; settlementDetails = DvPSettlementDetails with settlementDetails = SettlementDetails with ..; ..
+    MT545Details with messageType = NEWM; dvpSettlementDetails = DvPSettlementDetails with settlementDetails = SettlementDetails with ..; ..
