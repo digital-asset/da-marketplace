@@ -31,12 +31,18 @@ data SettlementDetails = SettlementDetails with
     sellerSafekeepingAcc: Account -- seller's security account 
     safekeepingPlace: Text --  TOKENIZED INFRASTRUCTURE (placeholder)
     placeOfSettlement: Text --  TOKENIZED INFRASTRUCTURE (placeholder)
+
+    deliveringAgent: Party  -- security account provider for the buyer
+    receivingAgent: Party  -- security account provider for the seller 
+    seller: Party
+    buyer: Party
   deriving (Eq, Show)
 
 
 data DvPSettlementDetails = DvPSettlementDetails with
     settledAmount: Decimal -- notional
     settledCurrency: Id
+    settlementDetails: SettlementDetails
   deriving (Eq, Show)
 
 data CRDB = CRED | DEBT deriving (Eq, Show)

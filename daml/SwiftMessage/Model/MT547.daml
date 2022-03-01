@@ -6,19 +6,16 @@ import SwiftMessage.Util
 -- DvP confirmation for seller 
 data MT547Details = MT547Details with
     messageType: MessageType -- NEWM
-    
-    receivingAgent: Party  -- security account provider for the seller 
-    seller: Party
-    
-    valueDate: Date --  Value Date/Time at which cash becomes available to the account owner (in a credit entry), or cease to be available to the account owner (in a debit entry).
-
     settlementDetails: DvPSettlementDetails
+    valueDate: Date --  Value Date/Time at which cash becomes available to the account owner (in a credit entry), or cease to be available to the account owner (in a debit entry).
   deriving (Eq, Show)
 
-createMT547Details : Text -> Decimal -> Party -> Party -> Decimal -> Id
+createMT547Details : Text -> Decimal -> Party -> Party -> Party -> Party
+  -> Decimal -> Id
   -> Date -> Date -> Date -> Date
   -> Text -> Text -> Account -> Account -> Text -> Text -> MT547Details
-createMT547Details instrumentId qtyOfInstrument receivingAgent seller settledAmount settledCurrency 
+createMT547Details instrumentId qtyOfInstrument deliveringAgent receivingAgent seller buyer 
+  settledAmount settledCurrency 
   dateOfTrade dateOfSettlement effDateOfSettlement valueDate 
   senderMsgRef relatedMsgRef buyerSafekeepingAcc sellerSafekeepingAcc safekeepingPlace placeOfSettlement =
-    MT547Details with messageType = NEWM; settlementDetails = DvPSettlementDetails with .. ; ..
+    MT547Details with messageType = NEWM; settlementDetails = DvPSettlementDetails with settlementDetails = SettlementDetails with ..; ..; ..

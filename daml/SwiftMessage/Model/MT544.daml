@@ -7,18 +7,14 @@ import SwiftMessage.Util
 -- FoP confirmation for buyer
 data MT544Details = MT544Details with
     messageType: MessageType
-
-    deliveringAgent: Party  -- security account provider for the buyer
-    seller: Party
-    
     settlementDetails: SettlementDetails
   deriving (Eq, Show)
 
 
-createMT544Details : Text -> Decimal -> Party -> Party
+createMT544Details : Text -> Decimal -> Party -> Party -> Party -> Party
   -> Date -> Date -> Date 
   -> Text -> Text -> Account -> Account -> Text -> Text -> MT544Details
-createMT544Details instrumentId qtyOfInstrument deliveringAgent seller
+createMT544Details instrumentId qtyOfInstrument deliveringAgent receivingAgent seller buyer
   dateOfTrade dateOfSettlement effDateOfSettlement 
   senderMsgRef relatedMsgRef buyerSafekeepingAcc sellerSafekeepingAcc safekeepingPlace placeOfSettlement =
-    MT544Details with messageType = NEWM; settlementDetails = SettlementDetails with ..; ..
+    MT544Details with messageType = NEWM; settlementDetails = SettlementDetails with ..

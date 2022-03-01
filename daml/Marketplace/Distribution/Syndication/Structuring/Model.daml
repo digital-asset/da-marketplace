@@ -115,22 +115,24 @@ template Tranche
           sellerSafekeepingAcc = getAccount False sellerSettlementInfo seller
         if settlementMode == Dvp then do
           let 
-            mt545 = createMT545Details instrumentId settledQty buyerSafekeepingAcc.provider seller settledAmount settledCurrency
+            mt545 = createMT545Details instrumentId settledQty buyerSafekeepingAcc.provider sellerSafekeepingAcc.provider seller buyer
+                    settledAmount settledCurrency
                     dateOfTrade dateOfSettlement effDateOfSettlement
                     settlementId settlementId buyerSafekeepingAcc sellerSafekeepingAcc "safekeepingPlace" "placeOfSettlement"
 
-            mt547 = createMT547Details instrumentId settledQty sellerSafekeepingAcc.provider seller settledAmount settledCurrency
+            mt547 = createMT547Details instrumentId settledQty buyerSafekeepingAcc.provider sellerSafekeepingAcc.provider seller buyer
+                    settledAmount settledCurrency
                     dateOfTrade dateOfSettlement effDateOfSettlement dateOfSettlement
                     settlementId settlementId buyerSafekeepingAcc sellerSafekeepingAcc "safekeepingPlace" "placeOfSettlement"
           createNewSettlementMessage settlementId (MT545 mt545) MT545_t
           createNewSettlementMessage settlementId (MT547 mt547) MT547_t
         else do
           let
-            mt544 = createMT544Details instrumentId settledQty buyerSafekeepingAcc.provider seller
+            mt544 = createMT544Details instrumentId settledQty buyerSafekeepingAcc.provider buyerSafekeepingAcc.provider seller buyer
                     dateOfTrade dateOfSettlement effDateOfSettlement
                     settlementId settlementId buyerSafekeepingAcc sellerSafekeepingAcc "safekeepingPlace" "placeOfSettlement"
 
-            mt546 = createMT546Details instrumentId settledQty sellerSafekeepingAcc.provider seller
+            mt546 = createMT546Details instrumentId settledQty buyerSafekeepingAcc.provider sellerSafekeepingAcc.provider seller buyer
                     dateOfTrade dateOfSettlement effDateOfSettlement dateOfSettlement
                     settlementId settlementId buyerSafekeepingAcc sellerSafekeepingAcc "safekeepingPlace" "placeOfSettlement"
           createNewSettlementMessage settlementId (MT544 mt544) MT544_t
