@@ -46,10 +46,12 @@ template Trade
               exercise siCid SettleInstruction
           adCids <- mapA settle instructionIds
           tradeCid <- create this with status = Settled
-          finalizeSwiftMessage (operator, settlementId, MT544_t)
-          finalizeSwiftMessage (operator, settlementId, MT545_t)
-          finalizeSwiftMessage (operator, settlementId, MT546_t)
-          finalizeSwiftMessage (operator, settlementId, MT547_t)
+          if settlementMode == Dvp then do 
+            finalizeSwiftMessage (operator, settlementId, MT545_t)
+            finalizeSwiftMessage (operator, settlementId, MT547_t)
+          else do
+            finalizeSwiftMessage (operator, settlementId, MT544_t)
+            finalizeSwiftMessage (operator, settlementId, MT546_t)
           pure (tradeCid, adCids)
 
 template Delivery
