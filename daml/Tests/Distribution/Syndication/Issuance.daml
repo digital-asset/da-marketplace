@@ -21,17 +21,17 @@ issuance Parties{..} Origination{..} = do
   let dealId = "DEAL1"
   dealCid     <- createDeal operator structurer issuer dealId
   (dealCid, tranche1Cid) <- addTranche operator structurer issuer settlementBank bndBank bondRegistrar cashProvider payingAgent dealId "TRANCHE1" bond1.id usd.assetId 100_000_000.0 Dvp Dvp
-  (dealCid, tranche2Cid) <- addTranche operator structurer issuer settlementBank bndBank bondRegistrar cashProvider payingAgent dealId "TRANCHE2" bond2.id usd.assetId 100_000_000.0 Dvp Dvp
+  (dealCid, tranche2Cid) <- addTranche operator structurer issuer settlementBank bndBank bondRegistrar cashProvider payingAgent dealId "TRANCHE2" bond2.id usd.assetId 100_000_000.0 Fop Fop
   (dealCid, tranche3Cid) <- addTranche operator structurer issuer settlementBank bndBank bondRegistrar cashProvider payingAgent dealId "TRANCHE3" bond3.id usd.assetId 100_000_000.0 Dvp Dvp
 
   deposit operator cashProvider  issuer     14_000_000.0 usd.assetId
-  deposit operator cashProvider  lm1        30_000_000.0 usd.assetId
-  deposit operator cashProvider  lm2       300_000_000.0 usd.assetId
-  deposit operator cashProvider  lm3       300_000_000.0 usd.assetId
-  deposit operator lm1           investor1  30_000_000.0 (usd.assetId with signatories = singleton lm1)
-  deposit operator lm2           investor2  60_000_000.0 (usd.assetId with signatories = singleton lm2)
-  deposit operator lm3           investor3  90_000_000.0 (usd.assetId with signatories = singleton lm3)
-  deposit operator lm3           investor4  120_000_000.0 (usd.assetId with signatories = singleton lm3)
+  deposit operator cashProvider  lm1        20_000_000.0 usd.assetId
+  deposit operator cashProvider  lm2       200_000_000.0 usd.assetId
+  deposit operator cashProvider  lm3       200_000_000.0 usd.assetId
+  deposit operator lm1           investor1  20_000_000.0 (usd.assetId with signatories = singleton lm1)
+  deposit operator lm2           investor2  40_000_000.0 (usd.assetId with signatories = singleton lm2)
+  deposit operator lm3           investor3  60_000_000.0 (usd.assetId with signatories = singleton lm3)
+  deposit operator lm3           investor4  80_000_000.0 (usd.assetId with signatories = singleton lm3)
 
   issue operator bondRegistrar issuer "BOND1-Issuance" tranche1Cid
   issue operator bondRegistrar issuer "BOND2-Issuance" tranche2Cid
@@ -71,16 +71,16 @@ issuance Parties{..} Origination{..} = do
   closeBook operator structurer issuer dealId "TRANCHE3" allocations offeredPrice
 
   confirmation11Cid <- confirm investor1 dealId "TRANCHE1" Dvp
-  confirmation12Cid <- confirm investor1 dealId "TRANCHE2" Dvp
+  confirmation12Cid <- confirm investor1 dealId "TRANCHE2" Fop
   confirmation13Cid <- confirm investor1 dealId "TRANCHE3" Dvp
   confirmation21Cid <- confirm investor2 dealId "TRANCHE1" Dvp
-  confirmation22Cid <- confirm investor2 dealId "TRANCHE2" Dvp
+  confirmation22Cid <- confirm investor2 dealId "TRANCHE2" Fop
   confirmation23Cid <- confirm investor2 dealId "TRANCHE3" Dvp
   confirmation31Cid <- confirm investor3 dealId "TRANCHE1" Dvp
-  confirmation32Cid <- confirm investor3 dealId "TRANCHE2" Dvp
+  confirmation32Cid <- confirm investor3 dealId "TRANCHE2" Fop
   confirmation33Cid <- confirm investor3 dealId "TRANCHE3" Dvp
   confirmation41Cid <- confirm investor4 dealId "TRANCHE1" Dvp
-  confirmation42Cid <- confirm investor4 dealId "TRANCHE2" Dvp
+  confirmation42Cid <- confirm investor4 dealId "TRANCHE2" Fop
   confirmation43Cid <- confirm investor4 dealId "TRANCHE3" Dvp
 
   let
