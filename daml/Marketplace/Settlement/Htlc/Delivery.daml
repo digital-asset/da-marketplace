@@ -12,7 +12,8 @@ data HtlcState = Locked | Settled | Refunded
 template Delivery
   with
     operator : Party
-    agent : Party
+    senderAgent : Party
+    receiverAgent : Party
     sender : Party
     receiver : Party
     settlementId : Text
@@ -23,12 +24,12 @@ template Delivery
     expiry : Time
   where
     signatory operator
-    observer agent
+    observer senderAgent, receiverAgent
 
     key (operator, settlementId) : (Party, Text)
     maintainer key._1
 
-    controller agent can
+    controller receiverAgent can
       Settle : (ContractId Delivery, [ContractId AssetDeposit])
         with
           secret : Text
@@ -49,6 +50,7 @@ template Delivery
           deliveryCid <- create this with status = Settled
           pure (deliveryCid, adCids)
 
+    controller senderAgent can
       Refund : (ContractId Delivery, [ContractId AssetDeposit])
         do
           time <- getTime

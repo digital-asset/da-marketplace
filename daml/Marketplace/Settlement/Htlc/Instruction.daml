@@ -11,7 +11,8 @@ type T = Instruction
 template Instruction
   with
     operator : Party
-    agent : Party
+    senderAgent : Party
+    receiverAgent : Party
     sender : Party
     receiver : Party
     signed : [Party]
@@ -25,12 +26,12 @@ template Instruction
     expiry : Time
   where
     signatory operator, signed
-    observer agent, sender, receiver
+    observer senderAgent, receiverAgent, sender, receiver
 
     key (operator, settlementId, instructionId) : (Party, Text, Text)
     maintainer key._1
 
-    controller sender can
+    controller senderAgent can
       Allocate : ContractId Instruction
         with
           settlementDepositCid : ContractId AssetDeposit
@@ -39,7 +40,7 @@ template Instruction
           deposit.asset === asset
           deposit.account === senderAccount
           depositCid <- exercise settlementDepositCid AssetDeposit_Lock with newLockers = fromList [operator]
-          depositCid <- Some <$> exercise depositCid AssetDeposit_SetObservers with newObservers = fromList [agent]
+          depositCid <- Some <$> exercise depositCid AssetDeposit_SetObservers with newObservers = fromList [receiverAgent]
           create this with depositCid; signed = sender :: signed
 
       Refund : ContractId AssetDeposit
@@ -56,7 +57,7 @@ template Instruction
         do
           create this with signed = receiver :: signed
 
-    controller agent can
+    controller receiverAgent can
       Settle : ContractId AssetDeposit
         with
           secret : Text
