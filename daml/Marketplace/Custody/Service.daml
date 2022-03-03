@@ -51,7 +51,7 @@ template Service
         do
           Custody.OpenAccountRequest{label} <- fetchAndArchive requestCid
           let account = Account with id = (Id with signatories = fromList [provider, customer]; label; version = 0); provider; owner = customer
-          create Custody.AccountInfo with operator; provider; customer; account
+          create Custody.AccountInfo with operator; account
 
       nonconsuming CloseAccount : ()
         with

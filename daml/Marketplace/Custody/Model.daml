@@ -77,11 +77,9 @@ template SettlementInfo
 template AccountInfo
   with
     operator : Party
-    provider : Party
-    customer : Party
     account : Account
   where
-    signatory operator, provider, customer
+    signatory operator, account.provider, account.owner
 
 template OpenAccountRequest
   with
