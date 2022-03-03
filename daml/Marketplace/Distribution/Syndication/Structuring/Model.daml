@@ -5,6 +5,8 @@ import DA.Set (fromList)
 import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Distribution.Syndication.Bidding.Model qualified as Bidding
 import Marketplace.Settlement.Hierarchical (createInstructions, getAccount, Trade(..), Status(..), SettlementMode(..))
+import Marketplace.Settlement.Htlc.Trade qualified as Htlc
+import Marketplace.Settlement.Htlc.Util (createInstructionsHtlc, HtlcState(..))
 import Marketplace.Issuance.Instrument.Model(Bond(..))
 import SwiftMessage.Message (SwiftMessage(MT547), SwiftMessage(MT545), SwiftMessage(MT544), SwiftMessage(MT546), SwiftMessageType(..), SwiftOutboundMessage(..))
 import SwiftMessage.Model.MT544
@@ -101,7 +103,7 @@ template Tranche
     -- helper fuction to send swift message
     let
       createNewSettlementMessage: Text -> SwiftMessage -> SwiftMessageType -> Update (ContractId SwiftOutboundMessage)
-      createNewSettlementMessage referenceId swiftMessage swiftMessageType = 
+      createNewSettlementMessage referenceId swiftMessage swiftMessageType =
         create SwiftOutboundMessage with provider = operator; consumer = operator; status = Pending; observers = fromList [bondRegistrar]; ..
 
       sendSwiftMessage : Party -> Party -> Decimal -> Decimal -> Id -> Text -> Date -> Date -> Date -> SettlementMode -> Update ()
@@ -114,7 +116,7 @@ template Tranche
           buyerSafekeepingAcc = getAccount False receiverSettlementInfo buyer
           sellerSafekeepingAcc = getAccount False sellerSettlementInfo seller
         if settlementMode == Dvp then do
-          let 
+          let
             mt545 = createMT545Details instrumentId settledQty buyerSafekeepingAcc.provider sellerSafekeepingAcc.provider seller buyer
                     settledAmount settledCurrency
                     dateOfTrade dateOfSettlement effDateOfSettlement
@@ -153,12 +155,12 @@ template Tranche
             settlementId = deliveryId.label <> "-" <> partyToText issuer <> "-" <> partyToText settlementBank
           (_, issuerSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, issuer)
           (_, settlementBankSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, settlementBank)
-          
-          let 
+
+          let
             issuerSecuritiesAccount = getAccount False issuerSettlementInfo issuer
             settlementBankSecuritiesAccount = getAccount False settlementBankSettlementInfo settlementBank
           bondSis <- createInstructions False operator bondRegistrar bondRegistrar issuerSecuritiesAccount settlementBankSecuritiesAccount settlementId 0 totalAsset
-          
+
           instructionIds <-
             if issuerSettlementMode == Dvp
             then do
@@ -167,10 +169,56 @@ template Tranche
                 settlementBankCashAccount = getAccount True settlementBankSettlementInfo settlementBank
               cashSis <- createInstructions True operator bondRegistrar cashProvider settlementBankCashAccount issuerCashAccount settlementId (length bondSis) totalPrice
               map (.instructionId) <$> mapA fetch (bondSis <> cashSis)
-            else do
+            else if issuerSettlementMode == Fop
+            then do
               map (.instructionId) <$> mapA fetch bondSis
+            else do
+              fail "InstructIssuerSettlement cannot be used with issuerSettlementMode = Htlc"
           sendSwiftMessage issuer settlementBank size settledAmount paymentId settlementId dateOfTrade dateOfSettlement dateOfSettlement issuerSettlementMode
           create Trade with operator; agent = bondRegistrar; deliverer = issuer; payer = settlementBank; settlementId; instructionIds; delivery = totalAsset; payment = totalPrice; status = Instructed; settlementMode = issuerSettlementMode
+
+      nonconsuming InstructIssuerSettlementHtlc : ContractId Htlc.Trade
+        with
+          price : Decimal
+          dateOfTrade : Date
+          dateOfSettlement : Date
+          hashlock : Text
+          expiry : Time
+        do
+          let
+            settledAmount = size * price
+            totalAsset = Asset with id = deliveryId; quantity = size
+            totalPrice = Asset with id = paymentId; quantity = settledAmount
+            settlementId = deliveryId.label <> "-" <> partyToText issuer <> "-" <> partyToText settlementBank
+          (_, issuerSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, issuer)
+          (_, settlementBankSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, settlementBank)
+
+          let
+            issuerSecuritiesAccount = getAccount False issuerSettlementInfo issuer
+            settlementBankSecuritiesAccount = getAccount False settlementBankSettlementInfo settlementBank
+          bondSis <- createInstructionsHtlc False operator bondRegistrar issuer issuerSecuritiesAccount settlementBank settlementBankSecuritiesAccount settlementId 0 totalAsset hashlock expiry
+
+          instructionIds <-
+            if issuerSettlementMode == Htlc
+            then do
+              map (.instructionId) <$> mapA fetch bondSis
+            else do
+              fail "InstructIssuerSettlementHtlc can only be used with issuerSettlementMode = Htlc"
+          create Htlc.Trade
+            with
+              operator
+              deliverer = issuer
+              delivererAgent = issuer
+              payer = settlementBank
+              payerAgent = settlementBank
+              settlementId
+              instructionIds
+              delivery = totalAsset
+              payment = totalPrice
+              status = Locked
+              settlementMode = issuerSettlementMode
+              hashlock
+              expiry
 
       nonconsuming InstructBndSettlement : ContractId Trade
         with

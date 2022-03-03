@@ -3,6 +3,8 @@ module Tests.Distribution.Syndication.Issuance where
 import Daml.Script
 import DA.Date (Month(Dec), date)
 import DA.Set (singleton)
+import DA.Text (sha256)
+import DA.Time (addRelTime, hours)
 import Marketplace.Distribution.Syndication.Structuring.Model qualified as Structuring
 import Marketplace.Settlement.Hierarchical (SettlementMode(..))
 import Tests.Distribution.Syndication.Origination (origination, Origination(..))
@@ -22,7 +24,7 @@ issuance Parties{..} Origination{..} = do
   dealCid     <- createDeal operator structurer issuer dealId
   (dealCid, tranche1Cid) <- addTranche operator structurer issuer settlementBank bndBank bondRegistrar cashProvider payingAgent dealId "TRANCHE1" bond1.id usd.assetId 100_000_000.0 Dvp Dvp
   (dealCid, tranche2Cid) <- addTranche operator structurer issuer settlementBank bndBank bondRegistrar cashProvider payingAgent dealId "TRANCHE2" bond2.id usd.assetId 100_000_000.0 Fop Fop
-  (dealCid, tranche3Cid) <- addTranche operator structurer issuer settlementBank bndBank bondRegistrar cashProvider payingAgent dealId "TRANCHE3" bond3.id usd.assetId 100_000_000.0 Dvp Dvp
+  (dealCid, tranche3Cid) <- addTranche operator structurer issuer settlementBank bndBank bondRegistrar cashProvider payingAgent dealId "TRANCHE3" bond3.id usd.assetId 100_000_000.0 Htlc Dvp
 
   deposit operator cashProvider  issuer     14_000_000.0 usd.assetId
   deposit operator cashProvider  lm1        20_000_000.0 usd.assetId
@@ -92,12 +94,20 @@ issuance Parties{..} Origination{..} = do
     dateOfTrade = dateOfSettlement
 
   -- Step 1
+  now <- getTime
+  let
+    secret = "mysecret"
+    hashlock = sha256 secret
+    expiry = addRelTime now $ hours 1
   dvpCid11 <- submit operator do exerciseCmd tranche1Cid Structuring.InstructIssuerSettlement with price; dateOfSettlement; dateOfTrade
   dvpCid12 <- submit operator do exerciseCmd tranche2Cid Structuring.InstructIssuerSettlement with price; dateOfSettlement; dateOfTrade
-  dvpCid13 <- submit operator do exerciseCmd tranche3Cid Structuring.InstructIssuerSettlement with price; dateOfSettlement; dateOfTrade
+  dvpCid13 <- submit operator do exerciseCmd tranche3Cid Structuring.InstructIssuerSettlementHtlc with price; dateOfSettlement; dateOfTrade; hashlock; expiry
   allocateInstructions [ issuer, custodian2, settlementBank ]
+  allocateInstructionsHtlc [ issuer, custodian2 ]
   signInstructions [ issuer, custodian2, settlementBank ]
-  settleTrades bondRegistrar [ dvpCid11, dvpCid12, dvpCid13 ]
+  signInstructionsHtlc [ custodian2, settlementBank ]
+  settleTrades bondRegistrar [ dvpCid11, dvpCid12 ]
+  settleTradeHtlc settlementBank (secret, dvpCid13)
 
   -- Step 2
   dvpCid21 <- submit operator do exerciseCmd tranche1Cid Structuring.InstructBndSettlement with price; dateOfSettlement; dateOfTrade

@@ -31,7 +31,7 @@ template Instruction
     key (operator, settlementId, instructionId) : (Party, Text, Text)
     maintainer key._1
 
-    controller senderAgent can
+    controller sender can
       Allocate : ContractId Instruction
         with
           settlementDepositCid : ContractId AssetDeposit
