@@ -1,0 +1,20 @@
+module SwiftMessage.Model.MT544 where
+
+import DA.Finance.Types
+import SwiftMessage.Util
+
+
+-- FoP confirmation for buyer
+data MT544Details = MT544Details with
+    messageType: MessageType
+    settlementDetails: SettlementDetails
+  deriving (Eq, Show)
+
+
+createMT544Details : Text -> Decimal -> Party -> Party -> Party -> Party
+  -> Date -> Date -> Date 
+  -> Text -> Text -> Account -> Account -> Text -> Text -> MT544Details
+createMT544Details instrumentId qtyOfInstrument deliveringAgent receivingAgent seller buyer
+  dateOfTrade dateOfSettlement effDateOfSettlement 
+  senderMsgRef relatedMsgRef buyerSafekeepingAcc sellerSafekeepingAcc safekeepingPlace placeOfSettlement =
+    MT544Details with messageType = NEWM; settlementDetails = SettlementDetails with ..

@@ -19,6 +19,7 @@ import Marketplace.Utils
 import SwiftMessage.Message (SwiftMessage(MT564), SwiftMessageType(..), SwiftOutboundMessage(..))
 import SwiftMessage.Model.MT564
 import SwiftMessage.Util
+import DA.Optional (whenSome)
 
 type Claims = Claim Date Decimal Id
 
@@ -76,17 +77,30 @@ template Service
               getPayoutDate serializedClaims = 
                 head $ fixings $ deserialize serializedClaims
             
-              getPayoutRate : Claims -> Decimal
+              getPayoutRate : Claims -> Update Decimal
               getPayoutRate serializedClaims = 
+                let getObserveRate label = do
+                    (_, observation) <- fetchByKey @Observation (operator, payingAgent, label, exDivDate)
+                    pure observation.value in
                 let (comingPayout, id) = head $ payoffs $ deserialize serializedClaims in
                 case comingPayout of
-                  Ob.Const v -> v
-                  other  -> error $ "Cannot find payout rate: " <> show other 
+                  Ob.Const rate -> pure rate
+                  Ob.Add (Ob.Observe k, Ob.Const spread) -> do
+                      observeRate <- getObserveRate k
+                      pure $ observeRate + spread
+                  other -> error $ "Cannot find payout rate with observation: " <> show other
+
+              createNewPrenotificationSwiftMessage : Text -> Party -> Party -> MT564Details -> Update (ContractId SwiftOutboundMessage)
+              createNewPrenotificationSwiftMessage referenceId provider consumer mt564 = do
+                let swiftMessageType = MT564_t
+                currentReport <- (lookupByKey @SwiftOutboundMessage (operator, referenceId, swiftMessageType))
+                whenSome currentReport archive
+                create SwiftOutboundMessage with swiftMessage=MT564 (mt564); status=Finalized; observers=empty; ..
               
               sendMessageForSnapshot : Snapshot -> Update (ContractId SwiftOutboundMessage)
               sendMessageForSnapshot snapshot = do                
                   let buyer = snapshot.deposit.account.owner
-                  let assetId = snapshot.assetId
+                      assetId = snapshot.assetId
                   (_, bond) <- fetchByKey @Instrument.Bond (fromList [issuer, bondRegistrar], assetId.label)
                   (_, description) <- fetchByKey @AssetDescription.T assetId
                   (_, settlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, buyer)
@@ -98,14 +112,16 @@ template Service
                     maturityDate = bond.maturityDate
                     payoutDate = getPayoutDate claims
                     redemptionDate = getRedemptionDate maturityDate payoutDate
-                    faceAmount = asset.quantity * (getPayoutRate claims)
+                  payoutRate <- getPayoutRate claims
+                  let
+                    faceAmount = asset.quantity * payoutRate
                     buyerSafekeepingAcc = getAccount False settlementInfo buyer
                     buyerCashAcc = getAccount True settlementInfo buyer
                     mt564 = createMT564Details instrumentId asset.id description.cfi issuer buyerSafekeepingAcc buyerCashAcc CRED faceAmount currency maturityDate payoutDate redemptionDate exDivDate
                     mt564_redempt = (\_ -> createMT564Details instrumentId asset.id description.cfi issuer buyerSafekeepingAcc buyerCashAcc CRED asset.quantity currency maturityDate payoutDate redemptionDate exDivDate) <$> redemptionDate          
-                    refId = PayoutRefId with receiver = buyer; isRedempt = False; ..
-                  mapA_ (\mt564_r -> create SwiftOutboundMessage with referenceId = show (refId with isRedempt = True); provider = operator ; consumer = operator; swiftMessage=MT564 (mt564_r); swiftMessageType=MT564_t; status=Finalized; observers=empty) mt564_redempt
-                  create SwiftOutboundMessage with referenceId = show refId; provider = operator ; consumer = operator; swiftMessage=MT564 (mt564); swiftMessageType=MT564_t; status=Finalized; observers=empty
+                    createRefId isRedempt = PayoutRefId with receiver = buyer; ..
+                  mapA_ (\mt564_r -> createNewPrenotificationSwiftMessage (show $ createRefId True) operator operator mt564_r) mt564_redempt
+                  createNewPrenotificationSwiftMessage (show $ createRefId False) operator operator mt564
           snapshots <- mapA fetch snapshotCids
           mapA_ (`exercise` Delete) snapshotCids
           mapA sendMessageForSnapshot snapshots
