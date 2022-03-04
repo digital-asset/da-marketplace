@@ -180,21 +180,21 @@ originateSwap operator provider customer observers swap = do
 
 issue : Party -> Party -> Party -> Text -> ContractId Structuring.Tranche -> Script (ContractId AssetDeposit)
 issue operator provider customer issuanceId trancheCid = do
-  (_, Custody.AccountInfo{account}) <- head <$> queryFilter @Custody.AccountInfo customer (\info -> info.provider == provider && info.customer == customer)
+  (_, Custody.AccountInfo{account}) <- head <$> queryFilter @Custody.AccountInfo customer (\info -> info.account.provider == provider && info.account.owner == customer)
   createIssuanceRequestCid <- submit customer do exerciseByKeyCmd @Issuance.Service (operator, provider, customer) Issuance.RequestCreateIssuance with ..
   snd <$> submit provider do exerciseByKeyCmd @Issuance.Service (operator, provider, customer) Issuance.CreateIssuance with createIssuanceRequestCid
 
 deposit : Party -> Party -> Party -> Decimal -> Id -> Script (ContractId AssetDeposit)
 deposit operator provider customer quantity assetId = do
   let asset = Asset with id = assetId; quantity
-  (_, Custody.AccountInfo{account}) <- head <$> queryFilter @Custody.AccountInfo customer (\info -> info.provider == provider && info.customer == customer)
+  (_, Custody.AccountInfo{account}) <- head <$> queryFilter @Custody.AccountInfo customer (\info -> info.account.provider == provider && info.account.owner == customer)
   depositRequestCid <- submitMulti [customer] [] do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.RequestDeposit with asset; account; depositChannel = Custody.ONLEDGER
   submit provider do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.Deposit with depositRequestCid
 
 depositToAccount : Party -> Party -> Party -> Text -> Decimal -> Id -> Script (ContractId AssetDeposit)
 depositToAccount operator provider customer accountLabel quantity assetId = do
   let asset = Asset with id = assetId; quantity
-  (_, Custody.AccountInfo{account}) <- head <$> queryFilter @Custody.AccountInfo customer (\info -> info.provider == provider && info.customer == customer && info.account.id.label == accountLabel)
+  (_, Custody.AccountInfo{account}) <- head <$> queryFilter @Custody.AccountInfo customer (\info -> info.account.provider == provider && info.account.owner == customer && info.account.id.label == accountLabel)
   depositRequestCid <- submitMulti [customer] [] do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.RequestDeposit with asset; account; depositChannel = Custody.ONLEDGER
   submit provider do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.Deposit with depositRequestCid
 
