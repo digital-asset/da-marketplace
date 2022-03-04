@@ -3,6 +3,7 @@ module Marketplace.Custody.Service where
 import DA.Finance.Asset
 import DA.Finance.Types
 import DA.Finance.Utils (fetchAndArchive)
+import DA.Set qualified as Set
 import DA.Map qualified as M
 import DA.Set (empty, fromList)
 import Marketplace.Custody.Model qualified as Custody
@@ -108,8 +109,9 @@ template Service
     choice Terminate : ()
       with
         ctrl : Party
-      controller ctrl
-      do pure ()
+      controller ctrl 
+      do
+        assertMsg ("only provider:" <> partyToText provider <> "or customer" <> partyToText customer <> "is allowed to terminate") (ctrl `Set.member` Set.fromList [provider, customer])
 
 template Offer
   with

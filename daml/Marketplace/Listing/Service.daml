@@ -1,7 +1,7 @@
 module Marketplace.Listing.Service where
 
 import DA.Finance.Types
-import DA.Set (Set, fromList)
+import DA.Set qualified as Set
 import Marketplace.Clearing.Market.Service qualified as Clearing
 import Marketplace.Trading.Error qualified as Error
 import Marketplace.Listing.Model ( ListingType(..), Listing(..), Status(..))
@@ -37,9 +37,9 @@ template Service
         do
           listingType <- case listingType of
             CollateralizedRequest -> return Collateralized
-            (ClearedRequest p)    -> Cleared p <$> (exerciseByKey @Clearing.Service (operator, p, customer) Clearing.ApproveClearedListing with observers = fromList observers; ..)
+            (ClearedRequest p)    -> Cleared p <$> (exerciseByKey @Clearing.Service (operator, p, customer) Clearing.ApproveClearedListing with observers = Set.fromList observers; ..)
 
-          create CreateListingRequest with status = Active; observers = fromList observers; ..
+          create CreateListingRequest with status = Active; observers = Set.fromList observers; ..
 
       nonconsuming RequestDisableListing : ContractId DisableListingRequest
         with
@@ -84,7 +84,9 @@ template Service
       with
         ctrl : Party
       controller ctrl
-      do pure ()
+      do
+        assertMsg ("only provider:" <> partyToText provider <> "or customer" <> partyToText customer <> "is allowed to terminate") (ctrl `Set.member` Set.fromList [provider, customer])
+        pure ()
 
 template Offer
   with
@@ -145,7 +147,7 @@ template CreateListingRequest
     minimumTradableQuantity : Decimal
     maximumTradableQuantity : Decimal
     status : Status
-    observers : Set Party
+    observers : Set.Set Party
   where
     signatory operator, provider, customer
 

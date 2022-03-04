@@ -79,7 +79,7 @@ template Service
         ctrl : Party
       controller ctrl
       do
-        pure ()
+        assertMsg ("only provider:" <> partyToText provider <> "or customer" <> partyToText customer <> "is allowed to terminate") (ctrl `Set.member` Set.fromList [provider, customer])
 
 template Offer
   with
