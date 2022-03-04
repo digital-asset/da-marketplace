@@ -94,6 +94,7 @@ data ReportDetail = ReportDetail with
 data ReportDetails = ReportDetails with
     safekeepingAccount: Account
     reportDate: Date
+    prevBusinessDate: Date
     reportDetails: [ReportDetail]
   deriving (Eq, Show)
   
