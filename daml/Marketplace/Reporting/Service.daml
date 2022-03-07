@@ -70,7 +70,7 @@ template Service
                 reportDetails = map (\(ReportDetailKey{..}, totalQuantityToday) -> 
                   let prevDayTotalQuantity : Optional Decimal = (fmap totalQuantity . find (\preDayDetail -> preDayDetail.assetId == assetId)) =<< prevDayReportDetailsOpt
                         in ReportDetail with totalQuantity = totalQuantityToday; ..) depositGroup
-              pure $ if isCashReporting then (refId, MT940 (createMT940Details account reportDetails today), messageType) else (refId, MT535 (createMT535Details account reportDetails today), messageType)
+              pure $ if isCashReporting then (refId, MT940 (createMT940Details account reportDetails today prevDate), messageType) else (refId, MT535 (createMT535Details account reportDetails today prevDate), messageType)
             
             groupSortOn f = (groupOn f . sortOn f)
             groupedDeposits = groupSortOn (\deposit -> (deposit.account.id, deposit.asset.id)) deposits
