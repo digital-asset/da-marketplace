@@ -2,10 +2,11 @@
 
 module Marketplace.Clearing.Service where
 
-import DA.Set qualified as Set
-
 import DA.Finance.Asset
 import DA.Finance.Types
+import DA.Set qualified as Set
+import DA.Text qualified as Text
+
 
 import Marketplace.Clearing.Model
 import Marketplace.Clearing.Utils
@@ -181,7 +182,8 @@ template Service
         ctrl : Party
       controller ctrl
       do
-        assertMsg ("only provider:" <> partyToText provider <> "or customer" <> partyToText customer <> "is allowed to terminate") (ctrl `Set.member` Set.fromList [provider, customer])
+        let ctrls = [operator, provider, customer]
+        assertMsg (Text.intercalate "," $ map partyToText ctrls) (ctrl `Set.member` Set.fromList ctrls)
         (standingCid,_) <- fetchByKey @MemberStanding (provider,customer)
         archive standingCid
 

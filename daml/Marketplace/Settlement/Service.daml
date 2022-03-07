@@ -1,6 +1,8 @@
 module Marketplace.Settlement.Service where
 
 import DA.Finance.Asset (AssetDeposit)
+import DA.Set qualified as Set
+import DA.Text qualified as Text
 import Marketplace.Settlement.Model (SettlementInstruction(..), Settle(..))
 import Marketplace.Utils
 
@@ -23,9 +25,13 @@ template Service
         do
           exercise settlementInstructionCid Settle
 
-    controller operator can
-      Terminate : ()
-        do return ()
+    choice Terminate : ()
+      with
+        ctrl : Party
+      controller ctrl 
+      do
+        let ctrls = [operator, provider]
+        assertMsg (Text.intercalate "," $ map partyToText ctrls) (ctrl `Set.member` Set.fromList ctrls)
 
 template Offer
   with

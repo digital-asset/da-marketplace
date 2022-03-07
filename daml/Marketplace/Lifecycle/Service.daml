@@ -8,7 +8,8 @@ import ContingentClaims.Util (fixings, payoffs)
 import DA.Finance.Types (Id)
 import DA.Foldable (mapA_)
 import DA.List (head)
-import DA.Set (empty, fromList)
+import DA.Optional (whenSome)
+import DA.Set qualified as Set
 import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Issuance.AssetDescription qualified as AssetDescription
 import Marketplace.Issuance.Instrument.Model qualified as Instrument
@@ -19,7 +20,6 @@ import Marketplace.Utils
 import SwiftMessage.Message (SwiftMessage(MT564), SwiftMessageType(..), SwiftOutboundMessage(..))
 import SwiftMessage.Model.MT564
 import SwiftMessage.Util
-import DA.Optional (whenSome)
 
 type Claims = Claim Date Decimal Id
 
@@ -95,13 +95,13 @@ template Service
                 let swiftMessageType = MT564_t
                 currentReport <- (lookupByKey @SwiftOutboundMessage (operator, referenceId, swiftMessageType))
                 whenSome currentReport archive
-                create SwiftOutboundMessage with swiftMessage=MT564 (mt564); status=Finalized; observers=empty; ..
+                create SwiftOutboundMessage with swiftMessage=MT564 (mt564); status=Finalized; observers=Set.empty; ..
               
               sendMessageForSnapshot : Snapshot -> Update (ContractId SwiftOutboundMessage)
               sendMessageForSnapshot snapshot = do                
                   let buyer = snapshot.deposit.account.owner
                       assetId = snapshot.assetId
-                  (_, bond) <- fetchByKey @Instrument.Bond (fromList [issuer, bondRegistrar], assetId.label)
+                  (_, bond) <- fetchByKey @Instrument.Bond (Set.fromList [issuer, bondRegistrar], assetId.label)
                   (_, description) <- fetchByKey @AssetDescription.T assetId
                   (_, settlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, buyer)
                   let                  
