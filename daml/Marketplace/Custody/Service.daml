@@ -113,7 +113,7 @@ template Service
       controller ctrl 
       do
         let ctrls = [operator, provider, customer]
-        assertMsg (Text.intercalate "," $ map partyToText ctrls) (ctrl `Set.member` Set.fromList ctrls)
+        assertMsg  ("Only " <> Text.intercalate "," (map partyToText ctrls) <> " are allowed to terminate") (ctrl `Set.member` Set.fromList ctrls)
         
 
 template Offer
