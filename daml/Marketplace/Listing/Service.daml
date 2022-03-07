@@ -2,6 +2,7 @@ module Marketplace.Listing.Service where
 
 import DA.Finance.Types
 import DA.Set qualified as Set
+import DA.Text qualified as Text
 import Marketplace.Clearing.Market.Service qualified as Clearing
 import Marketplace.Trading.Error qualified as Error
 import Marketplace.Listing.Model ( ListingType(..), Listing(..), Status(..))
@@ -85,8 +86,8 @@ template Service
         ctrl : Party
       controller ctrl
       do
-        assertMsg ("only provider:" <> partyToText provider <> "or customer" <> partyToText customer <> "is allowed to terminate") (ctrl `Set.member` Set.fromList [provider, customer])
-        pure ()
+        let ctrls = [operator, provider, customer]
+        assertMsg  ("Only " <> Text.intercalate "," (map partyToText ctrls) <> " are allowed to terminate") (ctrl `Set.member` Set.fromList ctrls)
 
 template Offer
   with

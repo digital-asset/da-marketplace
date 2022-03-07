@@ -2,6 +2,7 @@ module Marketplace.Trading.Otc.Service where
 
 import DA.Finance.Types (Asset)
 import DA.Set qualified as Set
+import DA.Text qualified as Text
 import Marketplace.Settlement.Hierarchical (SettlementMode)
 import Marketplace.Trading.Model (Side(..))
 import Marketplace.Trading.Otc.Model qualified as Trading
@@ -57,10 +58,10 @@ template Service
     choice Terminate : ()
       with
         ctrl : Party
-      controller ctrl        
+      controller ctrl
       do
-        assertMsg ("only provider:" <> partyToText provider <> "or customer" <> partyToText customer <> "is allowed to terminate") (ctrl `Set.member` Set.fromList [provider, customer])
-        pure ()
+        let ctrls = [operator, provider, customer]
+        assertMsg  ("Only " <> Text.intercalate "," (map partyToText ctrls) <> " are allowed to terminate") (ctrl `Set.member` Set.fromList ctrls)
 
 template Offer
   with

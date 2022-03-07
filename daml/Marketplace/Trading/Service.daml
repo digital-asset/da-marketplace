@@ -1,10 +1,11 @@
 module Marketplace.Trading.Service where
 
+import DA.Finance.Asset (AssetDeposit, AssetDeposit_Lock(..), AssetDeposit_Unlock(..))
+import DA.Finance.Utils (fetchAndArchive)
 import DA.Foldable (sequence_)
 import DA.Optional (whenSome)
 import DA.Set qualified as Set
-import DA.Finance.Asset (AssetDeposit, AssetDeposit_Lock(..), AssetDeposit_Unlock(..))
-import DA.Finance.Utils (fetchAndArchive)
+import DA.Text qualified as Text
 import Marketplace.Custody.Service qualified as Custody
 import Marketplace.Trading.Model qualified as Order
 import Marketplace.Clearing.Service qualified as Clearing
@@ -184,8 +185,8 @@ template Service
         ctrl : Party
       controller ctrl
       do
-        assertMsg ("only provider:" <> partyToText provider <> "or customer" <> partyToText customer <> "is allowed to terminate") (ctrl `Set.member` Set.fromList [provider, customer])
-        pure ()
+        let ctrls = [operator, provider, customer]
+        assertMsg  ("Only " <> Text.intercalate "," (map partyToText ctrls) <> " are allowed to terminate") (ctrl `Set.member` Set.fromList ctrls)
 
 template Offer
   with

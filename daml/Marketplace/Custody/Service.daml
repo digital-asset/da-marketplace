@@ -4,6 +4,7 @@ import DA.Finance.Asset
 import DA.Finance.Types
 import DA.Finance.Utils (fetchAndArchive)
 import DA.Set qualified as Set
+import DA.Text qualified as Text
 import DA.Map qualified as M
 import DA.Set (empty, fromList)
 import Marketplace.Custody.Model qualified as Custody
@@ -111,7 +112,9 @@ template Service
         ctrl : Party
       controller ctrl 
       do
-        assertMsg ("only provider:" <> partyToText provider <> "or customer" <> partyToText customer <> "is allowed to terminate") (ctrl `Set.member` Set.fromList [provider, customer])
+        let ctrls = [operator, provider, customer]
+        assertMsg  ("Only " <> Text.intercalate "," (map partyToText ctrls) <> " are allowed to terminate") (ctrl `Set.member` Set.fromList ctrls)
+        
 
 template Offer
   with
