@@ -189,7 +189,7 @@ template Tranche
             settledAmount = size * price
             totalAsset = Asset with id = deliveryId; quantity = size
             totalPrice = Asset with id = paymentId; quantity = settledAmount
-            settlementId = deliveryId.label <> "-" <> partyToText issuer <> "-" <> partyToText settlementBank
+            settlementId = deliveryId.label <> "-" <> partyToText settlementBank <> "-" <> partyToText bndBank
           (_, issuerSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, issuer)
           (_, settlementBankSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, settlementBank)
 
@@ -204,21 +204,7 @@ template Tranche
               map (.instructionId) <$> mapA fetch bondSis
             else do
               fail "InstructIssuerSettlementHtlc can only be used with issuerSettlementMode = Htlc"
-          create Htlc.Trade
-            with
-              operator
-              deliverer = issuer
-              delivererAgent = issuer
-              payer = settlementBank
-              payerAgent = settlementBank
-              settlementId
-              instructionIds
-              delivery = totalAsset
-              payment = totalPrice
-              status = Locked
-              settlementMode = issuerSettlementMode
-              hashlock
-              expiry
+          create Htlc.Trade with operator; deliverer = issuer; delivererAgent = issuer; payer = settlementBank; payerAgent = settlementBank; settlementId; instructionIds; delivery = totalAsset; payment = totalPrice; status = Locked; settlementMode = issuerSettlementMode; hashlock; expiry
 
       nonconsuming InstructBndSettlement : ContractId Trade
         with
@@ -252,6 +238,35 @@ template Tranche
               map (.instructionId) <$> mapA fetch bondSis
           sendSwiftMessage settlementBank bndBank size settledAmount paymentId settlementId dateOfTrade dateOfSettlement dateOfSettlement bndSettlementMode
           create Trade with operator; agent = bondRegistrar; deliverer = settlementBank; payer = bndBank; settlementId; instructionIds; delivery = totalAsset; payment = totalPrice; status = Instructed; settlementMode = bndSettlementMode
+
+      nonconsuming InstructBndSettlementHtlc : ContractId Htlc.Trade
+        with
+          price : Decimal
+          dateOfTrade : Date
+          dateOfSettlement : Date
+          hashlock : Text
+          expiry : Time
+        do
+          let
+            settledAmount = size * price
+            totalAsset = Asset with id = deliveryId; quantity = size
+            totalPrice = Asset with id = paymentId; quantity = settledAmount
+            settlementId = deliveryId.label <> "-" <> partyToText issuer <> "-" <> partyToText settlementBank
+          (_, bndBankSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, bndBank)
+          (_, settlementBankSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, settlementBank)
+
+          let
+            bndBankSecuritiesAccount = getAccount False bndBankSettlementInfo bndBank
+            settlementBankSecuritiesAccount = getAccount False settlementBankSettlementInfo settlementBank
+          bondSis <- createInstructionsHtlc False operator bondRegistrar settlementBank settlementBankSecuritiesAccount bndBank bndBankSecuritiesAccount settlementId 0 totalAsset hashlock expiry
+
+          instructionIds <-
+            if bndSettlementMode == Htlc
+            then do
+              map (.instructionId) <$> mapA fetch bondSis
+            else do
+              fail "InstructIssuerSettlementHtlc can only be used with issuerSettlementMode = Htlc"
+          create Htlc.Trade with operator; deliverer = settlementBank; delivererAgent = settlementBank; payer = bndBank; payerAgent = bndBank; settlementId; instructionIds; delivery = totalAsset; payment = totalPrice; status = Locked; settlementMode = issuerSettlementMode; hashlock; expiry
 
       nonconsuming InstructInvestorSettlement : [ContractId Trade]
         with
@@ -293,4 +308,41 @@ template Tranche
               sendSwiftMessage settlementBank bndBank aggregate settledAmount paymentId settlementId dateOfTrade dateOfSettlement dateOfSettlement conf.settlementMode
               exercise confCid Bidding.Delete
               create Trade with operator; agent = bondRegistrar; deliverer = bndBank; payer = conf.investor; settlementId; instructionIds; delivery = conf.asset; payment = aggregatePrice; status = Instructed; settlementMode = conf.settlementMode
+          mapA settleConfirmation filtered
+
+      nonconsuming InstructInvestorSettlementHtlc : [(Party, ContractId Htlc.Trade)]
+        with
+          confirmationCids : [ContractId Bidding.Confirmation]
+          price : Decimal
+          dateOfTrade : Date
+          dateOfSettlement : Date
+          hashlock : Text
+          expiry : Time
+        do
+          confirmations <- zip confirmationCids <$> mapA fetch confirmationCids
+          let
+            filtered = filter (\(_, c) -> c.asset.id == deliveryId) confirmations
+            settleConfirmation : (ContractId Bidding.Confirmation, Bidding.Confirmation) -> Update (Party, ContractId Htlc.Trade)
+            settleConfirmation (confCid, conf) = do
+              let
+                aggregate = conf.asset.quantity
+                settledAmount = conf.price.quantity * conf.asset.quantity
+                aggregatePrice = conf.price with quantity = settledAmount
+                settlementId = deliveryId.label <> "-" <> partyToText bndBank <> "-" <> partyToText conf.investor
+              (_, bndBankSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, bndBank)
+              (_, investorSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, conf.investor)
+              let
+                bndBankSecuritiesAccount = getAccount False bndBankSettlementInfo bndBank
+                investorSecuritiesAccount = getAccount False investorSettlementInfo conf.investor
+              assertMsg "Total confirmed amount is larger than available quantity" $ aggregate <= size
+              bondSis <- createInstructionsHtlc False operator bondRegistrar bndBank bndBankSecuritiesAccount conf.investor investorSecuritiesAccount settlementId 0 conf.asset hashlock expiry
+              instructionIds <-
+                if conf.settlementMode == Htlc
+                then do
+                  map (.instructionId) <$> mapA fetch bondSis
+                else do
+                  fail "InstructIssuerSettlementHtlc can only be used with issuerSettlementMode = Htlc"
+              exercise confCid Bidding.Delete
+              tradeCid <- create Htlc.Trade with operator; deliverer = bndBank; delivererAgent = bndBank; payer = conf.investor; payerAgent = conf.investor; settlementId; instructionIds; delivery = conf.asset; payment = aggregatePrice; status = Locked; settlementMode = issuerSettlementMode; hashlock; expiry              
+              pure (conf.investor, tradeCid)
           mapA settleConfirmation filtered
