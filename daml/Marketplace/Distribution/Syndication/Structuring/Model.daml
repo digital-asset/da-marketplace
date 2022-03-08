@@ -1,12 +1,13 @@
 module Marketplace.Distribution.Syndication.Structuring.Model where
 
 import DA.Finance.Types (Id, Asset(..), Account)
+import DA.Optional (fromSomeNote)
 import DA.Set (fromList)
 import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Distribution.Syndication.Bidding.Model qualified as Bidding
 import Marketplace.Settlement.Hierarchical (createInstructions, getAccount, Trade(..), Status(..), SettlementMode(..))
 import Marketplace.Settlement.Htlc.Trade qualified as Htlc
-import Marketplace.Settlement.Htlc.Util (createInstructionsHtlc, HtlcState(..))
+import Marketplace.Settlement.Htlc.Util
 import Marketplace.Issuance.Instrument.Model(Bond(..))
 import SwiftMessage.Message (SwiftMessage(MT547), SwiftMessage(MT545), SwiftMessage(MT544), SwiftMessage(MT546), SwiftMessageType(..), SwiftOutboundMessage(..))
 import SwiftMessage.Model.MT544
@@ -284,28 +285,26 @@ template Tranche
               create Trade with operator; agent = bondRegistrar; deliverer = bndBank; payer = conf.investor; settlementId; instructionIds; delivery = conf.asset; payment = totalPrice; status = Instructed; settlementMode = conf.settlementMode
           mapA settleConfirmation filtered
 
-      nonconsuming InstructInvestorSettlementHtlc : [(Party, ContractId Htlc.Trade)]
+      nonconsuming InstructInvestorSettlementHtlc : [ContractId Htlc.Trade]
         with
           confirmationCids : [ContractId Bidding.Confirmation]
           price : Decimal
           dateOfTrade : Date
           dateOfSettlement : Date
-          hashlock : Text
           expiry : Time
         do
           confirmations <- zip confirmationCids <$> mapA fetch confirmationCids
           let
             filtered = filter (\(_, c) -> c.asset.id == deliveryId) confirmations
-            settleConfirmation : (ContractId Bidding.Confirmation, Bidding.Confirmation) -> Update (Party, ContractId Htlc.Trade)
+            settleConfirmation : (ContractId Bidding.Confirmation, Bidding.Confirmation) -> Update (ContractId Htlc.Trade)
             settleConfirmation (confCid, conf) = do
               assertMsg "InstructInvestorSettlementHtlc can only be used with confirmation settlementmode = Htlc" (conf.settlementMode == Htlc)
               
               settlementResult@SettlementResult{..} <- createSettlementResultWithConfirmation conf price
               assertMsg "Total confirmed amount is larger than available quantity" $ totalAsset.quantity <= size
-              
+              let hashlock = fromSomeNote "hashlock not present in confirmation for HTLC settlement" conf.hashlock
               instructionIds <- createSettlementInstructionsHtlc settlementResult hashlock expiry              
               
               exercise confCid Bidding.Delete
-              tradeCid <- create Htlc.Trade with operator; deliverer = bndBank; delivererAgent = bndBank; payer = conf.investor; payerAgent = conf.investor; settlementId; instructionIds; delivery = conf.asset; payment = totalPrice; status = Locked; settlementMode = issuerSettlementMode; hashlock; expiry              
-              pure (conf.investor, tradeCid)
+              create Htlc.Trade with operator; deliverer = bndBank; delivererAgent = bndBank; payer = conf.investor; payerAgent = conf.investor; settlementId; instructionIds; delivery = conf.asset; payment = totalPrice; status = Locked; settlementMode = issuerSettlementMode; hashlock; expiry              
           mapA settleConfirmation filtered

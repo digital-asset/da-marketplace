@@ -72,18 +72,28 @@ issuance Parties{..} Origination{..} = do
   closeBook operator structurer issuer dealId "TRANCHE2" allocations offeredPrice
   closeBook operator structurer issuer dealId "TRANCHE3" allocations offeredPrice
 
-  confirmation11Cid <- confirm investor1 dealId "TRANCHE1" Dvp
-  confirmation12Cid <- confirm investor1 dealId "TRANCHE2" Fop
-  confirmation13Cid <- confirm investor1 dealId "TRANCHE3" Htlc
-  confirmation21Cid <- confirm investor2 dealId "TRANCHE1" Dvp
-  confirmation22Cid <- confirm investor2 dealId "TRANCHE2" Fop
-  confirmation23Cid <- confirm investor2 dealId "TRANCHE3" Htlc
-  confirmation31Cid <- confirm investor3 dealId "TRANCHE1" Dvp
-  confirmation32Cid <- confirm investor3 dealId "TRANCHE2" Fop
-  confirmation33Cid <- confirm investor3 dealId "TRANCHE3" Htlc
-  confirmation41Cid <- confirm investor4 dealId "TRANCHE1" Dvp
-  confirmation42Cid <- confirm investor4 dealId "TRANCHE2" Fop
-  confirmation43Cid <- confirm investor4 dealId "TRANCHE3" Htlc
+  let 
+    secret1 = "investor1Sceret"
+    hashlock1 = sha256 secret1
+    secret2 = "investor2Sceret"
+    hashlock2 = sha256 secret2
+    secret3 = "investor3Sceret"
+    hashlock3 = sha256 secret3
+    secret4 = "investor4Sceret"
+    hashlock4 = sha256 secret4
+
+  confirmation11Cid <- confirm investor1 dealId "TRANCHE1" Dvp None
+  confirmation12Cid <- confirm investor1 dealId "TRANCHE2" Fop None
+  confirmation13Cid <- confirm investor1 dealId "TRANCHE3" Htlc (Some hashlock1)
+  confirmation21Cid <- confirm investor2 dealId "TRANCHE1" Dvp None
+  confirmation22Cid <- confirm investor2 dealId "TRANCHE2" Fop None
+  confirmation23Cid <- confirm investor2 dealId "TRANCHE3" Htlc (Some hashlock2)
+  confirmation31Cid <- confirm investor3 dealId "TRANCHE1" Dvp None
+  confirmation32Cid <- confirm investor3 dealId "TRANCHE2" Fop None
+  confirmation33Cid <- confirm investor3 dealId "TRANCHE3" Htlc (Some hashlock3)
+  confirmation41Cid <- confirm investor4 dealId "TRANCHE1" Dvp None
+  confirmation42Cid <- confirm investor4 dealId "TRANCHE2" Fop None
+  confirmation43Cid <- confirm investor4 dealId "TRANCHE3" Htlc (Some hashlock4)
 
   let
     confirmationCids1 = [ confirmation11Cid, confirmation21Cid, confirmation31Cid, confirmation41Cid ]
@@ -96,9 +106,9 @@ issuance Parties{..} Origination{..} = do
   -- Step 1
   now <- getTime
   let
-    secret = "mysecret"
-    hashlock = sha256 secret
     expiry = addRelTime now $ hours 1
+    secret = "settlementBankSecret"
+    hashlock = sha256 secret
   dvpCid11 <- submit operator do exerciseCmd tranche1Cid Structuring.InstructIssuerSettlement with price; dateOfSettlement; dateOfTrade
   dvpCid12 <- submit operator do exerciseCmd tranche2Cid Structuring.InstructIssuerSettlement with price; dateOfSettlement; dateOfTrade
   dvpCid13 <- submit operator do exerciseCmd tranche3Cid Structuring.InstructIssuerSettlementHtlc with price; dateOfSettlement; dateOfTrade; hashlock; expiry
@@ -110,6 +120,9 @@ issuance Parties{..} Origination{..} = do
   settleTradeHtlc settlementBank (secret, dvpCid13)
 
   -- Step 2
+  let 
+    secret = "bndBankSecret"
+    hashlock = sha256 secret
   dvpCid21 <- submit operator do exerciseCmd tranche1Cid Structuring.InstructBndSettlement with price; dateOfSettlement; dateOfTrade
   dvpCid22 <- submit operator do exerciseCmd tranche2Cid Structuring.InstructBndSettlement with price; dateOfSettlement; dateOfTrade
   dvpCid23 <- submit operator do exerciseCmd tranche3Cid Structuring.InstructBndSettlementHtlc with price; dateOfSettlement; dateOfTrade; hashlock; expiry
@@ -123,14 +136,15 @@ issuance Parties{..} Origination{..} = do
   -- -- -- Step 3
   dvpCids31 <- submit operator do exerciseCmd tranche1Cid Structuring.InstructInvestorSettlement with confirmationCids = confirmationCids1; price; dateOfSettlement; dateOfTrade
   dvpCids32 <- submit operator do exerciseCmd tranche2Cid Structuring.InstructInvestorSettlement with confirmationCids = confirmationCids2; price; dateOfSettlement; dateOfTrade
-  dvpCids33 <- submit operator do exerciseCmd tranche3Cid Structuring.InstructInvestorSettlementHtlc with confirmationCids = confirmationCids3; price; dateOfSettlement; dateOfTrade; hashlock; expiry
+  dvpCids33 <- submit operator do exerciseCmd tranche3Cid Structuring.InstructInvestorSettlementHtlc with confirmationCids = confirmationCids3; price; dateOfSettlement; dateOfTrade; expiry
   allocateInstructions [ bndBank, lm1, lm2, lm3, custodian1, custodian2, custodian3, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
   allocateInstructionsHtlc [ bndBank, custodian1, custodian2, custodian3, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
   signInstructions [ bndBank, lm1, lm2, lm3, custodian1, custodian2, custodian3, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
   signInstructionsHtlc [ custodian1, custodian2, custodian3, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
   settleTrades bondRegistrar $ dvpCids31 <> dvpCids32
-  settleTradesHtlc $ map (\(p, dvpCid) -> (p, (secret, dvpCid))) dvpCids33
-
+  let
+    investorSecretDvpTuples = zip3 [investor1, investor2, investor3, investor4] [secret1, secret2, secret3, secret4] dvpCids33
+  settleTradesHtlc investorSecretDvpTuples
   -- Clean up
   consolidate [ issuer, settlementBank, bndBank, lm1, lm2, lm3, custodian1, custodian2, custodian3, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
 

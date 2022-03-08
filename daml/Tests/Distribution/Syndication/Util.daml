@@ -226,10 +226,10 @@ closeBook operator provider customer dealId trancheId allocations offeredPrice =
   bidCids <- map fst <$> queryFilter @Bidding.Bid customer (\r -> r.dealId == dealId && r.trancheId == trancheId)
   submit customer do exerciseByKeyCmd @Structuring.Service (operator, provider, customer) Structuring.CloseBook with ..
 
-confirm : Party -> Text -> Text -> SettlementMode -> Script (ContractId Bidding.Confirmation)
-confirm investor dealId trancheId settlementMode = do
+confirm : Party -> Text -> Text -> SettlementMode -> Optional Text -> Script (ContractId Bidding.Confirmation)
+confirm investor dealId trancheId settlementMode hashlock = do
   [(allocationCid, _)] <- queryFilter @Bidding.Allocation investor (\a -> a.dealId == dealId && a.trancheId == trancheId)
-  submit investor do exerciseCmd allocationCid Bidding.Confirm with settlementMode
+  submit investor do exerciseCmd allocationCid Bidding.Confirm with ..
 
 allocateSi : Party -> (ContractId SettlementInstruction, SettlementInstruction) -> Script ()
 allocateSi party (siCid, si) = do
@@ -341,9 +341,9 @@ settleTrades : Party -> [ContractId Trade] -> Script ()
 settleTrades party secretsAndtradeCids = do
   forA_ secretsAndtradeCids $ settleTrade party
 
-settleTradesHtlc : [(Party, (Text, ContractId HtlcTrade.Trade))] -> Script ()
+settleTradesHtlc : [(Party, Text, ContractId HtlcTrade.Trade)] -> Script ()
 settleTradesHtlc partyAndTradeCidPairs = do
-  forA_ partyAndTradeCidPairs $ (\pair -> settleTradeHtlc pair._1 pair._2)
+  forA_ partyAndTradeCidPairs $ (\(investor, secret, tradeCid) -> settleTradeHtlc investor (secret, tradeCid))
 
 settleDelivery : Party -> ContractId Delivery -> Script ()
 settleDelivery party deliveryCid = do
