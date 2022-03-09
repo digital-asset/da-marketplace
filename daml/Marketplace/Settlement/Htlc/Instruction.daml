@@ -1,0 +1,72 @@
+module Marketplace.Settlement.Htlc.Instruction where
+
+import DA.Assert ((===))
+import DA.Finance.Asset (AssetDeposit, AssetDeposit_SetObservers(..), AssetDeposit_Transfer(..), AssetDeposit_Lock(..), AssetDeposit_Unlock(..))
+import DA.Finance.Types (Account, Asset)
+import DA.Set (fromList)
+import DA.Text (sha256)
+
+type T = Instruction
+
+template Instruction
+  with
+    operator : Party
+    senderAgent : Party
+    receiverAgent : Party
+    sender : Party
+    receiver : Party
+    signed : [Party]
+    settlementId : Text
+    instructionId : Text
+    senderAccount : Account
+    receiverAccount : Account
+    asset : Asset
+    depositCid : Optional (ContractId AssetDeposit)
+    hashlock : Text
+    expiry : Time
+  where
+    signatory operator, signed
+    observer senderAgent, receiverAgent, sender, receiver
+
+    key (operator, settlementId, instructionId) : (Party, Text, Text)
+    maintainer key._1
+
+    controller sender can
+      Allocate : ContractId Instruction
+        with
+          settlementDepositCid : ContractId AssetDeposit
+        do
+          deposit <- fetch settlementDepositCid
+          deposit.asset === asset
+          deposit.account === senderAccount
+          depositCid <- exercise settlementDepositCid AssetDeposit_Lock with newLockers = fromList [operator]
+          depositCid <- Some <$> exercise depositCid AssetDeposit_SetObservers with newObservers = fromList [receiverAgent]
+          create this with depositCid; signed = sender :: signed
+
+      Refund : ContractId AssetDeposit
+        do
+          time <- getTime
+          assertMsg "Time lock has not expired" (time >= expiry)
+          case depositCid of
+            Some cid -> do
+              exercise cid AssetDeposit_Unlock
+            None -> fail $ "Instruction [" <> instructionId <> "] of settlement [ " <> settlementId <> " ] is not allocated"
+
+    controller receiver can
+      Sign : ContractId Instruction
+        do
+          create this with signed = receiver :: signed
+
+    controller receiverAgent can
+      Settle : ContractId AssetDeposit
+        with
+          secret : Text
+        do
+          time <- getTime
+          assertMsg "Expired" (time < expiry)
+          hashlock === sha256 secret
+          case depositCid of
+            Some cid -> do
+              cid <- exercise cid AssetDeposit_Unlock
+              exercise cid AssetDeposit_Transfer with receiverAccount
+            None -> fail $ "Instruction [" <> instructionId <> "] of settlement [ " <> settlementId <> " ] is not allocated"

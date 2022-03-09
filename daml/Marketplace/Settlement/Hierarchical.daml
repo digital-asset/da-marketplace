@@ -10,7 +10,7 @@ import DA.Set (fromList)
 import Marketplace.Custody.Model qualified as Custody
 import SwiftMessage.Message
 
-data SettlementMode = Dvp | Fop deriving (Eq, Show)
+data SettlementMode = Dvp | Fop | Htlc deriving (Eq, Show)
 
 data Status =
   Instructed
@@ -46,7 +46,7 @@ template Trade
               exercise siCid SettleInstruction
           adCids <- mapA settle instructionIds
           tradeCid <- create this with status = Settled
-          if settlementMode == Dvp then do 
+          if settlementMode == Dvp then do
             finalizeSwiftMessage (operator, settlementId, MT545_t)
             finalizeSwiftMessage (operator, settlementId, MT547_t)
           else do
