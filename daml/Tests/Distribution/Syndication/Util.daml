@@ -35,6 +35,8 @@ import Marketplace.Lifecycle.Service qualified as Lifecycle
 import Marketplace.Snapshot.Service qualified as Snapshot
 import Marketplace.Reporting.Service qualified as Reporting
 import Marketplace.Settlement.Hierarchical (SettlementInstruction, Allocate(..), Sign(..), Settle(..), Trade, Delivery, SettleDelivery(..), SettlementMode)
+import Marketplace.Settlement.Htlc.Instruction qualified as Htlc
+import Marketplace.Settlement.Htlc.Trade qualified as HtlcTrade
 import Marketplace.Trading.Otc.Service qualified as Trading
 
 createCustodianRole : Party -> Party -> Script (ContractId Custodian.Role, ContractId Custody.SettlementInfo)
@@ -180,21 +182,21 @@ originateSwap operator provider customer observers swap = do
 
 issue : Party -> Party -> Party -> Text -> ContractId Structuring.Tranche -> Script (ContractId AssetDeposit)
 issue operator provider customer issuanceId trancheCid = do
-  (_, Custody.AccountInfo{account}) <- head <$> queryFilter @Custody.AccountInfo customer (\info -> info.provider == provider && info.customer == customer)
+  (_, Custody.AccountInfo{account}) <- head <$> queryFilter @Custody.AccountInfo customer (\info -> info.account.provider == provider && info.account.owner == customer)
   createIssuanceRequestCid <- submit customer do exerciseByKeyCmd @Issuance.Service (operator, provider, customer) Issuance.RequestCreateIssuance with ..
   snd <$> submit provider do exerciseByKeyCmd @Issuance.Service (operator, provider, customer) Issuance.CreateIssuance with createIssuanceRequestCid
 
 deposit : Party -> Party -> Party -> Decimal -> Id -> Script (ContractId AssetDeposit)
 deposit operator provider customer quantity assetId = do
   let asset = Asset with id = assetId; quantity
-  (_, Custody.AccountInfo{account}) <- head <$> queryFilter @Custody.AccountInfo customer (\info -> info.provider == provider && info.customer == customer)
+  (_, Custody.AccountInfo{account}) <- head <$> queryFilter @Custody.AccountInfo customer (\info -> info.account.provider == provider && info.account.owner == customer)
   depositRequestCid <- submitMulti [customer] [] do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.RequestDeposit with asset; account; depositChannel = Custody.ONLEDGER
   submit provider do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.Deposit with depositRequestCid
 
 depositToAccount : Party -> Party -> Party -> Text -> Decimal -> Id -> Script (ContractId AssetDeposit)
 depositToAccount operator provider customer accountLabel quantity assetId = do
   let asset = Asset with id = assetId; quantity
-  (_, Custody.AccountInfo{account}) <- head <$> queryFilter @Custody.AccountInfo customer (\info -> info.provider == provider && info.customer == customer && info.account.id.label == accountLabel)
+  (_, Custody.AccountInfo{account}) <- head <$> queryFilter @Custody.AccountInfo customer (\info -> info.account.provider == provider && info.account.owner == customer && info.account.id.label == accountLabel)
   depositRequestCid <- submitMulti [customer] [] do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.RequestDeposit with asset; account; depositChannel = Custody.ONLEDGER
   submit provider do exerciseByKeyCmd @Custody.Service (operator, provider, customer) Custody.Deposit with depositRequestCid
 
@@ -224,10 +226,10 @@ closeBook operator provider customer dealId trancheId allocations offeredPrice =
   bidCids <- map fst <$> queryFilter @Bidding.Bid customer (\r -> r.dealId == dealId && r.trancheId == trancheId)
   submit customer do exerciseByKeyCmd @Structuring.Service (operator, provider, customer) Structuring.CloseBook with ..
 
-confirm : Party -> Text -> Text -> SettlementMode -> Script (ContractId Bidding.Confirmation)
-confirm investor dealId trancheId settlementMode = do
+confirm : Party -> Text -> Text -> SettlementMode -> Optional Text -> Script (ContractId Bidding.Confirmation)
+confirm investor dealId trancheId settlementMode hashlock = do
   [(allocationCid, _)] <- queryFilter @Bidding.Allocation investor (\a -> a.dealId == dealId && a.trancheId == trancheId)
-  submit investor do exerciseCmd allocationCid Bidding.Confirm with settlementMode
+  submit investor do exerciseCmd allocationCid Bidding.Confirm with ..
 
 allocateSi : Party -> (ContractId SettlementInstruction, SettlementInstruction) -> Script ()
 allocateSi party (siCid, si) = do
@@ -261,12 +263,52 @@ allocateSi party (siCid, si) = do
         debug $ "Insufficient funds for party " <> partyToText party
         pure ()
 
+allocateSiHtlc : Party -> (ContractId Htlc.Instruction, Htlc.Instruction) -> Script ()
+allocateSiHtlc party (siCid, si) = do
+  adsAllocated <- mapOptional ((.depositCid) . snd) <$> queryFilter @Htlc.Instruction party (\si -> si.sender == party && isSome si.depositCid)
+  ads <- queryFilter @AssetDeposit party (\ad -> ad.account.owner == party)
+  let
+    valid (adCid, ad) = notElem adCid adsAllocated && ad.account.owner == party && ad.account == si.senderAccount && ad.asset.id == si.asset.id && ad.asset.quantity >= si.asset.quantity
+    adCids = map fst $ filter valid ads
+  case adCids of
+    [] ->
+      if si.senderAccount.provider == party && si.senderAccount.owner == party then do
+        adCid <- submit party do createCmd AssetDeposit with asset = si.asset; account = si.senderAccount; observers = empty; lockers = empty
+        submit party do exerciseCmd siCid Htlc.Allocate with settlementDepositCid = adCid
+        pure ()
+      else do
+        pure ()
+    adHead :: adTail -> do
+      adMergedCid <-
+        if null adTail
+        then pure adHead
+        else submit party do exerciseCmd adHead AssetDeposit_Merge with depositCids = adTail
+      Some adMerged <- queryContractId party adMergedCid
+      if adMerged.asset.quantity > si.asset.quantity then do
+        adCid :: _ <- submit party do exerciseCmd adMergedCid AssetDeposit_Split with quantities = [ si.asset.quantity ]
+        submit party do exerciseCmd siCid Htlc.Allocate with settlementDepositCid = adCid
+        pure ()
+      else if adMerged.asset.quantity == si.asset.quantity then do
+        submit party do exerciseCmd siCid Htlc.Allocate with settlementDepositCid = adMergedCid
+        pure ()
+      else do
+        debug $ "Insufficient funds for party " <> partyToText party
+        pure ()
+
 allocateInstructions : [Party] -> Script ()
 allocateInstructions parties = do
   let
     allocate party = do
       sisUnallocated <- queryFilter @SettlementInstruction party (\si -> si.sender == party && isNone si.depositCid)
       forA_ sisUnallocated (allocateSi party)
+  forA_ parties allocate
+
+allocateInstructionsHtlc : [Party] -> Script ()
+allocateInstructionsHtlc parties = do
+  let
+    allocate party = do
+      sisUnallocated <- queryFilter @Htlc.Instruction party (\si -> si.sender == party && isNone si.depositCid)
+      forA_ sisUnallocated (allocateSiHtlc party)
   forA_ parties allocate
 
 signInstructions : [Party] -> Script ()
@@ -277,14 +319,31 @@ signInstructions parties = do
       forA_ sis (\(siCid, _) -> submit party do exerciseCmd siCid Sign)
   forA_ parties sign
 
+signInstructionsHtlc : [Party] -> Script ()
+signInstructionsHtlc parties = do
+  let
+    sign party = do
+      sis <- queryFilter @Htlc.Instruction party (\si -> si.receiver == party)
+      forA_ sis (\(siCid, _) -> submit party do exerciseCmd siCid Htlc.Sign)
+  forA_ parties sign
+
 settleTrade : Party -> ContractId Trade -> Script ()
 settleTrade party tradeCid = do
   submit party do exerciseCmd tradeCid Settle
   pure ()
 
+settleTradeHtlc : Party -> (Text, ContractId HtlcTrade.Trade) -> Script ()
+settleTradeHtlc party (secret, tradeCid) = do
+  submit party do exerciseCmd tradeCid HtlcTrade.Settle with secret
+  pure ()
+
 settleTrades : Party -> [ContractId Trade] -> Script ()
-settleTrades party tradeCids = do
-  forA_ tradeCids $ settleTrade party
+settleTrades party secretsAndtradeCids = do
+  forA_ secretsAndtradeCids $ settleTrade party
+
+settleTradesHtlc : [(Party, Text, ContractId HtlcTrade.Trade)] -> Script ()
+settleTradesHtlc partyAndTradeCidPairs = do
+  forA_ partyAndTradeCidPairs $ (\(investor, secret, tradeCid) -> settleTradeHtlc investor (secret, tradeCid))
 
 settleDelivery : Party -> ContractId Delivery -> Script ()
 settleDelivery party deliveryCid = do

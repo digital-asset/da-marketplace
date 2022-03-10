@@ -8,7 +8,7 @@ data MT535Details = MT535Details with
     reportDetails: ReportDetails
   deriving (Eq, Show)
  
-createMT535Details : Account -> [ReportDetail] -> Date -> MT535Details
-createMT535Details safekeepingAccount reportDetails reportDate = 
+createMT535Details : Account -> [ReportDetail] -> Date -> Date -> MT535Details
+createMT535Details safekeepingAccount reportDetails reportDate prevBusinessDate = 
   MT535Details with reportDetails = ReportDetails with ..
   

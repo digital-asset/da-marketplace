@@ -3,6 +3,8 @@ module Marketplace.Custody.Service where
 import DA.Finance.Asset
 import DA.Finance.Types
 import DA.Finance.Utils (fetchAndArchive)
+import DA.Set qualified as Set
+import DA.Text qualified as Text
 import DA.Map qualified as M
 import DA.Set (empty, fromList)
 import Marketplace.Custody.Model qualified as Custody
@@ -51,7 +53,7 @@ template Service
         do
           Custody.OpenAccountRequest{label} <- fetchAndArchive requestCid
           let account = Account with id = (Id with signatories = fromList [provider, customer]; label; version = 0); provider; owner = customer
-          create Custody.AccountInfo with operator; provider; customer; account
+          create Custody.AccountInfo with operator; account
 
       nonconsuming CloseAccount : ()
         with
@@ -108,8 +110,11 @@ template Service
     choice Terminate : ()
       with
         ctrl : Party
-      controller ctrl
-      do pure ()
+      controller ctrl 
+      do
+        let ctrls = [operator, provider, customer]
+        assertMsg  ("Only " <> Text.intercalate "," (map partyToText ctrls) <> " are allowed to terminate") (ctrl `Set.member` Set.fromList ctrls)
+        
 
 template Offer
   with

@@ -16,6 +16,35 @@ data MessageType =
   | RMDR
   deriving (Eq, Show)
 
+data SettlementDetails = SettlementDetails with 
+    instrumentId: Text --ISIN + Bond label
+    qtyOfInstrument: Decimal -- quantity of Bond
+    
+    dateOfTrade: Date
+    dateOfSettlement: Date
+    effDateOfSettlement: Date -- this should be SETT instead of ESET and should be same as dateOfSettlement
+    
+    senderMsgRef: Text -- settlement id
+    relatedMsgRef: Text -- same as senderMsgRef
+    
+    buyerSafekeepingAcc: Account -- buyer's security account 
+    sellerSafekeepingAcc: Account -- seller's security account 
+    safekeepingPlace: Text --  TOKENIZED INFRASTRUCTURE (placeholder)
+    placeOfSettlement: Text --  TOKENIZED INFRASTRUCTURE (placeholder)
+
+    deliveringAgent: Party  -- security account provider for the buyer
+    receivingAgent: Party  -- security account provider for the seller 
+    seller: Party
+    buyer: Party
+  deriving (Eq, Show)
+
+
+data DvPSettlementDetails = DvPSettlementDetails with
+    settledAmount: Decimal -- notional
+    settledCurrency: Id
+    settlementDetails: SettlementDetails
+  deriving (Eq, Show)
+
 data CRDB = CRED | DEBT deriving (Eq, Show)
 
 data PayoutDetails = PayoutDetails with
@@ -65,6 +94,7 @@ data ReportDetail = ReportDetail with
 data ReportDetails = ReportDetails with
     safekeepingAccount: Account
     reportDate: Date
+    prevBusinessDate: Date
     reportDetails: [ReportDetail]
   deriving (Eq, Show)
   

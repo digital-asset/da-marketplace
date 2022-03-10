@@ -65,6 +65,7 @@ template Allocation
       Confirm : ContractId Confirmation
         with
           settlementMode : SettlementMode
+          hashlock : Optional Text
         do
           create Confirmation with ..
 
@@ -78,6 +79,7 @@ template Confirmation
     asset : Asset
     price : Asset
     settlementMode : SettlementMode
+    hashlock : Optional Text
   where
     signatory operator, provider, investor
     observer issuer

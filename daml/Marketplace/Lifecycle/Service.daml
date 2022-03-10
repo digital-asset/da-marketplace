@@ -8,7 +8,8 @@ import ContingentClaims.Util (fixings, payoffs)
 import DA.Finance.Types (Id)
 import DA.Foldable (mapA_)
 import DA.List (head)
-import DA.Set (empty, fromList)
+import DA.Optional (whenSome)
+import DA.Set qualified as Set
 import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Issuance.AssetDescription qualified as AssetDescription
 import Marketplace.Issuance.Instrument.Model qualified as Instrument
@@ -19,7 +20,6 @@ import Marketplace.Utils
 import SwiftMessage.Message (SwiftMessage(MT564), SwiftMessageType(..), SwiftOutboundMessage(..))
 import SwiftMessage.Model.MT564
 import SwiftMessage.Util
-import DA.Optional (whenSome)
 
 type Claims = Claim Date Decimal Id
 
@@ -77,25 +77,31 @@ template Service
               getPayoutDate serializedClaims = 
                 head $ fixings $ deserialize serializedClaims
             
-              getPayoutRate : Claims -> Decimal
+              getPayoutRate : Claims -> Update Decimal
               getPayoutRate serializedClaims = 
+                let getObserveRate label = do
+                    (_, observation) <- fetchByKey @Observation (operator, payingAgent, label, exDivDate)
+                    pure observation.value in
                 let (comingPayout, id) = head $ payoffs $ deserialize serializedClaims in
                 case comingPayout of
-                  Ob.Const v -> v
-                  other  -> error $ "Cannot find payout rate: " <> show other
+                  Ob.Const rate -> pure rate
+                  Ob.Add (Ob.Observe k, Ob.Const spread) -> do
+                      observeRate <- getObserveRate k
+                      pure $ observeRate + spread
+                  other -> error $ "Cannot find payout rate with observation: " <> show other
 
               createNewPrenotificationSwiftMessage : Text -> Party -> Party -> MT564Details -> Update (ContractId SwiftOutboundMessage)
               createNewPrenotificationSwiftMessage referenceId provider consumer mt564 = do
                 let swiftMessageType = MT564_t
                 currentReport <- (lookupByKey @SwiftOutboundMessage (operator, referenceId, swiftMessageType))
                 whenSome currentReport archive
-                create SwiftOutboundMessage with swiftMessage=MT564 (mt564); status=Finalized; observers=empty; ..
+                create SwiftOutboundMessage with swiftMessage=MT564 (mt564); status=Finalized; observers=Set.empty; ..
               
               sendMessageForSnapshot : Snapshot -> Update (ContractId SwiftOutboundMessage)
               sendMessageForSnapshot snapshot = do                
                   let buyer = snapshot.deposit.account.owner
-                  let assetId = snapshot.assetId
-                  (_, bond) <- fetchByKey @Instrument.Bond (fromList [issuer, bondRegistrar], assetId.label)
+                      assetId = snapshot.assetId
+                  (_, bond) <- fetchByKey @Instrument.Bond (Set.fromList [issuer, bondRegistrar], assetId.label)
                   (_, description) <- fetchByKey @AssetDescription.T assetId
                   (_, settlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, buyer)
                   let                  
@@ -106,7 +112,9 @@ template Service
                     maturityDate = bond.maturityDate
                     payoutDate = getPayoutDate claims
                     redemptionDate = getRedemptionDate maturityDate payoutDate
-                    faceAmount = asset.quantity * (getPayoutRate claims)
+                  payoutRate <- getPayoutRate claims
+                  let
+                    faceAmount = asset.quantity * payoutRate
                     buyerSafekeepingAcc = getAccount False settlementInfo buyer
                     buyerCashAcc = getAccount True settlementInfo buyer
                     mt564 = createMT564Details instrumentId asset.id description.cfi issuer buyerSafekeepingAcc buyerCashAcc CRED faceAmount currency maturityDate payoutDate redemptionDate exDivDate
