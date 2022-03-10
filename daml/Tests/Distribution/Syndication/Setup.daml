@@ -191,11 +191,11 @@ setup = do
   createBiddingService operator cm1 investor4
 
   -- Lifecycling services
-  createLifecycleService operator issuer bondRegistrar cashProvider payingAgent
+  createLifecycleService operator bondRegistrar issuer payingAgent cashProvider
 
   -- Snapshot services
   createSnapshotService operator payingAgent
-  
+
 
   -- Reporting services
   createReportingService operator bondRegistrar

@@ -1,7 +1,7 @@
 module Marketplace.Distribution.Syndication.Bidding.Model where
 
 import DA.Finance.Types (Asset, Id)
-import Marketplace.Settlement.Hierarchical (SettlementMode)
+import Marketplace.Settlement.Hierarchical.Util (SettlementMode)
 
 template BidRequest
   with

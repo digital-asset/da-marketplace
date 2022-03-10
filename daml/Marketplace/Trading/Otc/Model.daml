@@ -2,7 +2,8 @@ module Marketplace.Trading.Otc.Model where
 
 import DA.Finance.Types (Asset)
 import Marketplace.Custody.Model qualified as Custody
-import Marketplace.Settlement.Hierarchical (createInstructions, getAccount, Trade(..), Status(..), SettlementMode(..))
+import Marketplace.Settlement.Hierarchical.Util (createInstructions, getAccount, Status(..), SettlementMode(..))
+import Marketplace.Settlement.Hierarchical.Dvp qualified as Hierarchical
 import Marketplace.Trading.Model (Side(..))
 
 template Order
@@ -53,7 +54,7 @@ template Match
   where
     signatory operator, provider, customer, counterparty
 
-    nonconsuming choice Instruct : ContractId Trade
+    nonconsuming choice Instruct : ContractId Hierarchical.Dvp
       controller operator
       do
         let
@@ -63,7 +64,7 @@ template Match
         (_, buyerSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, buyer)
         (_, sellerSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, seller)
 
-        let 
+        let
           buyerSecuritiesAccount = getAccount False buyerSettlementInfo buyer
           sellerSecuritiesAccount = getAccount False sellerSettlementInfo seller
         deliverySis <- createInstructions False operator operator deliveryRegistrar sellerSecuritiesAccount buyerSecuritiesAccount settlementId 0 delivery
@@ -72,10 +73,9 @@ template Match
             then do
               let
                 buyerCashAccount = getAccount True buyerSettlementInfo buyer
-                sellerCashAccount = getAccount True sellerSettlementInfo seller      
+                sellerCashAccount = getAccount True sellerSettlementInfo seller
               paymentSis <- createInstructions True operator operator paymentRegistrar buyerCashAccount sellerCashAccount settlementId (length deliverySis) payment
               map (.instructionId) <$> mapA fetch (deliverySis <> paymentSis)
             else do
               map (.instructionId) <$> mapA fetch deliverySis
-        create Trade with operator; agent = operator; deliverer = seller; payer = buyer; settlementId; instructionIds; delivery; payment; status = Instructed; settlementMode
-        
+        create Hierarchical.Dvp with operator; agent = operator; deliverer = seller; payer = buyer; settlementId; instructionIds; delivery; payment; status = Instructed; settlementMode

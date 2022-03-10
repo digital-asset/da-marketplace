@@ -3,12 +3,12 @@ module Tests.Distribution.Syndication.Util where
 import ContingentClaims.Claim (Claim, serialize)
 import ContingentClaims.Observation (Observation)
 import Daml.Script
-import DA.Finance.Asset (AssetDeposit_Upgrade(..), AssetDeposit(..), AssetDeposit_Split(..), AssetDeposit_Merge(..))
+import DA.Finance.Asset (AssetDeposit(..), AssetDeposit_Split(..), AssetDeposit_Merge(..))
 import DA.Finance.Base.DayCount (DayCountConvention)
 import DA.Finance.Base.HolidayCalendar (BusinessDayConventionEnum)
 import DA.Finance.Base.RollConvention (PeriodEnum, RollConventionEnum)
 import DA.Finance.Types (Asset(..), Id(..))
-import DA.Foldable (mapA_, forA_)
+import DA.Foldable (forA_)
 import DA.List (head, dedup)
 import DA.Optional (isNone, isSome, mapOptional)
 import DA.Set (empty)
@@ -34,9 +34,13 @@ import Marketplace.Distribution.Syndication.Structuring.Service qualified as Str
 import Marketplace.Lifecycle.Service qualified as Lifecycle
 import Marketplace.Snapshot.Service qualified as Snapshot
 import Marketplace.Reporting.Service qualified as Reporting
-import Marketplace.Settlement.Hierarchical (SettlementInstruction, Allocate(..), Sign(..), Settle(..), Trade, Delivery, SettleDelivery(..), SettlementMode)
+import Marketplace.Settlement.Hierarchical.Instruction (Instruction, Allocate(..), Sign(..))
+import Marketplace.Settlement.Hierarchical.Delivery (Delivery, SettleDelivery(..))
+import Marketplace.Settlement.Hierarchical.Dvd (Dvd, SettleDvd(..))
+import Marketplace.Settlement.Hierarchical.Dvp (Dvp, SettleDvp(..))
+import Marketplace.Settlement.Hierarchical.Util (SettlementMode)
 import Marketplace.Settlement.Htlc.Instruction qualified as Htlc
-import Marketplace.Settlement.Htlc.Trade qualified as HtlcTrade
+import Marketplace.Settlement.Htlc.Dvp qualified as Htlc
 import Marketplace.Trading.Otc.Service qualified as Trading
 
 createCustodianRole : Party -> Party -> Script (ContractId Custodian.Role, ContractId Custody.SettlementInfo)
@@ -95,8 +99,8 @@ createBiddingService operator provider customer = do
   submit customer do exerciseCmd offerCid Bidding.Accept
 
 createLifecycleService : Party -> Party -> Party -> Party -> Party -> Script (ContractId Lifecycle.Service)
-createLifecycleService operator issuer bondRegistrar cashProvider payingAgent = do
-  offerCid <- submit issuer do exerciseByKeyCmd @Issuer.Role (operator, issuer) Issuer.OfferLifecycleService with ..
+createLifecycleService operator bondRegistrar issuer payingAgent cashProvider = do
+  offerCid <- submit issuer do exerciseByKeyCmd @Issuance.Service (operator, bondRegistrar, issuer) Issuance.OfferLifecycleService with ..
   submit payingAgent do exerciseCmd offerCid Lifecycle.Accept
 
 createSnapshotService : Party -> Party -> Script (ContractId Snapshot.Service)
@@ -231,9 +235,9 @@ confirm investor dealId trancheId settlementMode hashlock = do
   [(allocationCid, _)] <- queryFilter @Bidding.Allocation investor (\a -> a.dealId == dealId && a.trancheId == trancheId)
   submit investor do exerciseCmd allocationCid Bidding.Confirm with ..
 
-allocateSi : Party -> (ContractId SettlementInstruction, SettlementInstruction) -> Script ()
+allocateSi : Party -> (ContractId Instruction, Instruction) -> Script ()
 allocateSi party (siCid, si) = do
-  adsAllocated <- mapOptional ((.depositCid) . snd) <$> queryFilter @SettlementInstruction party (\si -> si.sender == party && isSome si.depositCid)
+  adsAllocated <- mapOptional ((.depositCid) . snd) <$> queryFilter @Instruction party (\si -> si.sender == party && isSome si.depositCid)
   ads <- queryFilter @AssetDeposit party (\ad -> ad.account.owner == party)
   let
     valid (adCid, ad) = notElem adCid adsAllocated && ad.account.owner == party && ad.account == si.senderAccount && ad.asset.id == si.asset.id && ad.asset.quantity >= si.asset.quantity
@@ -299,7 +303,7 @@ allocateInstructions : [Party] -> Script ()
 allocateInstructions parties = do
   let
     allocate party = do
-      sisUnallocated <- queryFilter @SettlementInstruction party (\si -> si.sender == party && isNone si.depositCid)
+      sisUnallocated <- queryFilter @Instruction party (\si -> si.sender == party && isNone si.depositCid)
       forA_ sisUnallocated (allocateSi party)
   forA_ parties allocate
 
@@ -315,7 +319,7 @@ signInstructions : [Party] -> Script ()
 signInstructions parties = do
   let
     sign party = do
-      sis <- queryFilter @SettlementInstruction party (\si -> si.receiver == party)
+      sis <- queryFilter @Instruction party (\si -> si.receiver == party)
       forA_ sis (\(siCid, _) -> submit party do exerciseCmd siCid Sign)
   forA_ parties sign
 
@@ -327,21 +331,21 @@ signInstructionsHtlc parties = do
       forA_ sis (\(siCid, _) -> submit party do exerciseCmd siCid Htlc.Sign)
   forA_ parties sign
 
-settleTrade : Party -> ContractId Trade -> Script ()
+settleTrade : Party -> ContractId Dvp -> Script ()
 settleTrade party tradeCid = do
-  submit party do exerciseCmd tradeCid Settle
+  submit party do exerciseCmd tradeCid SettleDvp
   pure ()
 
-settleTradeHtlc : Party -> (Text, ContractId HtlcTrade.Trade) -> Script ()
+settleTradeHtlc : Party -> (Text, ContractId Htlc.Dvp) -> Script ()
 settleTradeHtlc party (secret, tradeCid) = do
-  submit party do exerciseCmd tradeCid HtlcTrade.Settle with secret
+  submit party do exerciseCmd tradeCid Htlc.SettleDvp with secret
   pure ()
 
-settleTrades : Party -> [ContractId Trade] -> Script ()
+settleTrades : Party -> [ContractId Dvp] -> Script ()
 settleTrades party secretsAndtradeCids = do
   forA_ secretsAndtradeCids $ settleTrade party
 
-settleTradesHtlc : [(Party, Text, ContractId HtlcTrade.Trade)] -> Script ()
+settleTradesHtlc : [(Party, Text, ContractId Htlc.Dvp)] -> Script ()
 settleTradesHtlc partyAndTradeCidPairs = do
   forA_ partyAndTradeCidPairs $ (\(investor, secret, tradeCid) -> settleTradeHtlc investor (secret, tradeCid))
 
@@ -353,6 +357,15 @@ settleDelivery party deliveryCid = do
 settleDeliveries : Party -> [ContractId Delivery] -> Script ()
 settleDeliveries party deliveryCids = do
   forA_ deliveryCids $ settleDelivery party
+
+settleDvd : Party -> ContractId Dvd -> Script ()
+settleDvd party dvdCid = do
+  submit party do exerciseCmd dvdCid SettleDvd
+  pure ()
+
+settleDvds : Party -> [ContractId Dvd] -> Script ()
+settleDvds party dvdCids = do
+  forA_ dvdCids $ settleDvd party
 
 consolidate : [Party] -> Script ()
 consolidate parties = do
@@ -374,15 +387,3 @@ getMaxId : Party -> Id -> Script Id
 getMaxId payingAgent assetId = do
   h :: t <- map snd <$> queryFilter @AssetDescription payingAgent (\ad -> ad.assetId.signatories == assetId.signatories && ad.assetId.label == assetId.label)
   pure $ foldl (\id desc -> if desc.assetId.version > id.version then desc.assetId else id) h.assetId t
-
-upgradeVersion : [Party] -> Id -> Script ()
-upgradeVersion parties maxId = do
-  let upgradeVersionForParty party = do
-        let
-          isTargetAsset : AssetDeposit -> Bool
-          isTargetAsset deposit = (maxId.version == deposit.asset.id.version && maxId.label == deposit.asset.id.label)
-        ads <- queryFilter @AssetDeposit party (\ad -> ad.account.provider == party && isTargetAsset ad)
-        mapA_ (\(adCid, ad) -> submit party do
-          let newVersion = maxId.version + 1
-          exerciseCmd adCid AssetDeposit_Upgrade with newVersion) ads
-  mapA_ upgradeVersionForParty parties

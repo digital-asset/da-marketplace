@@ -3,7 +3,8 @@ module Tests.Distribution.Syndication.Trading where
 import Daml.Script
 import DA.Finance.Types (Asset(..))
 import DA.Set (singleton)
-import Marketplace.Settlement.Hierarchical qualified as Settlement
+import Marketplace.Settlement.Hierarchical.Dvp qualified as Hierarchical (Dvp)
+import Marketplace.Settlement.Hierarchical.Util (SettlementMode(..))
 import Marketplace.Trading.Model (Side(..))
 import Marketplace.Trading.Otc.Model qualified as Trading
 import Marketplace.Trading.Otc.Service qualified as Trading
@@ -17,7 +18,7 @@ setTradingStatus operator isTradingAllowed = do
   serviceCids <- map fst <$> queryFilter @Trading.Service operator (\s -> s.operator == operator)
   submit operator do mapA (\sCid -> exerciseCmd sCid Trading.SetStatus with isTradingAllowed) serviceCids
 
-createOrder : Party -> Party -> Party -> Party -> Party -> Text -> Asset -> Asset -> Side -> Settlement.SettlementMode -> Script (ContractId Trading.Order)
+createOrder : Party -> Party -> Party -> Party -> Party -> Text -> Asset -> Asset -> Side -> SettlementMode -> Script (ContractId Trading.Order)
 createOrder operator customer counterparty deliveryRegistrar paymentRegistrar id delivery payment side settlementMode = do
   submit customer do exerciseByKeyCmd @Trading.Service (operator, operator, customer) Trading.CreateOrder with ..
 
@@ -25,7 +26,7 @@ acceptOrder : Party -> Party -> ContractId Trading.Order -> Script (ContractId T
 acceptOrder operator customer orderCid = do
   submit customer do exerciseByKeyCmd @Trading.Service (operator, operator, customer) Trading.AcceptOrder with ctrl = customer; orderCid
 
-instructMatch : Party -> ContractId Trading.Match -> Script (ContractId Settlement.Trade)
+instructMatch : Party -> ContractId Trading.Match -> Script (ContractId Hierarchical.Dvp)
 instructMatch operator matchCid = do
   submit operator do exerciseCmd matchCid Trading.Instruct
 
@@ -46,7 +47,7 @@ trading Parties{..} Origination{..}= do
   let
     delivery = Asset with id = bond1Desc.assetId; quantity = 1_000_000.0
     payment = Asset with id = usd.assetId; quantity = 1_000_000.0
-  orderCid <- createOrder operator investor1 investor2 bondRegistrar cashProvider "TRD1" delivery payment Buy Settlement.Dvp
+  orderCid <- createOrder operator investor1 investor2 bondRegistrar cashProvider "TRD1" delivery payment Buy Dvp
   matchCid <- acceptOrder operator investor2 orderCid
   tradeCid <- instructMatch operator matchCid
 

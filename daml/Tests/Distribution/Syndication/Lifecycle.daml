@@ -13,7 +13,8 @@ import Marketplace.Lifecycle.Model qualified as Lifecycle
 import Marketplace.Lifecycle.Service qualified as Lifecycle
 import Marketplace.Snapshot.Model as Snapshot
 import Marketplace.Snapshot.Service qualified as Snapshot
-import Marketplace.Settlement.Hierarchical (Delivery)
+import Marketplace.Settlement.Hierarchical.Delivery (Delivery)
+import Marketplace.Settlement.Hierarchical.Dvd (Dvd)
 import Tests.Distribution.Syndication.Setup (setup, Parties(..))
 import Tests.Distribution.Syndication.Issuance (issuance)
 import Tests.Distribution.Syndication.Origination (origination, Origination(..))
@@ -44,11 +45,11 @@ provideSnapshot custodian assetId = do
     [] -> pure []
     _ -> fail "More than one snapshot request received"
 
-instructLifecycle : Party -> Party -> Id -> RefId -> Date -> Script [ContractId Delivery]
+instructLifecycle : Party -> Party -> Id -> RefId -> Date -> Script ([ContractId Dvd], [ContractId Delivery])
 instructLifecycle operator payingAgent assetId snapshotRefId date = do
   [(effectCid, effect)] <- queryFilter @Lifecycle.Effect payingAgent (\e -> e.payingAgent == payingAgent && e.assetId == assetId && e.date == date)
-  snapshotCids <- map fst <$> queryFilter @Snapshot.Snapshot payingAgent (\s -> s.requester == payingAgent 
-    && s.deposit.asset.id.label == assetId.label 
+  snapshotCids <- map fst <$> queryFilter @Snapshot.Snapshot payingAgent (\s -> s.requester == payingAgent
+    && s.deposit.asset.id.label == assetId.label
     && s.deposit.asset.id.version == assetId.version
     && s.referenceId == snapshotRefId)
   submit operator do exerciseCmd effectCid Lifecycle.Instruct with snapshotCids
@@ -62,7 +63,7 @@ testReporting = do
   -- create report can be done at anytime
   Some calendar <- queryContractId @HolidayCalendar operator calendarCid
   setTime (time (date 2021 Jan 8) 0 0 0)
-  
+
   -- security report
   reporting operator bondRegistrar calendar False
   reporting operator custodian1 calendar False
@@ -82,7 +83,6 @@ testReporting = do
   reporting operator bondRegistrar calendar False
   pure ()
 
-
 testBond1 : Script ()
 testBond1 = do
   parties@Parties{..} <- setup
@@ -90,13 +90,13 @@ testBond1 = do
   issuance parties orig
   submitMulti [operator, payingAgent] [] do createCmd Lifecycle.Today with operator; provider = payingAgent; date = date 2021 Jan 15
 
-  let 
+  let
       bond1Id = bond1Desc.assetId
       bond1PayoutDates = [ date 2022 Mar 21, date 2022 Jun 21, date 2022 Sep 20, date 2022 Dec 20 ]
 
-  forA_ bond1PayoutDates (\date -> do preNotify parties date bond1Id 
+  forA_ bond1PayoutDates (\date -> do preNotify parties date bond1Id
                                       lifecycle parties date bond1Id)
-                                    
+
   [(_, ad1)] <- queryFilter @AssetDeposit investor1 (\ad -> ad.asset.id.label == usd.assetId.label)
   [(_, ad2)] <- queryFilter @AssetDeposit investor2 (\ad -> ad.asset.id.label == usd.assetId.label)
   [(_, ad3)] <- queryFilter @AssetDeposit investor3 (\ad -> ad.asset.id.label == usd.assetId.label)
@@ -116,13 +116,13 @@ testBond2 = do
   issuance parties orig
   submitMulti [operator, payingAgent] [] do createCmd Lifecycle.Today with operator; provider = payingAgent; date = date 2021 Jan 15
 
-  let 
+  let
     bond2Id = bond2Desc.assetId
     bond2PayoutDates = [ date 2022 Jun 21, date 2022 Dec 20, date 2023 Jun 20, date 2023 Dec 20 ]
 
-  forA_ bond2PayoutDates (\date -> do preNotify parties date bond2Id 
+  forA_ bond2PayoutDates (\date -> do preNotify parties date bond2Id
                                       lifecycle parties date bond2Id)
-  
+
   [(_, ad1)] <- queryFilter @AssetDeposit investor1 (\ad -> ad.asset.id.label == usd.assetId.label)
   [(_, ad2)] <- queryFilter @AssetDeposit investor2 (\ad -> ad.asset.id.label == usd.assetId.label)
   [(_, ad3)] <- queryFilter @AssetDeposit investor3 (\ad -> ad.asset.id.label == usd.assetId.label)
@@ -130,7 +130,7 @@ testBond2 = do
   ad1.asset.quantity === 11_000_000.0
   ad2.asset.quantity === 22_000_000.0
   ad3.asset.quantity === 33_000_000.0
-  ad4.asset.quantity === 44_000_000.0                                                      
+  ad4.asset.quantity === 44_000_000.0
   pure ()
 
 testBond3 : Script ()
@@ -140,11 +140,11 @@ testBond3 = do
   issuance parties orig
   submitMulti [operator, payingAgent] [] do createCmd Lifecycle.Today with operator; provider = payingAgent; date = date 2021 Jan 15
 
-  let 
+  let
     bond3Id = bond3Desc.assetId
     bond3PayoutDates = [ date 2022 Jun 21, date 2022 Dec 20, date 2023 Jun 20, date 2023 Dec 20 ]
 
-  forA_ (zip bond3PayoutDates [1..length bond3PayoutDates]) (\(date, i) -> 
+  forA_ (zip bond3PayoutDates [1..length bond3PayoutDates]) (\(date, i) ->
     submitMulti [operator, payingAgent] [] do createCmd Lifecycle.Observation with provider = payingAgent; label = libor6m.label; value = 0.001 * intToDecimal i; ..)
   forA_ bond3PayoutDates (\date -> do preNotify parties date bond3Id -- note that for floating rate bond pre-notification, we assume that the observables are alr created on exDivDate
                                       lifecycle parties date bond3Id)
@@ -156,7 +156,7 @@ testBond3 = do
   ad1.asset.quantity === 10_500_000.0
   ad2.asset.quantity === 21_000_000.0
   ad3.asset.quantity === 31_500_000.0
-  ad4.asset.quantity === 42_000_000.0                                      
+  ad4.asset.quantity === 42_000_000.0
   pure ()
 
 lifecycleSnapshot : Parties -> Id -> RefId -> Script ()
@@ -182,18 +182,17 @@ lifecycle parties@Parties{..} date assetId = do
   effectCidOpt <- submit payingAgent do exerciseByKeyCmd @Lifecycle.Service (operator, issuer, payingAgent) Lifecycle.CalculateEffect with assetId = maxId; election = None
 
   case effectCidOpt of
-    Some (effectCid, requestCid) -> do
+    Some (effectCid, descriptionCid) -> do
       let snapshotRefId = "lifecycle-snapshot"
       lifecycleSnapshot parties maxId snapshotRefId
-      submit bondRegistrar do exerciseCmd requestCid Lifecycle.ApproveUpdate -- update asset description after calculating effect
       Some effect <- queryContractId payingAgent effectCid
       debug $ "[" <> show date <> "][" <> maxId.label <> "(v" <> show maxId.version <> ")] " <> "Event with " <> show (length effect.payouts) <> " payouts"
-      upgradeVersion [bondRegistrar, custodian1, custodian2, custodian4, custodian5] maxId
-      paymentCids <- instructLifecycle operator payingAgent maxId snapshotRefId date
+      (dvdCids, paymentCids) <- instructLifecycle operator payingAgent maxId snapshotRefId date
 
       allocateInstructions [ issuer, bondRegistrar, lm1, lm2, lm3, custodian1, custodian2, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
       signInstructions [ issuer, bondRegistrar, lm1, lm2, lm3, custodian1, custodian2, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
       settleDeliveries payingAgent paymentCids
+      settleDvds payingAgent dvdCids
       consolidate [ issuer, bondRegistrar, lm1, lm2, lm3, custodian1, custodian2, custodian4, custodian5, investor1, investor2, investor3, investor4 ]
 
     None -> do
@@ -205,8 +204,8 @@ preNotify parties@Parties{..} date assetId = do
   maxId <- getMaxId payingAgent assetId
   let snapshotRefId = "prenotify-snapshot"
   lifecycleSnapshot parties maxId snapshotRefId
-  snapshotCids <- map fst <$> queryFilter @Snapshot.Snapshot payingAgent (\s -> s.requester == payingAgent 
-    && s.deposit.asset.id.label == maxId.label 
+  snapshotCids <- map fst <$> queryFilter @Snapshot.Snapshot payingAgent (\s -> s.requester == payingAgent
+    && s.deposit.asset.id.label == maxId.label
     && s.deposit.asset.id.version == maxId.version
     && s.referenceId == snapshotRefId)
 
@@ -214,8 +213,7 @@ preNotify parties@Parties{..} date assetId = do
   pure ()
 
 reporting : Party -> Party -> HolidayCalendar -> Bool -> Script ()
-reporting operator accountProvider calendar isCashReporting = do 
+reporting operator accountProvider calendar isCashReporting = do
   depositCids <- map fst <$> queryFilter @AssetDeposit accountProvider (\deposit -> deposit.account.provider == accountProvider)
   submit accountProvider do exerciseByKeyCmd @Reporting.Service (operator, accountProvider) Reporting.CreateReports with calendar; depositCids; isCashReporting
   pure ()
-  

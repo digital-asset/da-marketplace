@@ -8,7 +8,7 @@ import Marketplace.Issuance.Role qualified as Issuer
 import Marketplace.Lifecycle.Redemption qualified as Lifecycle
 import Marketplace.Snapshot.Model as Snapshot
 import Marketplace.Snapshot.Service qualified as Snapshot
-import Marketplace.Settlement.Hierarchical (Delivery)
+import Marketplace.Settlement.Hierarchical.Delivery (Delivery)
 import Tests.Distribution.Syndication.Setup (setup, Parties(..))
 import Tests.Distribution.Syndication.Issuance (issuance)
 import Tests.Distribution.Syndication.Origination (origination, Origination(..))
@@ -42,8 +42,8 @@ provideSnapshot custodian assetId = do
 instructLifecycle : Party -> Party -> Id -> RefId -> Script [ContractId Delivery]
 instructLifecycle operator payingAgent assetId referenceId = do
   [(requestCid, _)] <- queryFilter @Lifecycle.IssuerRedemptionRequest operator (\e -> e.payingAgent == payingAgent && e.assetId == assetId)
-  snapshotCids <- map fst <$> queryFilter @Snapshot.Snapshot operator (\s -> s.requester == payingAgent 
-    && s.deposit.asset.id.label == assetId.label 
+  snapshotCids <- map fst <$> queryFilter @Snapshot.Snapshot operator (\s -> s.requester == payingAgent
+    && s.deposit.asset.id.label == assetId.label
     && s.deposit.asset.id.version == assetId.version
     && s.referenceId == referenceId)
   submit operator do exerciseCmd requestCid Lifecycle.InstructIssuerRedemption with snapshotCids

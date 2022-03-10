@@ -3,7 +3,7 @@ module Marketplace.Trading.Otc.Service where
 import DA.Finance.Types (Asset)
 import DA.Set qualified as Set
 import DA.Text qualified as Text
-import Marketplace.Settlement.Hierarchical (SettlementMode)
+import Marketplace.Settlement.Hierarchical.Util (SettlementMode)
 import Marketplace.Trading.Model (Side(..))
 import Marketplace.Trading.Otc.Model qualified as Trading
 
