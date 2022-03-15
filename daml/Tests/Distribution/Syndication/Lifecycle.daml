@@ -182,7 +182,7 @@ lifecycle parties@Parties{..} date assetId = do
   effectCidOpt <- submit payingAgent do exerciseByKeyCmd @Lifecycle.Service (operator, issuer, payingAgent) Lifecycle.CalculateEffect with assetId = maxId; election = None
 
   case effectCidOpt of
-    Some (effectCid, descriptionCid) -> do
+    Some effectCid -> do
       let snapshotRefId = "lifecycle-snapshot"
       lifecycleSnapshot parties maxId snapshotRefId
       Some effect <- queryContractId payingAgent effectCid

@@ -39,7 +39,7 @@ template Service
     maintainer key._1
 
     controller payingAgent can
-      nonconsuming CalculateEffect : Optional (ContractId Effect, ContractId AssetDescription.T)
+      nonconsuming CalculateEffect : Optional (ContractId Effect)
         with
           assetId : Id
           election : Optional Claims
@@ -62,7 +62,7 @@ template Service
               expired = serializedRemaining == Zero
             descriptionCid <- create description with assetId.version = newVersion; claims = serializedRemaining
             effectCid <- create Effect with operator; issuer; bondRegistrar; cashProvider; payingAgent; lifecycleId; assetId; newVersion; date = today.date; payouts = pending; expired
-            pure $ Some (effectCid, descriptionCid)
+            pure $ Some effectCid
           else
             pure None
 
