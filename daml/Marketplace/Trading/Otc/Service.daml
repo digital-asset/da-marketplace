@@ -31,6 +31,7 @@ template Service
         paymentRegistrar : Party
         side : Side
         settlementMode : SettlementMode
+        hashlockOpt : Optional Text
       controller customer
       do
         if not tradingAllowed
