@@ -3,7 +3,10 @@ module Tests.Distribution.Syndication.Trading where
 import Daml.Script
 import DA.Finance.Types (Asset(..))
 import DA.Set (singleton)
+import DA.Text (sha256)
+import DA.Time (hours, addRelTime)
 import Marketplace.Settlement.Hierarchical.Dvp qualified as Hierarchical (Dvp)
+import Marketplace.Settlement.Htlc.Dvp qualified as Htlc (Dvp)
 import Marketplace.Settlement.Hierarchical.Util (SettlementMode(..))
 import Marketplace.Trading.Model (Side(..))
 import Marketplace.Trading.Otc.Model qualified as Trading
@@ -30,6 +33,10 @@ instructMatch : Party -> ContractId Trading.Match -> Script (ContractId Hierarch
 instructMatch operator matchCid = do
   submit operator do exerciseCmd matchCid Trading.Instruct
 
+instructMatchHtlc : Party -> ContractId Trading.Match -> Time -> Script (ContractId Htlc.Dvp)
+instructMatchHtlc operator matchCid expiry = do
+  submit operator do exerciseCmd matchCid Trading.InstructHtlc with expiry
+
 test : Script ()
 test = do
   parties@Parties{..} <- setup
@@ -47,13 +54,37 @@ trading Parties{..} Origination{..}= do
   let
     delivery = Asset with id = bond1Desc.assetId; quantity = 1_000_000.0
     payment = Asset with id = usd.assetId; quantity = 1_000_000.0
+    
+    delivery2 = Asset with id = bond2Desc.assetId; quantity = 2_000_000.0
+    payment2 = Asset with id = usd.assetId; quantity = 2_000_000.0
+    
+    payment3 = Asset with id = usd.assetId; quantity = 3_000_000.0
+    delivery3 = Asset with id = bond3Desc.assetId; quantity = 3_000_000.0
+
   orderCid <- createOrder operator investor1 investor2 bondRegistrar cashProvider "TRD1" delivery payment Buy Dvp None
   matchCid <- acceptOrder operator investor2 orderCid
   tradeCid <- instructMatch operator matchCid
+  
+  orderCid2 <- createOrder operator investor1 investor2 bondRegistrar cashProvider "TRD2" delivery2 payment2 Buy Fop None
+  matchCid2 <- acceptOrder operator investor2 orderCid2
+  tradeCid2 <- instructMatch operator matchCid2
+
+  now <- getTime
+  let 
+    secret = "secret"
+    hashlock = sha256 secret
+    expiry = addRelTime now $ hours 1
+  orderCid3 <- createOrder operator investor1 investor2 bondRegistrar cashProvider "TRD3" delivery3 payment3 Buy Htlc (Some hashlock)
+  matchCid3 <- acceptOrder operator investor2 orderCid3
+  tradeCid3 <- instructMatchHtlc operator matchCid3 expiry
 
   allocateInstructions [ lm1, lm2, investor1, investor2, custodian1, custodian2 ]
+  allocateInstructionsHtlc [ investor2, custodian1, custodian2 ]
   signInstructions [ lm1, lm2, investor1, investor2, custodian1, custodian2 ]
+  signInstructionsHtlc [ investor1, custodian1, custodian2 ]
   settleTrade operator tradeCid
+  settleTrade operator tradeCid2
+  settleTradeHtlc investor1 (secret, tradeCid3)
 
   consolidate [ lm1, lm2, investor1, investor2, custodian1, custodian2 ]
 
