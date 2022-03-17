@@ -18,8 +18,8 @@ setTradingStatus operator isTradingAllowed = do
   serviceCids <- map fst <$> queryFilter @Trading.Service operator (\s -> s.operator == operator)
   submit operator do mapA (\sCid -> exerciseCmd sCid Trading.SetStatus with isTradingAllowed) serviceCids
 
-createOrder : Party -> Party -> Party -> Party -> Party -> Text -> Asset -> Asset -> Side -> SettlementMode -> Script (ContractId Trading.Order)
-createOrder operator customer counterparty deliveryRegistrar paymentRegistrar id delivery payment side settlementMode = do
+createOrder : Party -> Party -> Party -> Party -> Party -> Text -> Asset -> Asset -> Side -> SettlementMode -> Optional Text -> Script (ContractId Trading.Order)
+createOrder operator customer counterparty deliveryRegistrar paymentRegistrar id delivery payment side settlementMode hashlockOpt= do
   submit customer do exerciseByKeyCmd @Trading.Service (operator, operator, customer) Trading.CreateOrder with ..
 
 acceptOrder : Party -> Party -> ContractId Trading.Order -> Script (ContractId Trading.Match)
@@ -47,7 +47,7 @@ trading Parties{..} Origination{..}= do
   let
     delivery = Asset with id = bond1Desc.assetId; quantity = 1_000_000.0
     payment = Asset with id = usd.assetId; quantity = 1_000_000.0
-  orderCid <- createOrder operator investor1 investor2 bondRegistrar cashProvider "TRD1" delivery payment Buy Dvp
+  orderCid <- createOrder operator investor1 investor2 bondRegistrar cashProvider "TRD1" delivery payment Buy Dvp None
   matchCid <- acceptOrder operator investor2 orderCid
   tradeCid <- instructMatch operator matchCid
 

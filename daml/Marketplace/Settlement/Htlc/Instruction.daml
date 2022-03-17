@@ -57,7 +57,7 @@ template Instruction
         do
           create this with signed = receiver :: signed
 
-    controller receiverAgent can
+    controller operator, receiverAgent can
       SettleInstruction : ContractId AssetDeposit
         with
           secret : Text
