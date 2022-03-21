@@ -24,8 +24,8 @@ template Service with
             archive assetDepositCid
             let 
               originalId = originalAssetDeposit.asset.id
-            (_, claimToken) <- fetchByKey @ClaimToken (originalId.signatories, originalId.label)
-            create originalAssetDeposit with asset = (originalAssetDeposit.asset with id = claimToken.id)
+            (_, claimTokenR) <- fetchByKey @ClaimTokenR (originalId.signatories, originalId.label)
+            create originalAssetDeposit with asset = (originalAssetDeposit.asset with id = claimTokenR.id)
 
       controller owner can 
         OfferTransferRelationship : ContractId TransferRelationshipOffer
@@ -45,8 +45,8 @@ template Service with
               (claimTokenAssetDeposit.account.owner == owner && claimTokenAssetDeposit.account.provider == provider) -- todo refactor
             let
               claimTokenId = claimTokenAssetDeposit.asset.id
-            (_, claimTokenR) <- fetchByKey @ClaimTokenR (claimTokenId.signatories, claimTokenId.label)
-            create claimTokenAssetDeposit with asset = (claimTokenAssetDeposit.asset with id = claimTokenR.originalId)
+            (_, claimToken) <- fetchByKey @ClaimToken (claimTokenId.signatories, claimTokenId.label)
+            create claimTokenAssetDeposit with asset = (claimTokenAssetDeposit.asset with id = claimToken.originalId)
 
             
 
