@@ -14,7 +14,7 @@ template Service with
       observer owner
     
       controller owner can 
-        Mint: ContractId AssetDeposit
+        nonconsuming Mint: ContractId AssetDeposit
           with 
             assetDepositCid : ContractId AssetDeposit
           do
@@ -28,7 +28,7 @@ template Service with
             create originalAssetDeposit with asset = (originalAssetDeposit.asset with id = claimTokenR.id)
 
       controller owner can 
-        OfferTransferRelationship : ContractId TransferRelationshipOffer
+        nonconsuming OfferTransferRelationship : ContractId TransferRelationshipOffer
           with 
             asset: Asset
             receiver: Party
@@ -36,7 +36,7 @@ template Service with
             create TransferRelationshipOffer with sender = owner; ..
 
       controller owner can
-        Burn: ContractId AssetDeposit
+        nonconsuming Burn: ContractId AssetDeposit
           with
             assetDepositCid : ContractId AssetDeposit
           do 

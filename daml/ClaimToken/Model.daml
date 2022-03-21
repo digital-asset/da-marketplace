@@ -58,7 +58,7 @@ template TransferRelationship
   where
     signatory operator, provider, sender, receiver
 
-    choice TransferClaimToken: ContractId AssetDeposit
+    nonconsuming choice TransferClaimToken: ContractId AssetDeposit
       with 
         ctrl: Party
         assetDepositCid: ContractId AssetDeposit
