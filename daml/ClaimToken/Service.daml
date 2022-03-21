@@ -1,0 +1,54 @@
+module ClaimToken.Service where
+
+import DA.Finance.Asset
+import DA.Finance.Types
+import ClaimToken.Model
+
+template Service with
+  operator: Party
+  provider: Party
+  owner: Party
+
+    where
+      signatory operator, provider
+      observer owner
+    
+      controller owner can 
+        Mint: ContractId AssetDeposit
+          with 
+            assetDepositCid : ContractId AssetDeposit
+          do
+            originalAssetDeposit <- fetch assetDepositCid
+            assertMsg "provider and owner of provided assetDeposit does not match with the Service Contract used" 
+              (originalAssetDeposit.account.owner == owner && originalAssetDeposit.account.provider == provider) -- todo refactor
+            archive assetDepositCid
+            let 
+              originalId = originalAssetDeposit.asset.id
+            (_, claimToken) <- fetchByKey @ClaimToken (originalId.signatories, originalId.label)
+            create originalAssetDeposit with asset = (originalAssetDeposit.asset with id = claimToken.id)
+
+      controller owner can 
+        OfferTransferRelationship : ContractId TransferRelationshipOffer
+          with 
+            asset: Asset
+            receiver: Party
+          do
+            create TransferRelationshipOffer with sender = owner; ..
+
+      controller owner can
+        Burn: ContractId AssetDeposit
+          with
+            assetDepositCid : ContractId AssetDeposit
+          do 
+            claimTokenAssetDeposit <- fetch assetDepositCid
+            assertMsg "provider and owner of provided assetDeposit does not match with the Service Contract used" 
+              (claimTokenAssetDeposit.account.owner == owner && claimTokenAssetDeposit.account.provider == provider) -- todo refactor
+            let
+              claimTokenId = claimTokenAssetDeposit.asset.id
+            (_, claimTokenR) <- fetchByKey @ClaimTokenR (claimTokenId.signatories, claimTokenId.label)
+            create claimTokenAssetDeposit with asset = (claimTokenAssetDeposit.asset with id = claimTokenR.originalId)
+
+            
+
+
+    
