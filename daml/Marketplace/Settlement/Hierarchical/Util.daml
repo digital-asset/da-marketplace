@@ -26,22 +26,26 @@ createInstructions isCash operator agent rootProvider senderAccount receiverAcco
   else if senderAccount.provider == rootProvider then do
     (_, providerSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, receiverAccount.provider)
     let providerAccount = getAccount isCash providerSettlementInfo receiverAccount.owner
-    sis1 <- createInstruction receiverAccount.provider receiverAccount.owner (fromSome providerSettlementInfo.ownAccount) receiverAccount (asset with id.signatories = fromList [providerSettlementInfo.party]) instructionIdx
+        assetSi = if isCash then (asset with id.signatories = fromList [providerSettlementInfo.party]) else asset
+    sis1 <- createInstruction receiverAccount.provider receiverAccount.owner (fromSome providerSettlementInfo.ownAccount) receiverAccount assetSi instructionIdx
     sis2 <- createInstructions isCash operator agent rootProvider senderAccount providerAccount settlementId (instructionIdx + 1) asset
     pure $ sis1 <> sis2
   else if receiverAccount.provider == rootProvider then do
     (_, providerSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, senderAccount.provider)
     let providerAccount = getAccount isCash providerSettlementInfo senderAccount.owner
-    sis1 <- createInstruction senderAccount.owner senderAccount.provider senderAccount (fromSome providerSettlementInfo.ownAccount) (asset with id.signatories = fromList [providerSettlementInfo.party]) instructionIdx
+        assetSi = if isCash then (asset with id.signatories = fromList [providerSettlementInfo.party]) else asset
+    sis1 <- createInstruction senderAccount.owner senderAccount.provider senderAccount (fromSome providerSettlementInfo.ownAccount) assetSi instructionIdx
     sis2 <- createInstructions isCash operator agent rootProvider providerAccount receiverAccount settlementId (instructionIdx + 1) asset
     pure $ sis1 <> sis2
   else do
     (_, senderProviderSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, senderAccount.provider)
     let senderProviderAccount = getAccount isCash senderProviderSettlementInfo senderAccount.owner
-    sis1 <- createInstruction senderAccount.owner senderAccount.provider senderAccount (fromSome senderProviderSettlementInfo.ownAccount) (asset with id.signatories = fromList [senderProviderSettlementInfo.party]) instructionIdx
+        assetSi = if isCash then (asset with id.signatories = fromList [senderProviderSettlementInfo.party]) else asset
+    sis1 <- createInstruction senderAccount.owner senderAccount.provider senderAccount (fromSome senderProviderSettlementInfo.ownAccount) assetSi instructionIdx
     (_, receiverProviderSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, receiverAccount.provider)
     let receiverProviderAccount = getAccount isCash receiverProviderSettlementInfo receiverAccount.owner
-    sis2 <- createInstruction receiverAccount.provider receiverAccount.owner (fromSome receiverProviderSettlementInfo.ownAccount) receiverAccount (asset with id.signatories = fromList [receiverProviderSettlementInfo.party]) (instructionIdx + 1)
+        assetSi = if isCash then (asset with id.signatories = fromList [receiverProviderSettlementInfo.party]) else asset
+    sis2 <- createInstruction receiverAccount.provider receiverAccount.owner (fromSome receiverProviderSettlementInfo.ownAccount) receiverAccount assetSi (instructionIdx + 1)
     sis3 <- createInstructions isCash operator agent rootProvider senderProviderAccount receiverProviderAccount settlementId (instructionIdx + 2) asset
     pure $ sis1 <> sis2 <> sis3
 
