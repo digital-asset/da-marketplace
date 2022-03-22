@@ -1,7 +1,7 @@
 module ClaimToken.Model where
 
-import DA.Finance.Types
 import DA.Finance.Asset (AssetDeposit_Transfer(..), AssetDeposit)
+import DA.Finance.Types
 import DA.Set (Set)
 
 template ClaimToken -- claim token id -> bond id
@@ -36,7 +36,6 @@ template ClaimTokenR -- reverse search (bond id -> claim token id)
 
 template TransferRelationshipOffer
   with
-    asset: Asset
     operator: Party
     provider: Party
     sender: Party

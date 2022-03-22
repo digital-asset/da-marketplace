@@ -48,6 +48,7 @@ template Bond
     isPricedDirty : Bool
     isCallable : Bool
     observers : [Party]
+    claimTokenId : Text
   where
     signatory id.signatories
     observer observers
