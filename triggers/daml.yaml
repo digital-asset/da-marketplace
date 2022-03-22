@@ -1,4 +1,4 @@
-sdk-version: 1.18.1
+sdk-version: 2.0.0
 name: da-marketplace-triggers
 source: daml
 parties:
@@ -11,7 +11,7 @@ parties:
   - Public
   - Exchange
   - Broker
-version: 0.1.22
+version: 0.1.23
 # trigger-dependencies-begin
 dependencies:
   - daml-prim
@@ -20,6 +20,6 @@ dependencies:
 build-options:
   - --ghc-option=-Wno-deprecations
 data-dependencies:
-  - ../.daml/dist/da-marketplace-0.1.22.dar
+  - ../.daml/dist/da-marketplace-0.1.23.dar
 sandbox-options:
   - --wall-clock-time

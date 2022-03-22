@@ -11,7 +11,7 @@ import DA.Finance.Types
 
 import DA.Action
 import DA.Optional
-import DA.Next.Set hiding (null)
+import DA.Set hiding (null)
 
 
 template CustodianRelationship
@@ -24,21 +24,23 @@ template CustodianRelationship
     key (custodian, operator, party) : (Party, Party, Party)
     maintainer key._1
 
-    controller party can
-      nonconsuming CustodianRelationship_RequestCredit : ContractId DepositCreditRequest
-        with
-          request : DepositCreditRequest
-        do create request
+    nonconsuming choice CustodianRelationship_RequestCredit : ContractId DepositCreditRequest
+      with
+        request : DepositCreditRequest
+      controller party
+      do create request
 
-      nonconsuming CustodianRelationship_RequestDebit : ContractId DepositDebitRequest
-        with
-          request : DepositDebitRequest
-        do create request
+    nonconsuming choice CustodianRelationship_RequestDebit : ContractId DepositDebitRequest
+      with
+        request : DepositDebitRequest
+      controller party
+      do create request
 
-      nonconsuming CustodianRelationship_RequestTransfer : ContractId DepositTransferRequest
-        with
-          request : DepositTransferRequest
-        do create request
+    nonconsuming choice CustodianRelationship_RequestTransfer : ContractId DepositTransferRequest
+      with
+        request : DepositTransferRequest
+      controller party
+      do create request
 
 
 template CustodianRelationshipRequest
@@ -51,27 +53,29 @@ template CustodianRelationshipRequest
     signatory operator, requester
     key (operator, requester, custodian, role) : (Party, Party, Party, MarketRole)
     maintainer key._1
+    observer custodian
 
-    controller custodian can
-      CustodianRelationshipRequest_Approve : ContractId CustodianRelationship
-        do
-          case role of
-            IssuerRole -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddIssuer with issuer = requester
-            ExchangeRole -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddExchange with exchange = requester
-            InvestorRole -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddInvestor with investor = requester
-            BrokerRole -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddBroker with broker = requester
-            _ -> return ()
-          create DismissibleNotification with
-            sender = custodian, senderRole = Some CustodianRole
-            receiver = requester, text = "Relationship request accepted."
-          createOrLookup CustodianRelationship with party = requester, ..
+    choice CustodianRelationshipRequest_Approve : ContractId CustodianRelationship
+      controller custodian
+      do
+        case role of
+          IssuerRole -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddIssuer with issuer = requester
+          ExchangeRole -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddExchange with exchange = requester
+          InvestorRole -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddInvestor with investor = requester
+          BrokerRole -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddBroker with broker = requester
+          _ -> return ()
+        create DismissibleNotification with
+          sender = custodian, senderRole = Some CustodianRole
+          receiver = requester, text = "Relationship request accepted."
+        createOrLookup CustodianRelationship with party = requester, ..
 
-      CustodianRelationshipRequest_Reject : ()
-        do
-          create DismissibleNotification with
-            sender = custodian, senderRole = Some CustodianRole
-            receiver = requester, text = "Relationship request rejected."
-          return ()
+    choice CustodianRelationshipRequest_Reject : ()
+      controller custodian
+      do
+        create DismissibleNotification with
+          sender = custodian, senderRole = Some CustodianRole
+          receiver = requester, text = "Relationship request rejected."
+        return ()
 
 
 template CustodianInvitation
@@ -81,18 +85,19 @@ template CustodianInvitation
     public : Party
   where
     signatory operator
+    observer custodian
 
     key (operator, custodian) : (Party, Party)
     maintainer key._1
 
-    controller custodian can
-      CustodianInvitation_Accept : ContractId Custodian
-        with
-          name : Text
-          location : Text
-        do
-          createOrLookup RegisteredCustodian with ..
-          createOrLookup Custodian with investors = [], exchanges = [], brokers = [], issuers = [], ..
+    choice CustodianInvitation_Accept : ContractId Custodian
+      with
+        name : Text
+        location : Text
+      controller custodian
+      do
+        createOrLookup RegisteredCustodian with ..
+        createOrLookup Custodian with investors = [], exchanges = [], brokers = [], issuers = [], ..
 
 
 template Custodian
@@ -109,54 +114,59 @@ template Custodian
     key (operator, custodian) :  (Party, Party)
     maintainer key._1
 
-    controller custodian can
-      Custodian_AddIssuer : ContractId Custodian
-        with
-          issuer : Party
-        do
-          assertMsg ("Issuer " <> show issuer <> " already exists") $ issuer `notElem` issuers
-          create this with issuers = issuer :: issuers
+    choice Custodian_AddIssuer : ContractId Custodian
+      with
+        issuer : Party
+      controller custodian
+      do
+        assertMsg ("Issuer " <> show issuer <> " already exists") $ issuer `notElem` issuers
+        create this with issuers = issuer :: issuers
 
-      Custodian_AddExchange : ContractId Custodian
-        with
-          exchange : Party
-        do
-          assertMsg ("Exchange " <> show exchange <> " already exists") $ exchange `notElem` exchanges
-          create this with exchanges = exchange :: exchanges
+    choice Custodian_AddExchange : ContractId Custodian
+      with
+        exchange : Party
+      controller custodian
+      do
+        assertMsg ("Exchange " <> show exchange <> " already exists") $ exchange `notElem` exchanges
+        create this with exchanges = exchange :: exchanges
 
-      Custodian_AddInvestor : ContractId Custodian
-        with
-          investor : Party
-        do
-          assertMsg ("Investor " <> show investor <> " already exists") $ investor `notElem` investors
-          create this with investors = investor :: investors
+    choice Custodian_AddInvestor : ContractId Custodian
+      with
+        investor : Party
+      controller custodian
+      do
+        assertMsg ("Investor " <> show investor <> " already exists") $ investor `notElem` investors
+        create this with investors = investor :: investors
 
-      Custodian_AddBroker : ContractId Custodian
-        with
-          broker : Party
-        do
-          assertMsg ("Broker " <> show broker <> " already exists") $ broker `notElem` brokers
-          create this with brokers = broker :: brokers
+    choice Custodian_AddBroker : ContractId Custodian
+      with
+        broker : Party
+      controller custodian
+      do
+        assertMsg ("Broker " <> show broker <> " already exists") $ broker `notElem` brokers
+        create this with brokers = broker :: brokers
 
-      nonconsuming Custodian_GetAccount : Account
-        with
-          investor : Party
-        do
-          let accountId = getAccountId investor custodian [custodian, operator]
-          return Account with id = accountId, provider = custodian, owner = investor
+    nonconsuming choice Custodian_GetAccount : Account
+      with
+        investor : Party
+      controller custodian
+      do
+        let accountId = getAccountId investor custodian [custodian, operator]
+        return Account with id = accountId, provider = custodian, owner = investor
 
-      nonconsuming Custodian_CreateDeposit : ContractId AssetDeposit
-        with
-          tokenId : Id
-          depositQuantity : Decimal
-          beneficiary : Party
-        do
-          optRelationships <- mapM (\s -> lookupByKey @CustodianRelationship (custodian, operator, s)) $ toList tokenId.signatories
-          assertMsg "Custodian must have a relationship with the issuer to deposit this token"
-            $ not (null (catOptionals optRelationships)) || custodian `member` tokenId.signatories
-          (tokenCid, token) <- fetchByKey @Token tokenId
-          account <- exercise self Custodian_GetAccount with investor = beneficiary
-          let quantity = roundBankers token.quantityPrecision depositQuantity
-              asset = Asset with id = tokenId, ..
-              depositObs = fromList $ [] -- account.provider :: signatory token
-          create AssetDeposit with observers = depositObs, account = account, ..
+    nonconsuming choice Custodian_CreateDeposit : ContractId AssetDeposit
+      with
+        tokenId : Id
+        depositQuantity : Decimal
+        beneficiary : Party
+      controller custodian
+      do
+        optRelationships <- mapM (\s -> lookupByKey @CustodianRelationship (custodian, operator, s)) $ toList tokenId.signatories
+        assertMsg "Custodian must have a relationship with the issuer to deposit this token"
+          $ not (null (catOptionals optRelationships)) || custodian `member` tokenId.signatories
+        (tokenCid, token) <- fetchByKey @Token tokenId
+        account <- exercise self Custodian_GetAccount with investor = beneficiary
+        let quantity = roundBankers token.quantityPrecision depositQuantity
+            asset = Asset with id = tokenId, ..
+            depositObs = fromList $ [] -- account.provider :: signatory token
+        create AssetDeposit with observers = depositObs, account = account, ..

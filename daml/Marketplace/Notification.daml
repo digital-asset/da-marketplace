@@ -13,6 +13,6 @@ template DismissibleNotification
     signatory sender
     observer receiver
 
-    controller receiver can
-      DismissibleNotification_Dismiss : ()
-        do return ()
+    choice DismissibleNotification_Dismiss : ()
+      controller receiver
+      do return ()

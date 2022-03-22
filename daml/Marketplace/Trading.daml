@@ -5,8 +5,8 @@ import Marketplace.Token
 import Marketplace.Transfer
 import Marketplace.Utils
 
-import DA.Next.Set (Set)
-import DA.Next.Set qualified as Set
+import DA.Set (Set)
+import DA.Set qualified as Set
 
 import DA.Finance.Asset
 import DA.Finance.Types
@@ -27,10 +27,11 @@ template Settlement
       controller party
       do
         create this with signatures = Set.insert party signatures
-    controller exchange can
-      Settlement_Settle : ContractId AssetDeposit
-        do
-          exercise depositCid AssetDeposit_Transfer with ..
+
+    choice Settlement_Settle : ContractId AssetDeposit
+      controller exchange
+      do
+        exercise depositCid AssetDeposit_Transfer with ..
 
 template SettlementAgreement
   with
@@ -42,12 +43,12 @@ template SettlementAgreement
     key (exchange, exchParticipant) : (Party, Party)
     maintainer key._1
 
-    controller exchange can
-      nonconsuming SettlementAgreement_SignSettlement : ContractId Settlement
-        with
-          settlementCid : ContractId Settlement
-        do
-          exercise settlementCid Settlement_Sign with party = exchParticipant
+    nonconsuming choice SettlementAgreement_SignSettlement : ContractId Settlement
+      with
+        settlementCid : ContractId Settlement
+      controller exchange
+      do
+        exercise settlementCid Settlement_Sign with party = exchParticipant
 
 template OrderRequest
   with
@@ -57,20 +58,21 @@ template OrderRequest
     signatory order.exchange, order.exchParticipant
     ensure order.qty > 0.0
 
-    controller order.exchange can
-      OrderRequest_Ack : ContractId Order
-        with
-          orderId : Int
-        do create order with orderId = orderId
+    choice OrderRequest_Ack : ContractId Order
+      with
+        orderId : Int
+      controller order.exchange
+      do create order with orderId = orderId
 
-      OrderRequest_Reject : ContractId AssetDeposit
-        do
-          exercise order.depositCid LockedAssetDeposit_Unlock
+    choice OrderRequest_Reject : ContractId AssetDeposit
+      controller order.exchange
+      do
+        exercise order.depositCid LockedAssetDeposit_Unlock
 
-    controller order.exchParticipant can
-      OrderRequest_Cancel : ContractId AssetDeposit
-        do
-          exercise order.depositCid LockedAssetDeposit_Unlock
+    choice OrderRequest_Cancel : ContractId AssetDeposit
+      controller order.exchParticipant
+      do
+        exercise order.depositCid LockedAssetDeposit_Unlock
 
 
 template OrderCancelRequest
@@ -82,12 +84,13 @@ template OrderCancelRequest
     key (order.exchange, order.orderId) : (Party, Int)
     maintainer key._1
 
-    controller order.exchange can
-      OrderCancel_Ack : ContractId AssetDeposit
-        do exerciseByKey @Order (order.exchange, order.orderId) Order_Cancel
+    choice OrderCancel_Ack : ContractId AssetDeposit
+      controller order.exchange
+      do exerciseByKey @Order (order.exchange, order.orderId) Order_Cancel
 
-      OrderCancel_Reject : ()
-        do return ()
+    choice OrderCancel_Reject : ()
+      controller order.exchange
+      do return ()
 
 
 template Order
@@ -114,112 +117,114 @@ template Order
     key (exchange, orderId) : (Party, Int)
     maintainer key._1
 
-    controller exchange can
-      Order_FillBinaryOption : (ContractId TradeSide, Optional (ContractId Order))
-        with
-          fillQty : Decimal
-          fillPrice : Decimal
-          counterParty : Party
-          counterOrderId : Int
-          timeMatched : Text
-        do
-          assertMsg "Fill quantity must be greater than 0" $ fillQty > 0.0
-          assertMsg "Fill quantity must be less than or equal to order quantity" $ fillQty <= qty
-          assertMsg "Fill price is outside of the order's price bounds"
-                 $ if isBid then fillPrice <= price
-                            else fillPrice >= price
-          let senderAccountId = Id
-                with signatories = account.id.signatories,
-                      label = getAccountLabel exchParticipant exchange, version = 0
-          let receiverAccountId = Id
-                with signatories = account.id.signatories,
-                      label = getAccountLabel counterParty exchange, version = 0
-              isBinaryOption = True
-          (_, binOption) <- fetchByKey @BinaryOption pair._1
-          (_, quoteToken) <- fetchByKey @Token pair._2
-          if fillQty < qty then do
-            let depositFillQty = roundBankers quoteToken.quantityPrecision $
-                                    if isBid then fillQty * fillPrice
-                                    else fillQty * (binOption.maxPrice - fillPrice)
+    choice Order_FillBinaryOption : (ContractId TradeSide, Optional (ContractId Order))
+      with
+        fillQty : Decimal
+        fillPrice : Decimal
+        counterParty : Party
+        counterOrderId : Int
+        timeMatched : Text
+      controller exchange
+      do
+        assertMsg "Fill quantity must be greater than 0" $ fillQty > 0.0
+        assertMsg "Fill quantity must be less than or equal to order quantity" $ fillQty <= qty
+        assertMsg "Fill price is outside of the order's price bounds"
+               $ if isBid then fillPrice <= price
+                          else fillPrice >= price
+        let senderAccountId = Id
+              with signatories = account.id.signatories,
+                    label = getAccountLabel exchParticipant exchange, version = 0
+        let receiverAccountId = Id
+              with signatories = account.id.signatories,
+                    label = getAccountLabel counterParty exchange, version = 0
+            isBinaryOption = True
+        (_, binOption) <- fetchByKey @BinaryOption pair._1
+        (_, quoteToken) <- fetchByKey @Token pair._2
+        if fillQty < qty then do
+          let depositFillQty = roundBankers quoteToken.quantityPrecision $
+                                  if isBid then fillQty * fillPrice
+                                  else fillQty * (binOption.maxPrice - fillPrice)
+          [filledDepositCid, restDepositCid] <- exercise depositCid LockedAssetDeposit_Split with quantities = [depositFillQty]
+          remainingCid <- create this
+            with qty = qty - fillQty, status = "PartiallyFilled", depositCid = restDepositCid
+          tradeCid <- create TradeSide with
+              isBuy = isBid, optDepositCid = Some filledDepositCid
+              qty = fillQty, price = fillPrice, ..
+
+          return $ (tradeCid, Some remainingCid)
+        else do
+          tradeCid <- create TradeSide with isBuy = isBid, optDepositCid = Some depositCid, price = fillPrice, ..
+          return $ (tradeCid, None)
+
+    choice Order_Fill : (ContractId TradeSide, Optional (ContractId Order))
+      with
+        fillQty : Decimal
+        fillPrice : Decimal
+        counterParty : Party
+        counterOrderId : Int
+        timeMatched : Text
+      controller exchange
+      do
+        assertMsg "Fill quantity must be greater than 0" $ fillQty > 0.0
+        assertMsg "Fill quantity must be less than or equal to order quantity"
+          $ fillQty <= qty
+        assertMsg "Fill price is outside of the order's price bounds"
+               $ if isBid then fillPrice <= price
+                          else fillPrice >= price
+
+        let receiverAccountId = Id
+              with signatories = account.id.signatories,
+                    label = getAccountLabel counterParty exchange, version = 0
+            isBinaryOption = False
+        let senderAccountId = Id
+              with signatories = account.id.signatories,
+                    label = getAccountLabel exchParticipant exchange, version = 0
+        (_, baseToken) <- fetchByKey @Token pair._1
+        (_, quoteToken) <- fetchByKey @Token pair._2
+        if fillQty < qty then do
+          deposit <- fetch depositCid
+          let minFillQty = 10.0 ** (- intToDecimal if isBid then quoteToken.quantityPrecision
+                                                            else baseToken.quantityPrecision)
+          let depositFillQty = min (if isBid
+                                    then roundBankers quoteToken.quantityPrecision $ fillQty * fillPrice
+                                    else fillQty)
+                                   (deposit.asset.quantity - minFillQty)
+          if (depositFillQty > 0.0 && depositFillQty < deposit.asset.quantity)
+          then do
             [filledDepositCid, restDepositCid] <- exercise depositCid LockedAssetDeposit_Split with quantities = [depositFillQty]
+
             remainingCid <- create this
-              with qty = qty - fillQty, status = "PartiallyFilled", depositCid = restDepositCid
+              with qty = qty - fillQty, status = "PartiallyFilled"
+                   depositCid = restDepositCid
+
             tradeCid <- create TradeSide with
                 isBuy = isBid, optDepositCid = Some filledDepositCid
                 qty = fillQty, price = fillPrice, ..
 
             return $ (tradeCid, Some remainingCid)
           else do
-            tradeCid <- create TradeSide with isBuy = isBid, optDepositCid = Some depositCid, price = fillPrice, ..
-            return $ (tradeCid, None)
-
-      Order_Fill : (ContractId TradeSide, Optional (ContractId Order))
-        with
-          fillQty : Decimal
-          fillPrice : Decimal
-          counterParty : Party
-          counterOrderId : Int
-          timeMatched : Text
-        do
-          assertMsg "Fill quantity must be greater than 0" $ fillQty > 0.0
-          assertMsg "Fill quantity must be less than or equal to order quantity"
-            $ fillQty <= qty
-          assertMsg "Fill price is outside of the order's price bounds"
-                 $ if isBid then fillPrice <= price
-                            else fillPrice >= price
-
-          let receiverAccountId = Id
-                with signatories = account.id.signatories,
-                      label = getAccountLabel counterParty exchange, version = 0
-              isBinaryOption = False
-          let senderAccountId = Id
-                with signatories = account.id.signatories,
-                      label = getAccountLabel exchParticipant exchange, version = 0
-          (_, baseToken) <- fetchByKey @Token pair._1
-          (_, quoteToken) <- fetchByKey @Token pair._2
-          if fillQty < qty then do
-            deposit <- fetch depositCid
-            let minFillQty = 10.0 ** (- intToDecimal if isBid then quoteToken.quantityPrecision
-                                                              else baseToken.quantityPrecision)
-            let depositFillQty = min (if isBid
-                                      then roundBankers quoteToken.quantityPrecision $ fillQty * fillPrice
-                                      else fillQty)
-                                     (deposit.asset.quantity - minFillQty)
-            if (depositFillQty > 0.0 && depositFillQty < deposit.asset.quantity)
-            then do
-              [filledDepositCid, restDepositCid] <- exercise depositCid LockedAssetDeposit_Split with quantities = [depositFillQty]
-
-              remainingCid <- create this
-                with qty = qty - fillQty, status = "PartiallyFilled"
-                     depositCid = restDepositCid
-
-              tradeCid <- create TradeSide with
-                  isBuy = isBid, optDepositCid = Some filledDepositCid
-                  qty = fillQty, price = fillPrice, ..
-
-              return $ (tradeCid, Some remainingCid)
-            else do
-              -- the fillQty is not enough to warrant a deposit transfer
-              remainingCid <- create this with qty = qty - fillQty, status = "PartiallyFilled"
-              tradeCid <- create TradeSide with
-                  isBuy = isBid, optDepositCid = None
-                  qty = fillQty, price = fillPrice, ..
-
-              return $ (tradeCid, Some remainingCid)
-          else do
+            -- the fillQty is not enough to warrant a deposit transfer
+            remainingCid <- create this with qty = qty - fillQty, status = "PartiallyFilled"
             tradeCid <- create TradeSide with
-                isBuy = isBid, optDepositCid = Some depositCid
-                price = fillPrice, ..
+                isBuy = isBid, optDepositCid = None
+                qty = fillQty, price = fillPrice, ..
 
-            return $ (tradeCid, None)
+            return $ (tradeCid, Some remainingCid)
+        else do
+          tradeCid <- create TradeSide with
+              isBuy = isBid, optDepositCid = Some depositCid
+              price = fillPrice, ..
 
-      Order_Cancel : ContractId AssetDeposit
-        do
-          exercise depositCid LockedAssetDeposit_Unlock
+          return $ (tradeCid, None)
 
-    controller exchParticipant can
-      nonconsuming Order_RequestCancel : ContractId OrderCancelRequest
-        do createOrLookup OrderCancelRequest with order = this
+    choice Order_Cancel : ContractId AssetDeposit
+      controller exchange
+      do
+        exercise depositCid LockedAssetDeposit_Unlock
+
+    nonconsuming choice Order_RequestCancel : ContractId OrderCancelRequest
+      controller exchange
+      do createOrLookup OrderCancelRequest with order = this
 
 
 assetSplit : Asset -> [Decimal] -> [Asset]
@@ -244,19 +249,19 @@ template BrokerOrderRequest
   where
     signatory broker, brokerCustomer, operator
 
-    controller broker can
-      BrokerOrderRequest_Accept : (ContractId BrokerOrder, ContractId DepositTransferRequest)
-        with
-          brokerOrderId : Int
-        do
-          deposit <- fetch depositCid
-          assertMsg "Deposit account does not belong to brokerCustomer" $ deposit.account.owner == brokerCustomer
-          brokerOrderCid <- create BrokerOrder with ..
-          let receiverAccountId = Id with signatories = deposit.account.id.signatories, label = getAccountLabel broker broker, version = 0
-          let custodian = getCustodian deposit.account.id operator
+    choice BrokerOrderRequest_Accept : (ContractId BrokerOrder, ContractId DepositTransferRequest)
+      with
+        brokerOrderId : Int
+      controller broker
+      do
+        deposit <- fetch depositCid
+        assertMsg "Deposit account does not belong to brokerCustomer" $ deposit.account.owner == brokerCustomer
+        brokerOrderCid <- create BrokerOrder with ..
+        let receiverAccountId = Id with signatories = deposit.account.id.signatories, label = getAccountLabel broker broker, version = 0
+        let custodian = getCustodian deposit.account.id operator
 
-          depositTransferReqCid <- create DepositTransferRequest with sender = brokerCustomer, senderAccountId = deposit.account.id, ..
-          return (brokerOrderCid, depositTransferReqCid)
+        depositTransferReqCid <- create DepositTransferRequest with sender = brokerCustomer, senderAccountId = deposit.account.id, ..
+        return (brokerOrderCid, depositTransferReqCid)
 
 
 template BrokerOrder
@@ -275,28 +280,28 @@ template BrokerOrder
     key (broker, brokerOrderId) : (Party, Int)
     maintainer key._1
 
-    controller broker can
-      BrokerOrder_Fill : ContractId DepositTransferRequest
-        with
-          depositCid : ContractId AssetDeposit
-        do
-          deposit <- fetch depositCid
-          assertMsg ("the owner of the deposit is not broker: " <> show broker)
-            $ deposit.account.owner == broker
-          (_, baseToken) <- fetchByKey @Token pair._1
-          (_, quoteToken) <- fetchByKey @Token pair._2
-          let depositToken = if isBid then baseToken else quoteToken
-          assertMsg ("deposit should be for " <> depositToken.id.label
-            <> " but it is for " <> deposit.asset.id.label)
-            $ deposit.asset.id == depositToken.id
-          let depositQty = if isBid then deposit.asset.quantity
-                           else roundBankers baseToken.quantityPrecision $ deposit.asset.quantity / price
-          assertMsg ("the deposit quantity of " <> show depositQty
-            <> " does not match the requested of " <> show qty) $ depositQty == qty
-          let senderAccountId = deposit.account.id
-              receiverAccountId = Id with signatories = deposit.account.id.signatories, label = getAccountLabel brokerCustomer broker, version = 0
-          create BrokerTrade with isBuy = isBid, ..
-          create DepositTransferRequest with sender = broker, ..
+    choice BrokerOrder_Fill : ContractId DepositTransferRequest
+      with
+        depositCid : ContractId AssetDeposit
+      controller broker
+      do
+        deposit <- fetch depositCid
+        assertMsg ("the owner of the deposit is not broker: " <> show broker)
+          $ deposit.account.owner == broker
+        (_, baseToken) <- fetchByKey @Token pair._1
+        (_, quoteToken) <- fetchByKey @Token pair._2
+        let depositToken = if isBid then baseToken else quoteToken
+        assertMsg ("deposit should be for " <> depositToken.id.label
+          <> " but it is for " <> deposit.asset.id.label)
+          $ deposit.asset.id == depositToken.id
+        let depositQty = if isBid then deposit.asset.quantity
+                         else roundBankers baseToken.quantityPrecision $ deposit.asset.quantity / price
+        assertMsg ("the deposit quantity of " <> show depositQty
+          <> " does not match the requested of " <> show qty) $ depositQty == qty
+        let senderAccountId = deposit.account.id
+            receiverAccountId = Id with signatories = deposit.account.id.signatories, label = getAccountLabel brokerCustomer broker, version = 0
+        create BrokerTrade with isBuy = isBid, ..
+        create DepositTransferRequest with sender = broker, ..
 
 template ClearedOrderRequest
   with
@@ -306,18 +311,19 @@ template ClearedOrderRequest
     signatory order.ccp, order.exchParticipant
     ensure order.qty > 0.0
 
-    controller order.exchange can
-      ClearedOrderRequest_Ack : ContractId ClearedOrder
-        with
-          orderId : Int
-        do create order with orderId = orderId
+    choice ClearedOrderRequest_Ack : ContractId ClearedOrder
+      with
+        orderId : Int
+      controller order.exchange
+      do create order with orderId = orderId
 
-      ClearedOrderRequest_Reject : ()
-        do return ()
+    choice ClearedOrderRequest_Reject : ()
+      controller order.exchange
+      do return ()
 
-    controller order.exchParticipant can
-      ClearedOrderRequest_Cancel : ()
-        do return ()
+    choice ClearedOrderRequest_Cancel : ()
+      controller order.exchParticipant
+      do return ()
 
 -- TODO: Allow for cancelling pending orders
 template ClearedOrder
@@ -339,32 +345,33 @@ template ClearedOrder
     key (exchange, orderId) : (Party, Int)
     maintainer key._1
 
-    controller exchange can
-      ClearedOrder_Fill : Optional (ContractId ClearedOrder)
-        with
-          fillQty : Decimal
-          fillPrice : Decimal
-        do
-          assertMsg "Fill quantity must be greater than 0" $ fillQty > 0.0
-          assertMsg "Fill quantity must be less than or equal to order quantity" $ fillQty <= qty
-          assertMsg "Fill price is outside of the order's price bounds"
-                 $ if isBid then fillPrice <= price
-                            else fillPrice >= price
+    choice ClearedOrder_Fill : Optional (ContractId ClearedOrder)
+      with
+        fillQty : Decimal
+        fillPrice : Decimal
+      controller exchange
+      do
+        assertMsg "Fill quantity must be greater than 0" $ fillQty > 0.0
+        assertMsg "Fill quantity must be less than or equal to order quantity" $ fillQty <= qty
+        assertMsg "Fill price is outside of the order's price bounds"
+               $ if isBid then fillPrice <= price
+                          else fillPrice >= price
 
-          if qty == fillQty
-            then do return None
-            else do
-              partialOrder <- create this with
-                qty = qty - fillQty, status = "PartiallyFilled"
+        if qty == fillQty
+          then do return None
+          else do
+            partialOrder <- create this with
+              qty = qty - fillQty, status = "PartiallyFilled"
 
-              return $ Some partialOrder
+            return $ Some partialOrder
 
-      ClearedOrder_Cancel : ()
-        do return ()
+    choice ClearedOrder_Cancel : ()
+      controller exchange
+      do return ()
 
-    controller exchParticipant can
-      nonconsuming ClearedOrder_RequestCancel : ContractId ClearedOrderCancelRequest
-        do createOrLookup ClearedOrderCancelRequest with order = this
+    nonconsuming choice ClearedOrder_RequestCancel : ContractId ClearedOrderCancelRequest
+      controller exchParticipant
+      do createOrLookup ClearedOrderCancelRequest with order = this
 
 template ClearedOrderCancelRequest
   with
@@ -375,14 +382,15 @@ template ClearedOrderCancelRequest
     key (order.exchange, order.orderId) : (Party, Int)
     maintainer key._1
 
-    controller order.exchange can
-      ClearedOrderCancel_Ack : ()
-        do
-          exerciseByKey @ClearedOrder (order.exchange, order.orderId) ClearedOrder_Cancel
-          return ()
+    choice ClearedOrderCancel_Ack : ()
+      controller order.exchange
+      do
+        exerciseByKey @ClearedOrder (order.exchange, order.orderId) ClearedOrder_Cancel
+        return ()
 
-      ClearedOrderCancel_Reject : ()
-        do return ()
+    choice ClearedOrderCancel_Reject : ()
+      controller order.exchange
+      do return ()
 
 -- TODO: Replace DerivativeTrade with ClearedTrade
 template ClearedTrade
@@ -404,32 +412,33 @@ template ClearedTrade
   where
     signatory exchange
     observer ccp
-    controller ccp can
-      ClearedTrade_Novate : (ContractId ClearedTradeSide, ContractId ClearedTradeSide)
-        with
-          buyerAccountId : Id
-          sellerAccountId : Id
-        do
-          timeNovated <- getTime
-          buyCid <- create ClearedTradeSide with
-            participant = buyer
-            orderId = buyerOrderId
-            accountId = buyerAccountId
-            isBuy = True
-            qty = executedQuantity
-            price = executedPrice
-            counterOrderId = sellerOrderId
-            ..
-          sellCid <- create ClearedTradeSide with
-            participant = seller
-            orderId = sellerOrderId
-            accountId = sellerAccountId
-            isBuy = False
-            qty = executedQuantity
-            price = executedPrice
-            counterOrderId = buyerOrderId
-            ..
-          return (buyCid, sellCid)
+
+    choice ClearedTrade_Novate : (ContractId ClearedTradeSide, ContractId ClearedTradeSide)
+      with
+        buyerAccountId : Id
+        sellerAccountId : Id
+      controller ccp
+      do
+        timeNovated <- getTime
+        buyCid <- create ClearedTradeSide with
+          participant = buyer
+          orderId = buyerOrderId
+          accountId = buyerAccountId
+          isBuy = True
+          qty = executedQuantity
+          price = executedPrice
+          counterOrderId = sellerOrderId
+          ..
+        sellCid <- create ClearedTradeSide with
+          participant = seller
+          orderId = sellerOrderId
+          accountId = sellerAccountId
+          isBuy = False
+          qty = executedQuantity
+          price = executedPrice
+          counterOrderId = buyerOrderId
+          ..
+        return (buyCid, sellCid)
 
 
 template ClearedTradeSide
@@ -471,26 +480,26 @@ template DerivativeTrade
   where
     signatory exchange
     observer ccp
-    controller ccp can
-      DerivativeTrade_Novate : (ContractId DerivativeTradeSide, ContractId DerivativeTradeSide)
-        with
-          buyerAccountId : Id
-          sellerAccountId : Id
-        do
-          timestamp <- getTime
-          buyCid <- create DerivativeTradeSide with
-            participant = buyer
-            orderId = buyerOrderId
-            accountId = buyerAccountId
-            isBuy = True
-            ..
-          sellCid <- create DerivativeTradeSide with
-            participant = seller
-            orderId = sellerOrderId
-            accountId = sellerAccountId
-            isBuy = False
-            ..
-          return (buyCid, sellCid)
+    choice DerivativeTrade_Novate : (ContractId DerivativeTradeSide, ContractId DerivativeTradeSide)
+      with
+        buyerAccountId : Id
+        sellerAccountId : Id
+      controller ccp
+      do
+        timestamp <- getTime
+        buyCid <- create DerivativeTradeSide with
+          participant = buyer
+          orderId = buyerOrderId
+          accountId = buyerAccountId
+          isBuy = True
+          ..
+        sellCid <- create DerivativeTradeSide with
+          participant = seller
+          orderId = sellerOrderId
+          accountId = sellerAccountId
+          isBuy = False
+          ..
+        return (buyCid, sellCid)
 
 
 template DerivativeTradeSide
@@ -537,51 +546,52 @@ template TradeSide
             (party, partyProvider) = getAccountOwnerProvider accountId.label
             account = Account with id = accountId, provider = partyProvider, owner = party
 
-    controller exchange can
-      TradeSide_Settle : (ContractId SettledTradeSide, [ContractId AssetDeposit])
-        do
-          assertMsg "Binary option settlement must be done with the SettleBinaryOption choice." $ not isBinaryOption
-          depositCids <- case optDepositCid of
-            Some lockedDepositCid -> do
-              depositCid <- exercise lockedDepositCid LockedAssetDeposit_Unlock
-              deposit <- fetch depositCid
-              (sendDepositCid, restDepositCids) <-
-                if isBuy && (deposit.asset.quantity > qty * price)
-                then do
-                  [sendDepositCid, restDepositCid] <- exercise depositCid AssetDeposit_Split with quantities = [qty * price]
-                  return (sendDepositCid, [restDepositCid])
+    choice TradeSide_Settle : (ContractId SettledTradeSide, [ContractId AssetDeposit])
+      controller exchange
+      do
+        assertMsg "Binary option settlement must be done with the SettleBinaryOption choice." $ not isBinaryOption
+        depositCids <- case optDepositCid of
+          Some lockedDepositCid -> do
+            depositCid <- exercise lockedDepositCid LockedAssetDeposit_Unlock
+            deposit <- fetch depositCid
+            (sendDepositCid, restDepositCids) <-
+              if isBuy && (deposit.asset.quantity > qty * price)
+              then do
+                [sendDepositCid, restDepositCid] <- exercise depositCid AssetDeposit_Split with quantities = [qty * price]
+                return (sendDepositCid, [restDepositCid])
 
-                else return (depositCid, [])
+              else return (depositCid, [])
 
-              let receiverAccount = getAccount receiverAccountId
+            let receiverAccount = getAccount receiverAccountId
 
-              settlementCid <- create Settlement with depositCid = sendDepositCid, signatures = mempty, ..
-              settlementCid <- exerciseByKey @SettlementAgreement (exchange, exchParticipant) SettlementAgreement_SignSettlement with ..
-              settlementCid <- exerciseByKey @SettlementAgreement (exchange, receiverAccount.owner) SettlementAgreement_SignSettlement with ..
-              transferredDepositCid <- exercise settlementCid Settlement_Settle
+            settlementCid <- create Settlement with depositCid = sendDepositCid, signatures = mempty, ..
+            settlementCid <- exerciseByKey @SettlementAgreement (exchange, exchParticipant) SettlementAgreement_SignSettlement with ..
+            settlementCid <- exerciseByKey @SettlementAgreement (exchange, receiverAccount.owner) SettlementAgreement_SignSettlement with ..
+            transferredDepositCid <- exercise settlementCid Settlement_Settle
 
-              return $ transferredDepositCid :: restDepositCids
-            None -> return []
-          settledTradeCid <- create SettledTradeSide with ..
-          return (settledTradeCid, depositCids)
+            return $ transferredDepositCid :: restDepositCids
+          None -> return []
+        settledTradeCid <- create SettledTradeSide with ..
+        return (settledTradeCid, depositCids)
 
-      TradeSide_SettleBinaryOption : (ContractId SettledTradeSide, Optional (ContractId AssetDeposit))
-        with
-          settledBinOptionCid : ContractId SettledBinaryOption
-        do
-          assertMsg "Only binary option trades can be settled with this choice." isBinaryOption
-          settledBinOption <- fetch settledBinOptionCid
-          let needsTransfer = settledBinOption.outcome /= isBuy
-          optDepositCid <- case (optDepositCid, needsTransfer) of
-            (Some lockedDepositCid, True) -> do
-              depositCid <- exercise lockedDepositCid LockedAssetDeposit_Unlock
-              let (receiver, receiverProvider) = getAccountOwnerProvider receiverAccountId.label
-                  receiverAccount = Account with id = receiverAccountId, provider = receiverProvider, owner = receiver
-              transferredDepositCid <- exercise depositCid AssetDeposit_Transfer with ..
-              return $ Some transferredDepositCid
-            _ -> return None
-          settledTradeCid <- create SettledTradeSide with ..
-          return (settledTradeCid, optDepositCid)
+    choice TradeSide_SettleBinaryOption : (ContractId SettledTradeSide, Optional (ContractId AssetDeposit))
+      with
+        settledBinOptionCid : ContractId SettledBinaryOption
+      controller exchange
+      do
+        assertMsg "Only binary option trades can be settled with this choice." isBinaryOption
+        settledBinOption <- fetch settledBinOptionCid
+        let needsTransfer = settledBinOption.outcome /= isBuy
+        optDepositCid <- case (optDepositCid, needsTransfer) of
+          (Some lockedDepositCid, True) -> do
+            depositCid <- exercise lockedDepositCid LockedAssetDeposit_Unlock
+            let (receiver, receiverProvider) = getAccountOwnerProvider receiverAccountId.label
+                receiverAccount = Account with id = receiverAccountId, provider = receiverProvider, owner = receiver
+            transferredDepositCid <- exercise depositCid AssetDeposit_Transfer with ..
+            return $ Some transferredDepositCid
+          _ -> return None
+        settledTradeCid <- create SettledTradeSide with ..
+        return (settledTradeCid, optDepositCid)
 
 
 template SettledTradeSide

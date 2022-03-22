@@ -27,39 +27,44 @@ template Operator
     key operator : Party
     maintainer key
 
-    controller operator can
-      nonconsuming Operator_OnboardCustodian : ContractId CustodianInvitation
-        with
-          custodian : Party
-        do
-          createOrLookup CustodianInvitation with ..
+    nonconsuming choice Operator_OnboardCustodian : ContractId CustodianInvitation
+      with
+        custodian : Party
+      controller operator
+      do
+        createOrLookup CustodianInvitation with ..
 
-      nonconsuming Operator_OnboardIssuer : ContractId IssuerInvitation
-        with
-          issuer : Party
-        do
-          createOrLookup IssuerInvitation with ..
+    nonconsuming choice Operator_OnboardIssuer : ContractId IssuerInvitation
+      with
+        issuer : Party
+      controller operator
+      do
+        createOrLookup IssuerInvitation with ..
 
-      nonconsuming Operator_OnboardInvestor : ContractId InvestorInvitation
-        with
-          investor : Party
-        do
-          createOrLookup InvestorInvitation with ..
+    nonconsuming choice Operator_OnboardInvestor : ContractId InvestorInvitation
+      with
+        investor : Party
+      controller operator
+      do
+        createOrLookup InvestorInvitation with ..
 
-      nonconsuming Operator_OnboardExchange : ContractId ExchangeInvitation
-        with
-          exchange : Party
-        do
-          createOrLookup ExchangeInvitation with ..
+    nonconsuming choice Operator_OnboardExchange : ContractId ExchangeInvitation
+      with
+        exchange : Party
+      controller operator
+      do
+        createOrLookup ExchangeInvitation with ..
 
-      nonconsuming Operator_OnboardBroker : ContractId BrokerInvitation
-        with
-          broker : Party
-        do
-          createOrLookup BrokerInvitation with ..
+    nonconsuming choice Operator_OnboardBroker : ContractId BrokerInvitation
+      with
+        broker : Party
+      controller operator
+      do
+        createOrLookup BrokerInvitation with ..
 
-      nonconsuming Operator_OnboardCCP : ContractId CCPInvitation
-        with
-          ccp : Party
-        do
-          createOrLookup CCPInvitation with ..
+    nonconsuming choice Operator_OnboardCCP : ContractId CCPInvitation
+      with
+        ccp : Party
+      controller operator
+      do
+        createOrLookup CCPInvitation with ..

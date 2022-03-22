@@ -14,7 +14,7 @@ import DA.Finance.Types
 import DA.Optional
 
 import DA.List
-import DA.Next.Set hiding (delete)
+import DA.Set hiding (delete)
 
 template ExchangeInvitation
   with
@@ -23,18 +23,19 @@ template ExchangeInvitation
     public : Party
   where
     signatory operator
+    observer exchange
 
     key (operator, exchange) : (Party, Party)
     maintainer key._1
 
-    controller exchange can
-      ExchangeInvitation_Accept : ContractId Exchange
-        with
-          name : Text
-          location : Text
-        do
-          createOrLookup RegisteredExchange with ..
-          createOrLookup Exchange with tokenPairs = [], clearedMarkets = [], binOptions = [], participants = [], ..
+    choice ExchangeInvitation_Accept : ContractId Exchange
+      with
+        name : Text
+        location : Text
+      controller exchange
+      do
+        createOrLookup RegisteredExchange with ..
+        createOrLookup Exchange with tokenPairs = [], clearedMarkets = [], binOptions = [], participants = [], ..
 
 
 -- |Request from an investor or broker to be added to the exchange
@@ -45,24 +46,26 @@ template ExchangeParticipantInvitationRequest
     participant : Party
   where
     signatory participant
+    observer exchange
     key (operator, exchange, participant) : (Party, Party, Party)
     maintainer key._3
 
-    controller exchange can
-      ExchangeParticipantInvitationRequest_Accept : ContractId ExchangeParticipant
-        do
-          create DismissibleNotification with
-            sender = exchange, senderRole = Some ExchangeRole
-            receiver = participant, text = "Exchange participant request accepted."
-          exerciseByKey @Exchange (operator,exchange) Exchange_AddParticipant with exchParticipant = participant
-          createOrLookup ExchangeParticipant with exchParticipant = participant, ..
+    choice ExchangeParticipantInvitationRequest_Accept : ContractId ExchangeParticipant
+      controller exchange
+      do
+        create DismissibleNotification with
+          sender = exchange, senderRole = Some ExchangeRole
+          receiver = participant, text = "Exchange participant request accepted."
+        exerciseByKey @Exchange (operator,exchange) Exchange_AddParticipant with exchParticipant = participant
+        createOrLookup ExchangeParticipant with exchParticipant = participant, ..
 
-      ExchangeInvtationRequest_Reject : ()
-        do
-          create DismissibleNotification with
-            sender = exchange, senderRole = Some ExchangeRole
-            receiver = participant, text = "Exchange participant request accepted."
-          return ()
+    choice ExchangeInvtationRequest_Reject : ()
+      controller exchange
+      do
+        create DismissibleNotification with
+          sender = exchange, senderRole = Some ExchangeRole
+          receiver = participant, text = "Exchange participant request accepted."
+        return ()
 
 
 template Exchange
@@ -90,122 +93,130 @@ template Exchange
                              then baseId.label <> quoteId.label <> "CLR"
                              else baseId.label <> quoteId.label
 
-    controller exchange can
-      nonconsuming Exchange_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
-        with
-          custodian : Party
-        do createOrLookup CustodianRelationshipRequest with requester = exchange, role = ExchangeRole, ..
+    nonconsuming choice Exchange_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
+      with
+        custodian : Party
+      controller exchange
+      do createOrLookup CustodianRelationshipRequest with requester = exchange, role = ExchangeRole, ..
 
-      nonconsuming Exchange_RequestCCPRelationship : ContractId CCPExchangeRelationshipRequest
-        with
-          ccp : Party
-        do
-          createOrLookup CCPExchangeRelationshipRequest with requester = exchange, party = ccp, requesterRole = ExchangeRole, ..
+    nonconsuming choice Exchange_RequestCCPRelationship : ContractId CCPExchangeRelationshipRequest
+      with
+        ccp : Party
+      controller exchange
+      do
+        createOrLookup CCPExchangeRelationshipRequest with requester = exchange, party = ccp, requesterRole = ExchangeRole, ..
 
-      Exchange_InviteParticipant : (ContractId Exchange, ContractId ExchangeParticipantInvitation)
-        with
-          exchParticipant : Party
-        do
-          participantInvitationCid <- create ExchangeParticipantInvitation with ..
-          exchangeCid <- create this with participants = dedup $ exchParticipant :: participants
-          return (exchangeCid, participantInvitationCid)
+    choice Exchange_InviteParticipant : (ContractId Exchange, ContractId ExchangeParticipantInvitation)
+      with
+        exchParticipant : Party
+      controller exchange
+      do
+        participantInvitationCid <- create ExchangeParticipantInvitation with ..
+        exchangeCid <- create this with participants = dedup $ exchParticipant :: participants
+        return (exchangeCid, participantInvitationCid)
 
-      Exchange_AddParticipant : ContractId Exchange
-        with
-          exchParticipant : Party
-        do
-          create this with participants = dedup $ exchParticipant :: participants
+    choice Exchange_AddParticipant : ContractId Exchange
+      with
+        exchParticipant : Party
+      controller exchange
+      do
+        create this with participants = dedup $ exchParticipant :: participants
 
-      Exchange_RemovePair : ContractId Exchange
-        with
-          pair : IdPair
-          clearedMarket : Bool
-        do
-          (marketPairCid, marketPair) <- fetchByKey @MarketPair (makeMarketPairId pair clearedMarket)
-          create ResetMarketRequest with ..
-          archive marketPairCid
-          create this with tokenPairs = delete pair tokenPairs
+    choice Exchange_RemovePair : ContractId Exchange
+      with
+        pair : IdPair
+        clearedMarket : Bool
+      controller exchange
+      do
+        (marketPairCid, marketPair) <- fetchByKey @MarketPair (makeMarketPairId pair clearedMarket)
+        create ResetMarketRequest with ..
+        archive marketPairCid
+        create this with tokenPairs = delete pair tokenPairs
 
-      Exchange_AddPair : (ContractId MarketPair, ContractId Exchange)
-        with
-          baseTokenId : Id
-          baseType : AssetType
-          quoteTokenId : Id
-          quoteType : AssetType
-          minQuantity : Decimal
-          maxQuantity : Decimal
-          clearedMarket : Bool
-          defaultCCP : Optional Party
-        do
-          baseQuantityPrecision <- (.quantityPrecision) <$> tokenOrUnderlying baseType baseTokenId
-          quoteQuantityPrecision <- (.quantityPrecision) <$> tokenOrUnderlying quoteType quoteTokenId
+    choice Exchange_AddPair : (ContractId MarketPair, ContractId Exchange)
+      with
+        baseTokenId : Id
+        baseType : AssetType
+        quoteTokenId : Id
+        quoteType : AssetType
+        minQuantity : Decimal
+        maxQuantity : Decimal
+        clearedMarket : Bool
+        defaultCCP : Optional Party
+      controller exchange
+      do
+        baseQuantityPrecision <- (.quantityPrecision) <$> tokenOrUnderlying baseType baseTokenId
+        quoteQuantityPrecision <- (.quantityPrecision) <$> tokenOrUnderlying quoteType quoteTokenId
 
-          assertMsg ("minimum quantity should be rounded to at most " <> show baseQuantityPrecision <> " decimal places")
-            $ roundBankers baseQuantityPrecision minQuantity == minQuantity
+        assertMsg ("minimum quantity should be rounded to at most " <> show baseQuantityPrecision <> " decimal places")
+          $ roundBankers baseQuantityPrecision minQuantity == minQuantity
 
-          assertMsg ("max quantity should be rounded to at most " <> show baseQuantityPrecision <> " decimal places")
-            $ roundBankers baseQuantityPrecision maxQuantity == maxQuantity
+        assertMsg ("max quantity should be rounded to at most " <> show baseQuantityPrecision <> " decimal places")
+          $ roundBankers baseQuantityPrecision maxQuantity == maxQuantity
 
-          assertMsg "minimum quantity should be less than the maximum quantity"
-            $ minQuantity < maxQuantity
+        assertMsg "minimum quantity should be less than the maximum quantity"
+          $ minQuantity < maxQuantity
 
-          assertMsg "Pair must have different base and quote tokens" $ baseTokenId.label /= quoteTokenId.label
+        assertMsg "Pair must have different base and quote tokens" $ baseTokenId.label /= quoteTokenId.label
 
-          let marketObservers = case defaultCCP of
-                 (Some x) -> x :: participants
-                 None     -> participants
+        let marketObservers = case defaultCCP of
+               (Some x) -> x :: participants
+               None     -> participants
 
-          let newMarket = MarketPair with
-                id = makeMarketPairId (baseTokenId, quoteTokenId) clearedMarket
-                clearedMarket
-                exchange
-                description = baseTokenId.label <> " vs " <> quoteTokenId.label
-                baseTokenId
-                quoteTokenId
-                calendarId = "1261007448"
-                pricePrecision = quoteQuantityPrecision
-                quantityPrecision = baseQuantityPrecision
-                minQuantity = minQuantity : Decimal
-                maxQuantity = maxQuantity : Decimal
-                status = InstrumentActive
-                observers = fromList marketObservers
+        let newMarket = MarketPair with
+              id = makeMarketPairId (baseTokenId, quoteTokenId) clearedMarket
+              clearedMarket
+              exchange
+              description = baseTokenId.label <> " vs " <> quoteTokenId.label
+              baseTokenId
+              quoteTokenId
+              calendarId = "1261007448"
+              pricePrecision = quoteQuantityPrecision
+              quantityPrecision = baseQuantityPrecision
+              minQuantity = minQuantity : Decimal
+              maxQuantity = maxQuantity : Decimal
+              status = InstrumentActive
+              observers = fromList marketObservers
 
-          marketCid <- create newMarket
+        marketCid <- create newMarket
 
-          (,) marketCid <$> if clearedMarket then do
-            let ccp = fromSomeNote "defaultCCP must be provided for cleared markets" defaultCCP
-            let clearedMarketPair = ((baseTokenId, quoteTokenId), ccp)
-            create this with clearedMarkets = dedup $ clearedMarketPair :: clearedMarkets
-          else
-            create this with tokenPairs = dedup $ (baseTokenId, quoteTokenId) :: tokenPairs
+        (,) marketCid <$> if clearedMarket then do
+          let ccp = fromSomeNote "defaultCCP must be provided for cleared markets" defaultCCP
+          let clearedMarketPair = ((baseTokenId, quoteTokenId), ccp)
+          create this with clearedMarkets = dedup $ clearedMarketPair :: clearedMarkets
+        else
+          create this with tokenPairs = dedup $ (baseTokenId, quoteTokenId) :: tokenPairs
 
-      Exchange_AddBinaryOption : ContractId Exchange
-        with
-          binOptionId : Id
-          quoteTokenId : Id
-        do
-          (_, binOption) <- fetchByKey @BinaryOption binOptionId
-          (_, quoteToken) <- fetchByKey @Token quoteTokenId
-          create this with binOptions = dedup $ (binOptionId, quoteTokenId) :: binOptions
+    choice Exchange_AddBinaryOption : ContractId Exchange
+      with
+        binOptionId : Id
+        quoteTokenId : Id
+      controller exchange
+      do
+        (_, binOption) <- fetchByKey @BinaryOption binOptionId
+        (_, quoteToken) <- fetchByKey @Token quoteTokenId
+        create this with binOptions = dedup $ (binOptionId, quoteTokenId) :: binOptions
 
-      nonconsuming Exchange_ApproveOrderRequest : ContractId Order
-        with
-          orderRequestCid : ContractId OrderRequest
-          orderId : Int
-        do
-          orderRequest <- fetch orderRequestCid
-          let pair = orderRequest.order.pair
-          assertMsg ("pair " <> pair._1.label <> "/" <> pair._2.label <> " is not supported by exchange")
-            $ (pair `elem` tokenPairs) || (pair `elem` binOptions)
+    nonconsuming choice Exchange_ApproveOrderRequest : ContractId Order
+      with
+        orderRequestCid : ContractId OrderRequest
+        orderId : Int
+      controller exchange
+      do
+        orderRequest <- fetch orderRequestCid
+        let pair = orderRequest.order.pair
+        assertMsg ("pair " <> pair._1.label <> "/" <> pair._2.label <> " is not supported by exchange")
+          $ (pair `elem` tokenPairs) || (pair `elem` binOptions)
 
-          exercise orderRequestCid OrderRequest_Ack with ..
+        exercise orderRequestCid OrderRequest_Ack with ..
 
-      nonconsuming Exchange_ResetMarket : ContractId ResetMarketRequest
-        with
-          pair : IdPair
-          clearedMarket : Bool
-        do
-          create ResetMarketRequest with ..
+    nonconsuming choice Exchange_ResetMarket : ContractId ResetMarketRequest
+      with
+        pair : IdPair
+        clearedMarket : Bool
+      controller exchange
+      do
+        create ResetMarketRequest with ..
 
 template ResetMarketRequest
   with
@@ -214,6 +225,6 @@ template ResetMarketRequest
     clearedMarket : Bool
   where
     signatory exchange
-    controller exchange can
-      ResetMarketRequest_Ack : ()
-        do return ()
+    choice ResetMarketRequest_Ack : ()
+      controller exchange
+      do return ()

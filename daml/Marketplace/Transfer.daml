@@ -8,7 +8,7 @@ import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 
 import DA.List hiding (delete)
-import DA.Next.Set
+import DA.Set
 
 
 template DepositTransferRequest
@@ -24,46 +24,48 @@ template DepositTransferRequest
         custodian = getCustodian senderAccountId operator
     ensure senderSig == receiverSig && senderAccountId /= receiverAccountId
     signatory operator, sender
+    observer custodian
 
-    controller custodian can
-      DepositTransferRequest_Approve : ContractId AssetDeposit
-        do
-          deposit <- fetch depositCid
-          issuer <- signatory . snd <$> fetchByKey @Token deposit.asset.id
-          let (sender, senderProvider) = getAccountOwnerProvider senderAccountId.label
-              (receiver, receiverProvider) = getAccountOwnerProvider receiverAccountId.label
+    choice DepositTransferRequest_Approve : ContractId AssetDeposit
+      controller custodian
+      do
+        deposit <- fetch depositCid
+        issuer <- signatory . snd <$> fetchByKey @Token deposit.asset.id
+        let (sender, senderProvider) = getAccountOwnerProvider senderAccountId.label
+            (receiver, receiverProvider) = getAccountOwnerProvider receiverAccountId.label
 
-              senderAccount = Account
-                with id = senderAccountId, provider = senderProvider, owner = sender
-              receiverAccount = Account
-                with id = receiverAccountId, provider = receiverProvider, owner = receiver
-              depositObservers = delete sender $ delete senderProvider $ deposit.observers
+            senderAccount = Account
+              with id = senderAccountId, provider = senderProvider, owner = sender
+            receiverAccount = Account
+              with id = receiverAccountId, provider = receiverProvider, owner = receiver
+            depositObservers = delete sender $ delete senderProvider $ deposit.observers
 
-          senderRuleCid <- create AssetSettlementRule
-            with account = senderAccount,
-                  observers = mempty,
-                  ctrls = empty
-          receiverRuleCid <- create AssetSettlementRule
-            with account = receiverAccount,
-                  observers = mempty,
-                  ctrls = fromList [sender]
+        senderRuleCid <- create AssetSettlementRule
+          with account = senderAccount,
+                observers = mempty,
+                ctrls = empty
+        receiverRuleCid <- create AssetSettlementRule
+          with account = receiverAccount,
+                observers = mempty,
+                ctrls = fromList [sender]
 
-          newDepositCid <- exercise senderRuleCid AssetSettlement_Transfer
-            with receiverAccountId = receiverAccountId, ..
+        newDepositCid <- exercise senderRuleCid AssetSettlement_Transfer
+          with receiverAccountId = receiverAccountId, ..
 
-          newDeposit <- fetch newDepositCid
-          let newObservers = fromList issuer <> depositObservers <> newDeposit.observers
-          newDepositCid' <- create newDeposit with observers = newObservers
-          archive newDepositCid
+        newDeposit <- fetch newDepositCid
+        let newObservers = fromList issuer <> depositObservers <> newDeposit.observers
+        newDepositCid' <- create newDeposit with observers = newObservers
+        archive newDepositCid
 
-          archive senderRuleCid
-          archive receiverRuleCid
+        archive senderRuleCid
+        archive receiverRuleCid
 
-          return newDepositCid'
+        return newDepositCid'
 
 
-      DepositTransferRequest_Reject : ()
-        do return ()
+    choice DepositTransferRequest_Reject : ()
+      controller custodian
+      do return ()
 
 template DepositDebitRequest
   with
@@ -75,24 +77,25 @@ template DepositDebitRequest
     let custodian = getCustodian ownerAccount.id operator
     signatory operator, custodian, owner
 
-    controller custodian can
-      DepositDebitRequest_Approve : Asset
-        do
-          let (owner, provider) = getAccountOwnerProvider ownerAccount.id.label
+    choice DepositDebitRequest_Approve : Asset
+      controller custodian
+      do
+        let (owner, provider) = getAccountOwnerProvider ownerAccount.id.label
 
-          depositRuleCid <- create AssetSettlementRule
-            with account = ownerAccount
-                 observers = mempty
-                 ctrls = empty
+        depositRuleCid <- create AssetSettlementRule
+          with account = ownerAccount
+               observers = mempty
+               ctrls = empty
 
-          newAsset <- exercise depositRuleCid AssetSettlement_Debit
-            with depositCid
+        newAsset <- exercise depositRuleCid AssetSettlement_Debit
+          with depositCid
 
-          archive depositRuleCid
-          return newAsset
+        archive depositRuleCid
+        return newAsset
 
-      DepositDebitRequest_Reject : ()
-        do return ()
+    choice DepositDebitRequest_Reject : ()
+      controller custodian
+      do return ()
 
 template DepositCreditRequest
   with
@@ -104,20 +107,21 @@ template DepositCreditRequest
     let custodian = getCustodian account.id operator
     signatory operator, custodian, owner
 
-    controller custodian can
-      DepositCreditRequest_Approve : ContractId AssetDeposit
-        do
-          let (owner, provider) = getAccountOwnerProvider account.id.label
-          let tokenSignatories = asset.id.signatories
+    choice DepositCreditRequest_Approve : ContractId AssetDeposit
+      controller custodian
+      do
+        let (owner, provider) = getAccountOwnerProvider account.id.label
+        let tokenSignatories = asset.id.signatories
 
-          depositRuleCid <- create AssetSettlementRule
-            with account = account
-                 observers = tokenSignatories
-                 ctrls = fromList [custodian]
+        depositRuleCid <- create AssetSettlementRule
+          with account = account
+               observers = tokenSignatories
+               ctrls = fromList [custodian]
 
-          newDepositCid <- exercise depositRuleCid AssetSettlement_Credit with asset, ctrl = custodian
-          archive depositRuleCid
-          return newDepositCid
+        newDepositCid <- exercise depositRuleCid AssetSettlement_Credit with asset, ctrl = custodian
+        archive depositRuleCid
+        return newDepositCid
 
-      DepositCreditRequest_Reject : ()
-        do return ()
+    choice DepositCreditRequest_Reject : ()
+      controller custodian
+      do return ()

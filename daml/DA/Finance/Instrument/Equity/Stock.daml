@@ -3,7 +3,7 @@
 
 module DA.Finance.Instrument.Equity.Stock where
 
-import DA.Next.Set
+import DA.Set
 
 import DA.Finance.Types
 
@@ -24,7 +24,7 @@ template EquityStock
     key id : Id
     maintainer key.signatories
 
-    controller id.signatories can
-      EquityStock_SetObservers : ContractId EquityStock
-        with newObservers : Set Party
-        do create this with observers = newObservers
+    choice EquityStock_SetObservers : ContractId EquityStock
+      with newObservers : Set Party
+      controller id.signatories
+      do create this with observers = newObservers

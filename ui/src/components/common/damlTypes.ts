@@ -1,4 +1,5 @@
 import { CreateEvent } from '@daml/ledger'
+import { Map, emptyMap } from '@daml/types';
 
 import { Asset } from '@daml.js/da-marketplace/lib/DA/Finance'
 import {
@@ -33,6 +34,23 @@ function cmpUnderscoredKeys(keyA: string, keyB: string): number {
         return -1;
     }
     return 0;
+}
+
+export type DamlSet<T> = { map: Map<T, {}> };
+
+export function makeDamlSet<T>(items: T[]): DamlSet<T> {
+  return { map: items.reduce((map, val) => map.set(val, {}), emptyMap<T, {}>()) };
+}
+
+export function damlSetValues<T>(damlSet: DamlSet<T>): T[] {
+  const r: T[] = [];
+  const it = damlSet.map.keys();
+  let i = it.next();
+  while (!i.done) {
+    r.push(i.value);
+    i = it.next();
+  }
+  return r;
 }
 
 export function wrapDamlTuple<T>(items: T[]): DamlTuple<T> {

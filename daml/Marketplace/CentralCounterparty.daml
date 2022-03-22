@@ -30,33 +30,35 @@ template CCPExchangeRelationshipRequest
     requesterRole : MarketRole
   where
   signatory operator, requester
+  observer party
   key (operator, requester, party) : (Party, Party, Party)
   maintainer key._1
 
-  controller party can
-    CCPExchangeRelationshipRequest_Approve : ContractId CCPExchangeRelationship
-      do
-        case requesterRole of
-          CCPRole -> do
-            let ccp = requester
-                exchange = party
+  choice CCPExchangeRelationshipRequest_Approve : ContractId CCPExchangeRelationship
+    controller party
+    do
+      case requesterRole of
+        CCPRole -> do
+          let ccp = requester
+              exchange = party
 
-            lookupByKey @CCPExchangeRelationship (ccp, operator, exchange) >>= \case
-              (Some cid) -> return cid
-              None       -> create CCPExchangeRelationship with ..
+          lookupByKey @CCPExchangeRelationship (ccp, operator, exchange) >>= \case
+            (Some cid) -> return cid
+            None       -> create CCPExchangeRelationship with ..
 
-          ExchangeRole -> do
-            let ccp = party
-                exchange = requester
+        ExchangeRole -> do
+          let ccp = party
+              exchange = requester
 
-            lookupByKey @CCPExchangeRelationship (ccp, operator, exchange) >>= \case
-              (Some cid) -> return cid
-              None       -> create CCPExchangeRelationship with ..
+          lookupByKey @CCPExchangeRelationship (ccp, operator, exchange) >>= \case
+            (Some cid) -> return cid
+            None       -> create CCPExchangeRelationship with ..
 
-          _ -> error "Parties that are not exchanges cannot request a CCP/Exchange relationship"
+        _ -> error "Parties that are not exchanges cannot request a CCP/Exchange relationship"
 
-    CCPExchangeRelationshipRequest_Reject : ()
-      do return ()
+  choice CCPExchangeRelationshipRequest_Reject : ()
+    controller party
+    do return ()
 
 
 template CCPInvitation
@@ -66,20 +68,21 @@ template CCPInvitation
     public : Party
   where
     signatory operator
+    observer ccp
 
     key (operator, ccp) : (Party, Party)
     maintainer key._1
 
-    controller ccp can
-      CCPInvitation_Accept : (ContractId RegisteredCCP, ContractId CCP)
-        with
-          name : Text
-          location : Text
-          custodian : Party
-        do
-          ccpRegistryCid <- create RegisteredCCP with ..
-          ccpCid <- create CCP with ..
-          return (ccpRegistryCid, ccpCid)
+    choice CCPInvitation_Accept : (ContractId RegisteredCCP, ContractId CCP)
+      with
+        name : Text
+        location : Text
+        custodian : Party
+      controller ccp
+      do
+        ccpRegistryCid <- create RegisteredCCP with ..
+        ccpCid <- create CCP with ..
+        return (ccpRegistryCid, ccpCid)
 
 
 template CCP
@@ -93,83 +96,90 @@ template CCP
     key (operator, ccp) : (Party, Party)
     maintainer key._2
 
-    controller ccp can
-      nonconsuming CCP_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
-        do
-          create CustodianRelationshipRequest with requester = ccp, role = CCPRole, ..
+    nonconsuming choice CCP_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
+      controller ccp
+      do
+        create CustodianRelationshipRequest with requester = ccp, role = CCPRole, ..
 
-      nonconsuming CCP_InviteCustomer : (ContractId CCPCustomerInvitation)
-        with
-          ccpCustomer : Party
-        do create CCPCustomerInvitation with ..
+    nonconsuming choice CCP_InviteCustomer : (ContractId CCPCustomerInvitation)
+      with
+        ccpCustomer : Party
+      controller ccp
+      do create CCPCustomerInvitation with ..
 
-      nonconsuming CCP_CreateMarginCalculation : (ContractId MarginCalculation)
-        with
-          ccpCustomer : Party
-          optAccountId : Optional Id
-          currency : Text
-          targetAmount : Decimal
-          calculationId : Text
-        do
-          -- reject any previous calculation
-          optRejectedCid <- lookupByKey @RejectedMarginCalculation (ccp, ccpCustomer, calculationId)
-          whenSome optRejectedCid $ \rcid -> exercise rcid RejectedMarginCalculation_Cancel
-          calculationTime <- getTime
-          let accountId = case optAccountId of
-                (Some aid) -> aid
-                None       -> getAccountId ccpCustomer ccp [custodian]
-          create MarginCalculation with customer = ccpCustomer, ..
+    nonconsuming choice CCP_CreateMarginCalculation : (ContractId MarginCalculation)
+      with
+        ccpCustomer : Party
+        optAccountId : Optional Id
+        currency : Text
+        targetAmount : Decimal
+        calculationId : Text
+      controller ccp
+      do
+        -- reject any previous calculation
+        optRejectedCid <- lookupByKey @RejectedMarginCalculation (ccp, ccpCustomer, calculationId)
+        whenSome optRejectedCid $ \rcid -> exercise rcid RejectedMarginCalculation_Cancel
+        calculationTime <- getTime
+        let accountId = case optAccountId of
+              (Some aid) -> aid
+              None       -> getAccountId ccpCustomer ccp [custodian]
+        create MarginCalculation with customer = ccpCustomer, ..
 
-      nonconsuming CCP_CreateMarkToMarketCalculation : (ContractId MarkToMarketCalculation)
-        with
-          ccpCustomer : Party
-          optAccountId : Optional Id
-          currency : Text
-          mtmAmount : Decimal
-          calculationTime : Time
-          calculationId : Text
-        do
-          let accountId = case optAccountId of
-                (Some aid) -> aid
-                None       -> getAccountId ccpCustomer ccp [custodian]
-          create MarkToMarketCalculation with customer = ccpCustomer, ..
+    nonconsuming choice CCP_CreateMarkToMarketCalculation : (ContractId MarkToMarketCalculation)
+      with
+        ccpCustomer : Party
+        optAccountId : Optional Id
+        currency : Text
+        mtmAmount : Decimal
+        calculationTime : Time
+        calculationId : Text
+      controller ccp
+      do
+        let accountId = case optAccountId of
+              (Some aid) -> aid
+              None       -> getAccountId ccpCustomer ccp [custodian]
+        create MarkToMarketCalculation with customer = ccpCustomer, ..
 
-      nonconsuming CCP_NovateDerivativeTrade : (ContractId DerivativeTradeSide, ContractId DerivativeTradeSide)
-        with
-          derivativeTradeCid : ContractId DerivativeTrade
-        do
-          derivativeTrade <- fetch derivativeTradeCid
-          -- verify that both buyer and seller are ccp customers
-          fetchByKey @CCPCustomer (ccp, operator, derivativeTrade.buyer)
-          fetchByKey @CCPCustomer (ccp, operator, derivativeTrade.seller)
+    nonconsuming choice CCP_NovateDerivativeTrade : (ContractId DerivativeTradeSide, ContractId DerivativeTradeSide)
+      with
+        derivativeTradeCid : ContractId DerivativeTrade
+      controller ccp
+      do
+        derivativeTrade <- fetch derivativeTradeCid
+        -- verify that both buyer and seller are ccp customers
+        fetchByKey @CCPCustomer (ccp, operator, derivativeTrade.buyer)
+        fetchByKey @CCPCustomer (ccp, operator, derivativeTrade.seller)
 
-          let buyerAccountId  = getAccountId derivativeTrade.buyer ccp [custodian]
-              sellerAccountId = getAccountId derivativeTrade.seller ccp [custodian]
-          exercise derivativeTradeCid DerivativeTrade_Novate with ..
+        let buyerAccountId  = getAccountId derivativeTrade.buyer ccp [custodian]
+            sellerAccountId = getAccountId derivativeTrade.seller ccp [custodian]
+        exercise derivativeTradeCid DerivativeTrade_Novate with ..
 
-      nonconsuming CCP_RequestExchangeRelationship : ContractId CCPExchangeRelationshipRequest
-        with
-          exchange : Party
-        do
-          create CCPExchangeRelationshipRequest with requester = ccp, party = exchange, requesterRole = CCPRole, ..
+    nonconsuming choice CCP_RequestExchangeRelationship : ContractId CCPExchangeRelationshipRequest
+      with
+        exchange : Party
+      controller ccp
+      do
+        create CCPExchangeRelationshipRequest with requester = ccp, party = exchange, requesterRole = CCPRole, ..
 
-      nonconsuming CCP_NovateClearedTrade : (ContractId ClearedTradeSide, ContractId ClearedTradeSide)
-        with
-          clearedTradeCid : ContractId ClearedTrade
-        do
-          clearedTrade <- fetch clearedTradeCid
-          -- verify that both buyer and seller are ccp customers
-          fetchByKey @CCPCustomer (ccp, operator, clearedTrade.buyer)
-          fetchByKey @CCPCustomer (ccp, operator, clearedTrade.seller)
+    nonconsuming choice CCP_NovateClearedTrade : (ContractId ClearedTradeSide, ContractId ClearedTradeSide)
+      with
+        clearedTradeCid : ContractId ClearedTrade
+      controller ccp
+      do
+        clearedTrade <- fetch clearedTradeCid
+        -- verify that both buyer and seller are ccp customers
+        fetchByKey @CCPCustomer (ccp, operator, clearedTrade.buyer)
+        fetchByKey @CCPCustomer (ccp, operator, clearedTrade.seller)
 
-          let buyerAccountId = getAccountId clearedTrade.buyer ccp [custodian]
-              sellerAccountId = getAccountId clearedTrade.seller ccp [custodian]
-          exercise clearedTradeCid ClearedTrade_Novate with ..
+        let buyerAccountId = getAccountId clearedTrade.buyer ccp [custodian]
+            sellerAccountId = getAccountId clearedTrade.seller ccp [custodian]
+        exercise clearedTradeCid ClearedTrade_Novate with ..
 
-      nonconsuming CCP_RequestFairValues : ContractId FairValueCalculationRequest
-        with
-          exchange : Party
-          currency : Id
-          upTo : Time
-        do
-          create FairValueCalculationRequest with ..
+    nonconsuming choice CCP_RequestFairValues : ContractId FairValueCalculationRequest
+      with
+        exchange : Party
+        currency : Id
+        upTo : Time
+      controller ccp
+      do
+        create FairValueCalculationRequest with ..

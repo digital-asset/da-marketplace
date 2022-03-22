@@ -22,21 +22,22 @@ template MarginCalculation
     key (ccp, customer, calculationId) : (Party, Party, Text)
     maintainer key._1
 
-    controller ccp can
-      MarginCalculation_Resolve : ContractId FulfilledMarginCalculation
-        with
-          note : Text
-        do
-          create DismissibleNotification with
-            sender = ccp, receiver = customer
-            senderRole = Some CCPRole, text = note
-          create FulfilledMarginCalculation with ..
+    choice MarginCalculation_Resolve : ContractId FulfilledMarginCalculation
+      with
+        note : Text
+      controller ccp
+      do
+        create DismissibleNotification with
+          sender = ccp, receiver = customer
+          senderRole = Some CCPRole, text = note
+        create FulfilledMarginCalculation with ..
 
-      MarginCalculation_Reject : ContractId RejectedMarginCalculation
-        with
-          note : Text
-        do
-          create RejectedMarginCalculation with calculation = this, ..
+    choice MarginCalculation_Reject : ContractId RejectedMarginCalculation
+      with
+        note : Text
+      controller ccp
+      do
+        create RejectedMarginCalculation with calculation = this, ..
 
 
 template FulfilledMarginCalculation
@@ -70,16 +71,17 @@ template RejectedMarginCalculation
     key (ccp, customer, calculation.calculationId) : (Party, Party, Text)
     maintainer key._1
 
-    controller ccp can
-      RejectedMarginCalculation_Retry : ContractId MarginCalculation
-        do create calculation
+    choice RejectedMarginCalculation_Retry : ContractId MarginCalculation
+      controller ccp
+      do create calculation
 
-      RejectedMarginCalculation_Cancel : ()
-        do return ()
+    choice RejectedMarginCalculation_Cancel : ()
+      controller ccp
+      do return ()
 
-    controller customer can
-      RejectedMarginCalculation_CustomerRetry : ContractId MarginCalculation
-        do create calculation
+    choice RejectedMarginCalculation_CustomerRetry : ContractId MarginCalculation
+      controller customer
+      do create calculation
 
 
 template MarkToMarketCalculation
@@ -98,21 +100,22 @@ template MarkToMarketCalculation
     key (ccp, customer, calculationId) : (Party, Party, Text)
     maintainer key._1
 
-    controller customer can
-      MarkToMarketCalculation_Resolve : ContractId FulfilledMarkToMarketCalculation
-        with
-          note : Text
-        do
-          create DismissibleNotification with
-            sender = ccp, receiver = customer
-            senderRole = Some CCPRole, text = note
-          create FulfilledMarkToMarketCalculation with ..
+    choice MarkToMarketCalculation_Resolve : ContractId FulfilledMarkToMarketCalculation
+      with
+        note : Text
+      controller customer
+      do
+        create DismissibleNotification with
+          sender = ccp, receiver = customer
+          senderRole = Some CCPRole, text = note
+        create FulfilledMarkToMarketCalculation with ..
 
-      MarkToMarketCalculation_Reject : ContractId RejectedMarkToMarketCalculation
-        with
-          note : Text
-        do
-          create RejectedMarkToMarketCalculation with calculation = this, ..
+    choice MarkToMarketCalculation_Reject : ContractId RejectedMarkToMarketCalculation
+      with
+        note : Text
+      controller customer
+      do
+        create RejectedMarkToMarketCalculation with calculation = this, ..
 
 
 template RejectedMarkToMarketCalculation
@@ -127,16 +130,17 @@ template RejectedMarkToMarketCalculation
     key (ccp, customer, calculation.calculationId) : (Party, Party, Text)
     maintainer key._1
 
-    controller ccp can
-      RejectedMarkToMarketCalculation_Retry : ContractId MarkToMarketCalculation
-        do create calculation
+    choice RejectedMarkToMarketCalculation_Retry : ContractId MarkToMarketCalculation
+      controller ccp
+      do create calculation
 
-      RejectedMarkToMarketCalculation_Cancel : ()
-        do return ()
+    choice RejectedMarkToMarketCalculation_Cancel : ()
+      controller ccp
+      do return ()
 
-    controller customer can
-      RejectedMarkToMarketCalculation_CustomerRetry : ContractId MarkToMarketCalculation
-        do create calculation
+    choice RejectedMarkToMarketCalculation_CustomerRetry : ContractId MarkToMarketCalculation
+      controller customer
+      do create calculation
 
 
 template FulfilledMarkToMarketCalculation

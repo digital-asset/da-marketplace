@@ -20,7 +20,7 @@ import DA.Finance.Asset
 import DA.Finance.Types
 
 import DA.Optional
-import DA.Next.Set
+import DA.Set
 
 data LedgerParties = LedgerParties with
   userAdmin  : Party -- ^DABL uses 'UserAdmin' for 'Operator'

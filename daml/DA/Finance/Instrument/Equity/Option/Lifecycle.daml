@@ -5,8 +5,8 @@ module DA.Finance.Instrument.Equity.Option.Lifecycle where
 
 import DA.Action
 import DA.Assert
-import DA.Next.Set
-import DA.Optional.Total
+import DA.Set
+import DA.Optional
 
 import DA.Finance.Asset.Lifecycle
 import DA.Finance.Instrument.Entitlement
@@ -35,55 +35,56 @@ template EquityOptionExerciseRule
     key signatories : Set Party
     maintainer key
 
-    controller signatories can
-      nonconsuming EquityOptionExercise_Lifecycle: (ContractId Entitlement, ContractId LifecycleEffects)
-         -- ^ Allows the signatories to create exercise
-         -- details for an option.
-        with
-          optionCid : ContractId EquityOption
-            -- ^ Option reference data.
-          underlyingPrice : Optional Decimal
-            -- ^ Price of the underlying in case of CASH settlement.
-          entitlementIdLabel : Text
-            -- ^ A label for the entitlement instrument describing the exercise.
-          settlementDate : Date
-            -- ^ The settlement date of the exercise.
-        do
-          option@EquityOption{..} <- fetch optionCid
-          (_, stock) <- fetchByKey @EquityStock option.underlyingId
-          when (exerciseType == EUROPEAN) do
-            assertOnOrAfterDateMsg "European option cannot be exercised before maturity" maturity
+    -- controller signatories can
+    nonconsuming choice EquityOptionExercise_Lifecycle: (ContractId Entitlement, ContractId LifecycleEffects)
+       -- ^ Allows the signatories to create exercise
+       -- details for an option.
+      with
+        optionCid : ContractId EquityOption
+          -- ^ Option reference data.
+        underlyingPrice : Optional Decimal
+          -- ^ Price of the underlying in case of CASH settlement.
+        entitlementIdLabel : Text
+          -- ^ A label for the entitlement instrument describing the exercise.
+        settlementDate : Date
+          -- ^ The settlement date of the exercise.
+      controller signatories
+      do
+        option@EquityOption{..} <- fetch optionCid
+        (_, stock) <- fetchByKey @EquityStock option.underlyingId
+        when (exerciseType == EUROPEAN) do
+          assertOnOrAfterDateMsg "European option cannot be exercised before maturity" maturity
 
-          let entitlementId = Id with signatories = id.signatories, label = entitlementIdLabel, version = 0
-          entitlementCid <-
-            case settlementType of
-              PHYSICAL -> do
-                let stockAsset = Asset with id = underlyingId, quantity = contractSize
-                let cashAsset = Asset with id = stock.ccy, quantity = contractSize * strike
-                let (underlying, payment) =
+        let entitlementId = Id with signatories = id.signatories, label = entitlementIdLabel, version = 0
+        entitlementCid <-
+          case settlementType of
+            PHYSICAL -> do
+              let stockAsset = Asset with id = underlyingId, quantity = contractSize
+              let cashAsset = Asset with id = stock.ccy, quantity = contractSize * strike
+              let (underlying, payment) =
+                   case optionType of
+                    CALL -> (stockAsset, Some cashAsset)
+                    PUT -> (cashAsset, Some stockAsset)
+              create Entitlement with id = entitlementId, ..
+
+            CASH -> do
+              let up = fromSomeNote "underlying price required for CASH settlement" underlyingPrice
+              let quantity =
                      case optionType of
-                      CALL -> (stockAsset, Some cashAsset)
-                      PUT -> (cashAsset, Some stockAsset)
-                create Entitlement with id = entitlementId, ..
+                      CALL -> contractSize * (up - strike)
+                      PUT -> contractSize * (strike - up)
+              let underlying = Asset with id = stock.ccy, quantity
+              let payment = None
+              create Entitlement with id = entitlementId, ..
 
-              CASH -> do
-                underlyingPrice <- fromSomeNote "underlying price required for CASH settlement" underlyingPrice
-                let quantity =
-                       case optionType of
-                        CALL -> contractSize * (underlyingPrice - strike)
-                        PUT -> contractSize * (strike - underlyingPrice)
-                let underlying = Asset with id = stock.ccy, quantity
-                let payment = None
-                create Entitlement with id = entitlementId, ..
+        lifecycleEffectsCid <- create LifecycleEffects with
+                                id
+                                label = "Option Exercise"
+                                consuming = []
+                                effects = [Asset with id = entitlementId, quantity = 1.0]
+                                observers
 
-          lifecycleEffectsCid <- create LifecycleEffects with
-                                  id
-                                  label = "Option Exercise"
-                                  consuming = []
-                                  effects = [Asset with id = entitlementId, quantity = 1.0]
-                                  observers
-
-          return (entitlementCid, lifecycleEffectsCid)
+        return (entitlementCid, lifecycleEffectsCid)
 
 -- | Rule that helps with processing stock splits for equity options.
 template EquityOptionStockSplitRule
@@ -96,34 +97,34 @@ template EquityOptionStockSplitRule
     key signatories : Set Party
     maintainer key
 
-    controller signatories can
-      nonconsuming EquityOptionStockSplit_Lifecycle : (ContractId EquityOption, ContractId LifecycleEffects)
-        -- ^ Allows the signatories to process stock split reference data
-        -- for a corresponding equity option.
-        with
-          optionCid : ContractId EquityOption
-            -- ^ The option to be lifecycled.
-          stockSplitCid : ContractId EquityStockSplit
-            -- ^ Stock split reference data.
-        do
-          option <- fetchAndArchive optionCid
-          stockSplit <- fetch stockSplitCid
+    nonconsuming choice EquityOptionStockSplit_Lifecycle : (ContractId EquityOption, ContractId LifecycleEffects)
+      -- ^ Allows the signatories to process stock split reference data
+      -- for a corresponding equity option.
+      with
+        optionCid : ContractId EquityOption
+          -- ^ The option to be lifecycled.
+        stockSplitCid : ContractId EquityStockSplit
+          -- ^ Stock split reference data.
+      controller signatories
+      do
+        option <- fetchAndArchive optionCid
+        stockSplit <- fetch stockSplitCid
 
-          option.underlyingId === stockSplit.id
-          assertOnOrAfterDateMsg "expects exDate <= now" $ stockSplit.exDate
+        option.underlyingId === stockSplit.id
+        assertOnOrAfterDateMsg "expects exDate <= now" $ stockSplit.exDate
 
-          let optionIdNew =  increaseVersion option.id
-          optionCid <- create option with
-                        id = optionIdNew
-                        contractSize = option.contractSize / stockSplit.rFactor
-                        strike = option.strike * stockSplit.rFactor
-                        underlyingId = increaseVersion option.underlyingId
+        let optionIdNew =  increaseVersion option.id
+        optionCid <- create option with
+                      id = optionIdNew
+                      contractSize = option.contractSize / stockSplit.rFactor
+                      strike = option.strike * stockSplit.rFactor
+                      underlyingId = increaseVersion option.underlyingId
 
-          lifecycleEffectsCid <- create LifecycleEffects with
-            id = option.id
-            label = "Stock Split on " <> stockSplit.id.label
-            consuming = []
-            effects = [Asset with id = optionIdNew, quantity = 1.0]
-            observers = option.observers
+        lifecycleEffectsCid <- create LifecycleEffects with
+          id = option.id
+          label = "Stock Split on " <> stockSplit.id.label
+          consuming = []
+          effects = [Asset with id = optionIdNew, quantity = 1.0]
+          observers = option.observers
 
-          return (optionCid, lifecycleEffectsCid)
+        return (optionCid, lifecycleEffectsCid)

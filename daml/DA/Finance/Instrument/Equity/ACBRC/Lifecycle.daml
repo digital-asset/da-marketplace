@@ -5,7 +5,7 @@ module DA.Finance.Instrument.Equity.ACBRC.Lifecycle where
 
 import DA.Assert
 import DA.List
-import DA.Next.Set
+import DA.Set
 
 import DA.Finance.Asset.Lifecycle
 import DA.Finance.Instrument.Equity.ACBRC
@@ -23,36 +23,36 @@ template ACBRCStockSplitRule
     key signatories : Set Party
     maintainer key
 
-    controller signatories can
-      nonconsuming ACBRCStockSplit_Lifecycle : (ContractId ACBRC, ContractId LifecycleEffects)
-        -- ^ Allows the signatories to process stock split reference data
-        -- for a corresponding equity option.
-        with
-          acbrcCid : ContractId ACBRC
-            -- ^ The ACBRC to be lifecycled.
-          stockSplitCid : ContractId EquityStockSplit
-            -- ^ Stock split reference data.
-        do
-          acbrc <- fetchAndArchive acbrcCid
-          stockSplit <- fetch stockSplitCid
+    nonconsuming choice ACBRCStockSplit_Lifecycle : (ContractId ACBRC, ContractId LifecycleEffects)
+      -- ^ Allows the signatories to process stock split reference data
+      -- for a corresponding equity option.
+      with
+        acbrcCid : ContractId ACBRC
+          -- ^ The ACBRC to be lifecycled.
+        stockSplitCid : ContractId EquityStockSplit
+          -- ^ Stock split reference data.
+      controller signatories
+      do
+        acbrc <- fetchAndArchive acbrcCid
+        stockSplit <- fetch stockSplitCid
 
-          acbrc.underlyingId === stockSplit.id
-          assertOnOrAfterDateMsg "expects exDate <= now" $ stockSplit.exDate
+        acbrc.underlyingId === stockSplit.id
+        assertOnOrAfterDateMsg "expects exDate <= now" $ stockSplit.exDate
 
-          let acbrcIdNew = increaseVersion acbrc.id
-          acbrcCid <- create acbrc with
-                        id = acbrcIdNew
-                        initialFixing = acbrc.initialFixing * stockSplit.rFactor
-                        underlyingId = increaseVersion acbrc.underlyingId
+        let acbrcIdNew = increaseVersion acbrc.id
+        acbrcCid <- create acbrc with
+                      id = acbrcIdNew
+                      initialFixing = acbrc.initialFixing * stockSplit.rFactor
+                      underlyingId = increaseVersion acbrc.underlyingId
 
-          lifecycleEffectsCid <- create LifecycleEffects with
-                                    id = acbrc.id
-                                    label = "Stock Split on " <> stockSplit.id.label
-                                    consuming = []
-                                    effects = [ Asset with id = acbrcIdNew, quantity = 1.0 ]
-                                    observers = acbrc.observers
+        lifecycleEffectsCid <- create LifecycleEffects with
+                                  id = acbrc.id
+                                  label = "Stock Split on " <> stockSplit.id.label
+                                  consuming = []
+                                  effects = [ Asset with id = acbrcIdNew, quantity = 1.0 ]
+                                  observers = acbrc.observers
 
-          return (acbrcCid, lifecycleEffectsCid)
+        return (acbrcCid, lifecycleEffectsCid)
 
 template ACBRCFixingRule
   with
@@ -63,48 +63,48 @@ template ACBRCFixingRule
     key signatories : Set Party
     maintainer key
 
-    controller signatories can
-      nonconsuming ACBRCFixing_Lifecycle : (ContractId ACBRC, ContractId LifecycleEffects)
-        with
-          acbrcCid : ContractId ACBRC
-          fixingCid : ContractId Fixing
-        do
-          acbrc <- fetchAndArchive acbrcCid
-          fixing <- fetch fixingCid
+    nonconsuming choice ACBRCFixing_Lifecycle : (ContractId ACBRC, ContractId LifecycleEffects)
+      with
+        acbrcCid : ContractId ACBRC
+        fixingCid : ContractId Fixing
+      controller signatories
+      do
+        acbrc <- fetchAndArchive acbrcCid
+        fixing <- fetch fixingCid
 
-          assertOnOrAfterDateMsg "expects date <= now" $ fixing.date
-          assertMsg "product already expired" $ acbrc.fixingIdx < length acbrc.fixingDates
-          assertMsg "underlyings don't match" $ acbrc.underlyingId == fixing.id
-          assertMsg "fixing has wrong date" $ acbrc.fixingDates!!acbrc.fixingIdx == fixing.date
-          let
-            performance = fixing.value / acbrc.initialFixing
-            knockInBarrierHit = acbrc.knockInBarrierHit || performance <= acbrc.knockInBarrier
-            isRedemption = acbrc.fixingIdx == length acbrc.fixingDates - 1
-            redemptionAmount = if knockInBarrierHit then min performance 1.0 else 1.0
-            callBarrierHit = not isRedemption && performance > acbrc.callBarrier
-            callAmount = 1.0
-            newAcbrcId = acbrc.id with version = acbrc.id.version + 1
-            effects
-              | isRedemption =
-                [ Asset with id = acbrc.currencyId, quantity = acbrc.coupon
-                , Asset with id = acbrc.currencyId, quantity = redemptionAmount ]
-              | callBarrierHit =
-                [ Asset with id = acbrc.currencyId, quantity = acbrc.coupon
-                , Asset with id = acbrc.currencyId, quantity = callAmount ]
-              | otherwise =
-                [ Asset with id = acbrc.currencyId, quantity = acbrc.coupon
-                , Asset with id = newAcbrcId, quantity = 1.0  ]
+        assertOnOrAfterDateMsg "expects date <= now" $ fixing.date
+        assertMsg "product already expired" $ acbrc.fixingIdx < length acbrc.fixingDates
+        assertMsg "underlyings don't match" $ acbrc.underlyingId == fixing.id
+        assertMsg "fixing has wrong date" $ acbrc.fixingDates!!acbrc.fixingIdx == fixing.date
+        let
+          performance = fixing.value / acbrc.initialFixing
+          knockInBarrierHit = acbrc.knockInBarrierHit || performance <= acbrc.knockInBarrier
+          isRedemption = acbrc.fixingIdx == length acbrc.fixingDates - 1
+          redemptionAmount = if knockInBarrierHit then min performance 1.0 else 1.0
+          callBarrierHit = not isRedemption && performance > acbrc.callBarrier
+          callAmount = 1.0
+          newAcbrcId = acbrc.id with version = acbrc.id.version + 1
+          effects
+            | isRedemption =
+              [ Asset with id = acbrc.currencyId, quantity = acbrc.coupon
+              , Asset with id = acbrc.currencyId, quantity = redemptionAmount ]
+            | callBarrierHit =
+              [ Asset with id = acbrc.currencyId, quantity = acbrc.coupon
+              , Asset with id = acbrc.currencyId, quantity = callAmount ]
+            | otherwise =
+              [ Asset with id = acbrc.currencyId, quantity = acbrc.coupon
+              , Asset with id = newAcbrcId, quantity = 1.0  ]
 
-          newAcbrcCid <- create acbrc with
-            id = newAcbrcId
-            knockInBarrierHit
-            callBarrierHit
-            fixingDates = if callBarrierHit then take (acbrc.fixingIdx + 1) acbrc.fixingDates else acbrc.fixingDates
-            fixingIdx = acbrc.fixingIdx + 1
-          lifecycleEffectsCid <- create LifecycleEffects with
-            id = acbrc.id
-            label = "Fixing on " <> show fixing.date
-            consuming = []
-            effects
-            observers = acbrc.observers
-          pure (newAcbrcCid, lifecycleEffectsCid)
+        newAcbrcCid <- create acbrc with
+          id = newAcbrcId
+          knockInBarrierHit
+          callBarrierHit
+          fixingDates = if callBarrierHit then take (acbrc.fixingIdx + 1) acbrc.fixingDates else acbrc.fixingDates
+          fixingIdx = acbrc.fixingIdx + 1
+        lifecycleEffectsCid <- create LifecycleEffects with
+          id = acbrc.id
+          label = "Fixing on " <> show fixing.date
+          consuming = []
+          effects
+          observers = acbrc.observers
+        pure (newAcbrcCid, lifecycleEffectsCid)

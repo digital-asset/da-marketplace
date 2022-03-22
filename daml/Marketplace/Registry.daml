@@ -14,17 +14,17 @@ template RegisteredCustodian
     key (operator, custodian) : (Party, Party)
     maintainer key._2
 
-    controller custodian can
-      RegisteredCustodian_UpdateProfile : ContractId RegisteredCustodian
-        with
-          newName : Text
-          newLocation : Text
-        do
-          create this with name = newName, location = newLocation
+    choice RegisteredCustodian_UpdateProfile : ContractId RegisteredCustodian
+      with
+        newName : Text
+        newLocation : Text
+      controller custodian
+      do
+        create this with name = newName, location = newLocation
 
-    controller operator can
-      RegisteredCustodian_Offboard : ()
-        do return ()
+    choice RegisteredCustodian_Offboard : ()
+      controller custodian
+      do return ()
 
 
 template RegisteredIssuer
@@ -43,19 +43,19 @@ template RegisteredIssuer
     key (operator, issuer) : (Party, Party)
     maintainer key._2
 
-    controller issuer can
-      RegisteredIssuer_UpdateProfile : ContractId RegisteredIssuer
-        with
-          newName : Text
-          newLocation : Text
-          newTitle : Text
-          newIssuerID : Text
-        do
-          create this with name = newName, location = newLocation, title = newTitle, issuerID = newIssuerID
+    choice RegisteredIssuer_UpdateProfile : ContractId RegisteredIssuer
+      with
+        newName : Text
+        newLocation : Text
+        newTitle : Text
+        newIssuerID : Text
+      controller issuer
+      do
+        create this with name = newName, location = newLocation, title = newTitle, issuerID = newIssuerID
 
-    controller operator can
-      RegisteredIssuer_Offboard : ()
-        do return ()
+    choice RegisteredIssuer_Offboard : ()
+      controller issuer
+      do return ()
 
 
 template RegisteredInvestor
@@ -73,17 +73,17 @@ template RegisteredInvestor
     key (operator, investor) : (Party, Party)
     maintainer key._2
 
-    controller investor can
-      RegisteredInvestor_UpdateProfile : ContractId RegisteredInvestor
-        with
-          newName : Text
-          newLocation : Text
-        do
-          create this with name = newName, location = newLocation
+    choice RegisteredInvestor_UpdateProfile : ContractId RegisteredInvestor
+      with
+        newName : Text
+        newLocation : Text
+      controller investor
+      do
+        create this with name = newName, location = newLocation
 
-    controller operator can
-      RegisteredInvestor_Offboard : ()
-        do return ()
+    choice RegisteredInvestor_Offboard : ()
+      controller operator
+      do return ()
 
 
 template RegisteredExchange
@@ -100,17 +100,17 @@ template RegisteredExchange
     key (operator, exchange) : (Party, Party)
     maintainer key._2
 
-    controller exchange can
-      RegisteredExchange_UpdateProfile : ContractId RegisteredExchange
-        with
-          newName : Text
-          newLocation : Text
-        do
-          create this with name = newName, location = newLocation
+    choice RegisteredExchange_UpdateProfile : ContractId RegisteredExchange
+      with
+        newName : Text
+        newLocation : Text
+      controller exchange
+      do
+        create this with name = newName, location = newLocation
 
-    controller operator can
-      RegisteredExchange_Offboard : ()
-        do return ()
+    choice RegisteredExchange_Offboard : ()
+      controller operator
+      do return ()
 
 
 template RegisteredBroker
@@ -127,17 +127,17 @@ template RegisteredBroker
     key (operator, broker) : (Party, Party)
     maintainer key._2
 
-    controller broker can
-      RegisteredBroker_UpdateProfile : ContractId RegisteredBroker
-        with
-          newName : Text
-          newLocation : Text
-        do
-          create this with name = newName, location = newLocation
+    choice RegisteredBroker_UpdateProfile : ContractId RegisteredBroker
+      with
+        newName : Text
+        newLocation : Text
+      controller broker
+      do
+        create this with name = newName, location = newLocation
 
-    controller operator can
-      RegisteredBroker_Offboard : ()
-        do return ()
+    choice RegisteredBroker_Offboard : ()
+      controller operator
+      do return ()
 
 
 template RegisteredCCP
@@ -154,14 +154,14 @@ template RegisteredCCP
     key (operator, ccp) : (Party, Party)
     maintainer key._2
 
-    controller ccp can
-      RegisteredCCP_UpdateProfile : ContractId RegisteredCCP
-        with
-          newName : Text
-          newLocation : Text
-        do
-          create this with name = newName, location = newLocation
+    choice RegisteredCCP_UpdateProfile : ContractId RegisteredCCP
+      with
+        newName : Text
+        newLocation : Text
+      controller ccp
+      do
+        create this with name = newName, location = newLocation
 
-    controller operator can
-      RegisteredCCP_Offboard : ()
-        do return ()
+    choice RegisteredCCP_Offboard : ()
+      controller operator
+      do return ()

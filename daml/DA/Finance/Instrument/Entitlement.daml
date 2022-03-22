@@ -3,7 +3,7 @@
 
 module DA.Finance.Instrument.Entitlement where
 
-import DA.Next.Set
+import DA.Set
 
 import DA.Finance.Asset.Lifecycle
 import DA.Finance.Types
@@ -33,18 +33,19 @@ template Entitlement
     key id : Id
     maintainer key.signatories
 
-    controller id.signatories can
-      Entitlement_SetObservers : ContractId Entitlement
-        with newObservers : Set Party
-        do create this with observers = newObservers
+    choice Entitlement_SetObservers : ContractId Entitlement
+      with newObservers : Set Party
+      controller id.signatories
+      do create this with observers = newObservers
 
-      nonconsuming Entitlement_Lifecycle : ContractId LifecycleEffects
-        -- ^ Allows the id.signatories to create lifecycle effects.
-        do
-          assertOnOrAfterDateMsg "expects settlementDate <= now" $ settlementDate
-          create LifecycleEffects with
-            id
-            label = "Entitlement on " <> underlying.id.label
-            consuming = optional [] pure payment
-            effects = [ underlying ]
-            observers = observers
+    nonconsuming choice Entitlement_Lifecycle : ContractId LifecycleEffects
+      -- ^ Allows the id.signatories to create lifecycle effects.
+      controller id.signatories
+      do
+        assertOnOrAfterDateMsg "expects settlementDate <= now" $ settlementDate
+        create LifecycleEffects with
+          id
+          label = "Entitlement on " <> underlying.id.label
+          consuming = optional [] pure payment
+          effects = [ underlying ]
+          observers = observers

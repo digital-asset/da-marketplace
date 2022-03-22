@@ -17,7 +17,7 @@ import {
 import { GlobeIcon, LockIcon, IconChevronDown, IconChevronUp, AddPlusIcon } from '../../icons/Icons'
 import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 
-import { ContractInfo, wrapTextMap } from '../common/damlTypes'
+import { ContractInfo, wrapTextMap, damlSetValues, makeDamlSet } from '../common/damlTypes'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
 import DonutChart, { getDonutChartColor, IDonutChartData } from '../common/DonutChart'
@@ -73,7 +73,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors,
             .map(rb => ({ contractId: rb.contractId, contractData: rb.contractData.broker }))
         ].flat()
 
-    const participants = Object.keys(token?.contractData.observers.textMap || [])
+    const participants = !!token ? damlSetValues(token.contractData.observers) : []
 
     const partyOptions = allRegisteredParties.filter(d => !Array.from(participants || []).includes(d.contractData))
         .map(d => {
@@ -167,7 +167,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors,
             return
         }
 
-        const newObservers = wrapTextMap([...participants, ...selectedParties])
+        const newObservers = makeDamlSet([...participants, ...selectedParties])
 
         await ledger.exerciseByKey(Token.Token_AddObservers, tokenId, { party, newObservers })
             .then(resp => history.push(`${baseUrl}/${resp[0]}`))

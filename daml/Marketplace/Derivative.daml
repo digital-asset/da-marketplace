@@ -4,7 +4,7 @@ import DA.Finance.Types
 
 import Marketplace.Utils
 
-import DA.Next.Set
+import DA.Set
 
 
 data SecType = CMDTYSWAP | FRA | FUT | FWD | IRS | MLEG | OPT | SWAPTION
@@ -57,12 +57,12 @@ template Derivative
       controller party
       do
         assert $ member party $ union id.signatories newObservers
-        create this with observers = union observers newObservers
+        create this with observers = observers `union` newObservers
 
-    controller id.signatories can
-      Derivative_SetObservers : ContractId Derivative
-        with newObservers : Set Party
-        do create this with observers = newObservers
+    choice Derivative_SetObservers : ContractId Derivative
+      with newObservers : Set Party
+      controller id.signatories
+      do create this with observers = newObservers
 
 
 template FairValueCalculationRequest
@@ -74,9 +74,10 @@ template FairValueCalculationRequest
     upTo : Time
   where
     signatory ccp
-    controller exchange can
-      FairValueCalculationRequest_Ack : ()
-        do return ()
+    observer exchange
+    choice FairValueCalculationRequest_Ack : ()
+      controller exchange
+      do return ()
 
 
 template ManualFairValueCalculation
@@ -90,13 +91,13 @@ template ManualFairValueCalculation
   where
     signatory exchange
 
-    controller exchange can
-      ManualFairValueCalculation_Calculate : ContractId FairValue
-        with
-          price : Decimal
-        do
-          timestamp <- getTime
-          create FairValue with ..
+    choice ManualFairValueCalculation_Calculate : ContractId FairValue
+      with
+        price : Decimal
+      controller exchange
+      do
+        timestamp <- getTime
+        create FairValue with ..
 
 
 template FairValue
@@ -124,9 +125,9 @@ template FairValueInterval
     key exchange : Party
     maintainer key
 
-    controller exchange can
-      FairValueInterval_Calculate : ContractId FairValueInterval
-        do
-          time <- getTime
+    choice FairValueInterval_Calculate : ContractId FairValueInterval
+      controller exchange
+      do
+        time <- getTime
 
-          create this with lastCalculated = time
+        create this with lastCalculated = time

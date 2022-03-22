@@ -17,7 +17,7 @@ import {
 import { GlobeIcon, LockIcon, IconChevronDown, IconChevronUp, AddPlusIcon } from '../../icons/Icons'
 import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 
-import { wrapTextMap } from '../common/damlTypes'
+import { wrapTextMap, damlSetValues, makeDamlSet } from '../common/damlTypes'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
 import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
@@ -54,7 +54,7 @@ const IssuedDerivative: React.FC<Props> = ({ sideNav, onLogout }) => {
 
 
     const isPublic = !!derivative?.contractData.isPublic
-    const participants = Object.keys(derivative?.contractData.observers.textMap || [])
+    const participants = !!derivative ? damlSetValues(derivative.contractData.observers) : []
 
     const partyOptions = allRegisteredParties.filter(d => !Array.from(participants || []).includes(d.contractData))
         .map(d => {
@@ -135,7 +135,7 @@ const IssuedDerivative: React.FC<Props> = ({ sideNav, onLogout }) => {
             return
         }
 
-        const newObservers = wrapTextMap([...participants, ...selectedParties])
+        const newObservers = makeDamlSet([...participants, ...selectedParties])
 
         await ledger.exerciseByKey(Token.Token_AddObservers, derivativeId, { party, newObservers })
             .then(resp => history.push(`${baseUrl}/${resp[0]}`))

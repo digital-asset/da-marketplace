@@ -65,12 +65,13 @@ template UserSession
     role : MarketRole
   where
     signatory user
+    observer operator
 
-    controller operator can
-      UserSession_Ack : ()
-        do
-          createOrLookup User with currentRole = role, ..
-          onboardRole role operator user
+    choice UserSession_Ack : ()
+      controller operator
+      do
+        createOrLookup User with currentRole = role, ..
+        onboardRole role operator user
 
 template User
   with
@@ -79,26 +80,28 @@ template User
     currentRole : MarketRole
   where
     signatory operator
+    observer user
 
     key (operator, user) : (Party, Party)
     maintainer key._1
 
-    controller user can
-      nonconsuming User_RequestRoleChange : ContractId UserRoleChangeRequest
-        with
-          newRole : MarketRole
-        do
-          create UserRoleChangeRequest with ..
+    nonconsuming choice User_RequestRoleChange : ContractId UserRoleChangeRequest
+      with
+        newRole : MarketRole
+      controller user
+      do
+        create UserRoleChangeRequest with ..
 
-    controller operator can
-      User_ChangeRole : ContractId User
-        with
-          newRole : MarketRole
-        do
-          create this with currentRole = newRole
+    choice User_ChangeRole : ContractId User
+      with
+        newRole : MarketRole
+      controller operator
+      do
+        create this with currentRole = newRole
 
-      User_Offboard : ()
-        do return ()
+    choice User_Offboard : ()
+      controller operator
+      do return ()
 
 template UserRoleChangeRequest
   with
@@ -107,12 +110,14 @@ template UserRoleChangeRequest
     newRole : MarketRole
   where
     signatory user
+    observer operator
 
-    controller operator can
-      UserRoleChangeRequest_Approve : ContractId User
-        do
-          onboardRole newRole operator user
-          exerciseByKey @User (operator, user) User_ChangeRole with newRole
+    choice UserRoleChangeRequest_Approve : ContractId User
+      controller operator
+      do
+        onboardRole newRole operator user
+        exerciseByKey @User (operator, user) User_ChangeRole with newRole
 
-      UserRoleChangeRequest_Reject : ()
-        do return ()
+    choice UserRoleChangeRequest_Reject : ()
+      controller operator
+      do return ()

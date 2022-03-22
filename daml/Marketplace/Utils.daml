@@ -4,7 +4,7 @@ import DA.Finance.Asset
 import DA.Finance.Types
 
 import DA.List (head)
-import DA.Next.Set qualified as Set
+import DA.Set qualified as Set
 import DA.Optional
 import DA.Text
 
@@ -23,9 +23,9 @@ template ExberrySID
   where
     signatory exchange
 
-    controller exchange can
-      ExberrySID_Ack : ()
-        do return ()
+    choice ExberrySID_Ack : ()
+      controller exchange
+      do return ()
 
 -- |Retrieve the Custodian who allocated this AssetDeposit
 getCustodian : Id -> Party -> Party

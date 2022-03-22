@@ -9,6 +9,7 @@ import Marketplace.Utils
 import DA.Finance.Asset
 import DA.Finance.Types
 
+import DA.Assert
 import DA.List
 
 template BrokerInvitation
@@ -18,19 +19,20 @@ template BrokerInvitation
     public : Party
   where
     signatory operator
+    observer broker
 
     key (operator, broker) : (Party, Party)
     maintainer key._1
 
-    controller broker can
-      BrokerInvitation_Accept : (ContractId RegisteredBroker, ContractId Broker)
-        with
-          name : Text
-          location : Text
-        do
-          brokerRegistryCid <- create RegisteredBroker with ..
-          brokerCid <- create Broker with ..
-          return (brokerRegistryCid, brokerCid)
+    choice BrokerInvitation_Accept : (ContractId RegisteredBroker, ContractId Broker)
+      with
+        name : Text
+        location : Text
+      controller broker
+      do
+        brokerRegistryCid <- create RegisteredBroker with ..
+        brokerCid <- create Broker with ..
+        return (brokerRegistryCid, brokerCid)
 
 
 template Broker
@@ -43,43 +45,46 @@ template Broker
     key (operator, broker) : (Party, Party)
     maintainer key._2
 
-    controller broker can
-      nonconsuming Broker_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
-        with
-          custodian : Party
-        do create CustodianRelationshipRequest with requester = broker, role = BrokerRole, ..
+    nonconsuming choice Broker_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
+      with
+        custodian : Party
+      controller broker
+      do create CustodianRelationshipRequest with requester = broker, role = BrokerRole, ..
 
-      nonconsuming Broker_InviteCustomer : (ContractId BrokerCustomerInvitation)
-        with
-          brokerCustomer : Party
-        do create BrokerCustomerInvitation with ..
+    nonconsuming choice Broker_InviteCustomer : (ContractId BrokerCustomerInvitation)
+      with
+        brokerCustomer : Party
+      controller broker
+      do create BrokerCustomerInvitation with ..
 
-      nonconsuming Broker_RequestDepositTransfer : ContractId DepositTransferRequest
-        with
-          depositCid : ContractId AssetDeposit
-          receiverAccountId : Id
-        do
-           deposit <- fetch depositCid
-           assert $ deposit.account.owner == broker
-           create DepositTransferRequest with sender = broker, senderAccountId = deposit.account.id, ..
+    nonconsuming choice Broker_RequestDepositTransfer : ContractId DepositTransferRequest
+      with
+        depositCid : ContractId AssetDeposit
+        receiverAccountId : Id
+      controller broker
+      do
+         deposit <- fetch depositCid
+         deposit.account.owner === broker
+         create DepositTransferRequest with sender = broker, senderAccountId = deposit.account.id, ..
 
-      nonconsuming Broker_AllocateToProvider : ContractId DepositTransferRequest
-        with
-          depositCids : [ContractId AssetDeposit]
-          amount : Decimal
-          provider : Party
-        do
-          aggregateQty <- getDepositQuantities depositCids
+    nonconsuming choice Broker_AllocateToProvider : ContractId DepositTransferRequest
+      with
+        depositCids : [ContractId AssetDeposit]
+        amount : Decimal
+        provider : Party
+      controller broker
+      do
+        aggregateQty <- getDepositQuantities depositCids
 
-          assertMsg ("amount should be less than or equal to total deposit amount") $ amount <= aggregateQty
+        assertMsg ("amount should be less than or equal to total deposit amount") $ amount <= aggregateQty
 
-          mergedCid <- exercise (head depositCids) AssetDeposit_Merge with depositCids = tail depositCids
-          depositCid <- head <$> exercise mergedCid AssetDeposit_Split with quantities = [ amount ]
+        mergedCid <- exercise (head depositCids) AssetDeposit_Merge with depositCids = tail depositCids
+        depositCid <- head <$> exercise mergedCid AssetDeposit_Split with quantities = [ amount ]
 
-          deposit <- fetch depositCid
-          let receiverAccountId = Id
-                with
-                  signatories = deposit.account.id.signatories,
-                    label = getAccountLabel broker provider,
-                    version = 0
-          exercise self Broker_RequestDepositTransfer with ..
+        deposit <- fetch depositCid
+        let receiverAccountId = Id
+              with
+                signatories = deposit.account.id.signatories,
+                  label = getAccountLabel broker provider,
+                  version = 0
+        exercise self Broker_RequestDepositTransfer with ..

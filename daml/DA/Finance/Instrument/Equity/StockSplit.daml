@@ -3,7 +3,7 @@
 
 module DA.Finance.Instrument.Equity.StockSplit where
 
-import DA.Next.Set
+import DA.Set
 
 import DA.Finance.Types
 
@@ -27,7 +27,7 @@ template EquityStockSplit
     key id : Id
     maintainer key.signatories
 
-    controller id.signatories can
-      EquityStockSplit_SetObservers : ContractId EquityStockSplit
-        with newObservers : Set Party
-        do create this with observers = newObservers
+    choice EquityStockSplit_SetObservers : ContractId EquityStockSplit
+      with newObservers : Set Party
+      controller id.signatories
+      do create this with observers = newObservers

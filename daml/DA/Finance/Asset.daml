@@ -5,7 +5,7 @@ module DA.Finance.Asset where
 
 import DA.Action
 import DA.Assert
-import DA.Next.Set (Set)
+import DA.Set (Set)
 
 import DA.Finance.Types
 import DA.Finance.Utils
@@ -23,28 +23,29 @@ template LockedAssetDeposit
     let setQty (qty: Decimal) (ad: LockedAssetDeposit) =
           ad with asset = ad.asset with quantity = qty
 
-    controller account.owner, locker can
-      LockedAssetDeposit_Unlock : ContractId AssetDeposit
-        -- ^ Unlock a locked asset deposit
-        do
-          create AssetDeposit with ..
+    choice LockedAssetDeposit_Unlock : ContractId AssetDeposit
+      -- ^ Unlock a locked asset deposit
+      controller account.owner, locker
+      do
+        create AssetDeposit with ..
 
-      LockedAssetDeposit_Split : [ContractId LockedAssetDeposit]
-        -- ^ Splits an asset deposit according to the provided list of quantities.
-        with
-          quantities : [Decimal]
-            -- ^ The quantities of the newly created asset deposits. The total quantity
-            -- needs to be smaller or equal than the current quantity. If it does not add up,
-            -- an asset deposit with the remainder is created.
-        do
-          let quantitySum = foldl (+) 0.0 quantities
-          assert $ quantitySum <= asset.quantity
+    choice LockedAssetDeposit_Split : [ContractId LockedAssetDeposit]
+      -- ^ Splits an asset deposit according to the provided list of quantities.
+      with
+        quantities : [Decimal]
+          -- ^ The quantities of the newly created asset deposits. The total quantity
+          -- needs to be smaller or equal than the current quantity. If it does not add up,
+          -- an asset deposit with the remainder is created.
+      controller account.owner, locker
+      do
+        let quantitySum = foldl (+) 0.0 quantities
+        assert $ quantitySum <= asset.quantity
 
-          let quantitiesAll =
-                if quantitySum == asset.quantity
-                then quantities
-                else quantities ++ [asset.quantity - quantitySum]
-          mapA (\q -> create $ setQty q this) quantitiesAll
+        let quantitiesAll =
+              if quantitySum == asset.quantity
+              then quantities
+              else quantities ++ [asset.quantity - quantitySum]
+        mapA (\q -> create $ setQty q this) quantitiesAll
 
 
 -- | Represents a deposit of an asset in an account. The `account.id` and `asset.id` fields
@@ -71,48 +72,50 @@ template AssetDeposit
     let setQty (qty: Decimal) (ad: AssetDeposit) =
           ad with asset = ad.asset with quantity = qty
 
-    controller account.owner can
 
-      AssetDeposit_SetObservers : ContractId AssetDeposit
-        with
-          newObservers : Set Party
-        do
-          create this with observers = newObservers
+    choice AssetDeposit_SetObservers : ContractId AssetDeposit
+      with
+        newObservers : Set Party
+      controller account.owner
+      do
+        create this with observers = newObservers
 
-      AssetDeposit_Split : [ContractId AssetDeposit]
-        -- ^ Splits an asset deposit according to the provided list of quantities.
-        with
-          quantities : [Decimal]
-            -- ^ The quantities of the newly created asset deposits. The total quantity
-            -- needs to be smaller or equal than the current quantity. If it does not add up,
-            -- an asset deposit with the remainder is created.
-        do
-          let quantitySum = foldl (+) 0.0 quantities
-          assert $ quantitySum <= asset.quantity
+    choice AssetDeposit_Split : [ContractId AssetDeposit]
+      -- ^ Splits an asset deposit according to the provided list of quantities.
+      with
+        quantities : [Decimal]
+          -- ^ The quantities of the newly created asset deposits. The total quantity
+          -- needs to be smaller or equal than the current quantity. If it does not add up,
+          -- an asset deposit with the remainder is created.
+      controller account.owner
+      do
+        let quantitySum = foldl (+) 0.0 quantities
+        assert $ quantitySum <= asset.quantity
 
-          let quantitiesAll =
-                if quantitySum == asset.quantity
-                then quantities
-                else quantities ++ [asset.quantity - quantitySum]
-          mapA (\q -> create $ setQty q this) quantitiesAll
+        let quantitiesAll =
+              if quantitySum == asset.quantity
+              then quantities
+              else quantities ++ [asset.quantity - quantitySum]
+        mapA (\q -> create $ setQty q this) quantitiesAll
 
-      AssetDeposit_Merge : ContractId AssetDeposit
-        -- ^ Merges a list of asset deposits with the given one into one.
-        with
-          depositCids : [ContractId AssetDeposit]
-            -- ^ The asset deposits that will be consumed. All fields except for the quantity
-            -- need to match.
-        do
-          deposit <-
-            foldlA
-              (\acc cid -> do
-                c <- fetchAndArchive cid
-                c === (setQty c.asset.quantity acc)
-                return $ setQty (acc.asset.quantity + c.asset.quantity) acc
-              )
-            this
-            depositCids
-          create deposit
+    choice AssetDeposit_Merge : ContractId AssetDeposit
+      -- ^ Merges a list of asset deposits with the given one into one.
+      with
+        depositCids : [ContractId AssetDeposit]
+          -- ^ The asset deposits that will be consumed. All fields except for the quantity
+          -- need to match.
+      controller account.owner
+      do
+        deposit <-
+          foldlA
+            (\acc cid -> do
+              c <- fetchAndArchive cid
+              c === (setQty c.asset.quantity acc)
+              return $ setQty (acc.asset.quantity + c.asset.quantity) acc
+            )
+          this
+          depositCids
+        create deposit
 
     choice AssetDeposit_Lock : ContractId LockedAssetDeposit
       -- ^ Lock an asset deposit

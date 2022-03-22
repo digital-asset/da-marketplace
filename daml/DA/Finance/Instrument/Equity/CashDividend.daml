@@ -3,7 +3,7 @@
 
 module DA.Finance.Instrument.Equity.CashDividend where
 
-import DA.Next.Set
+import DA.Set
 
 import DA.Finance.Types
 
@@ -29,7 +29,7 @@ template EquityCashDividend
     key id : Id
     maintainer key.signatories
 
-    controller id.signatories can
-      EquityCashDividend_SetObservers : ContractId EquityCashDividend
+    choice EquityCashDividend_SetObservers : ContractId EquityCashDividend
         with newObservers : Set Party
+      controller id.signatories
         do create this with observers = newObservers

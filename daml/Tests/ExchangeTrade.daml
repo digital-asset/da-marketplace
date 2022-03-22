@@ -18,7 +18,8 @@ import DA.Finance.Types
 
 import Setup
 
-import DA.Next.Set
+import DA.Assert
+import DA.Set
 import DA.List (head)
 
 setupTransfer : Script ()
@@ -106,8 +107,8 @@ handleTrade lp@LedgerParties{userAdmin = operator, exchange, bob, alice} btcToke
   (Some bobDeposit)   <- queryContractId bob bobDepositCid
   (Some aliceDeposit) <- queryContractId alice aliceDepositCid
 
-  assert $ aliceDeposit.asset.quantity == 1.0
-  assert $ bobDeposit.asset.quantity == 40.0
+  aliceDeposit.asset.quantity === 1.0
+  bobDeposit.asset.quantity === 40.0
 
 onboardInvestor : LedgerParties -> Party -> Text-> Script (ContractId Investor)
 onboardInvestor lp investor name = do

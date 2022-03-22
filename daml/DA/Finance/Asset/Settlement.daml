@@ -1,7 +1,7 @@
 module DA.Finance.Asset.Settlement where
 
 import DA.Assert
-import DA.Next.Set as Set
+import DA.Set as Set
 
 import DA.Finance.Asset
 import DA.Finance.Types
@@ -22,36 +22,36 @@ template AssetSettlementRule
       -- of the `AssetSettlement_Credit` choice.
   where
     signatory account.id.signatories
-    observer ctrls, observers
+    observer ctrls, observers, account.owner
 
     key account.id : Id
     maintainer key.signatories
 
-    controller account.owner can
-      nonconsuming AssetSettlement_Transfer : ContractId AssetDeposit
-        -- ^ Gives the owner the right to transfer an asset deposit to a new owner.
-        -- Requires that the AssetSettlementRule of the receiver account is available
-        -- for use.
-        with
-          receiverAccountId : Id
-            -- ^ The account id to which the asset deposit will be transferred to.
-          depositCid : ContractId AssetDeposit
-            -- ^ The asset deposit that will be consumed.
-        do
-          asset <- exercise self AssetSettlement_Debit with depositCid
-          exerciseByKey @AssetSettlementRule receiverAccountId AssetSettlement_Credit with asset, ctrl = account.owner
+    nonconsuming choice AssetSettlement_Transfer : ContractId AssetDeposit
+      -- ^ Gives the owner the right to transfer an asset deposit to a new owner.
+      -- Requires that the AssetSettlementRule of the receiver account is available
+      -- for use.
+      with
+        receiverAccountId : Id
+          -- ^ The account id to which the asset deposit will be transferred to.
+        depositCid : ContractId AssetDeposit
+          -- ^ The asset deposit that will be consumed.
+      controller account.owner
+      do
+        asset <- exercise self AssetSettlement_Debit with depositCid
+        exerciseByKey @AssetSettlementRule receiverAccountId AssetSettlement_Credit with asset, ctrl = account.owner
 
-    controller account.id.signatories can
-      nonconsuming AssetSettlement_Debit : Asset
-        -- ^ Gives the account.id.signatories the right to debit (i.e. archive)
-        -- an asset deposit.
-        with
-          depositCid : ContractId AssetDeposit
-            -- ^ The asset deposit that will be consumed.
-        do
-          deposit <- fetchAndArchive depositCid
-          deposit.account === account
-          return deposit.asset
+    nonconsuming choice AssetSettlement_Debit : Asset
+      -- ^ Gives the account.id.signatories the right to debit (i.e. archive)
+      -- an asset deposit.
+      with
+        depositCid : ContractId AssetDeposit
+          -- ^ The asset deposit that will be consumed.
+      controller account.id.signatories
+      do
+        deposit <- fetchAndArchive depositCid
+        deposit.account === account
+        return deposit.asset
 
     nonconsuming choice AssetSettlement_Credit : ContractId AssetDeposit
       -- ^ Allows a `ctrl` (if part of `ctrls`) to create an asset deposit.

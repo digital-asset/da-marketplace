@@ -3,7 +3,7 @@
 
 module DA.Finance.Instrument.Equity.Stock.Lifecycle where
 
-import DA.Next.Set
+import DA.Set
 
 import DA.Finance.Asset.Lifecycle
 import DA.Finance.Instrument.Entitlement
@@ -24,44 +24,44 @@ template EquityStockCashDividendRule
     key signatories : Set Party
     maintainer key
 
-    controller signatories can
-      nonconsuming EquityStockCashDividend_Lifecycle : (ContractId EquityStock, ContractId Entitlement, ContractId LifecycleEffects)
-        -- ^ Allows the signatories to process dividend reference data
-        -- for the corresponding stock.
-        with
-          dividendCid : ContractId EquityCashDividend
-            -- ^ Dividend reference data.
-          entitlementIdLabel : Text
-            -- ^ A label for the entitlement instrument describing the dividend payment.
-        do
-          dividend <- fetch dividendCid
-          assertOnOrAfterDateMsg "expects exDate <= now" $ dividend.exDate
+    nonconsuming choice EquityStockCashDividend_Lifecycle : (ContractId EquityStock, ContractId Entitlement, ContractId LifecycleEffects)
+      -- ^ Allows the signatories to process dividend reference data
+      -- for the corresponding stock.
+      with
+        dividendCid : ContractId EquityCashDividend
+          -- ^ Dividend reference data.
+        entitlementIdLabel : Text
+          -- ^ A label for the entitlement instrument describing the dividend payment.
+      controller signatories
+      do
+        dividend <- fetch dividendCid
+        assertOnOrAfterDateMsg "expects exDate <= now" $ dividend.exDate
 
-          (_, stock) <- fetchByKey @EquityStock dividend.id
-          let stockIdNew = increaseVersion stock.id
-          stockCid <- create stock with id = stockIdNew
+        (_, stock) <- fetchByKey @EquityStock dividend.id
+        let stockIdNew = increaseVersion stock.id
+        stockCid <- create stock with id = stockIdNew
 
-          let entitlementId = Id with signatories, label = entitlementIdLabel, version = 0
-          entitlementCid <-
-            create Entitlement with
-              id = entitlementId
-              settlementDate = dividend.settlementDate
-              underlying = Asset with id = stock.ccy, quantity = dividend.perShare
-              payment = None
-              observers = dividend.observers
+        let entitlementId = Id with signatories, label = entitlementIdLabel, version = 0
+        entitlementCid <-
+          create Entitlement with
+            id = entitlementId
+            settlementDate = dividend.settlementDate
+            underlying = Asset with id = stock.ccy, quantity = dividend.perShare
+            payment = None
+            observers = dividend.observers
 
-          lifecycleEffectsCid <-
-            create LifecycleEffects with
-              id = stock.id
-              label = "Cash Dividend on " <> stock.id.label
-              consuming = []
-              effects =
-                [ Asset with id = stockIdNew, quantity = 1.0
-                , Asset with id = entitlementId, quantity = 1.0
-                ]
-              observers = dividend.observers
+        lifecycleEffectsCid <-
+          create LifecycleEffects with
+            id = stock.id
+            label = "Cash Dividend on " <> stock.id.label
+            consuming = []
+            effects =
+              [ Asset with id = stockIdNew, quantity = 1.0
+              , Asset with id = entitlementId, quantity = 1.0
+              ]
+            observers = dividend.observers
 
-          return (stockCid, entitlementCid, lifecycleEffectsCid)
+        return (stockCid, entitlementCid, lifecycleEffectsCid)
 
 -- | Rule that helps with processing stock splits for stocks.
 template EquityStockSplitRule
@@ -74,27 +74,27 @@ template EquityStockSplitRule
     key signatories : Set Party
     maintainer key
 
-    controller signatories can
-      nonconsuming EquityStockSplit_Lifecycle : (ContractId EquityStock, ContractId LifecycleEffects)
-        -- ^ Allows the signatories to process stock split reference data
-        -- for the corresponding stock.
-        with
-          stockSplitCid : ContractId EquityStockSplit
-            -- ^ Stock split reference data.
-        do
-          stockSplit <- fetch stockSplitCid
-          assertOnOrAfterDateMsg "expects exDate <= now" $ stockSplit.exDate
+    nonconsuming choice EquityStockSplit_Lifecycle : (ContractId EquityStock, ContractId LifecycleEffects)
+      -- ^ Allows the signatories to process stock split reference data
+      -- for the corresponding stock.
+      with
+        stockSplitCid : ContractId EquityStockSplit
+          -- ^ Stock split reference data.
+      controller signatories
+      do
+        stockSplit <- fetch stockSplitCid
+        assertOnOrAfterDateMsg "expects exDate <= now" $ stockSplit.exDate
 
-          (_, stock) <- fetchByKey @EquityStock stockSplit.id
-          let stockIdNew = increaseVersion stock.id
-          stockCid <- create stock with id = stockIdNew
+        (_, stock) <- fetchByKey @EquityStock stockSplit.id
+        let stockIdNew = increaseVersion stock.id
+        stockCid <- create stock with id = stockIdNew
 
-          lifecycleEffectsCid <-
-            create LifecycleEffects with
-              id = stock.id
-              label = "Stock Split on " <> stockSplit.id.label
-              consuming = []
-              effects = [ Asset with id = stockIdNew, quantity = 1.0 / stockSplit.rFactor ]
-              observers = stockSplit.observers
+        lifecycleEffectsCid <-
+          create LifecycleEffects with
+            id = stock.id
+            label = "Stock Split on " <> stockSplit.id.label
+            consuming = []
+            effects = [ Asset with id = stockIdNew, quantity = 1.0 / stockSplit.rFactor ]
+            observers = stockSplit.observers
 
-          return (stockCid, lifecycleEffectsCid)
+        return (stockCid, lifecycleEffectsCid)

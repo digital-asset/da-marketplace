@@ -7,7 +7,7 @@ import DA.Finance.Types
 
 import DA.Action
 import DA.Foldable hiding (elem, null)
-import DA.Next.Set (fromList)
+import DA.Set (fromList)
 import DA.List
 import DA.Optional
 import DA.Map (Map)

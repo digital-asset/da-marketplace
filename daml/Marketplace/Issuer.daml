@@ -9,7 +9,7 @@ import Marketplace.Utils
 
 import DA.Finance.Types
 
-import DA.Next.Set
+import DA.Set
 
 
 template IssuerInvitation
@@ -19,20 +19,21 @@ template IssuerInvitation
     public : Party
   where
     signatory operator
+    observer issuer
 
     key (operator, issuer) : (Party, Party)
     maintainer key._1
 
-    controller issuer can
-      IssuerInvitation_Accept : ContractId Issuer
-        with
-          name : Text
-          location : Text
-          title : Text
-          issuerID : Text
-        do
-          createOrLookup RegisteredIssuer with ..
-          createOrLookup Issuer with ..
+    choice IssuerInvitation_Accept : ContractId Issuer
+      with
+        name : Text
+        location : Text
+        title : Text
+        issuerID : Text
+      controller issuer
+      do
+        createOrLookup RegisteredIssuer with ..
+        createOrLookup Issuer with ..
 
 
 template Issuer
@@ -46,56 +47,59 @@ template Issuer
     key (operator, issuer) : (Party, Party)
     maintainer key._1
 
-    controller issuer can
-      nonconsuming Issuer_IssueToken : ContractId Token
-        with
-          name : Text
-          quantityPrecision : Int
-          description : Text
-          isPublic : Bool
-          observers : [Party]
-        do
-          let tokenId = Id with signatories = fromList [issuer], label = name, version = 0
-          let tokenObservers = if isPublic then (public :: operator :: observers) else observers
-          createOrLookup Token with id = tokenId, observers = fromList tokenObservers, ..
+    nonconsuming choice Issuer_IssueToken : ContractId Token
+      with
+        name : Text
+        quantityPrecision : Int
+        description : Text
+        isPublic : Bool
+        observers : [Party]
+      controller issuer
+      do
+        let tokenId = Id with signatories = fromList [issuer], label = name, version = 0
+        let tokenObservers = if isPublic then (public :: operator :: observers) else observers
+        createOrLookup Token with id = tokenId, observers = fromList tokenObservers, ..
 
-      nonconsuming Issuer_IssueBinaryOption : ContractId BinaryOption
-        with
-          name : Text
-          description : Text
-          minPrice : Decimal
-          maxPrice : Decimal
-          isPublic : Bool
-          observers : [Party]
-        do
-          let binOptionId = Id with signatories = fromList [issuer], label = name, version = 0
-          let binOptionObservers = if isPublic then (public :: observers) else observers
-          createOrLookup BinaryOption with id = binOptionId, observers = fromList binOptionObservers, ..
+    nonconsuming choice Issuer_IssueBinaryOption : ContractId BinaryOption
+      with
+        name : Text
+        description : Text
+        minPrice : Decimal
+        maxPrice : Decimal
+        isPublic : Bool
+        observers : [Party]
+      controller issuer
+      do
+        let binOptionId = Id with signatories = fromList [issuer], label = name, version = 0
+        let binOptionObservers = if isPublic then (public :: observers) else observers
+        createOrLookup BinaryOption with id = binOptionId, observers = fromList binOptionObservers, ..
 
-      nonconsuming Issuer_IssueDerivative : (Id, ContractId Derivative)
-        with
-          prodSym : Text
-          prodCode : Text
-          description : Text
-          pricePrecision : Int
-          secType : Optional SecType
-          mmy : Text
-          mult : Int
-          uom : Text
-          optionData : Optional OptionData
-          underlying : Id
-          isPublic : Bool
-          observers : [Party]
-        do
-          let id = Id with signatories = fromList [ issuer ], label = prodSym, version = 0
-              derivativeObservers = if isPublic then (public :: operator :: observers) else observers
-              typ = case secType of
-                (Some t) -> t
-                None     -> OPT
-              derivative = Derivative with uuid = prodSym, observers = fromList derivativeObservers, secType = typ, ..
-          (,) id <$> create derivative
+    nonconsuming choice Issuer_IssueDerivative : (Id, ContractId Derivative)
+      with
+        prodSym : Text
+        prodCode : Text
+        description : Text
+        pricePrecision : Int
+        secType : Optional SecType
+        mmy : Text
+        mult : Int
+        uom : Text
+        optionData : Optional OptionData
+        underlying : Id
+        isPublic : Bool
+        observers : [Party]
+      controller issuer
+      do
+        let id = Id with signatories = fromList [ issuer ], label = prodSym, version = 0
+            derivativeObservers = if isPublic then (public :: operator :: observers) else observers
+            typ = case secType of
+              (Some t) -> t
+              None     -> OPT
+            derivative = Derivative with uuid = prodSym, observers = fromList derivativeObservers, secType = typ, ..
+        (,) id <$> create derivative
 
-      nonconsuming Issuer_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
-        with
-          custodian : Party
-        do createOrLookup CustodianRelationshipRequest with requester = issuer, role = IssuerRole, ..
+    nonconsuming choice Issuer_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
+      with
+        custodian : Party
+      controller issuer
+      do createOrLookup CustodianRelationshipRequest with requester = issuer, role = IssuerRole, ..

@@ -5,7 +5,7 @@ import Marketplace.Utils
 
 import DA.Finance.Types
 
-import DA.Next.Set
+import DA.Set
 
 
 -- | Reference data describing a token.
@@ -30,12 +30,12 @@ template Token
       controller party
       do
         assert $ member party $ union id.signatories newObservers
-        create this with observers = union observers newObservers
+        create this with observers = observers `union` newObservers
 
-    controller id.signatories can
-      Token_SetObservers : ContractId Token
-        with newObservers : Set Party
-        do create this with observers = newObservers
+    choice Token_SetObservers : ContractId Token
+      with newObservers : Set Party
+      controller id.signatories
+      do create this with observers = newObservers
 
 data InstrumentStatus = InstrumentActive
                       | InstrumentDisabled deriving (Show, Eq)
