@@ -1,14 +1,14 @@
-module Marketplace.Settlement.Htlc.Trade where
+module Marketplace.Settlement.Htlc.Dvp where
 
 import DA.Assert ((===))
 import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Asset)
 import DA.Text (sha256)
-import Marketplace.Settlement.Htlc.Instruction qualified as Htlc
+import Marketplace.Settlement.Htlc.Instruction (Instruction, RefundInstruction(..), SettleInstruction(..))
 import Marketplace.Settlement.Htlc.Util (HtlcState(..))
-import Marketplace.Settlement.Hierarchical (SettlementMode)
+import Marketplace.Settlement.Hierarchical.Util (SettlementMode)
 
-template Trade
+template Dvp
   with
     operator : Party
     deliverer : Party
@@ -31,7 +31,7 @@ template Trade
     maintainer key._1
 
     controller payerAgent can
-      Settle : (ContractId Trade, [ContractId AssetDeposit])
+      SettleDvp : (ContractId Dvp, [ContractId AssetDeposit])
         with
           secret : Text
         do
@@ -41,30 +41,30 @@ template Trade
           hashlock === sha256 secret
           let
             settle (instructionId : Text) = do
-              (siCid, si) <- fetchByKey @Htlc.Instruction (operator, settlementId, instructionId)
+              (siCid, si) <- fetchByKey @Instruction (operator, settlementId, instructionId)
               si.settlementId === settlementId
               si.asset.id.label === delivery.id.label
               si.asset.id.version === delivery.id.version
               si.asset.quantity === delivery.quantity
-              exercise siCid Htlc.Settle with secret
+              exercise siCid SettleInstruction with secret
           adCids <- mapA settle instructionIds
           tradeCid <- create this with status = Settled
           pure (tradeCid, adCids)
 
     controller delivererAgent can
-      Refund : (ContractId Trade, [ContractId AssetDeposit])
+      Refund : (ContractId Dvp, [ContractId AssetDeposit])
         do
           time <- getTime
           assertMsg "Time lock has not expired" (time >= expiry)
           status === Locked
           let
             refund (instructionId : Text) = do
-              (siCid, si) <- fetchByKey @Htlc.Instruction (operator, settlementId, instructionId)
+              (siCid, si) <- fetchByKey @Instruction (operator, settlementId, instructionId)
               si.settlementId === settlementId
               si.asset.id.label === delivery.id.label
               si.asset.id.version === delivery.id.version
               si.asset.quantity === delivery.quantity
-              exercise siCid Htlc.Refund
+              exercise siCid RefundInstruction
           adCids <- mapA refund instructionIds
           deliveryCid <- create this with status = Refunded
           pure (deliveryCid, adCids)

@@ -1,7 +1,7 @@
 [submodule "lib-finance"]
 	path = lib-finance
 	url = git@github.com:digital-asset/lib-finance.git
-	branch = marketplace
+	branch = syndication
 
 [submodule "contingent-claims"]
 	path = contingent-claims

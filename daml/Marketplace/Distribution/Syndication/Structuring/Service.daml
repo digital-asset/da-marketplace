@@ -7,7 +7,7 @@ import DA.Optional (catOptionals)
 import Marketplace.Distribution.Syndication.Structuring.Model (Deal(..), CreateTranche(..), Tranche, CreateDealRequest(..), AddTrancheRequest(..))
 import Marketplace.Distribution.Syndication.Bidding.Model qualified as Bidding
 import Marketplace.Distribution.Syndication.BookBuilding.Model qualified as BookBuilding
-import Marketplace.Settlement.Hierarchical (SettlementMode)
+import Marketplace.Settlement.Hierarchical.Util (SettlementMode)
 import Marketplace.Utils
 
 type S = Service

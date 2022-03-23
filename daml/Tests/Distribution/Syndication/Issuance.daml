@@ -6,7 +6,7 @@ import DA.Set (singleton)
 import DA.Text (sha256)
 import DA.Time (addRelTime, hours)
 import Marketplace.Distribution.Syndication.Structuring.Model qualified as Structuring
-import Marketplace.Settlement.Hierarchical (SettlementMode(..))
+import Marketplace.Settlement.Hierarchical.Util (SettlementMode(..))
 import Tests.Distribution.Syndication.Origination (origination, Origination(..))
 import Tests.Distribution.Syndication.Setup (setup, Parties(..))
 import Tests.Distribution.Syndication.Util
@@ -72,7 +72,7 @@ issuance Parties{..} Origination{..} = do
   closeBook operator structurer issuer dealId "TRANCHE2" allocations offeredPrice
   closeBook operator structurer issuer dealId "TRANCHE3" allocations offeredPrice
 
-  let 
+  let
     secret1 = "investor1Sceret"
     hashlock1 = sha256 secret1
     secret2 = "investor2Sceret"
@@ -120,7 +120,7 @@ issuance Parties{..} Origination{..} = do
   settleTradeHtlc settlementBank (secret, dvpCid13)
 
   -- Step 2
-  let 
+  let
     secret = "bndBankSecret"
     hashlock = sha256 secret
   dvpCid21 <- submit operator do exerciseCmd tranche1Cid Structuring.InstructBndSettlement with price; dateOfSettlement; dateOfTrade

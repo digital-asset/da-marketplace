@@ -8,7 +8,10 @@ import Marketplace.Issuance.AssetDescription
 import Marketplace.Issuance.CFI qualified as CFI
 import Marketplace.Issuance.Instrument.Model qualified as Instrument
 import Marketplace.Snapshot.Model
-import Marketplace.Settlement.Hierarchical (createInstructions, getAccount, Delivery(..), Status(..))
+import Marketplace.Settlement.Hierarchical.Delivery (Delivery(..))
+import Marketplace.Settlement.Hierarchical.Dvd (Dvd(..))
+import Marketplace.Settlement.Hierarchical.Instruction (Instruction(..))
+import Marketplace.Settlement.Hierarchical.Util (createInstructions, getAccount, Status(..))
 import SwiftMessage.Message (SwiftMessage(MT566), SwiftMessageType(..), SwiftOutboundMessage(..))
 import SwiftMessage.Model.MT566
 import SwiftMessage.Util
@@ -62,8 +65,7 @@ template Effect
     signatory operator, issuer, payingAgent
     observer bondRegistrar
 
-
-    choice Instruct : [ContractId Delivery]
+    choice Instruct : ([ContractId Dvd], [ContractId Delivery])
       with
         snapshotCids : [ContractId Snapshot]
       controller operator
@@ -74,7 +76,7 @@ template Effect
             (_, description) <- fetchByKey @AssetDescription assetId
             if (description.cfi == CFI.bond) then do
               (_, bond) <- fetchByKey @Instrument.Bond (fromList [issuer, bondRegistrar], assetId.label)
-            
+
               let
                 instrumentId = bond.isin <> "-" <> assetId.label
                 faceAmount = asset.quantity
@@ -87,8 +89,18 @@ template Effect
               create SwiftOutboundMessage with referenceId = show refId; provider = operator ; consumer = operator; swiftMessage=MT566 (mt566); swiftMessageType=MT566_t; status=Pending; observers=fromList [payingAgent]
               pure $ Some refId
             else pure None
-          
+
           indexedPayouts = zip [0 .. length payouts - 1] payouts
+          
+          createInstructionsForDelivery : Text -> Party -> Party -> Asset -> Int -> Update [ContractId Instruction]
+          createInstructionsForDelivery settlementId sender receiver asset idx = do
+            (_, senderSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, sender)
+            (_, receiverSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, receiver)
+            let
+              senderAccount = getAccount False senderSettlementInfo sender
+              receiverAccount = getAccount False receiverSettlementInfo receiver
+            createInstructions False operator payingAgent bondRegistrar senderAccount receiverAccount settlementId idx asset
+          
           createInstructionsForPayout : Snapshot -> (Int, (Decimal, Id)) -> Update (ContractId Delivery)
           createInstructionsForPayout snapshot (index, (amount, id)) = do
             let
@@ -109,30 +121,41 @@ template Effect
             payoutRefIdOpt <- sendSwiftMessage receiver receiverSecAccount receiverCashAccount asset (amount == 1.0)
             let refIdOpt = show <$> payoutRefIdOpt
             create Delivery with operator; agent = payingAgent; sender; receiver; settlementId; refIdOpt; instructionIds; asset; status = Instructed
-          
-          createInstructionsForSnapshot : ContractId Snapshot -> Update [ContractId Delivery]
+
+          createInstructionsForSnapshot : ContractId Snapshot -> Update ([ContractId Dvd], [ContractId Delivery])
           createInstructionsForSnapshot snapshotCid = do
             snapshot <- fetch snapshotCid
+            let 
+              settlementId = lifecycleId <> "-" <> partyToText snapshot.deposit.account.owner
+              asset = snapshot.deposit.asset with id.signatories = fromList [bondRegistrar, issuer]
+              bondHolder = snapshot.deposit.account.owner
             deliveryCids <-
               if expired
               then do
-                let
-                  settlementId = lifecycleId <> "-" <> partyToText snapshot.deposit.account.owner <> "-Expiry"
-                  asset = snapshot.deposit.asset with id.signatories = fromList [bondRegistrar, issuer]; id.version = newVersion
-                  sender = snapshot.deposit.account.owner
-                  receiver = bondRegistrar
-                (_, senderSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, sender)
-                (_, receiverSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, receiver)
-                let
-                  senderAccount = getAccount False senderSettlementInfo sender
-                  receiverAccount = getAccount False receiverSettlementInfo receiver
-                instructionCids <- createInstructions False operator payingAgent bondRegistrar senderAccount receiverAccount settlementId 0 asset
+                let settlementIdExp = settlementId <> "-Expiry"
+                instructionCids <- createInstructionsForDelivery settlementIdExp bondHolder bondRegistrar asset 0
                 instructionIds <- map (.instructionId) <$> mapA fetch instructionCids
-                dCid <- create Delivery with operator; agent = payingAgent; sender; receiver; settlementId; refIdOpt = None; instructionIds; asset; status = Instructed
+                dCid <- create Delivery with operator; agent = payingAgent; sender = bondHolder; receiver = bondRegistrar; settlementId = settlementIdExp; refIdOpt = None; instructionIds; asset; status = Instructed
                 dCids <- mapA (createInstructionsForPayout snapshot) indexedPayouts
-                pure $ dCid :: dCids
-              else
-                mapA (createInstructionsForPayout snapshot) indexedPayouts
+                pure ([], dCid :: dCids)
+              else do
+                let 
+                  settlementIdUpgrade = settlementId <> "-Upgrade"
+                  delivery1 = asset
+                  delivery2 = asset with id.version = newVersion
+                  deliverer1 = bondHolder
+                  deliverer2 = bondRegistrar
+                let
+                instruction1Cids <- createInstructionsForDelivery settlementIdUpgrade deliverer1 deliverer2 delivery1 0
+                instruction2Cids <- createInstructionsForDelivery settlementIdUpgrade deliverer2 deliverer1 delivery2 (length instruction1Cids)
+                instructionIds <- map (.instructionId) <$> mapA fetch (instruction1Cids <> instruction2Cids)
+                tCid <- create Dvd with operator; agent = payingAgent; deliverer1; deliverer2; settlementId = settlementIdUpgrade; instructionIds; delivery1; delivery2; status = Instructed
+                dCid <- mapA (createInstructionsForPayout snapshot) indexedPayouts
+                pure ([tCid], dCid)
             exercise snapshotCid Delete
             pure deliveryCids
-        concat <$> mapA createInstructionsForSnapshot snapshotCids
+        results <- mapA createInstructionsForSnapshot snapshotCids
+        let
+          dvds = concatMap fst results
+          deliveries = concatMap snd results
+        pure (dvds, deliveries)

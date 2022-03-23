@@ -1,8 +1,12 @@
 module Marketplace.Trading.Otc.Model where
 
-import DA.Finance.Types (Asset)
+import DA.Finance.Types (Asset, Account)
+import DA.Optional (fromSomeNote)
 import Marketplace.Custody.Model qualified as Custody
-import Marketplace.Settlement.Hierarchical (createInstructions, getAccount, Trade(..), Status(..), SettlementMode(..))
+import Marketplace.Settlement.Hierarchical.Util (createInstructions, getAccount, Status(..), SettlementMode(..))
+import Marketplace.Settlement.Htlc.Util (createInstructionsHtlc, HtlcState(..))
+import Marketplace.Settlement.Htlc.Dvp qualified as Htlc
+import Marketplace.Settlement.Hierarchical.Dvp qualified as Hierarchical
 import Marketplace.Trading.Model (Side(..))
 
 template Order
@@ -18,6 +22,7 @@ template Order
     payment : Asset
     side : Side
     settlementMode : SettlementMode
+    hashlockOpt : Optional Text
   where
     signatory operator, provider, customer
     observer counterparty
@@ -25,7 +30,7 @@ template Order
     choice Accept : ContractId Match
       controller counterparty
       do
-        create Match with ..
+        create Match with order = this
 
     choice Reject : ()
       controller counterparty
@@ -37,45 +42,62 @@ template Order
       do
         pure ()
 
+-- helper data record for Instruct choices in Match
+data SettlementResult = SettlementResult with
+  settlementId : Text
+
+  deliverer : Party
+  payer : Party
+  delivererSecAccount : Account
+  delivererCashAccount : Account
+  payerSecAccount : Account
+  payerCashAccount : Account
+
 template Match
   with
-    operator : Party
-    provider : Party
-    customer : Party
-    counterparty : Party
-    deliveryRegistrar : Party
-    paymentRegistrar : Party
-    id : Text
-    delivery : Asset
-    payment : Asset
-    side : Side
-    settlementMode : SettlementMode
+    order : Order
   where
-    signatory operator, provider, customer, counterparty
+    signatory signatory order, order.counterparty
 
-    nonconsuming choice Instruct : ContractId Trade
-      controller operator
-      do
+    let
+      createSettlementResult : Order -> Update SettlementResult
+      createSettlementResult Order{..} = do
         let
-          buyer = if side == Buy then customer else counterparty
-          seller = if side == Buy then counterparty else customer
           settlementId = id <> "-" <> partyToText customer <> "-" <> partyToText counterparty
-        (_, buyerSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, buyer)
-        (_, sellerSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, seller)
+          payer = if side == Buy then customer else counterparty
+          deliverer = if side == Buy then counterparty else customer
+        (_, payerSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, payer)
+        (_, delivererSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, deliverer)
+        let
+          payerSecAccount = getAccount False payerSettlementInfo payer
+          payerCashAccount = getAccount True payerSettlementInfo payer
+          delivererSecAccount = getAccount False delivererSettlementInfo deliverer
+          delivererCashAccount = getAccount True delivererSettlementInfo deliverer
+        pure $ SettlementResult with ..
 
-        let 
-          buyerSecuritiesAccount = getAccount False buyerSettlementInfo buyer
-          sellerSecuritiesAccount = getAccount False sellerSettlementInfo seller
-        deliverySis <- createInstructions False operator operator deliveryRegistrar sellerSecuritiesAccount buyerSecuritiesAccount settlementId 0 delivery
+    nonconsuming choice Instruct : ContractId Hierarchical.Dvp
+      controller order.operator
+      do
+        SettlementResult {..} <- createSettlementResult order
+        let Order{..} = order
+        deliverySis <- createInstructions False operator operator deliveryRegistrar delivererSecAccount payerSecAccount settlementId 0 delivery
         instructionIds <-
             if settlementMode == Dvp
             then do
-              let
-                buyerCashAccount = getAccount True buyerSettlementInfo buyer
-                sellerCashAccount = getAccount True sellerSettlementInfo seller      
-              paymentSis <- createInstructions True operator operator paymentRegistrar buyerCashAccount sellerCashAccount settlementId (length deliverySis) payment
+              paymentSis <- createInstructions True operator operator paymentRegistrar payerCashAccount delivererCashAccount settlementId (length deliverySis) payment
               map (.instructionId) <$> mapA fetch (deliverySis <> paymentSis)
             else do
               map (.instructionId) <$> mapA fetch deliverySis
-        create Trade with operator; agent = operator; deliverer = seller; payer = buyer; settlementId; instructionIds; delivery; payment; status = Instructed; settlementMode
-        
+        create Hierarchical.Dvp with operator; agent = operator; deliverer; payer; settlementId; instructionIds; delivery; payment; status = Instructed; settlementMode
+      
+    nonconsuming choice InstructHtlc : ContractId Htlc.Dvp
+      with 
+        expiry : Time
+      controller order.operator
+      do 
+        SettlementResult {..} <- createSettlementResult order
+        let Order{..} = order
+            hashlock = fromSomeNote "No hashlock specified for HTLC" hashlockOpt
+        deliverySis <- createInstructionsHtlc False operator deliveryRegistrar deliverer delivererSecAccount payer payerSecAccount settlementId 0 delivery hashlock expiry
+        instructionIds <- map (.instructionId) <$> mapA fetch deliverySis
+        create Htlc.Dvp with delivererAgent = deliverer; payerAgent = payer; status = Locked; ..

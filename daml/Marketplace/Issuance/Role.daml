@@ -4,7 +4,6 @@ import DA.Finance.Types (Asset, Id)
 import DA.Map (empty)
 import Marketplace.Issuance.Instrument.Model qualified as Instrument
 import Marketplace.Lifecycle.Redemption qualified as Lifecycle
-import Marketplace.Lifecycle.Service qualified as Lifecycle
 import Marketplace.Custody.Model qualified as Custody
 
 template Role
@@ -18,20 +17,6 @@ template Role
     maintainer key._1
 
     controller issuer can
-
-      nonconsuming OfferLifecycleService : ContractId Lifecycle.Offer
-        with
-          bondRegistrar : Party
-          cashProvider : Party
-          payingAgent : Party
-        do
-          create Lifecycle.Offer with ..
-
-      nonconsuming ApproveLifecycleRequest : ContractId Lifecycle.Service
-        with
-          requestCid : ContractId Lifecycle.Request
-        do
-          exercise requestCid Lifecycle.Approve
 
       nonconsuming RequestRedemption : ContractId Lifecycle.IssuerRedemptionRequest
         with

@@ -1,0 +1,36 @@
+module Marketplace.Settlement.Hierarchical.Dvd where
+
+import DA.Finance.Types (Asset)
+import DA.Finance.Asset (AssetDeposit(..))
+import Marketplace.Settlement.Hierarchical.Instruction (Instruction, SettleInstruction(..))
+import Marketplace.Settlement.Hierarchical.Util (Status(..))
+
+template Dvd
+  with
+    operator : Party
+    agent : Party
+    deliverer1 : Party
+    deliverer2 : Party
+    settlementId : Text
+    instructionIds : [Text]
+    delivery1 : Asset
+    delivery2 : Asset
+    status : Status
+  where
+    signatory operator
+    observer agent
+
+    key (operator, settlementId) : (Party, Text)
+    maintainer key._1
+
+    controller agent can
+      SettleDvd : (ContractId Dvd, [ContractId AssetDeposit])
+        do
+          let
+            settle (instructionId : Text) = do
+              (siCid, si) <- fetchByKey @Instruction (operator, settlementId, instructionId)
+              assertMsg "Settlement id of instruction doesn't match trade" $ si.settlementId == settlementId
+              exercise siCid SettleInstruction
+          adCids <- mapA settle instructionIds
+          tradeCid <- create this with status = Settled
+          pure (tradeCid, adCids)

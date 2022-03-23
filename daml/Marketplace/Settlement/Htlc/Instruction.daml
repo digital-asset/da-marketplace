@@ -43,7 +43,7 @@ template Instruction
           depositCid <- Some <$> exercise depositCid AssetDeposit_SetObservers with newObservers = fromList [receiverAgent]
           create this with depositCid; signed = sender :: signed
 
-      Refund : ContractId AssetDeposit
+      RefundInstruction : ContractId AssetDeposit
         do
           time <- getTime
           assertMsg "Time lock has not expired" (time >= expiry)
@@ -57,8 +57,8 @@ template Instruction
         do
           create this with signed = receiver :: signed
 
-    controller receiverAgent can
-      Settle : ContractId AssetDeposit
+    controller operator, receiverAgent can
+      SettleInstruction : ContractId AssetDeposit
         with
           secret : Text
         do

@@ -83,4 +83,4 @@ template Service
               currentReport <- (lookupByKey @SwiftOutboundMessage (accountProvider, referenceId, swiftMessageType))
               whenSome currentReport archive
               create SwiftOutboundMessage with 
-                referenceId; provider = accountProvider ; consumer = operator; swiftMessage; swiftMessageType; status=Finalized; observers=empty) swiftMessages
+                referenceId; provider = accountProvider ; consumer = accountProvider; swiftMessage; swiftMessageType; status=Finalized; observers=empty) swiftMessages

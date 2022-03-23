@@ -1,13 +1,14 @@
 module Marketplace.Issuance.Service where
 
+import DA.Assert ((===))
 import DA.Finance.Asset
 import DA.Finance.Types
 import DA.Finance.Utils (fetchAndArchive)
--- import DA.Map qualified as Map
 import DA.Set (Set, fromList, empty)
 import Marketplace.Issuance.Model (Issuance(..))
 import Marketplace.Issuance.CFI
 import Marketplace.Issuance.AssetDescription (AssetDescription(..), Claims)
+import Marketplace.Lifecycle.Service qualified as Lifecycle
 import Marketplace.Distribution.Syndication.Structuring.Model qualified as Structuring
 
 template Service
@@ -48,6 +49,23 @@ template Service
           depositCid : ContractId AssetDeposit
         do
           create ReduceIssuanceRequest with ..
+
+      nonconsuming OfferLifecycleService : ContractId Lifecycle.Offer
+        with
+          bondRegistrar : Party
+          payingAgent : Party
+          issuer : Party
+          cashProvider : Party
+        do
+          bondRegistrar === provider
+          issuer === customer
+          create Lifecycle.Offer with ..
+
+      nonconsuming ApproveLifecycleRequest : ContractId Lifecycle.Service
+        with
+          lifecycleServiceRequestCid : ContractId Lifecycle.Request
+        do
+          exercise lifecycleServiceRequestCid Lifecycle.Approve
 
     controller provider can
       nonconsuming Originate: (ContractId AssetDescription, AssetDescription)

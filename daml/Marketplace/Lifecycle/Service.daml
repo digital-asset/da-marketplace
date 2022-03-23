@@ -15,7 +15,7 @@ import Marketplace.Issuance.AssetDescription qualified as AssetDescription
 import Marketplace.Issuance.Instrument.Model qualified as Instrument
 import Marketplace.Lifecycle.Model (Observation, Today, Effect(..))
 import Marketplace.Snapshot.Model
-import Marketplace.Settlement.Hierarchical (getAccount)
+import Marketplace.Settlement.Hierarchical.Util (getAccount)
 import Marketplace.Utils
 import SwiftMessage.Message (SwiftMessage(MT564), SwiftMessageType(..), SwiftOutboundMessage(..))
 import SwiftMessage.Model.MT564
@@ -28,19 +28,18 @@ type T = Service
 template Service
   with
     operator : Party
-    issuer : Party
     bondRegistrar : Party
-    cashProvider : Party
     payingAgent : Party
+    issuer : Party
+    cashProvider : Party
   where
-    signatory operator, issuer, payingAgent
-    observer bondRegistrar
-    
+    signatory operator, bondRegistrar, issuer, payingAgent
+
     key (operator, issuer, payingAgent) : (Party, Party, Party)
     maintainer key._1
 
     controller payingAgent can
-      nonconsuming CalculateEffect : Optional (ContractId Effect, ContractId AssetDescriptionUpdateRequest)
+      nonconsuming CalculateEffect : Optional (ContractId Effect)
         with
           assetId : Id
           election : Optional Claims
@@ -56,13 +55,14 @@ template Service
             _ -> pure (deserialize description.claims)
           Lifecycle.Result{remaining, pending} <- Lifecycle.lifecycle obs remaining today.date
           let serializedRemaining = serialize remaining
-          if description.claims /= serialize remaining then do
-            let newVersion = assetId.version + 1
-            let lifecycleId = "Lifecycle-" <> show today.date <> "-" <> assetId.label <> "(v" <> show assetId.version <> ")"
-            let expired = serializedRemaining == Zero
-            requestCid <- create AssetDescriptionUpdateRequest with claims = serializedRemaining; ..
+          if description.claims /= serializedRemaining then do
+            let
+              newVersion = assetId.version + 1
+              lifecycleId = "Lifecycle-" <> show today.date <> "-" <> assetId.label <> "(v" <> show assetId.version <> ")"
+              expired = serializedRemaining == Zero
+            descriptionCid <- create description with assetId.version = newVersion; claims = serializedRemaining
             effectCid <- create Effect with operator; issuer; bondRegistrar; cashProvider; payingAgent; lifecycleId; assetId; newVersion; date = today.date; payouts = pending; expired
-            pure $ Some (effectCid, requestCid)
+            pure $ Some effectCid
           else
             pure None
 
@@ -72,13 +72,13 @@ template Service
           snapshotCids : [ContractId Snapshot]
           exDivDate : Date
         do
-          let 
-              getPayoutDate : Claims -> Date 
-              getPayoutDate serializedClaims = 
+          let
+              getPayoutDate : Claims -> Date
+              getPayoutDate serializedClaims =
                 head $ fixings $ deserialize serializedClaims
-            
+
               getPayoutRate : Claims -> Update Decimal
-              getPayoutRate serializedClaims = 
+              getPayoutRate serializedClaims =
                 let getObserveRate label = do
                     (_, observation) <- fetchByKey @Observation (operator, payingAgent, label, exDivDate)
                     pure observation.value in
@@ -96,18 +96,18 @@ template Service
                 currentReport <- (lookupByKey @SwiftOutboundMessage (operator, referenceId, swiftMessageType))
                 whenSome currentReport archive
                 create SwiftOutboundMessage with swiftMessage=MT564 (mt564); status=Finalized; observers=Set.empty; ..
-              
+
               sendMessageForSnapshot : Snapshot -> Update (ContractId SwiftOutboundMessage)
-              sendMessageForSnapshot snapshot = do                
+              sendMessageForSnapshot snapshot = do
                   let buyer = snapshot.deposit.account.owner
                       assetId = snapshot.assetId
                   (_, bond) <- fetchByKey @Instrument.Bond (Set.fromList [issuer, bondRegistrar], assetId.label)
                   (_, description) <- fetchByKey @AssetDescription.T assetId
                   (_, settlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, buyer)
-                  let                  
+                  let
                     claims = description.claims
                     asset = snapshot.deposit.asset
-                    instrumentId = bond.isin <> "-" <> assetId.label        
+                    instrumentId = bond.isin <> "-" <> assetId.label
                     currency = bond.currencyId
                     maturityDate = bond.maturityDate
                     payoutDate = getPayoutDate claims
@@ -118,7 +118,7 @@ template Service
                     buyerSafekeepingAcc = getAccount False settlementInfo buyer
                     buyerCashAcc = getAccount True settlementInfo buyer
                     mt564 = createMT564Details instrumentId asset.id description.cfi issuer buyerSafekeepingAcc buyerCashAcc CRED faceAmount currency maturityDate payoutDate redemptionDate exDivDate
-                    mt564_redempt = (\_ -> createMT564Details instrumentId asset.id description.cfi issuer buyerSafekeepingAcc buyerCashAcc CRED asset.quantity currency maturityDate payoutDate redemptionDate exDivDate) <$> redemptionDate          
+                    mt564_redempt = (\_ -> createMT564Details instrumentId asset.id description.cfi issuer buyerSafekeepingAcc buyerCashAcc CRED asset.quantity currency maturityDate payoutDate redemptionDate exDivDate) <$> redemptionDate
                     createRefId isRedempt = PayoutRefId with receiver = buyer; ..
                   mapA_ (\mt564_r -> createNewPrenotificationSwiftMessage (show $ createRefId True) operator operator mt564_r) mt564_redempt
                   createNewPrenotificationSwiftMessage (show $ createRefId False) operator operator mt564
@@ -131,12 +131,12 @@ template Service
 template Offer
   with
     operator : Party
-    issuer : Party
     bondRegistrar : Party
-    cashProvider : Party
     payingAgent : Party
+    issuer : Party
+    cashProvider : Party
   where
-    signatory operator, issuer
+    signatory operator, bondRegistrar, issuer
 
     controller payingAgent can
       Accept : ContractId Service
@@ -149,15 +149,15 @@ template Offer
 
 template Request
   with
-    issuer : Party
     operator : Party
     bondRegistrar : Party
-    cashProvider : Party
     payingAgent : Party
-  where
+    issuer : Party
+    cashProvider : Party
+   where
     signatory payingAgent
 
-    controller operator, issuer can
+    controller operator, bondRegistrar can
       Approve : ContractId Service
         do
           createOrLookup Service with ..
@@ -165,20 +165,3 @@ template Request
       Reject : ()
         do
           return ()
-
-template AssetDescriptionUpdateRequest 
-  with
-    issuer : Party
-    payingAgent : Party
-    bondRegistrar : Party
-    assetId : Id
-    description : AssetDescription.AssetDescription
-    newVersion : Int
-    claims : Claims
-  where 
-    signatory issuer, payingAgent
-    
-    controller bondRegistrar can 
-      ApproveUpdate : ContractId AssetDescription.AssetDescription
-        do
-          create description with assetId.version = newVersion; claims

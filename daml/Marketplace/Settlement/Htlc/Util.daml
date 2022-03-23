@@ -6,7 +6,7 @@ import DA.Optional (fromSome)
 import DA.Set (fromList)
 import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Settlement.Htlc.Instruction qualified as Instruction
-import Marketplace.Settlement.Hierarchical (getAccount)
+import Marketplace.Settlement.Hierarchical.Util (getAccount)
 
 data HtlcState = Locked | Settled | Refunded
   deriving (Eq, Show)
