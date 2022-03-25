@@ -6,7 +6,7 @@ import DA.Finance.Utils (fetchAndArchive)
 import DA.Set (Set, insert)
 import Marketplace.Settlement.Model qualified as Settlement
 import Marketplace.Trading.Model qualified as Order
-import DA.Optional (optionalToList)
+import DA.Optional.Total (optionalToList)
 
 -- TODO: Try to turn this into a service
 
