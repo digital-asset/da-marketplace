@@ -69,10 +69,9 @@ template TransferRelationship
 
     nonconsuming choice TransferClaimToken: ContractId AssetDeposit
       with 
-        ctrl: Party
         assetDepositCid: ContractId AssetDeposit
         receiverAccount: Account
-      controller ctrl 
+      controller sender
         do
           assetDeposit <- fetch assetDepositCid
           assertMsg "account provider does not match" (assetDeposit.account.provider == provider && receiverAccount.provider == provider)
