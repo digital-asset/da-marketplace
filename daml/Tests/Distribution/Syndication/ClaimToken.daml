@@ -1,15 +1,15 @@
 module Tests.Distribution.Syndication.ClaimToken where
 
-import ClaimToken.Service qualified as ClaimToken
 import ClaimToken.Model qualified as ClaimToken
+import ClaimToken.Service qualified as ClaimToken
 import DA.Finance.Asset(AssetDeposit)
 import DA.List (head)
 import Daml.Script
 import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Settlement.Hierarchical.Util (getAccount)
-import Tests.Distribution.Syndication.Setup (setup, Parties(..))
 import Tests.Distribution.Syndication.Issuance (issuance)
 import Tests.Distribution.Syndication.Origination (origination, Origination(..))
+import Tests.Distribution.Syndication.Setup (setup, Parties(..))
 
 
 

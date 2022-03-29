@@ -15,20 +15,27 @@ template Service with
 
       key (operator, provider, owner) : (Party, Party, Party)
       maintainer key._1
-    
+
+      let 
+        preProcessCheck : ContractId AssetDeposit -> Update AssetDeposit
+        preProcessCheck assetDepositCid = do
+          assertMsg "claim token service is not allowed at the moment, please inquire operator" isAllowed
+          
+          originalAssetDeposit <- fetch assetDepositCid
+          let currentAccount = originalAssetDeposit.account
+          assertMsg "provider and owner of provided assetDeposit does not match with current Service" (currentAccount.owner == owner && currentAccount.provider == provider)
+          pure originalAssetDeposit
+          
       controller owner can 
         nonconsuming Mint : ContractId AssetDeposit
           with 
             assetDepositCid : ContractId AssetDeposit
           do
-            assertMsg "claim token service is not allowed at the moment, please inquire operator" isAllowed
-            originalAssetDeposit <- fetch assetDepositCid
-            assertMsg "provider and owner of provided assetDeposit does not match with the Service Contract used"
-              (originalAssetDeposit.account.owner == owner && originalAssetDeposit.account.provider == provider) -- todo refactor
+            bondAssetDeposit <- preProcessCheck assetDepositCid
             archive assetDepositCid
-            let assetId = originalAssetDeposit.asset.id
+            let assetId = bondAssetDeposit.asset.id
             claimTokenId <- exerciseByKey @ClaimTokenR (assetId.signatories, assetId.label) GetClaimTokenId with ctrl = owner
-            create originalAssetDeposit with asset = (originalAssetDeposit.asset with id = claimTokenId)
+            create bondAssetDeposit with asset = (bondAssetDeposit.asset with id = claimTokenId) -- bond -> claim token
 
       controller owner can 
         nonconsuming OfferTransferRelationship : ContractId TransferRelationshipOffer
@@ -42,14 +49,11 @@ template Service with
           with
             assetDepositCid : ContractId AssetDeposit
           do
-            assertMsg "claim token service is not allowed at the moment, please inquire operator" isAllowed 
-            claimTokenAssetDeposit <- fetch assetDepositCid
+            claimTokenAssetDeposit <- preProcessCheck assetDepositCid
             archive assetDepositCid
-            assertMsg "provider and owner of provided assetDeposit does not match with the Service Contract used" 
-              (claimTokenAssetDeposit.account.owner == owner && claimTokenAssetDeposit.account.provider == provider) -- todo refactor
             let assetId = claimTokenAssetDeposit.asset.id
             originalId <- exerciseByKey @ClaimToken (assetId.signatories, assetId.label) GetOriginalId with ctrl = owner
-            create claimTokenAssetDeposit with asset = (claimTokenAssetDeposit.asset with id = originalId)
+            create claimTokenAssetDeposit with asset = (claimTokenAssetDeposit.asset with id = originalId) -- claim token -> bond
       
       controller operator can
         AllowService: ContractId Service
