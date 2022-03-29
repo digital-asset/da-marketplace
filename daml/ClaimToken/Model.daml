@@ -19,6 +19,11 @@ template ClaimToken -- claim token id -> bond id
     ensure 
       id.signatories == originalId.signatories
 
+    choice GetOriginalId: Id
+      with ctrl: Party
+      controller ctrl 
+      do pure $ originalId
+
 template ClaimTokenR -- reverse search (bond id -> claim token id)
   with
     id: Id
@@ -33,6 +38,11 @@ template ClaimTokenR -- reverse search (bond id -> claim token id)
 
     ensure 
       id.signatories == originalId.signatories
+    
+    choice GetClaimTokenId: Id
+      with ctrl: Party
+      controller ctrl
+      do pure $ id
 
 template TransferRelationshipOffer
   with
@@ -68,6 +78,7 @@ template TransferRelationship
           assertMsg "account provider does not match" (assetDeposit.account.provider == provider && receiverAccount.provider == provider)
           assertMsg "sender should match with account owner" (assetDeposit.account.owner == sender)
           exercise assetDepositCid AssetDeposit_Transfer with receiverAccount
+          
 
 
 

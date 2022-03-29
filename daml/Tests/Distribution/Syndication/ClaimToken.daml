@@ -36,8 +36,7 @@ claimTokenTest = do
   -- mint
   (assetDepositCid, assetDeposit) <- head <$> query @AssetDeposit investor3
   let assetId = assetDeposit.asset.id
-  Some (_, claimTokenR) <- queryContractKey @ClaimToken.ClaimTokenR operator (assetId.signatories, assetId.label)
-  claimTokenAssetDepositCid <- submit investor3 do exerciseCmd serviceId ClaimToken.Mint with assetDepositCid; claimTokenR
+  claimTokenAssetDepositCid <- submitMulti [investor3] [public] do exerciseCmd serviceId ClaimToken.Mint with assetDepositCid
   
   -- transfer
   transferRelationshipOfferCid <- submit investor3 do exerciseCmd serviceId ClaimToken.OfferTransferRelationship with receiver = investor4
@@ -50,5 +49,5 @@ claimTokenTest = do
   Some assetDeposit <- queryContractId @AssetDeposit investor4 claimTokenAssetDepositCid
   let assetId = assetDeposit.asset.id
   Some (_, claimToken) <- queryContractKey @ClaimToken.ClaimToken operator (assetId.signatories, assetId.label)
-  submit investor4 do exerciseCmd serviceId2 ClaimToken.Burn with assetDepositCid = claimTokenAssetDepositCid; claimToken
+  submitMulti [investor4] [public] do exerciseCmd serviceId2 ClaimToken.Burn with assetDepositCid = claimTokenAssetDepositCid
   pure ()

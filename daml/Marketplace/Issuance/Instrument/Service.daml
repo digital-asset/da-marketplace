@@ -29,8 +29,8 @@ template Service
           let cfi = CFI with code = "DBXXXX"
           claims <- getClaims operator provider bond.stream bond.currencyId bond.maturityDate True
           bondCid <- create bond
-          create ClaimToken with id = (bond.id with label = bond.claimTokenId); originalId = bond.id; observers = fromList [operator]
-          create ClaimTokenR with id = (bond.id with label = bond.claimTokenId); originalId = bond.id; observers = fromList [operator]
+          create ClaimToken with id = (bond.id with label = bond.claimTokenId); originalId = bond.id; observers = fromList observers
+          create ClaimTokenR with id = (bond.id with label = bond.claimTokenId); originalId = bond.id; observers = fromList observers
           assetCid <- exerciseByKey @Issuance.Service (operator, provider, customer) Issuance.RequestOrigination with assetLabel = bond.id.label; cfi; description = bond.id.label; claims; observers = observers
           pure (assetCid, bondCid)
 

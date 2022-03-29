@@ -7,6 +7,7 @@ template Service with
   operator: Party
   provider: Party
   owner: Party
+  isAllowed: Bool
 
     where
       signatory operator, provider
@@ -19,13 +20,15 @@ template Service with
         nonconsuming Mint : ContractId AssetDeposit
           with 
             assetDepositCid : ContractId AssetDeposit
-            claimTokenR : ClaimTokenR 
           do
+            assertMsg "claim token service is not allowed at the moment, please inquire operator" isAllowed
             originalAssetDeposit <- fetch assetDepositCid
             assertMsg "provider and owner of provided assetDeposit does not match with the Service Contract used"
               (originalAssetDeposit.account.owner == owner && originalAssetDeposit.account.provider == provider) -- todo refactor
             archive assetDepositCid
-            create originalAssetDeposit with asset = (originalAssetDeposit.asset with id = claimTokenR.id)
+            let assetId = originalAssetDeposit.asset.id
+            claimTokenId <- exerciseByKey @ClaimTokenR (assetId.signatories, assetId.label) GetClaimTokenId with ctrl = owner
+            create originalAssetDeposit with asset = (originalAssetDeposit.asset with id = claimTokenId)
 
       controller owner can 
         nonconsuming OfferTransferRelationship : ContractId TransferRelationshipOffer
@@ -38,19 +41,31 @@ template Service with
         nonconsuming Burn : ContractId AssetDeposit
           with
             assetDepositCid : ContractId AssetDeposit
-            claimToken : ClaimToken
-          do 
+          do
+            assertMsg "claim token service is not allowed at the moment, please inquire operator" isAllowed 
             claimTokenAssetDeposit <- fetch assetDepositCid
             archive assetDepositCid
             assertMsg "provider and owner of provided assetDeposit does not match with the Service Contract used" 
               (claimTokenAssetDeposit.account.owner == owner && claimTokenAssetDeposit.account.provider == provider) -- todo refactor
-            create claimTokenAssetDeposit with asset = (claimTokenAssetDeposit.asset with id = claimToken.originalId)
+            let assetId = claimTokenAssetDeposit.asset.id
+            originalId <- exerciseByKey @ClaimToken (assetId.signatories, assetId.label) GetOriginalId with ctrl = owner
+            create claimTokenAssetDeposit with asset = (claimTokenAssetDeposit.asset with id = originalId)
+      
+      controller operator can
+        AllowService: ContractId Service
+          do
+            create this with isAllowed = True
+        
+      controller operator can
+        BanService: ContractId Service
+          do
+            create this with isAllowed = False
 
 template Request 
   with
-    operator : Party
-    provider : Party
-    owner : Party
+    operator: Party
+    provider: Party
+    owner: Party
 
   where 
     signatory operator
@@ -58,7 +73,7 @@ template Request
     controller provider can 
       Approve : ContractId Service
         do
-          create Service with ..
+          create Service with isAllowed = True; ..
             
 
 
