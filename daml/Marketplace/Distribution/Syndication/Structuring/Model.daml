@@ -121,7 +121,11 @@ template Tranche
     let
       createNewSettlementMessage: Text -> SwiftMessage -> SwiftMessageType -> Update (ContractId SwiftOutboundMessage)
       createNewSettlementMessage referenceId swiftMessage swiftMessageType =
-        create SwiftOutboundMessage with provider = operator; consumer = operator; status = Pending; observers = fromList [bondRegistrar]; ..
+        let status = case swiftMessageType of
+                      MT548_buy_t -> Finalized
+                      MT548_sell_t -> Finalized
+                      _ -> Pending in
+        create SwiftOutboundMessage with provider = operator; consumer = operator; status; observers = fromList [bondRegistrar]; ..
 
       sendSwiftMessage : Party -> Party -> Decimal -> Decimal -> Id -> Text -> Date -> Date -> Date -> SettlementMode -> Update ()
       sendSwiftMessage seller buyer settledQty settledAmount settledCurrency settlementId dateOfTrade dateOfSettlement effDateOfSettlement settlementMode = do

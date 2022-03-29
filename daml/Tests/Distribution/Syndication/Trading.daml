@@ -1,6 +1,7 @@
 module Tests.Distribution.Syndication.Trading where
 
 import Daml.Script
+import DA.Date
 import DA.Finance.Types (Asset(..))
 import DA.Set (singleton)
 import DA.Text (sha256)
@@ -29,13 +30,13 @@ acceptOrder : Party -> Party -> ContractId Trading.Order -> Script (ContractId T
 acceptOrder operator customer orderCid = do
   submit customer do exerciseByKeyCmd @Trading.Service (operator, operator, customer) Trading.AcceptOrder with ctrl = customer; orderCid
 
-instructMatch : Party -> ContractId Trading.Match -> Script (ContractId Hierarchical.Dvp)
-instructMatch operator matchCid = do
-  submit operator do exerciseCmd matchCid Trading.Instruct
+instructMatch : Party -> ContractId Trading.Match -> Date -> Script (ContractId Hierarchical.Dvp)
+instructMatch operator matchCid dateOfSettlement = do
+  submit operator do exerciseCmd matchCid Trading.Instruct with ..
 
-instructMatchHtlc : Party -> ContractId Trading.Match -> Time -> Script (ContractId Htlc.Dvp)
-instructMatchHtlc operator matchCid expiry = do
-  submit operator do exerciseCmd matchCid Trading.InstructHtlc with expiry
+instructMatchHtlc : Party -> ContractId Trading.Match -> Time -> Date -> Script (ContractId Htlc.Dvp)
+instructMatchHtlc operator matchCid expiry dateOfSettlement = do
+  submit operator do exerciseCmd matchCid Trading.InstructHtlc with ..
 
 test : Script ()
 test = do
@@ -45,7 +46,7 @@ test = do
   trading parties orig
 
 trading : Parties -> Origination -> Script ()
-trading Parties{..} Origination{..}= do
+trading Parties{..} Origination{..} = do
 
   deposit operator cashProvider  lm1        1_000_000.0 usd.assetId
   deposit operator lm1           investor1  1_000_000.0 (usd.assetId with signatories = singleton lm1)
@@ -60,14 +61,15 @@ trading Parties{..} Origination{..}= do
     
     payment3 = Asset with id = usd.assetId; quantity = 3_000_000.0
     delivery3 = Asset with id = bond3Desc.assetId; quantity = 3_000_000.0
+    dateOfSettlement = date 2022 Jun 17
 
   orderCid <- createOrder operator investor1 investor2 bondRegistrar cashProvider "TRD1" delivery payment Buy Dvp None
   matchCid <- acceptOrder operator investor2 orderCid
-  tradeCid <- instructMatch operator matchCid
+  tradeCid <- instructMatch operator matchCid dateOfSettlement
   
   orderCid2 <- createOrder operator investor1 investor2 bondRegistrar cashProvider "TRD2" delivery2 payment2 Buy Fop None
   matchCid2 <- acceptOrder operator investor2 orderCid2
-  tradeCid2 <- instructMatch operator matchCid2
+  tradeCid2 <- instructMatch operator matchCid2 dateOfSettlement
 
   now <- getTime
   let 
@@ -76,7 +78,7 @@ trading Parties{..} Origination{..}= do
     expiry = addRelTime now $ hours 1
   orderCid3 <- createOrder operator investor1 investor2 bondRegistrar cashProvider "TRD3" delivery3 payment3 Buy Htlc (Some hashlock)
   matchCid3 <- acceptOrder operator investor2 orderCid3
-  tradeCid3 <- instructMatchHtlc operator matchCid3 expiry
+  tradeCid3 <- instructMatchHtlc operator matchCid3 expiry dateOfSettlement
 
   allocateInstructions [ lm1, lm2, investor1, investor2, custodian1, custodian2 ]
   allocateInstructionsHtlc [ investor2, custodian1, custodian2 ]

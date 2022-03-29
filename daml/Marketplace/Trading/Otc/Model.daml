@@ -2,12 +2,17 @@ module Marketplace.Trading.Otc.Model where
 
 import DA.Finance.Types (Asset, Account)
 import DA.Optional (fromSomeNote)
+import DA.Set (singleton)
 import Marketplace.Custody.Model qualified as Custody
+import Marketplace.Issuance.Instrument.Model(Bond(..))
 import Marketplace.Settlement.Hierarchical.Util (createInstructions, getAccount, Status(..), SettlementMode(..))
 import Marketplace.Settlement.Htlc.Util (createInstructionsHtlc, HtlcState(..))
 import Marketplace.Settlement.Htlc.Dvp qualified as Htlc
 import Marketplace.Settlement.Hierarchical.Dvp qualified as Hierarchical
 import Marketplace.Trading.Model (Side(..))
+import SwiftMessage.Util
+import SwiftMessage.Message(SwiftOutboundMessage(..), SwiftMessageType(..), SwiftMessage(..))
+import SwiftMessage.Model.MT548
 
 template Order
   with
@@ -74,11 +79,38 @@ template Match
           delivererSecAccount = getAccount False delivererSettlementInfo deliverer
           delivererCashAccount = getAccount True delivererSettlementInfo deliverer
         pure $ SettlementResult with ..
+      
+      createSettlementAdvice : Order -> SettlementResult -> Date -> Update SettlementAdvice
+      createSettlementAdvice Order{..} SettlementResult{..} dateOfSettlement = do
+        (_, bond) <- fetchByKey @Bond (delivery.id.signatories, delivery.id.label)
+        let 
+          instrumentId = bond.isin <> "-" <> delivery.id.label
+          settledAmount = payment.quantity
+          settledQty = delivery.quantity
+          buyer = payer
+          buyerSafekeepingAcc = payerSecAccount
+          receivingAgent = payerSecAccount.provider
+          seller = deliverer
+          sellerSafekeepingAcc = delivererSecAccount
+          deliveringAgent = delivererSecAccount.provider
+          dateOfTrade = dateOfSettlement
+        pure $ SettlementAdvice with ..
+
+      sendSwiftMessage : Text -> SettlementAdvice -> SettlementMode -> Party -> Party -> Update ()
+      sendSwiftMessage settlementId settlementAdvice settlementMode operator agent = do
+        let
+          paymentMode = if settlementMode == Fop then FREE else APMT
+          mt548_buy = createMT548Details settlementAdvice RECE paymentMode  
+          mt548_sell = createMT548Details settlementAdvice DELI paymentMode
+        create SwiftOutboundMessage with referenceId = settlementId; provider = operator; consumer = operator; status = Finalized; observers = singleton agent; swiftMessage = MT548 (mt548_buy); swiftMessageType = MT548_buy_t
+        create SwiftOutboundMessage with referenceId = settlementId; provider = operator; consumer = operator; status = Finalized; observers = singleton agent; swiftMessage = MT548 (mt548_sell); swiftMessageType = MT548_sell_t
+        pure ()
 
     nonconsuming choice Instruct : ContractId Hierarchical.Dvp
+      with dateOfSettlement : Date
       controller order.operator
       do
-        SettlementResult {..} <- createSettlementResult order
+        settlementResult@SettlementResult {..} <- createSettlementResult order
         let Order{..} = order
         deliverySis <- createInstructions False operator operator deliveryRegistrar delivererSecAccount payerSecAccount settlementId 0 delivery
         instructionIds <-
@@ -88,16 +120,22 @@ template Match
               map (.instructionId) <$> mapA fetch (deliverySis <> paymentSis)
             else do
               map (.instructionId) <$> mapA fetch deliverySis
+
+        settlementAdvice <- createSettlementAdvice order settlementResult dateOfSettlement
+        sendSwiftMessage settlementId settlementAdvice settlementMode operator operator 
         create Hierarchical.Dvp with operator; agent = operator; deliverer; payer; settlementId; instructionIds; delivery; payment; status = Instructed; settlementMode
       
     nonconsuming choice InstructHtlc : ContractId Htlc.Dvp
       with 
         expiry : Time
+        dateOfSettlement : Date
       controller order.operator
       do 
-        SettlementResult {..} <- createSettlementResult order
+        settlementResult@SettlementResult {..} <- createSettlementResult order
         let Order{..} = order
             hashlock = fromSomeNote "No hashlock specified for HTLC" hashlockOpt
         deliverySis <- createInstructionsHtlc False operator deliveryRegistrar deliverer delivererSecAccount payer payerSecAccount settlementId 0 delivery hashlock expiry
         instructionIds <- map (.instructionId) <$> mapA fetch deliverySis
+        settlementAdvice <- createSettlementAdvice order settlementResult dateOfSettlement
+        sendSwiftMessage settlementId settlementAdvice settlementMode operator payer
         create Htlc.Dvp with delivererAgent = deliverer; payerAgent = payer; status = Locked; ..
