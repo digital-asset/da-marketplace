@@ -150,21 +150,21 @@ createSchedule : Date -> Date -> PeriodEnum -> Int -> [Text] -> BusinessDayConve
 createSchedule startDate endDate period periodMultiplier calendarIds businessDayConvention dayCountConvention rollConvention =
   Instrument.InterestSchedule with ..
 
-createFixedRateBond : Id -> Text -> Id -> Party -> Date -> Date -> Instrument.InterestSchedule -> Decimal -> Bool -> Bool -> Bool -> [Party] -> Text -> Instrument.Bond
+createFixedRateBond : Id -> Text -> Id -> Party -> Date -> Date -> Instrument.InterestSchedule -> Decimal -> Bool -> Bool -> Bool -> [Party] -> Optional Text -> Instrument.Bond
 createFixedRateBond id isin currencyId issuer issueDate maturityDate schedule annualRate isTradeable isPricedDirty isCallable observers claimTokenId =
   let
     amount = Instrument.Fixed with annualRate
     stream = Some Instrument.InterestStream with schedule; amount
   in Instrument.Bond with ..
 
-createFloatingRateBond : Id -> Text -> Id -> Party -> Date -> Date -> Instrument.InterestSchedule -> Id -> Decimal -> Bool -> Bool -> Bool -> [Party] -> Text -> Instrument.Bond
+createFloatingRateBond : Id -> Text -> Id -> Party -> Date -> Date -> Instrument.InterestSchedule -> Id -> Decimal -> Bool -> Bool -> Bool -> [Party] -> Optional Text -> Instrument.Bond
 createFloatingRateBond id isin currencyId issuer issueDate maturityDate schedule rateId periodSpread isTradeable isPricedDirty isCallable observers claimTokenId =
   let
     amount = Instrument.Float with rateId; periodSpread
     stream = Some Instrument.InterestStream with schedule; amount
   in Instrument.Bond with ..
 
-createZeroCouponBond : Id -> Text -> Id -> Party -> Date -> Date -> Bool -> Bool -> Bool -> [Party] -> Text -> Instrument.Bond
+createZeroCouponBond : Id -> Text -> Id -> Party -> Date -> Date -> Bool -> Bool -> Bool -> [Party] -> Optional Text -> Instrument.Bond
 createZeroCouponBond id isin currencyId issuer issueDate maturityDate isTradeable isPricedDirty isCallable observers claimTokenId =
   Instrument.Bond with stream = None; ..
 

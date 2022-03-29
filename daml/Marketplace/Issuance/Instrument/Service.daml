@@ -2,6 +2,7 @@ module Marketplace.Issuance.Instrument.Service where
 
 import ClaimToken.Model
 import ContingentClaims.Claim.Serializable (Claim(And, Give))
+import DA.Optional (whenSome)
 import DA.Set (fromList)
 import Marketplace.Issuance.CFI (CFI(..))
 import Marketplace.Issuance.Service qualified as Issuance
@@ -29,8 +30,10 @@ template Service
           let cfi = CFI with code = "DBXXXX"
           claims <- getClaims operator provider bond.stream bond.currencyId bond.maturityDate True
           bondCid <- create bond
-          create ClaimToken with id = (bond.id with label = bond.claimTokenId); originalId = bond.id; observers = fromList observers
-          create ClaimTokenR with id = (bond.id with label = bond.claimTokenId); originalId = bond.id; observers = fromList observers
+          whenSome bond.claimTokenId (\claimTokenId -> do 
+                                  create ClaimToken with id = (bond.id with label = claimTokenId); originalId = bond.id; observers = fromList observers
+                                  create ClaimTokenR with id = (bond.id with label = claimTokenId); originalId = bond.id; observers = fromList observers
+                                  pure ())
           assetCid <- exerciseByKey @Issuance.Service (operator, provider, customer) Issuance.RequestOrigination with assetLabel = bond.id.label; cfi; description = bond.id.label; claims; observers = observers
           pure (assetCid, bondCid)
 
