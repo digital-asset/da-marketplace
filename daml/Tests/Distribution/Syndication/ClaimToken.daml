@@ -24,6 +24,17 @@ init = do
   submit custodian5 do exerciseCmd requestCid1 ClaimToken.Approve
   submit custodian5 do exerciseCmd requestCid2 ClaimToken.Approve
 
+  Some (serviceId, _) <- queryContractKey @ClaimToken.Service operator (operator, custodian5, investor3)
+  Some (serviceId2, _) <- queryContractKey @ClaimToken.Service operator (operator, custodian5, investor4)
+  
+  -- mint
+  (assetDepositCid, assetDeposit) <- head <$> query @AssetDeposit investor3
+  let assetId = assetDeposit.asset.id
+  claimTokenAssetDepositCid <- submitMulti [investor3] [public] do exerciseCmd serviceId ClaimToken.Mint with assetDepositCid
+
+  transferRelationshipOfferCid <- submit investor3 do exerciseCmd serviceId ClaimToken.OfferTransferRelationship with receiver = investor4
+  transferRelationshipCid <- submit investor4 do exerciseCmd transferRelationshipOfferCid ClaimToken.AcceptOffer
+
   pure (parties, orig)
 
 
@@ -43,7 +54,7 @@ claimTokenTest = do
   transferRelationshipCid <- submit investor4 do exerciseCmd transferRelationshipOfferCid ClaimToken.AcceptOffer
   Some (_, settlementInfoReceiver) <- queryContractKey @Custody.SettlementInfo operator (operator, investor4)
   let receiverAccount = getAccount False settlementInfoReceiver investor4
-  claimTokenAssetDepositCid <- submit investor3 do exerciseCmd transferRelationshipCid ClaimToken.TransferClaimToken with ctrl = investor3; receiverAccount; assetDepositCid = claimTokenAssetDepositCid
+  claimTokenAssetDepositCid <- submit investor3 do exerciseCmd transferRelationshipCid ClaimToken.TransferClaimToken with receiverAccount; assetDepositCid = claimTokenAssetDepositCid
 
   -- burn
   Some assetDeposit <- queryContractId @AssetDeposit investor4 claimTokenAssetDepositCid

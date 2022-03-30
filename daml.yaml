@@ -1,25 +1,28 @@
 sdk-version: 1.17.1
 name: da-marketplace
 source: daml
-init-script: Demo:demo
+init-script: Tests.Distribution.Syndication.ClaimToken:init
 parties:
-  - Alice
-  - Bob
-  - Dana
-  - Charlie
+  # - Alice
+  # - Bob
+  # - Dana
+  # - Charlie
+  # - Operator
+  # - Public
+  # - Exchange
+  # - Ccp
+  # - Broker
+  # - Bank
+  # - Issuer
   - Operator
-  - Public
-  - Exchange
-  - Ccp
-  - Broker
-  - Bank
-  - Issuer
+  - Investor3
+  - Investor4
 version: 0.2.0
 dependencies:
   - daml-prim
   - daml-stdlib
   - daml-script
-start-navigator: no
+start-navigator: yes
 sandbox-options:
   - --wall-clock-time
   - --ledgerid=da-marketplace-sandbox
