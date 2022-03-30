@@ -4,16 +4,21 @@
 module Tests.Distribution.Syndication.Prepopulation where
 
 import Daml.Script
-import Tests.Distribution.Syndication.Setup (setup, Parties(..))
+import Tests.Distribution.Syndication.Setup (allocateParties, setupAuto, Parties(..))
 import Tests.Distribution.Syndication.Issuance (issuance)
 import Tests.Distribution.Syndication.Origination (origination, Origination(..))
 import Tests.Distribution.Syndication.Lifecycle
 import DA.Foldable (mapA_)
 
 
-snapshotsForMT564 : Script ()
-snapshotsForMT564 = do
-  parties@Parties{..} <- setup
+test : Script ()
+test = do
+  parties <- allocateParties
+  snapshotsForMT564 parties
+          
+snapshotsForMT564 : Parties -> Script ()
+snapshotsForMT564 parties@Parties{..} = do
+  setupAuto parties
   orig@Origination{..} <- origination parties
   issuance parties orig
 

@@ -31,8 +31,8 @@ data Parties = Parties
     bndBank : Party
     payingAgent : Party
 
-setup : Script Parties
-setup = do
+allocateParties : Script Parties
+allocateParties = do 
   operator      <- allocatePartyWithHint "Operator" $ PartyIdHint "Operator"
   cashProvider  <- allocatePartyWithHint "CashProvider" $ PartyIdHint "CashProvider"
   bondRegistrar <- allocatePartyWithHint "BondRegistrar" $ PartyIdHint "BondRegistrar"
@@ -56,7 +56,10 @@ setup = do
     structurer = lm1
     settlementBank = lm2
     bndBank = lm3
+  pure $ Parties with ..
 
+setupAuto : Parties -> Script Parties
+setupAuto parties@Parties{..} = do
   -- Roles
   submit operator do createCmd Operator.Role with operator; observers = empty
 
@@ -210,4 +213,9 @@ setup = do
   createReportingService operator lm2
   createReportingService operator lm3
 
-  pure Parties with ..
+  pure parties
+
+setup : Script Parties
+setup = do
+  parties@Parties{..} <- allocateParties
+  setupAuto parties
