@@ -56,6 +56,11 @@ allocateParties = do
     structurer = lm1
     settlementBank = lm2
     bndBank = lm3
+
+  superuserId <- validateUserId "superuser"
+  let allParties = [operator, cashProvider, bondRegistrar, payingAgent, lm1, lm2, lm3, cm1,
+        investor1, investor2, investor3, investor4, custodian1, custodian2, custodian3, custodian4, custodian5, issuer, public]
+  createUser (User superuserId None) $ map CanActAs allParties
   pure $ Parties with ..
 
 setupAuto : Parties -> Script Parties
