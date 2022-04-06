@@ -6,12 +6,15 @@ data REDE = RECE | DELI deriving (Show, Eq) -- buy side (RECE) and sell side (DE
 
 data PAMT = APMT | FREE deriving (Show, Eq) -- payment indicator DvP (against payment: APMT) and FoP (free of payment: FREE)
 
+data MTCHorCPRC = MACH | CAND deriving (Show, Eq) -- status of current dvp can be MACH (matched) or CAND (canceled)
+
 data MT548Details = MT548Details with
     settlementStatusAndProcessingAdvice: SettlementStatusAndProcessingAdvice
     side: REDE
     payment: PAMT
+    status: MTCHorCPRC
   deriving (Show, Eq) -- todo refactor dup part
 
 createMT548Details: SettlementStatusAndProcessingAdvice -> REDE -> PAMT -> MT548Details
-createMT548Details settlementStatusAndProcessingAdvice side payment = 
-    MT548Details with ..
+createMT548Details settlementStatusAndProcessingAdvice side payment =
+    MT548Details with status = MACH; ..

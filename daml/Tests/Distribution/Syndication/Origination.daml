@@ -9,6 +9,7 @@ import DA.Finance.Base.RollConvention (PeriodEnum(..), RollConventionEnum(..))
 import DA.Finance.Types (Id(..))
 import DA.Set (fromList)
 import Marketplace.Issuance.AssetDescription (AssetDescription)
+import Marketplace.Issuance.CFI qualified as CFI
 import Marketplace.Issuance.Instrument.Model qualified as Instrument
 import Tests.Distribution.Syndication.Setup (setup, Parties(..))
 import Tests.Distribution.Syndication.Util
@@ -35,7 +36,7 @@ test = do
 origination : Parties -> Script Origination
 origination Parties{..} = do
 
-  (_, usd)  <- originate operator cashProvider cashProvider public "USD" Zero
+  (_, usd)  <- originate operator cashProvider cashProvider public "USD" CFI.currency Zero
 
   let
     fedHolidays =

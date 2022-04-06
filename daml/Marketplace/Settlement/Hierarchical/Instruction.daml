@@ -47,3 +47,8 @@ template Instruction
           case depositCid of
             Some cid -> exercise cid AssetDeposit_Transfer with receiverAccount
             None -> fail $ "Instruction [" <> instructionId <> "] of settlement [ " <> settlementId <> " ] is not allocated"
+
+    controller operator can 
+      CancelInstruction : ()
+        do 
+          pure ()

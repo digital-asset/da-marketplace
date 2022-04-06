@@ -68,3 +68,10 @@ template Dvp
           adCids <- mapA refund instructionIds
           deliveryCid <- create this with status = Refunded
           pure (deliveryCid, adCids)
+
+    choice CancelDvp : ContractId Dvp
+      controller operator
+      do
+        create this with status = Cancelled
+        
+        

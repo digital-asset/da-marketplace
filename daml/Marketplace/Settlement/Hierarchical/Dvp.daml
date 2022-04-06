@@ -2,7 +2,8 @@ module Marketplace.Settlement.Hierarchical.Dvp where
 
 import DA.Finance.Types (Asset)
 import DA.Finance.Asset (AssetDeposit(..))
-import Marketplace.Settlement.Hierarchical.Instruction (Instruction, SettleInstruction(..))
+import DA.Foldable (mapA_)
+import Marketplace.Settlement.Hierarchical.Instruction (Instruction, CancelInstruction(..), SettleInstruction(..))
 import Marketplace.Settlement.Hierarchical.Util qualified as Util (Status(..), SettlementMode(..))
 import SwiftMessage.Message
 
@@ -42,3 +43,15 @@ template Dvp
             finalizeSwiftMessage (operator, settlementId, MT544_t)
             finalizeSwiftMessage (operator, settlementId, MT546_t)
           pure (tradeCid, adCids)
+    
+    choice CancelDvp : ContractId Dvp
+      controller operator
+      do
+        let
+          cancel : Text -> Update () 
+          cancel instructionId = do
+            (siCid, si) <- fetchByKey @Instruction (operator, settlementId, instructionId)
+            assertMsg "Settlement id of instruction doesn't match trade" $ si.settlementId == settlementId
+            exercise siCid CancelInstruction
+        mapA_ cancel instructionIds
+        create this with status = Util.Cancelled
