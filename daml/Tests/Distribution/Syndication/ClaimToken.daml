@@ -43,7 +43,7 @@ claimTokenTest = do
   transferRelationshipCid <- submit investor4 do exerciseCmd transferRelationshipOfferCid ClaimToken.AcceptOffer
   Some (_, settlementInfoReceiver) <- queryContractKey @Custody.SettlementInfo operator (operator, investor4)
   let receiverAccount = getAccount False settlementInfoReceiver investor4
-  claimTokenAssetDepositCid <- submit investor3 do exerciseCmd transferRelationshipCid ClaimToken.TransferClaimToken with ctrl = investor3; receiverAccount; assetDepositCid = claimTokenAssetDepositCid
+  claimTokenAssetDepositCid <- submit investor3 do exerciseCmd transferRelationshipCid ClaimToken.TransferClaimToken with receiverAccount; assetDepositCid = claimTokenAssetDepositCid
 
   -- burn
   Some assetDeposit <- queryContractId @AssetDeposit investor4 claimTokenAssetDepositCid
