@@ -1,10 +1,11 @@
 module Marketplace.Issuance.Instrument.Service where
 
 import ClaimToken.Model
-import ContingentClaims.Claim.Serializable (Claim(And, Give))
+import ContingentClaims.Claim.Serializable (Claim(And, Give, Zero))
 import DA.Optional (whenSome)
-import DA.Set (fromList)
-import Marketplace.Issuance.CFI (CFI(..))
+import DA.Set (empty, fromList)
+import Marketplace.Issuance.AssetDescription
+import Marketplace.Issuance.CFI qualified as CFI
 import Marketplace.Issuance.Service qualified as Issuance
 import Marketplace.Issuance.Instrument.Model (getClaims, Bond(..), Swap(..))
 
@@ -27,12 +28,15 @@ template Service
           bond : Bond
           observers : [Party]
         do
-          let cfi = CFI with code = "DBXXXX"
+          let cfi = CFI.bond
           claims <- getClaims operator provider bond.stream bond.currencyId bond.maturityDate True
           bondCid <- create bond
           whenSome bond.claimTokenId (\claimTokenId -> do 
-                                  create ClaimToken with id = (bond.id with label = claimTokenId); originalId = bond.id; observers = fromList observers
-                                  create ClaimTokenR with id = (bond.id with label = claimTokenId); originalId = bond.id; observers = fromList observers
+                                  let id = (bond.id with label = claimTokenId)
+                                  create ClaimToken with id; originalId = bond.id; observers = fromList observers
+                                  create ClaimTokenR with id; originalId = bond.id; observers = fromList observers
+                                  -- create dummy asset description for claim token
+                                  create AssetDescription with assetId = id; description = "claim-token-" <> bond.id.label; cfi = CFI.other; issuer = customer; claims = Zero; registrar = provider; observers = empty
                                   pure ())
           assetCid <- exerciseByKey @Issuance.Service (operator, provider, customer) Issuance.RequestOrigination with assetLabel = bond.id.label; cfi; description = bond.id.label; claims; observers = observers
           pure (assetCid, bondCid)
@@ -42,7 +46,7 @@ template Service
           swap : Swap
           observers : [Party]
         do
-          let cfi = CFI with code = "SRXXXX"
+          let cfi = CFI.CFI with code = "SRXXXX"
           pay <- getClaims operator provider (Some swap.pay) swap.payCurrencyId swap.maturityDate False
           receive <- getClaims operator provider (Some swap.receive) swap.receiveCurrencyId swap.maturityDate False
           let claims = And [ Give pay, receive ]
