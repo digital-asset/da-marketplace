@@ -16,5 +16,5 @@ data MT548Details = MT548Details with
   deriving (Show, Eq) -- todo refactor dup part
 
 createMT548Details: SettlementStatusAndProcessingAdvice -> REDE -> PAMT -> MT548Details
-createMT548Details settlementStatusAndProcessingAdvice side payment = 
+createMT548Details settlementStatusAndProcessingAdvice side payment =
     MT548Details with status = MACH; ..

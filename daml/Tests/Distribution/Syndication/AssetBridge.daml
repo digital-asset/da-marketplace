@@ -13,7 +13,6 @@ import Tests.Distribution.Syndication.Util
 test : Script ()
 test = do
   parties <- allocateParties
-
   assetBridgeDeposit parties
   pure()
 
