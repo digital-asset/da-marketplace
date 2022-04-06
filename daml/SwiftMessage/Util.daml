@@ -47,7 +47,7 @@ data DvPSettlementDetails = DvPSettlementDetails with
 
 data CRDB = CRED | DEBT deriving (Eq, Show)
 
-data SettlementAdvice = SettlementAdvice with -- for MT548
+data SettlementStatusAndProcessingAdvice = SettlementStatusAndProcessingAdvice with -- for MT548
     instrumentId: Text -- ISIN + Bond Label
     settledAmount: Decimal -- cash amount for buyer
     settledQty: Decimal -- bond qty for sender

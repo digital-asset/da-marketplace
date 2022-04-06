@@ -137,7 +137,7 @@ template Tranche
           instrumentId = bond.isin <> "-" <> deliveryId.label
           buyerSafekeepingAcc = getAccount False receiverSettlementInfo buyer
           sellerSafekeepingAcc = getAccount False sellerSettlementInfo seller
-          settlementAdvice = SettlementAdvice with receivingAgent = buyerSafekeepingAcc.provider; deliveringAgent = sellerSafekeepingAcc.provider; ..
+          settlementStatusAndProcessingAdvice = SettlementStatusAndProcessingAdvice with receivingAgent = buyerSafekeepingAcc.provider; deliveringAgent = sellerSafekeepingAcc.provider; ..
         if settlementMode == Dvp then do
           let
             mt545 = createMT545Details instrumentId settledQty buyerSafekeepingAcc.provider sellerSafekeepingAcc.provider seller buyer
@@ -150,8 +150,8 @@ template Tranche
                     dateOfTrade dateOfSettlement effDateOfSettlement dateOfSettlement
                     settlementId settlementId buyerSafekeepingAcc sellerSafekeepingAcc "safekeepingPlace" "placeOfSettlement"
                     
-            mt548_buy = createMT548Details settlementAdvice RECE APMT  
-            mt548_sell = createMT548Details settlementAdvice DELI APMT
+            mt548_buy = createMT548Details settlementStatusAndProcessingAdvice RECE APMT  
+            mt548_sell = createMT548Details settlementStatusAndProcessingAdvice DELI APMT
           
           createNewSettlementMessage settlementId (MT545 mt545) MT545_t
           createNewSettlementMessage settlementId (MT547 mt547) MT547_t
@@ -168,8 +168,8 @@ template Tranche
                     settlementId settlementId buyerSafekeepingAcc sellerSafekeepingAcc "safekeepingPlace" "placeOfSettlement"
             
             paymentMode = if settlementMode == Fop then FREE else APMT
-            mt548_buy = createMT548Details settlementAdvice RECE paymentMode
-            mt548_sell = createMT548Details settlementAdvice DELI paymentMode
+            mt548_buy = createMT548Details settlementStatusAndProcessingAdvice RECE paymentMode
+            mt548_sell = createMT548Details settlementStatusAndProcessingAdvice DELI paymentMode
           when (settlementMode == Fop) do
             createNewSettlementMessage settlementId (MT544 mt544) MT544_t
             createNewSettlementMessage settlementId (MT546 mt546) MT546_t

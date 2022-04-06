@@ -80,8 +80,8 @@ template Match
           delivererCashAccount = getAccount True delivererSettlementInfo deliverer
         pure $ SettlementResult with ..
       
-      createSettlementAdvice : Order -> SettlementResult -> Date -> Update SettlementAdvice
-      createSettlementAdvice Order{..} SettlementResult{..} dateOfSettlement = do
+      createSettlementStatusAndProcessingAdvice : Order -> SettlementResult -> Date -> Update SettlementStatusAndProcessingAdvice
+      createSettlementStatusAndProcessingAdvice Order{..} SettlementResult{..} dateOfSettlement = do
         (_, bond) <- fetchByKey @Bond (delivery.id.signatories, delivery.id.label)
         let 
           instrumentId = bond.isin <> "-" <> delivery.id.label
@@ -94,14 +94,14 @@ template Match
           sellerSafekeepingAcc = delivererSecAccount
           deliveringAgent = delivererSecAccount.provider
           dateOfTrade = dateOfSettlement
-        pure $ SettlementAdvice with ..
+        pure $ SettlementStatusAndProcessingAdvice with ..
 
-      sendSwiftMessage : Text -> SettlementAdvice -> SettlementMode -> Party -> Party -> Update ()
-      sendSwiftMessage settlementId settlementAdvice settlementMode operator agent = do
+      sendSwiftMessage : Text -> SettlementStatusAndProcessingAdvice -> SettlementMode -> Party -> Party -> Update ()
+      sendSwiftMessage settlementId settlementStatusAndProcessingAdvice settlementMode operator agent = do
         let
           paymentMode = if settlementMode == Fop then FREE else APMT
-          mt548_buy = createMT548Details settlementAdvice RECE paymentMode  
-          mt548_sell = createMT548Details settlementAdvice DELI paymentMode
+          mt548_buy = createMT548Details settlementStatusAndProcessingAdvice RECE paymentMode  
+          mt548_sell = createMT548Details settlementStatusAndProcessingAdvice DELI paymentMode
         create SwiftOutboundMessage with referenceId = settlementId; provider = operator; consumer = operator; status = Finalized; observers = singleton agent; swiftMessage = MT548 (mt548_buy); swiftMessageType = MT548_buy_t
         create SwiftOutboundMessage with referenceId = settlementId; provider = operator; consumer = operator; status = Finalized; observers = singleton agent; swiftMessage = MT548 (mt548_sell); swiftMessageType = MT548_sell_t
         pure ()
@@ -121,8 +121,8 @@ template Match
             else do
               map (.instructionId) <$> mapA fetch deliverySis
 
-        settlementAdvice <- createSettlementAdvice order settlementResult dateOfSettlement
-        sendSwiftMessage settlementId settlementAdvice settlementMode operator operator 
+        settlementStatusAndProcessingAdvice <- createSettlementStatusAndProcessingAdvice order settlementResult dateOfSettlement
+        sendSwiftMessage settlementId settlementStatusAndProcessingAdvice settlementMode operator operator 
         create Hierarchical.Dvp with operator; agent = operator; deliverer; payer; settlementId; instructionIds; delivery; payment; status = Instructed; settlementMode
       
     nonconsuming choice InstructHtlc : ContractId Htlc.Dvp
@@ -136,6 +136,6 @@ template Match
             hashlock = fromSomeNote "No hashlock specified for HTLC" hashlockOpt
         deliverySis <- createInstructionsHtlc False operator deliveryRegistrar deliverer delivererSecAccount payer payerSecAccount settlementId 0 delivery hashlock expiry
         instructionIds <- map (.instructionId) <$> mapA fetch deliverySis
-        settlementAdvice <- createSettlementAdvice order settlementResult dateOfSettlement
-        sendSwiftMessage settlementId settlementAdvice settlementMode operator payer
+        settlementStatusAndProcessingAdvice <- createSettlementStatusAndProcessingAdvice order settlementResult dateOfSettlement
+        sendSwiftMessage settlementId settlementStatusAndProcessingAdvice settlementMode operator payer
         create Htlc.Dvp with delivererAgent = deliverer; payerAgent = payer; status = Locked; ..
