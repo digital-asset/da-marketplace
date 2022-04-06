@@ -24,7 +24,7 @@ sandbox-options:
   - --wall-clock-time
   - --ledgerid=da-marketplace-sandbox
 scenario-service:
-  grpc-max-message-size: 134217728
+  grpc-max-message-size: 6000000
 codegen:
   js:
     output-directory: daml.js
