@@ -9,12 +9,12 @@ data PAMT = APMT | FREE deriving (Show, Eq) -- payment indicator DvP (against pa
 data MTCHorCPRC = MACH | CAND deriving (Show, Eq) -- status of current dvp can be MACH (matched) or CAND (canceled)
 
 data MT548Details = MT548Details with
-    settlementAdvice: SettlementAdvice
+    settlementStatusAndProcessingAdvice: SettlementStatusAndProcessingAdvice
     side: REDE
     payment: PAMT
     status: MTCHorCPRC
   deriving (Show, Eq) -- todo refactor dup part
 
-createMT548Details: SettlementAdvice -> REDE -> PAMT -> MT548Details
-createMT548Details settlementAdvice side payment = 
+createMT548Details: SettlementStatusAndProcessingAdvice -> REDE -> PAMT -> MT548Details
+createMT548Details settlementStatusAndProcessingAdvice side payment = 
     MT548Details with status = MACH; ..

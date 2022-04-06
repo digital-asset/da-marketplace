@@ -7,18 +7,20 @@ import DA.Optional (fromSome)
 import Marketplace.Custody.Model
 import Marketplace.Custody.Service qualified as Custody
 import Marketplace.Issuance.CFI qualified as CFI
-import Tests.Distribution.Syndication.Setup (setup, Parties(..))
+import Tests.Distribution.Syndication.Setup (allocateParties, setupAuto, Parties(..))
 import Tests.Distribution.Syndication.Util
 
 test : Script ()
 test = do
-  parties <- setup
+  parties <- allocateParties
+
   assetBridgeDeposit parties
   pure()
 
 
 assetBridgeDeposit : Parties  -> Script ()
-assetBridgeDeposit Parties{..} = do
+assetBridgeDeposit parties@Parties{..} = do
+  setupAuto parties
   (_, usd)  <- originate operator cashProvider cashProvider public "USD" CFI.currency Zero
   let asset = Asset with id = usd.assetId; quantity = 14_000_000.0
 
