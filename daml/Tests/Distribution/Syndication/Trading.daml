@@ -30,11 +30,11 @@ acceptOrder : Party -> Party -> ContractId Trading.Order -> Script (ContractId T
 acceptOrder operator customer orderCid = do
   submit customer do exerciseByKeyCmd @Trading.Service (operator, operator, customer) Trading.AcceptOrder with ctrl = customer; orderCid
 
-instructMatch : Party -> ContractId Trading.Match -> Date -> Script (ContractId Hierarchical.Dvp)
+instructMatch : Party -> ContractId Trading.Match -> Date -> Script (ContractId Trading.Match, ContractId Hierarchical.Dvp)
 instructMatch operator matchCid dateOfSettlement = do
   submit operator do exerciseCmd matchCid Trading.Instruct with ..
 
-instructMatchHtlc : Party -> ContractId Trading.Match -> Time -> Date -> Script (ContractId Htlc.Dvp)
+instructMatchHtlc : Party -> ContractId Trading.Match -> Time -> Date -> Script (ContractId Trading.Match, ContractId Htlc.Dvp)
 instructMatchHtlc operator matchCid expiry dateOfSettlement = do
   submit operator do exerciseCmd matchCid Trading.InstructHtlc with ..
 
@@ -65,11 +65,11 @@ trading Parties{..} Origination{..} = do
 
   orderCid <- createOrder operator investor1 investor2 bondRegistrar cashProvider "TRD1" delivery payment Buy Dvp None
   matchCid <- acceptOrder operator investor2 orderCid
-  tradeCid <- instructMatch operator matchCid dateOfSettlement
+  (matchCid, tradeCid) <- instructMatch operator matchCid dateOfSettlement
   
   orderCid2 <- createOrder operator investor1 investor2 bondRegistrar cashProvider "TRD2" delivery2 payment2 Buy Fop None
   matchCid2 <- acceptOrder operator investor2 orderCid2
-  tradeCid2 <- instructMatch operator matchCid2 dateOfSettlement
+  (matchCid2, tradeCid2) <- instructMatch operator matchCid2 dateOfSettlement
 
   now <- getTime
   let 
@@ -78,7 +78,7 @@ trading Parties{..} Origination{..} = do
     expiry = addRelTime now $ hours 1
   orderCid3 <- createOrder operator investor1 investor2 bondRegistrar cashProvider "TRD3" delivery3 payment3 Buy Htlc (Some hashlock)
   matchCid3 <- acceptOrder operator investor2 orderCid3
-  tradeCid3 <- instructMatchHtlc operator matchCid3 expiry dateOfSettlement
+  (matchCid3, tradeCid3) <- instructMatchHtlc operator matchCid3 expiry dateOfSettlement
 
   allocateInstructions [ lm1, lm2, investor1, investor2, custodian1, custodian2 ]
   allocateInstructionsHtlc [ investor2, custodian1, custodian2 ]
@@ -87,6 +87,22 @@ trading Parties{..} Origination{..} = do
   settleTrade operator tradeCid
   settleTrade operator tradeCid2
   settleTradeHtlc investor1 (secret, tradeCid3)
+
+
+  -- demonstrate cancellation flow
+  orderCid4 <- createOrder operator investor1 investor2 bondRegistrar cashProvider "TRD4" delivery payment Buy Dvp None
+  matchCid4 <- acceptOrder operator investor2 orderCid4
+  
+  -- cancellation can be made before instruct 
+  cancelProposalCid <- submit investor1 do exerciseCmd matchCid4 Trading.ProposeCancel with ctrl = investor1
+  matchCid4 <- submit investor2 do exerciseCmd cancelProposalCid Trading.RejectCancellation
+  
+  (matchCid4, tradeCid4) <- instructMatch operator matchCid4 dateOfSettlement
+  
+  -- cancellation can also be made after instruct but note that if any instruction has been allocated, the allocation will not be rolled back
+  cancelProposalCid <- submit investor1 do exerciseCmd matchCid4 Trading.ProposeCancel with ctrl = investor1
+  matchCancelCid <- submit investor2 do exerciseCmd cancelProposalCid Trading.AcceptCancellation
+  submit operator do exerciseCmd matchCancelCid Trading.CancelMatch
 
   consolidate [ lm1, lm2, investor1, investor2, custodian1, custodian2 ]
 
