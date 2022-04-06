@@ -6,7 +6,7 @@ import DA.Finance.Types (Asset)
 import DA.Text (sha256)
 import Marketplace.Settlement.Htlc.Instruction (Instruction, RefundInstruction(..), SettleInstruction(..))
 import Marketplace.Settlement.Htlc.Util (HtlcState(..))
-import Marketplace.Settlement.Hierarchical.Util (SettlementMode) 
+import Marketplace.Settlement.Hierarchical.Util (SettlementMode)
 
 template Dvp
   with
@@ -73,4 +73,5 @@ template Dvp
       controller operator
       do
         create this with status = Cancelled
+        
         
