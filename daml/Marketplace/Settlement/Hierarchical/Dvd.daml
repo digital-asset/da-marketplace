@@ -23,8 +23,8 @@ template Dvd
     key (operator, settlementId) : (Party, Text)
     maintainer key._1
 
-    controller agent can
-      SettleDvd : (ContractId Dvd, [ContractId AssetDeposit])
+    choice SettleDvd : (ContractId Dvd, [ContractId AssetDeposit])
+      controller agent
         do
           let
             settle (instructionId : Text) = do

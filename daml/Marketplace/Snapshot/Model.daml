@@ -13,22 +13,24 @@ template SnapshotRequest
     assetId : Id
   where
     signatory operator, requester
+    observer custodian
 
     let
       isTargetAsset : AssetDeposit -> Bool 
       isTargetAsset deposit = let depositId = deposit.asset.id in 
           assetId.version == depositId.version && assetId.label == depositId.label
     
-    controller custodian can
-      Forward : [ContractId SnapshotRequest]
-        with depositCids : [ContractId AssetDeposit]
+    choice Forward : [ContractId SnapshotRequest]
+      with depositCids : [ContractId AssetDeposit]
+      controller custodian
         do 
           deposits <- filter isTargetAsset <$> mapA fetch depositCids
           let holders = map (\d -> d.account.owner) deposits
           mapA (\h -> create this with custodian = h) holders
       
-      Provide : [ContractId Snapshot]
-        with depositCids : [ContractId AssetDeposit]
+    choice Provide : [ContractId Snapshot]
+      with depositCids : [ContractId AssetDeposit]
+      controller custodian
         do
           deposits <- filter isTargetAsset <$> mapA fetch depositCids
           mapA (\deposit -> create Snapshot with ..) deposits

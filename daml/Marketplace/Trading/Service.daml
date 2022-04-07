@@ -34,10 +34,10 @@ template Service
         Order.Collateralized depositCid _ -> unlockDeposit depositCid
         _ -> pure ()
 
-    controller customer can
-      nonconsuming RequestCreateOrder : ContractId Order.T
-        with
-          details : Order.Details
+    nonconsuming choice RequestCreateOrder : ContractId Order.T
+      with
+        details : Order.Details
+      controller customer
         do
           createdAt <- getTime
 
@@ -82,9 +82,10 @@ template Service
                     False -> do
                       rejectOrder "3002" "Rejected by Clearinghouse"
 
-      nonconsuming RequestCancelOrder : (ContractId Order.T, ContractId CancelOrderRequest)
-        with
-          orderCid : ContractId Order.T
+    nonconsuming choice RequestCancelOrder : (ContractId Order.T, ContractId CancelOrderRequest)
+      with
+        orderCid : ContractId Order.T
+      controller customer
         do
           order@Order.Order{..} <- fetchAndArchive orderCid
 
@@ -93,11 +94,11 @@ template Service
 
           return (orderCid, cancelOrderRequestCid)
 
-    controller provider can
-      nonconsuming AcknowledgeOrderRequest : ContractId Order.T
-        with
-          createOrderRequestCid : ContractId CreateOrderRequest
-          providerOrderId : Text
+    nonconsuming choice AcknowledgeOrderRequest : ContractId Order.T
+      with
+        createOrderRequestCid : ContractId CreateOrderRequest
+        providerOrderId : Text
+      controller provider
         do
           CreateOrderRequest{..} <- fetchAndArchive createOrderRequestCid
           (orderCid, order) <- fetchByKey (provider, details.id)
@@ -110,11 +111,12 @@ template Service
               create order with status = Order.PendingExecution; providerOrderId = Some providerOrderId
             _ -> return orderCid
 
-      nonconsuming RejectOrderRequest : ContractId Order.T
-        with
-          createOrderRequestCid : ContractId CreateOrderRequest
-          errorCode : Int
-          errorMessage : Text
+    nonconsuming choice RejectOrderRequest : ContractId Order.T
+      with
+        createOrderRequestCid : ContractId CreateOrderRequest
+        errorCode : Int
+        errorMessage : Text
+      controller provider
         do
           CreateOrderRequest{details} <- fetch createOrderRequestCid
           (orderCid, order) <- fetchByKey (provider, details.id)
@@ -126,11 +128,12 @@ template Service
 
           create order with status = Order.Rejected with reason
 
-      nonconsuming MarketOrderCancelRequest : ContractId Order.T
-        with
-          createOrderRequestCid : ContractId CreateOrderRequest
-          providerOrderId : Text
-          cancelledQuantity : Decimal
+    nonconsuming choice MarketOrderCancelRequest : ContractId Order.T
+      with
+        createOrderRequestCid : ContractId CreateOrderRequest
+        providerOrderId : Text
+        cancelledQuantity : Decimal
+      controller provider
         do
           CreateOrderRequest{details} <- fetch createOrderRequestCid
           (orderCid, order) <- fetchByKey (provider, details.id)
@@ -147,9 +150,10 @@ template Service
               create order with status = Order.Cancelled, providerOrderId = Some providerOrderId
             else pure orderCid
 
-      nonconsuming CancelOrder : ContractId Order.T
-        with
-          cancelOrderRequestCid : ContractId CancelOrderRequest
+    nonconsuming choice CancelOrder : ContractId Order.T
+      with
+        cancelOrderRequestCid : ContractId CancelOrderRequest
+      controller provider
         do
           CancelOrderRequest{..} <- fetchAndArchive cancelOrderRequestCid
           (orderCid, order@Order.Order{..}) <- fetchByKey (provider, details.id)
@@ -160,11 +164,12 @@ template Service
 
           create order with status = Order.Cancelled
 
-      nonconsuming RejectCancellation : ContractId Order.T
-        with
-          cancelOrderRequestCid : ContractId CancelOrderRequest
-          errorCode : Int
-          errorMessage : Text
+    nonconsuming choice RejectCancellation : ContractId Order.T
+      with
+        cancelOrderRequestCid : ContractId CancelOrderRequest
+        errorCode : Int
+        errorMessage : Text
+      controller provider
         do
           CancelOrderRequest{..} <- fetchAndArchive cancelOrderRequestCid
           (orderCid, order) <- fetchByKey (provider, details.id)
@@ -173,10 +178,10 @@ template Service
           let reason = Error with code = show errorCode; message = errorMessage
           create order with status = Order.CancellationRejected with reason
 
-    controller operator, provider can
-      nonconsuming SignConfirmation : ContractId Confirmation.T
-        with
-          confirmationCid : ContractId Confirmation.T
+    nonconsuming choice SignConfirmation : ContractId Confirmation.T
+      with
+        confirmationCid : ContractId Confirmation.T
+      controller operator, provider
         do
           exercise confirmationCid Confirmation.Sign with ctrl = customer, ..
 
@@ -195,19 +200,21 @@ template Offer
     customer : Party
   where
     signatory operator, provider
+    observer customer
 
-    controller customer can
-      Accept : ContractId Service
-        with
+    choice Accept : ContractId Service
+      with
+      controller customer
         do
           createOrLookup Service with ..
 
-      Decline : ()
+    choice Decline : ()
+      controller customer
         do
           return ()
 
-    controller provider can
-      Withdraw : ()
+    choice Withdraw : ()
+      controller provider
         do pure ()
 
 template Request
@@ -216,13 +223,14 @@ template Request
     provider : Party
   where
     signatory customer
+    observer provider
 
-    controller customer can
-      Cancel : ()
+    choice Cancel : ()
+      controller customer
         do pure ()
 
-    controller provider can
-      Reject : ()
+    choice Reject : ()
+      controller provider
         do pure ()
 
     choice Approve : ContractId Service
@@ -246,24 +254,26 @@ template CreateOrderRequest
 
     let serviceKey = (operator, provider, customer)
 
-    controller provider can
-      nonconsuming AcknowledgeRequest : ContractId Order.T
-        with
-          providerOrderId : Text
+    nonconsuming choice AcknowledgeRequest : ContractId Order.T
+      with
+        providerOrderId : Text
+      controller provider
         do
           exerciseByKey @Service serviceKey AcknowledgeOrderRequest with createOrderRequestCid = self, ..
 
-      nonconsuming RejectRequest : ContractId Order.T
-        with
-          errorCode : Int
-          errorMessage : Text
+    nonconsuming choice RejectRequest : ContractId Order.T
+      with
+        errorCode : Int
+        errorMessage : Text
+      controller provider
         do
           exerciseByKey @Service serviceKey RejectOrderRequest with createOrderRequestCid = self, ..
 
-      nonconsuming CancelRequest : ContractId Order.T
-        with
-          providerOrderId : Text
-          cancelledQuantity : Decimal
+    nonconsuming choice CancelRequest : ContractId Order.T
+      with
+        providerOrderId : Text
+        cancelledQuantity : Decimal
+      controller provider
         do
           exerciseByKey @Service serviceKey MarketOrderCancelRequest with createOrderRequestCid = self, ..
 
@@ -281,14 +291,15 @@ template CancelOrderRequest
 
     let serviceKey = (operator, provider, customer)
 
-    controller provider can
-      nonconsuming AcknowledgeCancel : ContractId Order.T
+    nonconsuming choice AcknowledgeCancel : ContractId Order.T
+      controller provider
         do
           exerciseByKey @Service serviceKey CancelOrder with cancelOrderRequestCid = self
 
-      nonconsuming FailureCancel : ContractId Order.T
-        with
-          errorCode : Int
-          errorMessage : Text
+    nonconsuming choice FailureCancel : ContractId Order.T
+      with
+        errorCode : Int
+        errorMessage : Text
+      controller provider
         do
           exerciseByKey @Service serviceKey RejectCancellation with cancelOrderRequestCid = self, ..

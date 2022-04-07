@@ -71,19 +71,21 @@ template Offer
     customer : Party
   where
     signatory operator, provider
+    observer customer
 
-    controller customer can
-      Accept : ContractId Service
-        with
+    choice Accept : ContractId Service
+      with
+      controller customer
         do
           create Service with tradingAllowed = False; ..
 
-      Decline : ()
+    choice Decline : ()
+      controller customer
         do
           return ()
 
-    controller provider can
-      Withdraw : ()
+    choice Withdraw : ()
+      controller provider
         do pure ()
 
 template Request
@@ -92,13 +94,14 @@ template Request
     provider : Party
   where
     signatory customer
+    observer provider
 
-    controller customer can
-      Cancel : ()
+    choice Cancel : ()
+      controller customer
         do pure ()
 
-    controller provider can
-      Reject : ()
+    choice Reject : ()
+      controller provider
         do pure ()
 
     choice Approve : ContractId Service

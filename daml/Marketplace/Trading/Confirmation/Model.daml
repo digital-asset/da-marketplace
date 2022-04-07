@@ -22,6 +22,7 @@ template Confirmation
     signed : Set Party
   where
     signatory signed
+    observer provider
 
     choice Sign : ContractId Confirmation
       with
@@ -32,11 +33,11 @@ template Confirmation
         create this with
           signed = insert ctrl signed
 
-    controller provider can
-      ProcessCleared : ()
-        with
-          buyCid : ContractId Order.T
-          sellCid : ContractId Order.T
+    choice ProcessCleared : ()
+      with
+        buyCid : ContractId Order.T
+        sellCid : ContractId Order.T
+      controller provider
         do
           forA_ [buyCid, sellCid] $ \orderCid -> do
             order <- fetchAndArchive orderCid
@@ -55,10 +56,11 @@ template Confirmation
                 create order with executions, remainingQuantity, status = Order.FullyExecuted
             return ()
 
-      Process : ContractId Settlement.SettlementInstruction
+    choice Process : ContractId Settlement.SettlementInstruction
         with
           buyCid : ContractId Order.T
           sellCid : ContractId Order.T
+        controller provider
         do
           [buyOrder, sellOrder] <- forA [buyCid, sellCid] fetchAndArchive
 

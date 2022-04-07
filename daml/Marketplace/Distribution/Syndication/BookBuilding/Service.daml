@@ -15,10 +15,10 @@ template Service
     key (operator, provider, customer) : (Party, Party, Party)
     maintainer key._1
 
-    controller customer can
-      nonconsuming RequestBookBuilding : ContractId BookBuilding.BuildRequest
-        with
-          trancheCid : ContractId Structuring.Tranche
+    nonconsuming choice RequestBookBuilding : ContractId BookBuilding.BuildRequest
+      with
+        trancheCid : ContractId Structuring.Tranche
+      controller customer
         do
           Structuring.Tranche{..} <- fetch trancheCid
           create BookBuilding.BuildRequest with operator; provider; customer; issuer; dealId; trancheId; deliveryId; paymentId; size
@@ -30,18 +30,20 @@ template Offer
     customer : Party
   where
     signatory operator, provider
+    observer customer
 
-    controller customer can
-      Accept : ContractId Service
+    choice Accept : ContractId Service
+      controller customer
         do
           createOrLookup Service with ..
 
-      Decline : ()
+    choice Decline : ()
+      controller customer
         do
           return ()
 
-    controller provider can
-      Withdraw : ()
+    choice Withdraw : ()
+      controller provider
         do pure ()
 
 template Request
@@ -52,12 +54,12 @@ template Request
     signatory customer
     observer provider
 
-    controller customer can
-      Cancel : ()
+    choice Cancel : ()
+      controller customer
         do pure ()
 
-    controller provider can
-      Reject : ()
+    choice Reject : ()
+      controller provider
         do pure ()
 
     choice Approve : ContractId Service

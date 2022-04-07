@@ -15,20 +15,19 @@ template Role
     key (operator, investor) :  (Party, Party)
     maintainer key._1
 
-    controller investor can
-
-      nonconsuming RequestRedemption : ContractId Lifecycle.InvestorRedemptionRequest
-        with
-          issuer : Party
-          bondRegistrar : Party
-          cashProvider : Party
-          payingAgent : Party
-          asset : Asset
+    nonconsuming choice RequestRedemption : ContractId Lifecycle.InvestorRedemptionRequest
+      with
+        issuer : Party
+        bondRegistrar : Party
+        cashProvider : Party
+        payingAgent : Party
+        asset : Asset
+      controller investor
         do
           create Lifecycle.InvestorRedemptionRequest with operator; investor; issuer; bondRegistrar; cashProvider; payingAgent; asset
 
-    controller operator can
-      TerminateRole: ()
+    choice TerminateRole: ()
+      controller operator
         do
           return ()
 
@@ -38,15 +37,17 @@ template Offer
     investor : Party
   where
     signatory operator
+    observer investor
 
-    controller investor can
-      Accept : (ContractId Role, ContractId Custody.SettlementInfo)
+    choice Accept : (ContractId Role, ContractId Custody.SettlementInfo)
+      controller investor
         do
           infoCid <- create Custody.SettlementInfo with operator; party = investor; ownAccount = None; omnibusCashAccount = None; omnibusSecuritiesAccount = None; cashAccounts = empty; securitiesAccounts = empty
           roleCid <- create Role with ..
           pure (roleCid, infoCid)
 
-      Decline : ()
+    choice Decline : ()
+      controller investor
         do
           return ()
 
@@ -58,14 +59,16 @@ template Request
     securitiesAccount : Optional Account
   where
     signatory investor
+    observer operator
 
-    controller operator can
-      Approve : (ContractId Role, ContractId Custody.SettlementInfo)
+    choice Approve : (ContractId Role, ContractId Custody.SettlementInfo)
+      controller operator
         do
           infoCid <- create Custody.SettlementInfo with operator; party = investor; ownAccount = None; omnibusCashAccount = None; omnibusSecuritiesAccount = None; cashAccounts = empty; securitiesAccounts = empty
           roleCid <- create Role with ..
           pure (roleCid, infoCid)
 
-      Reject : ()
+    choice Reject : ()
+      controller operator
         do
           return ()

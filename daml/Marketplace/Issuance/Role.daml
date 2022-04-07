@@ -16,22 +16,21 @@ template Role
     key (operator, issuer) :  (Party, Party)
     maintainer key._1
 
-    controller issuer can
-
-      nonconsuming RequestRedemption : ContractId Lifecycle.IssuerRedemptionRequest
-        with
-          bondRegistrar : Party
-          cashProvider : Party
-          payingAgent : Party
-          assetId : Id
-          price : Asset
+    nonconsuming choice RequestRedemption : ContractId Lifecycle.IssuerRedemptionRequest
+      with
+        bondRegistrar : Party
+        cashProvider : Party
+        payingAgent : Party
+        assetId : Id
+        price : Asset
+      controller issuer
         do
           (_, bond) <- fetchByKey @Instrument.Bond (assetId.signatories, assetId.label)
           assertMsg "Bond is not callable" bond.isCallable
           create Lifecycle.IssuerRedemptionRequest with operator; issuer; bondRegistrar; cashProvider; payingAgent; assetId; price
 
-    controller operator can
-      TerminateRole: ()
+    choice TerminateRole: ()
+      controller operator
         do
           return ()
 
@@ -41,15 +40,17 @@ template Offer
     issuer : Party
   where
     signatory operator
+    observer issuer
 
-    controller issuer can
-      Accept : (ContractId Role, ContractId Custody.SettlementInfo)
+    choice Accept : (ContractId Role, ContractId Custody.SettlementInfo)
+      controller issuer
         do
           infoCid <- create Custody.SettlementInfo with operator; party = issuer; ownAccount = None; omnibusCashAccount = None; omnibusSecuritiesAccount = None; cashAccounts = empty; securitiesAccounts = empty
           roleCid <- create Role with ..
           pure (roleCid, infoCid)
 
-      Decline : ()
+    choice Decline : ()
+      controller issuer
         do
           return ()
 
@@ -60,13 +61,14 @@ template Request
   where
     signatory issuer
 
-    controller operator can
-      Approve : (ContractId Role, ContractId Custody.SettlementInfo)
+    choice Approve : (ContractId Role, ContractId Custody.SettlementInfo)
+      controller operator
         do
           infoCid <- create Custody.SettlementInfo with operator; party = issuer; ownAccount = None; omnibusCashAccount = None; omnibusSecuritiesAccount = None; cashAccounts = empty; securitiesAccounts = empty
           roleCid <- create Role with ..
           pure (roleCid, infoCid)
 
-      Reject : ()
+    choice Reject : ()
+      controller operator
         do
           return ()

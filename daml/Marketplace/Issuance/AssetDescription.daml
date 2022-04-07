@@ -87,8 +87,8 @@ template Index
     key (descriptionSignatories, assetLabel) : (Set Party, Text)
     maintainer key._1
 
-    controller descriptionSignatories can
-      nonconsuming LookupOrInsert : (ContractId Index, Version) with claims : Claims
+    nonconsuming choice LookupOrInsert : (ContractId Index, Version) with claims : Claims
+      controller descriptionSignatories
         do
           case Map.lookup claims versions of
              Some version -> return (self, version)

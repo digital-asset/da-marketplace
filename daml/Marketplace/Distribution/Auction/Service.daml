@@ -27,44 +27,47 @@ template Service
   where
     signatory operator, provider, customer
 
-    controller customer can
-      nonconsuming RequestCreateAuction : ContractId CreateAuctionRequest
-        with
-          auctionId : Text
-          asset : Asset
-          quotedAssetId : Id
-          floorPrice : Decimal
-          depositCid : ContractId AssetDeposit
-          receivableAccount : Account
+    nonconsuming choice RequestCreateAuction : ContractId CreateAuctionRequest
+      with
+        auctionId : Text
+        asset : Asset
+        quotedAssetId : Id
+        floorPrice : Decimal
+        depositCid : ContractId AssetDeposit
+        receivableAccount : Account
+      controller customer
         do
           create CreateAuctionRequest with ..
 
-      nonconsuming CancelAuctionRequest : ()
-        with
-          createAuctionRequestCid : ContractId CreateAuctionRequest
+    nonconsuming choice CancelAuctionRequest : ()
+      with
+        createAuctionRequestCid : ContractId CreateAuctionRequest
+      controller customer
         do
           archive createAuctionRequestCid
 
-    controller provider can
-      nonconsuming CreateAuction : ContractId Auction.T
-        with
-          createAuctionRequestCid : ContractId CreateAuctionRequest
+    nonconsuming choice CreateAuction : ContractId Auction.T
+      with
+        createAuctionRequestCid : ContractId CreateAuctionRequest
+      controller provider
         do
           CreateAuctionRequest{auctionId; asset; quotedAssetId; floorPrice; depositCid, receivableAccount} <- fetchAndArchive createAuctionRequestCid
 
           depositCid <- exercise depositCid AssetDeposit_Lock with newLockers = fromList [ provider ]
           create Auction with status = Auction.Open; ..
 
-      nonconsuming RejectAuction : ()
-        with
-          createAuctionRequestCid : ContractId CreateAuctionRequest
+    nonconsuming choice RejectAuction : ()
+      with
+        createAuctionRequestCid : ContractId CreateAuctionRequest
+      controller provider
         do
           archive createAuctionRequestCid
 
-      nonconsuming ProcessAuction : (ContractId Auction.T, [ContractId Settlement.SettlementInstruction])
-        with
-          auctionCid : ContractId Auction.T
-          bidCids : [ContractId Bidding.Bid]
+    nonconsuming choice ProcessAuction : (ContractId Auction.T, [ContractId Settlement.SettlementInstruction])
+      with
+        auctionCid : ContractId Auction.T
+        bidCids : [ContractId Bidding.Bid]
+      controller provider
         do
           auction@Auction{floorPrice ,asset , depositCid, status, receivableAccount} <- fetch auctionCid
           assertMsg "Auction already successfully processed" (status `elem` [Auction.Open, Auction.NoValidBids])
@@ -104,18 +107,20 @@ template Offer
     customer : Party
   where
     signatory operator, provider
+    observer customer
 
-    controller customer can
-      Accept : ContractId Service
+    choice Accept : ContractId Service
+      controller customer
         do
           create Service with ..
 
-      Decline : ()
+    choice Decline : ()
+      controller customer
         do
           return ()
 
-    controller provider can
-      Withdraw : ()
+    choice Withdraw : ()
+      controller provider
         do pure ()
 
 template Request
@@ -126,12 +131,12 @@ template Request
     signatory customer
     observer provider
 
-    controller customer can
-      Cancel : ()
+    choice Cancel : ()
+      controller customer
         do pure ()
 
-    controller provider can
-      Reject : ()
+    choice Reject : ()
+      controller provider
         do pure ()
 
     choice Approve : ContractId Service

@@ -22,55 +22,59 @@ template Service
     key (operator, provider, customer) : (Party, Party, Party)
     maintainer key._1
 
-    controller customer can
-      nonconsuming RequestOrigination: ContractId OriginationRequest
-        with
-          assetLabel : Text
-          cfi : CFI
-          description : Text
-          claims : Claims
-          observers : [Party]
+    nonconsuming choice RequestOrigination: ContractId OriginationRequest
+      with
+        assetLabel : Text
+        cfi : CFI
+        description : Text
+        claims : Claims
+        observers : [Party]
+      controller customer
         do
           create OriginationRequest with observers = fromList observers; ..
 
-      nonconsuming RequestCreateIssuance : ContractId CreateIssuanceRequest
-        with
-          issuanceId : Text
-          account : Account
-          trancheCid : ContractId Structuring.Tranche
+    nonconsuming choice RequestCreateIssuance : ContractId CreateIssuanceRequest
+      with
+        issuanceId : Text
+        account : Account
+        trancheCid : ContractId Structuring.Tranche
+      controller customer
         do
           Structuring.Tranche{deliveryId, size} <- fetch trancheCid
           create CreateIssuanceRequest with assetId = deliveryId; quantity = size; ..
 
-      nonconsuming RequestReduceIssuance : ContractId ReduceIssuanceRequest
-        with
-          issuanceId : Text
-          accountId : Id
-          depositCid : ContractId AssetDeposit
+    nonconsuming choice RequestReduceIssuance : ContractId ReduceIssuanceRequest
+      with
+        issuanceId : Text
+        accountId : Id
+        depositCid : ContractId AssetDeposit
+      controller customer
         do
           create ReduceIssuanceRequest with ..
 
-      nonconsuming OfferLifecycleService : ContractId Lifecycle.Offer
-        with
-          bondRegistrar : Party
-          payingAgent : Party
-          issuer : Party
-          cashProvider : Party
+    nonconsuming choice OfferLifecycleService : ContractId Lifecycle.Offer
+      with
+        bondRegistrar : Party
+        payingAgent : Party
+        issuer : Party
+        cashProvider : Party
+      controller customer
         do
           bondRegistrar === provider
           issuer === customer
           create Lifecycle.Offer with ..
 
-      nonconsuming ApproveLifecycleRequest : ContractId Lifecycle.Service
-        with
-          lifecycleServiceRequestCid : ContractId Lifecycle.Request
+    nonconsuming choice ApproveLifecycleRequest : ContractId Lifecycle.Service
+      with
+        lifecycleServiceRequestCid : ContractId Lifecycle.Request
+      controller customer
         do
           exercise lifecycleServiceRequestCid Lifecycle.Approve
 
-    controller provider can
-      nonconsuming Originate: (ContractId AssetDescription, AssetDescription)
-        with
-          createOriginationCid: ContractId OriginationRequest
+    nonconsuming choice Originate: (ContractId AssetDescription, AssetDescription)
+      with
+        createOriginationCid: ContractId OriginationRequest
+      controller provider
         do
           OriginationRequest{assetLabel; cfi; description; claims; observers} <- fetch createOriginationCid
           archive createOriginationCid
@@ -95,9 +99,10 @@ template Service
           adCid <- create ad
           pure (adCid, ad)
 
-      nonconsuming CreateIssuance : (ContractId Issuance, ContractId AssetDeposit)
-        with
-          createIssuanceRequestCid : ContractId CreateIssuanceRequest
+    nonconsuming choice CreateIssuance : (ContractId Issuance, ContractId AssetDeposit)
+      with
+        createIssuanceRequestCid : ContractId CreateIssuanceRequest
+      controller provider
         do
           CreateIssuanceRequest{issuanceId; assetId; account; quantity} <- fetchAndArchive createIssuanceRequestCid
           issuanceCid <- create Issuance with ..
@@ -108,9 +113,10 @@ template Service
 
           pure (issuanceCid, depositCid)
 
-      nonconsuming ReduceIssuance : ContractId Issuance
-        with
-          reduceIssuanceRequestCid : ContractId ReduceIssuanceRequest
+    nonconsuming choice ReduceIssuance : ContractId Issuance
+      with
+        reduceIssuanceRequestCid : ContractId ReduceIssuanceRequest
+      controller provider
         do
           ReduceIssuanceRequest{issuanceId; accountId; depositCid} <- fetchAndArchive reduceIssuanceRequestCid
           deposit <- fetchAndArchive depositCid
@@ -127,17 +133,19 @@ template Offer
     customer : Party
   where
     signatory operator, provider
+    observer customer
 
-    controller customer can
-      Accept : ContractId Service
+    choice Accept : ContractId Service
+      controller customer
         do
           create Service with ..
 
-      Decline : ()
+    choice Decline : ()
+      controller customer
         do pure ()
 
-    controller provider can
-      Withdraw : ()
+    choice Withdraw : ()
+      controller provider
         do pure ()
 
 template Request
@@ -148,12 +156,12 @@ template Request
     signatory customer
     observer provider
 
-    controller customer can
-      Cancel : ()
+    choice Cancel : ()
+      controller customer
         do pure ()
 
-    controller provider can
-      Reject : ()
+    choice Reject : ()
+      controller provider
         do pure ()
 
     choice Approve : ContractId Service

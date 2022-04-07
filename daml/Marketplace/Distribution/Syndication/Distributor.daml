@@ -15,46 +15,50 @@ template Role
     key (operator, provider) :  (Party, Party)
     maintainer key._1
 
-    controller provider can
-
-      nonconsuming OfferBiddingService : ContractId Bidding.Offer
-        with
-          customer : Party
+    nonconsuming choice OfferBiddingService : ContractId Bidding.Offer
+      with
+        customer : Party
+      controller provider
         do
           create Bidding.Offer with ..
 
-      nonconsuming ApproveBiddingRequest : ContractId Bidding.Service
-        with
-          biddingRequestCid : ContractId Bidding.Request
+    nonconsuming choice ApproveBiddingRequest : ContractId Bidding.Service
+      with
+        biddingRequestCid : ContractId Bidding.Request
+      controller provider
         do
           exercise biddingRequestCid Bidding.Approve with ..
 
-      nonconsuming TerminateBiddingService : ()
-        with
-          biddingServiceCid : ContractId Bidding.Service
+    nonconsuming choice TerminateBiddingService : ()
+      with
+        biddingServiceCid : ContractId Bidding.Service
+      controller provider
         do
           archive biddingServiceCid
 
-      nonconsuming OfferBookBuildingService : ContractId BookBuilding.Offer
-        with
-          customer : Party
+    nonconsuming choice OfferBookBuildingService : ContractId BookBuilding.Offer
+      with
+        customer : Party
+      controller provider
         do
           create BookBuilding.Offer with ..
 
-      nonconsuming ApproveBookBuildingRequest : ContractId BookBuilding.Service
-        with
-          bookBuildingRequestCid : ContractId BookBuilding.Request
+    nonconsuming choice ApproveBookBuildingRequest : ContractId BookBuilding.Service
+      with
+        bookBuildingRequestCid : ContractId BookBuilding.Request
+      controller provider
         do
           exercise bookBuildingRequestCid BookBuilding.Approve with ..
 
-      nonconsuming TerminateBookBuildingService : ()
-        with
-          bookBuildingServiceCid : ContractId BookBuilding.Service
+    nonconsuming choice TerminateBookBuildingService : ()
+      with
+        bookBuildingServiceCid : ContractId BookBuilding.Service
+      controller provider
         do
           archive bookBuildingServiceCid
 
-    controller operator can
-      TerminateRole: ()
+    choice TerminateRole: ()
+      controller operator
         do
           return ()
 
@@ -65,13 +69,15 @@ template Offer
     observers : Set Party
   where
     signatory operator
+    observer provider
 
-    controller provider can
-      Accept : ContractId Role
+    choice Accept : ContractId Role
+      controller provider
         do
           createOrLookup Role with ..
 
-      Decline : ()
+    choice Decline : ()
+      controller provider
         do
           return ()
 
@@ -81,12 +87,14 @@ template Request
     operator : Party
   where
     signatory provider
+    observer operator
 
-    controller operator can
-      Approve : ContractId Role
+    choice Approve : ContractId Role
+      controller operator
         do
           createOrLookup Role with ..
 
-      Reject : ()
+    choice Reject : ()
+      controller operator
         do
           return ()

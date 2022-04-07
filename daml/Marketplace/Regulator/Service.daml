@@ -15,19 +15,19 @@ template Service
     key (operator, provider, customer) : (Party, Party, Party)
     maintainer key._1
 
-    controller customer can
-      nonconsuming RequestIdentityVerification : ContractId IdentityVerificationRequest
-        with
-          legalName : Text
-          location : Text
-          observers : [Party]
+    nonconsuming choice RequestIdentityVerification : ContractId IdentityVerificationRequest
+      with
+        legalName : Text
+        location : Text
+        observers : [Party]
+      controller customer
         do
           create IdentityVerificationRequest with observers = fromList observers; ..
 
-    controller provider can
-      nonconsuming VerifyIdentity : ContractId VerifiedIdentity
-        with
-          identityVerificationRequestCid : ContractId IdentityVerificationRequest
+    nonconsuming choice VerifyIdentity : ContractId VerifiedIdentity
+      with
+        identityVerificationRequestCid : ContractId IdentityVerificationRequest
+      controller provider
         do
           IdentityVerificationRequest{..} <- fetch identityVerificationRequestCid
           archive identityVerificationRequestCid
@@ -40,17 +40,19 @@ template Offer
     customer : Party
   where
     signatory operator, provider
+    observer customer
 
-    controller customer can
-      Accept : ContractId Service
+    choice Accept : ContractId Service
+      controller customer
         do
           createOrLookup Service with ..
 
-      Decline : ()
+    choice Decline : ()
+      controller customer
         do pure ()
 
-    controller provider can
-      Withdraw : ()
+    choice Withdraw : ()
+      controller provider
         do pure ()
 
 template Request
@@ -61,12 +63,12 @@ template Request
     signatory customer
     observer provider
 
-    controller customer can
-      Cancel : ()
+    choice Cancel : ()
+      controller customer
         do pure ()
 
-    controller provider can
-      Reject : ()
+    choice Reject : ()
+      controller provider
         do pure ()
 
     choice Approve : ContractId Service

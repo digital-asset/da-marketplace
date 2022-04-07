@@ -18,11 +18,11 @@ template Service
     key (operator, provider, customer) : (Party, Party, Party)
     maintainer key._1
 
-    controller customer can
-      nonconsuming RequestBond : (ContractId Issuance.OriginationRequest, ContractId Bond)
-        with
-          bond : Bond
-          observers : [Party]
+    nonconsuming choice RequestBond : (ContractId Issuance.OriginationRequest, ContractId Bond)
+      with
+        bond : Bond
+        observers : [Party]
+      controller customer
         do
           let cfi = CFI with code = "DBXXXX"
           claims <- getClaims operator provider bond.stream bond.currencyId bond.maturityDate True
@@ -30,10 +30,11 @@ template Service
           assetCid <- exerciseByKey @Issuance.Service (operator, provider, customer) Issuance.RequestOrigination with assetLabel = bond.id.label; cfi; description = bond.id.label; claims; observers = observers
           pure (assetCid, bondCid)
 
-      nonconsuming RequestSwap : (ContractId Issuance.OriginationRequest, ContractId Swap)
-        with
-          swap : Swap
-          observers : [Party]
+    nonconsuming choice RequestSwap : (ContractId Issuance.OriginationRequest, ContractId Swap)
+      with
+        swap : Swap
+        observers : [Party]
+      controller customer
         do
           let cfi = CFI with code = "SRXXXX"
           pay <- getClaims operator provider (Some swap.pay) swap.payCurrencyId swap.maturityDate False
@@ -50,17 +51,19 @@ template Offer
     customer : Party
   where
     signatory operator, provider
+    observer customer
 
-    controller customer can
-      Accept : ContractId Service
+    choice Accept : ContractId Service
+      controller customer
         do
           create Service with ..
 
-      Decline : ()
+    choice Decline : ()
+      controller customer
         do pure ()
 
-    controller provider can
-      Withdraw : ()
+    choice Withdraw : ()
+      controller provider
         do pure ()
 
 template Request
@@ -71,12 +74,12 @@ template Request
     signatory customer
     observer provider
 
-    controller customer can
-      Cancel : ()
+    choice Cancel : ()
+      controller customer
         do pure ()
 
-    controller provider can
-      Reject : ()
+    choice Reject : ()
+      controller provider
         do pure ()
 
     choice Approve : ContractId Service

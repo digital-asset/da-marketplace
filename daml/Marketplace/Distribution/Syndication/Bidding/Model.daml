@@ -32,17 +32,18 @@ template Bid
     observer issuer
     ensure asset.quantity > 0.0 && price.quantity > 0.0
 
-    controller issuer can
-      Allocate : ContractId Allocation
-        with
-          offeredPrice : Decimal
-          offeredQuantity : Decimal
+    choice Allocate : ContractId Allocation
+      with
+        offeredPrice : Decimal
+        offeredQuantity : Decimal
+      controller issuer
         do
           assertMsg "Offered price is higher than price limit" $ offeredPrice <= price.quantity
           assertMsg "Offered quantity is higher than quantity limit" $ offeredQuantity <= asset.quantity
           create Allocation with asset = (asset with quantity = offeredQuantity); price = (price with quantity = offeredPrice); ..
 
-      Reject : ()
+    choice Reject : ()
+      controller issuer
         do
           pure ()
 
@@ -61,11 +62,11 @@ template Allocation
     observer issuer
     ensure asset.quantity > 0.0 && price.quantity > 0.0
 
-    controller investor can
-      Confirm : ContractId Confirmation
-        with
-          settlementMode : SettlementMode
-          hashlock : Optional Text
+    choice Confirm : ContractId Confirmation
+      with
+        settlementMode : SettlementMode
+        hashlock : Optional Text
+      controller investor
         do
           create Confirmation with ..
 

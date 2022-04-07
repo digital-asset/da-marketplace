@@ -24,16 +24,17 @@ template Service
     accountProvider: Party
   where 
     signatory operator
+    observer accountProvider
 
     key (operator, accountProvider) : (Party, Party)
     maintainer key._1
     
-    controller accountProvider can 
-      nonconsuming CreateReports: [ContractId SwiftOutboundMessage]
-        with
-          calendar: HolidayCalendar
-          depositCids: [ContractId AssetDeposit]
-          isCashReporting: Bool -- is cash reporting or is security reporting
+    nonconsuming choice CreateReports: [ContractId SwiftOutboundMessage]
+      with
+        calendar: HolidayCalendar
+        depositCids: [ContractId AssetDeposit]
+        isCashReporting: Bool -- is cash reporting or is security reporting
+      controller accountProvider
         do
           deposits <- filter (\deposit -> deposit.account.provider == accountProvider) <$> mapA (fetch @AssetDeposit) depositCids
           assertMsg ("no deposits found: for provider:" <> partyToText accountProvider) $ (not . null) deposits

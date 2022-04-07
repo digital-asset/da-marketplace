@@ -20,58 +20,64 @@ template Role
     key (operator, provider) :  (Party, Party)
     maintainer key._1
 
-    controller provider can
-
-      nonconsuming OfferClearingService : ContractId Clearing.Offer
-        with
-          customer : Party
+    nonconsuming choice OfferClearingService : ContractId Clearing.Offer
+      with
+        customer : Party
+      controller provider
         do
           create Clearing.Offer with ..
 
-      nonconsuming ApproveClearingRequest : ContractId Clearing.Service
-        with
-          clearingRequestCid : ContractId Clearing.Request
+    nonconsuming choice ApproveClearingRequest : ContractId Clearing.Service
+      with
+        clearingRequestCid : ContractId Clearing.Request
+      controller provider
         do
           exercise clearingRequestCid Clearing.Approve with ..
 
-      nonconsuming RejectClearingRequest : ()
-        with
-          clearingRequestCid : ContractId Clearing.Request
+    nonconsuming choice RejectClearingRequest : ()
+      with
+        clearingRequestCid : ContractId Clearing.Request
+      controller provider
         do
           exercise clearingRequestCid Clearing.Reject
 
-      nonconsuming TerminateClearingService : ()
-        with
-          custodyServiceCid : ContractId Clearing.Service
+    nonconsuming choice TerminateClearingService : ()
+      with
+        custodyServiceCid : ContractId Clearing.Service
+      controller provider
         do
           archive custodyServiceCid
 
-      nonconsuming OfferMarketService : ContractId Market.Offer
-        with
-          customer : Party
+    nonconsuming choice OfferMarketService : ContractId Market.Offer
+      with
+        customer : Party
+      controller provider
         do
           create Market.Offer with ..
 
-      nonconsuming ApproveMarketRequest : ContractId Market.Service
-        with
-          marketRequestCid : ContractId Market.Request
+    nonconsuming choice ApproveMarketRequest : ContractId Market.Service
+      with
+        marketRequestCid : ContractId Market.Request
+      controller provider
         do
           exercise marketRequestCid Market.Approve with ..
 
-      nonconsuming RejectMarketRequest : ()
-        with
-          marketRequestCid : ContractId Market.Request
+    nonconsuming choice RejectMarketRequest : ()
+      with
+        marketRequestCid : ContractId Market.Request
+      controller provider
         do
           exercise marketRequestCid Market.Reject
 
-      nonconsuming TerminateMarketService : ()
-        with
-          marketServiceCid : ContractId Market.Service
+    nonconsuming choice TerminateMarketService : ()
+      with
+        marketServiceCid : ContractId Market.Service
+      controller provider
         do
           archive marketServiceCid
 
-    controller operator can
-      TerminateRole : ()
+    choice TerminateRole : ()
+      controller operator
         do
           return ()
 
@@ -82,17 +88,19 @@ template Offer
     observers : Set Party
   where
     signatory operator
+    observer provider
 
-    controller provider can
-      Accept : (ContractId Role, ContractId Market.Service)
-        with
-          ccpAccount : Account
+    choice Accept : (ContractId Role, ContractId Market.Service)
+      with
+        ccpAccount : Account
+      controller provider
         do
           marketCid <- createOrLookup Market.Service with customer = provider, ..
           roleCid   <- createOrLookup Role with ..
           return (roleCid, marketCid)
 
-      Decline : ()
+    choice Decline : ()
+      controller provider
         do
           return ()
 
@@ -103,16 +111,18 @@ template Request
     ccpAccount : Account
   where
     signatory provider
+    observer operator
 
-    controller operator can
-      Approve : (ContractId Role, ContractId Market.Service)
-        with
-          observers : Set Party
+    choice Approve : (ContractId Role, ContractId Market.Service)
+      with
+        observers : Set Party
+      controller operator
         do
           marketCid <- createOrLookup Market.Service with customer = provider, ..
           roleCid   <- createOrLookup Role with ..
           return (roleCid, marketCid)
 
-      Reject : ()
+    choice Reject : ()
+      controller operator
         do
           return ()

@@ -67,9 +67,9 @@ template Bid
     key (customer, auctionId) : (Party, Text)
     maintainer key._1
 
-    controller provider can
-      UpdateStatus : ContractId Bid
-        with
-          newStatus : Status
+    choice UpdateStatus : ContractId Bid
+      with
+        newStatus : Status
+      controller provider
         do
           create this with status = newStatus

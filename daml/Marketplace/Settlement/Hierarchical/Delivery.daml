@@ -26,8 +26,8 @@ template Delivery
     key (operator, settlementId) : (Party, Text)
     maintainer key._1
 
-    controller agent can
-      SettleDelivery : (ContractId Delivery, [ContractId AssetDeposit])
+    choice SettleDelivery : (ContractId Delivery, [ContractId AssetDeposit])
+      controller agent
         do
           let
             settle (instructionId : Text) = do

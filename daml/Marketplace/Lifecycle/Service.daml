@@ -38,11 +38,11 @@ template Service
     key (operator, issuer, payingAgent) : (Party, Party, Party)
     maintainer key._1
 
-    controller payingAgent can
-      nonconsuming CalculateEffect : Optional (ContractId Effect)
-        with
-          assetId : Id
-          election : Optional Claims
+    nonconsuming choice CalculateEffect : Optional (ContractId Effect)
+      with
+        assetId : Id
+        election : Optional Claims
+      controller payingAgent
         do
           (_, today) <- fetchByKey @Today (operator, payingAgent)
           (_, description) <- fetchByKey @AssetDescription.T assetId
@@ -66,11 +66,11 @@ template Service
           else
             pure None
 
-    controller operator can
-      nonconsuming SendPrePayoutSwiftMessage : [ContractId SwiftOutboundMessage]
-        with
-          snapshotCids : [ContractId Snapshot]
-          exDivDate : Date
+    nonconsuming choice SendPrePayoutSwiftMessage : [ContractId SwiftOutboundMessage]
+      with
+        snapshotCids : [ContractId Snapshot]
+        exDivDate : Date
+      controller operator
         do
           let
               getPayoutDate : Claims -> Date
@@ -125,7 +125,8 @@ template Service
           snapshots <- mapA fetch snapshotCids
           mapA_ (`exercise` Delete) snapshotCids
           mapA sendMessageForSnapshot snapshots
-      Terminate : ()
+    choice Terminate : ()
+      controller operator
         do return ()
 
 template Offer
@@ -137,13 +138,15 @@ template Offer
     cashProvider : Party
   where
     signatory operator, bondRegistrar, issuer
+    observer payingAgent
 
-    controller payingAgent can
-      Accept : ContractId Service
+    choice Accept : ContractId Service
+      controller payingAgent
         do
           createOrLookup Service with ..
 
-      Decline : ()
+    choice Decline : ()
+      controller payingAgent
         do
           return ()
 
@@ -156,12 +159,14 @@ template Request
     cashProvider : Party
    where
     signatory payingAgent
+    observer operator, bondRegistrar
 
-    controller operator, bondRegistrar can
-      Approve : ContractId Service
+    choice Approve : ContractId Service
+      controller operator, bondRegistrar
         do
           createOrLookup Service with ..
 
-      Reject : ()
+    choice Reject : ()
+      controller operator, bondRegistrar
         do
           return ()
