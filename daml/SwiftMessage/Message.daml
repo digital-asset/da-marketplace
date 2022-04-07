@@ -42,31 +42,32 @@ template SwiftOutboundMessage
     status : MessageStatus
   where 
     signatory provider
-    observer observers
+    observer observers, consumer
 
     key (provider, referenceId, swiftMessageType) : (Party, RefId, SwiftMessageType)
     maintainer key._1
 
-    controller consumer can
-      RespondSuccess : ContractId SwiftOutboundMessage
+    choice RespondSuccess : ContractId SwiftOutboundMessage
+      controller consumer
         do create this with status = Processed
 
-      RespondFailed : ContractId SwiftOutboundMessage
-        with failedMessage : String
+    choice RespondFailed : ContractId SwiftOutboundMessage
+      with failedMessage : String
+      controller consumer
           do create this with status = Failed failedMessage
     
-    controller observers can
-      Finalize : ContractId SwiftOutboundMessage
+    choice Finalize : ContractId SwiftOutboundMessage
+      controller observers
         do create this with status = Finalized
 
-    controller provider can
-      Cancel : ()
+    choice Cancel : ()
+      controller provider
         do pure ()
     
-    controller provider can
-      AddObservers : ContractId SwiftOutboundMessage
-        with 
-          newObserver : Set Party 
+    choice AddObservers : ContractId SwiftOutboundMessage
+      with 
+        newObserver : Set Party 
+      controller provider
             do create this with observers = newObserver <> observers 
 
 finalizeSwiftMessage k = do

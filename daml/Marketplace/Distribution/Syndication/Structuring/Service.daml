@@ -23,36 +23,38 @@ template Service
     key (operator, provider, customer) : (Party, Party, Party)
     maintainer key._1
 
-    controller customer can
-      nonconsuming RequestCreateDeal : ContractId CreateDealRequest
-        with
-          dealId : Text
+    nonconsuming choice RequestCreateDeal : ContractId CreateDealRequest
+      with
+        dealId : Text
+      controller customer
         do
           create CreateDealRequest with ..
 
-      nonconsuming RequestAddTranche : ContractId AddTrancheRequest
-        with
-          settlementBank : Party
-          bndBank : Party
-          cashProvider : Party
-          bondRegistrar : Party
-          payingAgent : Party
-          dealId : Text
-          trancheId : Text
-          deliveryId : Id
-          paymentId : Id
-          size : Decimal
-          issuerSettlementMode : SettlementMode
-          bndSettlementMode : SettlementMode
+    nonconsuming choice RequestAddTranche : ContractId AddTrancheRequest
+      with
+        settlementBank : Party
+        bndBank : Party
+        cashProvider : Party
+        bondRegistrar : Party
+        payingAgent : Party
+        dealId : Text
+        trancheId : Text
+        deliveryId : Id
+        paymentId : Id
+        size : Decimal
+        issuerSettlementMode : SettlementMode
+        bndSettlementMode : SettlementMode
+      controller customer
         do
           create AddTrancheRequest with ..
 
-      nonconsuming CloseBook : [ContractId Bidding.Allocation]
-        with
-          buildRequestCids : [ContractId BookBuilding.BuildRequest]
-          bidCids : [ContractId Bidding.Bid]
-          allocations : [(Party, Decimal)]
-          offeredPrice : Decimal
+    nonconsuming choice CloseBook : [ContractId Bidding.Allocation]
+      with
+        buildRequestCids : [ContractId BookBuilding.BuildRequest]
+        bidCids : [ContractId Bidding.Bid]
+        allocations : [(Party, Decimal)]
+        offeredPrice : Decimal
+      controller customer
         do
           let
             allocate bidCid = do
@@ -66,17 +68,18 @@ template Service
           forA_ buildRequestCids (`exercise` BookBuilding.Delete)
           catOptionals <$> mapA allocate bidCids
 
-    controller provider can
-      nonconsuming CreateDeal : ContractId Deal
-        with
-          createDealRequestCid : ContractId CreateDealRequest
+    nonconsuming choice CreateDeal : ContractId Deal
+      with
+        createDealRequestCid : ContractId CreateDealRequest
+      controller provider
         do
           CreateDealRequest{..} <- fetchAndArchive createDealRequestCid
           create Deal with dealProvider = provider; issuer = customer; trancheIds = []; ..
 
-      nonconsuming AddTranche : (ContractId Deal, ContractId Tranche)
-        with
-          addTrancheRequestCid : ContractId AddTrancheRequest
+    nonconsuming choice AddTranche : (ContractId Deal, ContractId Tranche)
+      with
+        addTrancheRequestCid : ContractId AddTrancheRequest
+      controller provider
         do
           AddTrancheRequest{..} <- fetchAndArchive addTrancheRequestCid
           exerciseByKey @Deal (operator, customer, dealId) CreateTranche with ..
@@ -88,18 +91,20 @@ template Offer
     customer : Party
   where
     signatory operator, provider
-
-    controller customer can
-      Accept : ContractId Service
+    observer customer
+    
+    choice Accept : ContractId Service
+      controller customer
         do
           createOrLookup Service with ..
 
-      Decline : ()
+    choice Decline : ()
+      controller customer
         do
           return ()
 
-    controller provider can
-      Withdraw : ()
+    choice Withdraw : ()
+      controller provider
         do pure ()
 
 template Request
@@ -110,12 +115,12 @@ template Request
     signatory customer
     observer provider
 
-    controller customer can
-      Cancel : ()
+    choice Cancel : ()
+      controller customer
         do pure ()
 
-    controller provider can
-      Reject : ()
+    choice Reject : ()
+      controller provider
         do pure ()
 
     choice Approve : ContractId Service

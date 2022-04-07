@@ -21,43 +21,44 @@ template Service
     key (operator, provider, customer) : (Party, Party, Party)
     maintainer key._1
 
-    controller customer can
-
-      nonconsuming RequestOpenAccount : ContractId Custody.OpenAccountRequest
-        with
-          label : Text
+    nonconsuming choice RequestOpenAccount : ContractId Custody.OpenAccountRequest
+      with
+        label : Text
+      controller customer
         do
           assertMsg "Account label cannot be empty" $ label /= ""
           create Custody.OpenAccountRequest with ..
 
-      nonconsuming RequestDeposit : ContractId Custody.DepositRequest
-        with
-          asset : Asset
-          account : Account
-          depositChannel: Custody.Channel
+    nonconsuming choice RequestDeposit : ContractId Custody.DepositRequest
+      with
+        asset : Asset
+        account : Account
+        depositChannel: Custody.Channel
+      controller customer
         do
           create Custody.DepositRequest with ..
 
-      nonconsuming RequestWithdrawal : ContractId Custody.WithdrawalRequest
-        with
-          depositCid : ContractId AssetDeposit
-          withdrawalChannel: Custody.Channel
+    nonconsuming choice RequestWithdrawal : ContractId Custody.WithdrawalRequest
+      with
+        depositCid : ContractId AssetDeposit
+        withdrawalChannel: Custody.Channel
+      controller customer
         do
           create Custody.WithdrawalRequest with ..
 
-    controller provider can
-
-      nonconsuming OpenAccount : ContractId Custody.AccountInfo
-        with
-          requestCid : ContractId Custody.OpenAccountRequest
+    nonconsuming choice OpenAccount : ContractId Custody.AccountInfo
+      with
+        requestCid : ContractId Custody.OpenAccountRequest
+      controller provider
         do
           Custody.OpenAccountRequest{label} <- fetchAndArchive requestCid
           let account = Account with id = (Id with signatories = fromList [provider, customer]; label; version = 0); provider; owner = customer
           create Custody.AccountInfo with operator; account
 
-      nonconsuming CloseAccount : ()
-        with
-          requestCid : ContractId Custody.CloseAccountRequest
+    nonconsuming choice CloseAccount : ()
+      with
+        requestCid : ContractId Custody.CloseAccountRequest
+      controller provider
         do
           Custody.CloseAccountRequest{accountInfoCid, settlementInfoCid} <- fetchAndArchive requestCid
           accountInfo <- fetch accountInfoCid
@@ -69,26 +70,29 @@ template Service
           assertMsg "Cannot close account used as securities settlement account" $ notElem accountInfo.account (M.values settlementInfo.securitiesAccounts)
           archive accountInfoCid
 
-      nonconsuming Deposit : ContractId AssetDeposit
-        with
-          depositRequestCid : ContractId Custody.DepositRequest
+    nonconsuming choice Deposit : ContractId AssetDeposit
+      with
+        depositRequestCid : ContractId Custody.DepositRequest
+      controller provider
         do
           Custody.DepositRequest{asset, account, depositChannel} <- fetchAndArchive depositRequestCid
           assertMsg "only handle onledger deposit request" (depositChannel == Custody.ONLEDGER)
           create AssetDeposit with asset; account; lockers = empty; observers = empty --fromList [ issuer ]
 
-      nonconsuming ExternalDeposit : (ContractId AssetDeposit, ContractId Custody.DepositConfirmed)
-        with
-          depositRequestAcknowledgedCid:  ContractId Custody.DepositRequestAcknowledged
+    nonconsuming choice ExternalDeposit : (ContractId AssetDeposit, ContractId Custody.DepositConfirmed)
+      with
+        depositRequestAcknowledgedCid:  ContractId Custody.DepositRequestAcknowledged
+      controller provider
         do
           Custody.DepositRequestAcknowledged{asset, account, depositChannel, referenceId} <- fetchAndArchive depositRequestAcknowledgedCid
           assetDepsositCid <- create AssetDeposit with asset; account; lockers = empty; observers = empty
           confirmedCid <- create Custody.DepositConfirmed with ..
           return (assetDepsositCid, confirmedCid)
 
-      nonconsuming Withdrawal : ()
-        with
-          withdrawalRequestCid : ContractId Custody.WithdrawalRequest
+    nonconsuming choice Withdrawal : ()
+      with
+        withdrawalRequestCid : ContractId Custody.WithdrawalRequest
+      controller provider
         do
           Custody.WithdrawalRequest{depositCid, withdrawalChannel} <- fetchAndArchive withdrawalRequestCid
           assertMsg "only handle onledger deposit request" (withdrawalChannel == Custody.ONLEDGER)
@@ -97,9 +101,10 @@ template Service
 
           archive depositCid
 
-      nonconsuming ExternalWithdrawal : ContractId Custody.WithdrawalConfirmed
-        with
-          withdrawalRequestAcknowledgedCid : ContractId Custody.WithdrawalRequestAcknowledged
+    nonconsuming choice ExternalWithdrawal : ContractId Custody.WithdrawalConfirmed
+      with
+        withdrawalRequestAcknowledgedCid : ContractId Custody.WithdrawalRequestAcknowledged
+      controller provider
         do
           Custody.WithdrawalRequestAcknowledged{depositCid, referenceId, withdrawalChannel} <- fetchAndArchive withdrawalRequestAcknowledgedCid
           deposit <- fetch depositCid
@@ -123,18 +128,20 @@ template Offer
     customer : Party
   where
     signatory operator, provider
+    observer customer
 
-    controller customer can
-      Accept : ContractId Service
+    choice Accept : ContractId Service
+      controller customer
         do
           let account = createAccount provider customer
           createOrLookup Service with ..
 
-      Decline : ()
+    choice Decline : ()
+      controller customer
         do pure ()
 
-    controller provider can
-      Withdraw : ()
+    choice Withdraw : ()
+      controller provider
         do pure ()
 
 template Request
@@ -145,12 +152,12 @@ template Request
     signatory customer
     observer provider
 
-    controller customer can
-      Cancel : ()
+    choice Cancel : ()
+      controller customer
         do pure ()
 
-    controller provider can
-      Reject : ()
+    choice Reject : ()
+      controller provider
         do pure ()
 
     choice Approve : ContractId Service

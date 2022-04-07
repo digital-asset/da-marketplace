@@ -21,22 +21,24 @@ template MemberStanding
     key (provider, customer) : (Party, Party)
     maintainer key._1
 
-    controller provider can
-      MemberStanding_UpdateMargin : ContractId MemberStanding
-        with
-          newMarginSatisfied : Bool
+    choice MemberStanding_UpdateMargin : ContractId MemberStanding
+      with
+        newMarginSatisfied : Bool
+      controller provider
         do
           create this with marginSatisfied = newMarginSatisfied
 
-      MemberStanding_UpdateMTM : ContractId MemberStanding
-        with
-          newMtmSatisied : Bool
+    choice MemberStanding_UpdateMTM : ContractId MemberStanding
+      with
+        newMtmSatisied : Bool
+      controller provider
         do
           create this with mtmSatisfied = newMtmSatisied
 
-      MemberStanding_AddObservers : ContractId MemberStanding
-        with
-          newObservers : Set Party
+    choice MemberStanding_AddObservers : ContractId MemberStanding
+      with
+        newObservers : Set Party
+      controller provider
         do
           create this with observers = observers <> newObservers
 
@@ -58,16 +60,17 @@ template MarginCalculation
     key (provider, customer, calculationId) : (Party, Party, Text)
     maintainer key._1
 
-    controller provider can
-      MarginCalculation_Resolve : ContractId FulfilledMarginCalculation
-        with
-          note : Text
+    choice MarginCalculation_Resolve : ContractId FulfilledMarginCalculation
+      with
+        note : Text
+      controller provider
         do
           create FulfilledMarginCalculation with calculation = this; ..
 
-      MarginCalculation_Reject : ContractId RejectedMarginCalculation
-        with
-          note : Text
+    choice MarginCalculation_Reject : ContractId RejectedMarginCalculation
+      with
+        note : Text
+      controller provider
         do
           create RejectedMarginCalculation with calculation = this; ..
 
@@ -99,8 +102,8 @@ template RejectedMarginCalculation
     key (provider, customer, calculation.calculationId) : (Party, Party, Text)
     maintainer key._1
 
-    controller provider can
-      RejectedMarginCalculation_Cancel : ()
+    choice RejectedMarginCalculation_Cancel : ()
+      controller provider
         do return ()
 
 template MarkToMarketCalculation
@@ -119,16 +122,17 @@ template MarkToMarketCalculation
     key (provider, customer, calculationId) : (Party, Party, Text)
     maintainer key._1
 
-    controller customer can
-      MarkToMarketCalculation_Resolve : ContractId FulfilledMarkToMarketCalculation
-        with
-          note : Text
+    choice MarkToMarketCalculation_Resolve : ContractId FulfilledMarkToMarketCalculation
+      with
+        note : Text
+      controller customer
         do
           create FulfilledMarkToMarketCalculation with calculation = this, ..
 
-      MarkToMarketCalculation_Reject : ContractId RejectedMarkToMarketCalculation
-        with
-          note : Text
+    choice MarkToMarketCalculation_Reject : ContractId RejectedMarkToMarketCalculation
+      with
+        note : Text
+      controller customer
         do
           create RejectedMarkToMarketCalculation with calculation = this, ..
 
@@ -144,8 +148,8 @@ template RejectedMarkToMarketCalculation
     key (provider, customer, calculation.calculationId) : (Party, Party, Text)
     maintainer key._1
 
-    controller provider can
-      RejectedMarkToMarketCalculation_Cancel : ()
+    choice RejectedMarkToMarketCalculation_Cancel : ()
+      controller provider
         do return ()
 
 template FulfilledMarkToMarketCalculation
@@ -174,8 +178,8 @@ template ClearedTrade
     signatory provider
     observer clearinghouse
 
-    controller clearinghouse can
-      ClearedTrade_Novate : (ContractId ClearedTradeSide, ContractId ClearedTradeSide)
+    choice ClearedTrade_Novate : (ContractId ClearedTradeSide, ContractId ClearedTradeSide)
+      controller clearinghouse
         do
           timeNovated <- getTime
 

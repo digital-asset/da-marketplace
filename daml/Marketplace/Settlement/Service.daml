@@ -18,10 +18,10 @@ template Service
     key (operator, provider) : (Party, Party)
     maintainer key._1
 
-    controller provider can
-      nonconsuming SettleInstruction : [ContractId AssetDeposit]
-        with
-          settlementInstructionCid : ContractId SettlementInstruction
+    nonconsuming choice SettleInstruction : [ContractId AssetDeposit]
+      with
+        settlementInstructionCid : ContractId SettlementInstruction
+      controller provider
         do
           exercise settlementInstructionCid Settle
 
@@ -39,13 +39,15 @@ template Offer
     provider : Party
   where
     signatory operator
+    observer provider
 
-    controller provider can
-      Accept : ContractId Service
+    choice Accept : ContractId Service
+      controller provider
         do
           createOrLookup Service with ..
 
-      Decline : ()
+    choice Decline : ()
+      controller provider
         do
           return ()
 
@@ -55,12 +57,14 @@ template Request
     operator : Party
   where
     signatory provider
+    observer operator
 
-    controller operator can
-      Approve : ContractId Service
+    choice Approve : ContractId Service
+      controller operator
         do
           createOrLookup Service with ..
 
-      Reject : ()
+    choice Reject : ()
+      controller operator
         do
           return ()

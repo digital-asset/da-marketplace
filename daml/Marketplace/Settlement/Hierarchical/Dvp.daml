@@ -26,8 +26,8 @@ template Dvp
     key (operator, settlementId) : (Party, Text)
     maintainer key._1
 
-    controller agent can
-      SettleDvp : (ContractId Dvp, [ContractId AssetDeposit])
+    choice SettleDvp : (ContractId Dvp, [ContractId AssetDeposit])
+      controller agent
         do
           let
             settle (instructionId : Text) = do

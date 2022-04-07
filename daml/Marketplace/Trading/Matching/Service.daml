@@ -23,10 +23,10 @@ template Service
     key provider : Party
     maintainer key
 
-    controller provider can
-      nonconsuming MatchOrders : MatchResult
-        with
-          execution : Order.Execution
+    nonconsuming choice MatchOrders : MatchResult
+      with
+        execution : Order.Execution
+      controller provider
         do
           [(makerOrderCid, makerOrder), (takerOrderCid, takerOrder)] <- forA [execution.makerOrderId, execution.takerOrderId] (\orderId -> fetchByKey @Order.T (provider, orderId))
 
@@ -61,13 +61,15 @@ template Offer
     provider : Party
   where
     signatory operator
+    observer provider
 
-    controller provider can
-      Accept : ContractId Service
+    choice Accept : ContractId Service
+      controller provider
         do
           createOrLookup Service with ..
 
-      Decline : ()
+    choice Decline : ()
+      controller provider
         do
           return ()
 
@@ -77,12 +79,14 @@ template Request
     operator : Party
   where
     signatory provider
+    observer operator
 
-    controller operator can
-      Approve : ContractId Service
+    choice Approve : ContractId Service
+      controller operator
         do
           createOrLookup Service with ..
 
-      Reject : ()
+    choice Reject : ()
+      controller operator
         do
           return ()

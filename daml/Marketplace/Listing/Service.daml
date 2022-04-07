@@ -21,20 +21,20 @@ template Service
     key (operator, provider, customer) : (Party, Party, Party)
     maintainer key._1
 
-    controller customer can
-      nonconsuming RequestCreateListing : ContractId CreateListingRequest
-        with
-          listingType : ListingTypeRequest
-          symbol : Text
-          calendarId : Text
-          description : Text
-          tradedAssetId : Id
-          quotedAssetId : Id
-          tradedAssetPrecision : Int
-          quotedAssetPrecision : Int
-          minimumTradableQuantity : Decimal
-          maximumTradableQuantity : Decimal
-          observers : [Party]
+    nonconsuming choice RequestCreateListing : ContractId CreateListingRequest
+      with
+        listingType : ListingTypeRequest
+        symbol : Text
+        calendarId : Text
+        description : Text
+        tradedAssetId : Id
+        quotedAssetId : Id
+        tradedAssetPrecision : Int
+        quotedAssetPrecision : Int
+        minimumTradableQuantity : Decimal
+        maximumTradableQuantity : Decimal
+        observers : [Party]
+      controller customer
         do
           listingType <- case listingType of
             CollateralizedRequest -> return Collateralized
@@ -42,28 +42,30 @@ template Service
 
           create CreateListingRequest with status = Active; observers = Set.fromList observers; ..
 
-      nonconsuming RequestDisableListing : ContractId DisableListingRequest
-        with
-          listingCid : ContractId Listing
+    nonconsuming choice RequestDisableListing : ContractId DisableListingRequest
+      with
+        listingCid : ContractId Listing
+      controller customer
         do
           create DisableListingRequest with ..
 
-    controller provider can
-      nonconsuming CreateListing : ContractId Listing
-        with
-          createListingRequestCid : ContractId CreateListingRequest
-          providerId : Text
+    nonconsuming choice CreateListing : ContractId Listing
+      with
+        createListingRequestCid : ContractId CreateListingRequest
+        providerId : Text
+      controller provider
         do
           CreateListingRequest{..} <- fetch createListingRequestCid
           archive createListingRequestCid
           create Listing with listingId = symbol; ..
 
-      nonconsuming ListingFailure : ContractId FailedListingCreation
-        with
-          createListingRequestCid : ContractId CreateListingRequest
-          message : Text
-          name : Text
-          code : Text
+    nonconsuming choice ListingFailure : ContractId FailedListingCreation
+      with
+        createListingRequestCid : ContractId CreateListingRequest
+        message : Text
+        name : Text
+        code : Text
+      controller provider
         do
           CreateListingRequest{..} <- fetch createListingRequestCid
           archive createListingRequestCid
@@ -71,9 +73,10 @@ template Service
           let error = Error.Error with message = name <> " : " <> message, ..
           create FailedListingCreation with ..
 
-      nonconsuming DisableListing : ContractId Listing
-        with
-          disableListingRequestCid : ContractId DisableListingRequest
+    nonconsuming choice DisableListing : ContractId Listing
+      with
+        disableListingRequestCid : ContractId DisableListingRequest
+      controller provider
         do
           DisableListingRequest{..} <- fetch disableListingRequestCid
           archive disableListingRequestCid
@@ -96,17 +99,19 @@ template Offer
     customer : Party
   where
     signatory operator, provider
+    observer customer
 
-    controller customer can
-      Accept : ContractId Service
+    choice Accept : ContractId Service
+      controller customer
         do
           createOrLookup Service with ..
 
-      Decline : ()
+    choice Decline : ()
+      controller customer
         do pure ()
 
-    controller provider can
-      Withdraw : ()
+    choice Withdraw : ()
+      controller provider
         do pure ()
 
 template Request
@@ -117,12 +122,12 @@ template Request
     signatory customer
     observer provider
 
-    controller customer can
-      Cancel : ()
+    choice Cancel : ()
+      controller customer
         do pure ()
 
-    controller provider can
-      Reject : ()
+    choice Reject : ()
+      controller provider
         do pure ()
 
     choice Approve : ContractId Service
@@ -157,18 +162,19 @@ template CreateListingRequest
 
     let serviceKey = (operator, provider, customer)
 
-    controller provider can
-      nonconsuming ListingRequestSuccess : ContractId Listing
-        with
-          providerId : Text
+    nonconsuming choice ListingRequestSuccess : ContractId Listing
+      with
+        providerId : Text
+      controller provider
         do
           exerciseByKey @Service serviceKey CreateListing with createListingRequestCid = self, ..
 
-      nonconsuming ListingRequestFailure : ContractId FailedListingCreation
-        with
-          message : Text
-          name : Text
-          code : Text
+    nonconsuming choice ListingRequestFailure : ContractId FailedListingCreation
+      with
+        message : Text
+        name : Text
+        code : Text
+      controller provider
         do
           exerciseByKey @Service serviceKey ListingFailure with createListingRequestCid = self, ..
 

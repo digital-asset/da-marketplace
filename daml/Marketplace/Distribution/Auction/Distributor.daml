@@ -17,45 +17,50 @@ template Role
     key (operator, provider) :  (Party, Party)
     maintainer key._1
 
-    controller provider can
-      nonconsuming OfferAuctionService : ContractId Auction.Offer
-        with
-          customer : Party
+    nonconsuming choice OfferAuctionService : ContractId Auction.Offer
+      with
+        customer : Party
+      controller provider
         do
           create Auction.Offer with ..
 
-      nonconsuming ApproveAuctionServiceRequest : ContractId Auction.Service
-        with
-          auctionServiceRequestCid : ContractId Auction.Request
+    nonconsuming choice ApproveAuctionServiceRequest : ContractId Auction.Service
+      with
+        auctionServiceRequestCid : ContractId Auction.Request
+      controller provider
         do
           exercise auctionServiceRequestCid Auction.Approve with ..
 
-      nonconsuming TerminateAuctionService : ()
-        with
-          auctionServiceCid : ContractId Auction.Service
+    nonconsuming choice TerminateAuctionService : ()
+      with
+        auctionServiceCid : ContractId Auction.Service
+      controller provider
         do
           archive auctionServiceCid
 
-      nonconsuming OfferBiddingService : ContractId Bidding.Offer
-        with
-          customer : Party
+    nonconsuming choice OfferBiddingService : ContractId Bidding.Offer
+      with
+        customer : Party
+      controller provider
         do
           create Bidding.Offer with ..
 
-      nonconsuming ApproveBiddingServiceRequest : ContractId Bidding.Service
-        with
-          biddingServiceRequestCid : ContractId Bidding.Request
+    nonconsuming choice ApproveBiddingServiceRequest : ContractId Bidding.Service
+      with
+        biddingServiceRequestCid : ContractId Bidding.Request
+      controller provider
         do
           exercise biddingServiceRequestCid Bidding.Approve with ..
 
-      nonconsuming TerminateBiddingService : ()
-        with
-          biddingServiceCid : ContractId Bidding.Service
+    nonconsuming choice TerminateBiddingService : ()
+      with
+        biddingServiceCid : ContractId Bidding.Service
+      controller provider
         do
           archive biddingServiceCid
 
-    controller operator can
-      TerminateRole : ()
+    choice TerminateRole : ()
+      controller operator
         do
           return ()
 
@@ -66,13 +71,15 @@ template Offer
     observers : Set Party
   where
     signatory operator
+    observer provider
 
-    controller provider can
-      Accept : ContractId Role
+    choice Accept : ContractId Role
+      controller provider
         do
           createOrLookup Role with ..
 
-      Decline : ()
+    choice Decline : ()
+      controller provider
         do
           return ()
 
@@ -82,14 +89,16 @@ template Request
     operator : Party
   where
     signatory provider
+    observer operator
 
-    controller operator can
-      Approve : ContractId Role
-        with
-          observers : Set Party
+    choice Approve : ContractId Role
+      with
+        observers : Set Party
+      controller operator
         do
           createOrLookup Role with ..
 
-      Reject : ()
+    choice Reject : ()
+      controller operator
         do
           return ()

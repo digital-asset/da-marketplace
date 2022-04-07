@@ -111,10 +111,10 @@ template DepositRequest
   where
     signatory operator, provider, customer
 
-    controller provider can
-      AckExternalDepositRequest: ContractId DepositRequestAcknowledged
-        with
-          referenceId: Text
+    choice AckExternalDepositRequest: ContractId DepositRequestAcknowledged
+      with
+        referenceId: Text
+      controller provider
         do
           assertMsg "only off-ledger request required acknowledge" (depositChannel /= ONLEDGER)
           create DepositRequestAcknowledged with ..
@@ -154,10 +154,10 @@ template WithdrawalRequest
     signatory operator, provider, customer
 
 
-    controller provider can
-      AckExternalWithdrawRequest: ContractId WithdrawalRequestAcknowledged
-        with
-          referenceId: Text
+    choice AckExternalWithdrawRequest: ContractId WithdrawalRequestAcknowledged
+      with
+        referenceId: Text
+      controller provider
         do
           assertMsg "only off-ledger request required acknowledge" (withdrawalChannel /= ONLEDGER)
           create WithdrawalRequestAcknowledged with ..

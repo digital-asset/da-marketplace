@@ -23,7 +23,7 @@ template SettlementInstruction
         receivers = map (.receiverAccount.owner) details
     signatory fromList $ [operator, provider] <> senders <> receivers
 
-    controller provider can
-      Settle : [ContractId AssetDeposit]
+    choice Settle : [ContractId AssetDeposit]
+      controller provider
         do
           forA details (\settlementDetails -> exercise settlementDetails.depositCid $ AssetDeposit_Transfer settlementDetails.receiverAccount)

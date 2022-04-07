@@ -15,28 +15,29 @@ template Role
     key (operator, provider) :  (Party, Party)
     maintainer key._1
 
-    controller provider can
-
-      nonconsuming OfferRegulatorService : ContractId Regulator.Offer
-        with
-          customer : Party
+    nonconsuming choice OfferRegulatorService : ContractId Regulator.Offer
+      with
+        customer : Party
+      controller provider
         do
           create Regulator.Offer with ..
 
-      nonconsuming ApproveRegulatorRequest : ContractId Regulator.Service
-        with
-          regulatorRequestCid : ContractId Regulator.Request
+    nonconsuming choice ApproveRegulatorRequest : ContractId Regulator.Service
+      with
+        regulatorRequestCid : ContractId Regulator.Request
+      controller provider
         do
           exercise regulatorRequestCid Regulator.Approve with ..
 
-      nonconsuming TerminateRegulatorService : ()
-        with
-          regulatorServiceCid : ContractId Regulator.Service
+    nonconsuming choice TerminateRegulatorService : ()
+      with
+        regulatorServiceCid : ContractId Regulator.Service
+      controller provider
         do
           archive regulatorServiceCid
 
-    controller operator can
-      TerminateRole : ()
+    choice TerminateRole : ()
+      controller operator
         do
           return ()
 
@@ -47,13 +48,15 @@ template Offer
     observers : Set Party
   where
     signatory operator
+    observer provider
 
-    controller provider can
-      Accept : ContractId Role
+    choice Accept : ContractId Role
+      controller provider
         do
           createOrLookup Role with ..
 
-      Decline : ()
+    choice Decline : ()
+      controller provider
         do
           return ()
 
@@ -63,14 +66,16 @@ template Request
     operator : Party
   where
     signatory provider
+    observer operator
 
-    controller operator can
-      Approve : ContractId Role
-        with
-          observers : Set Party
+    choice Approve : ContractId Role
+      with
+        observers : Set Party
+      controller operator
         do
           createOrLookup Role with ..
 
-      Reject : ()
+    choice Reject : ()
+      controller operator
         do
           return ()
