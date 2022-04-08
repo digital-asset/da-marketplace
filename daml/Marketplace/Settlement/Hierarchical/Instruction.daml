@@ -25,10 +25,10 @@ template Instruction
     key (operator, settlementId, instructionId) : (Party, Text, Text)
     maintainer key._1
 
-    controller sender can
-      Allocate : ContractId Instruction
-        with
-          settlementDepositCid : ContractId AssetDeposit
+    choice Allocate : ContractId Instruction
+      with
+        settlementDepositCid : ContractId AssetDeposit
+      controller sender
         do
           deposit <- fetch settlementDepositCid
           deposit.asset === asset
@@ -36,14 +36,19 @@ template Instruction
           depositCid <- Some <$> exercise settlementDepositCid AssetDeposit_SetObservers with newObservers = fromList [agent]
           create this with depositCid; signed = sender :: signed
 
-    controller receiver can
-      Sign : ContractId Instruction
+    choice Sign : ContractId Instruction
+      controller receiver
         do
           create this with signed = receiver :: signed
 
-    controller operator, agent can
-      SettleInstruction : ContractId AssetDeposit
+    choice SettleInstruction : ContractId AssetDeposit
+      controller operator, agent
         do
           case depositCid of
             Some cid -> exercise cid AssetDeposit_Transfer with receiverAccount
             None -> fail $ "Instruction [" <> instructionId <> "] of settlement [ " <> settlementId <> " ] is not allocated"
+
+    choice CancelInstruction : ()
+      controller operator
+        do 
+          pure ()

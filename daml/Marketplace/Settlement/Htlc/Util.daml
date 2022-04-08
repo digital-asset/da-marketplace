@@ -8,7 +8,7 @@ import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Settlement.Htlc.Instruction qualified as Instruction
 import Marketplace.Settlement.Hierarchical.Util (getAccount)
 
-data HtlcState = Locked | Settled | Refunded
+data HtlcState = Locked | Settled | Refunded | Cancelled
   deriving (Eq, Show)
 
 createInstructionsHtlc : Bool -> Party -> Party -> Party -> Account -> Party -> Account -> Text -> Int -> Asset -> Text -> Time -> Update [ContractId Instruction.T]

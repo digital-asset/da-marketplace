@@ -30,10 +30,10 @@ template Dvp
     key (operator, settlementId) : (Party, Text)
     maintainer key._1
 
-    controller payerAgent can
-      SettleDvp : (ContractId Dvp, [ContractId AssetDeposit])
-        with
-          secret : Text
+    choice SettleDvp : (ContractId Dvp, [ContractId AssetDeposit])
+      with
+        secret : Text
+      controller payerAgent
         do
           time <- getTime
           assertMsg "Time lock has expired" (time < expiry)
@@ -51,8 +51,8 @@ template Dvp
           tradeCid <- create this with status = Settled
           pure (tradeCid, adCids)
 
-    controller delivererAgent can
-      Refund : (ContractId Dvp, [ContractId AssetDeposit])
+    choice Refund : (ContractId Dvp, [ContractId AssetDeposit])
+      controller delivererAgent
         do
           time <- getTime
           assertMsg "Time lock has not expired" (time >= expiry)
@@ -68,3 +68,10 @@ template Dvp
           adCids <- mapA refund instructionIds
           deliveryCid <- create this with status = Refunded
           pure (deliveryCid, adCids)
+
+    choice CancelDvp : ContractId Dvp
+      controller operator
+      do
+        create this with status = Cancelled
+        
+        

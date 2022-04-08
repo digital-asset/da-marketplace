@@ -114,11 +114,11 @@ template FeeSchedule
     maintainer key._2
     observer observers
 
-    controller provider can
-      UpdateFeeSchedule : ContractId FeeSchedule
-        with
-          amount : Decimal
-          currency : Id
+    choice UpdateFeeSchedule : ContractId FeeSchedule
+      with
+        amount : Decimal
+        currency : Id
+      controller provider
         do
           timeInEffect <- getTime
           let newFee = Fee with ..

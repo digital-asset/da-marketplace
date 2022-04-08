@@ -31,10 +31,10 @@ template Instruction
     key (operator, settlementId, instructionId) : (Party, Text, Text)
     maintainer key._1
 
-    controller sender can
-      Allocate : ContractId Instruction
-        with
-          settlementDepositCid : ContractId AssetDeposit
+    choice Allocate : ContractId Instruction
+      with
+        settlementDepositCid : ContractId AssetDeposit
+      controller sender
         do
           deposit <- fetch settlementDepositCid
           deposit.asset === asset
@@ -43,7 +43,8 @@ template Instruction
           depositCid <- Some <$> exercise depositCid AssetDeposit_SetObservers with newObservers = fromList [receiverAgent]
           create this with depositCid; signed = sender :: signed
 
-      RefundInstruction : ContractId AssetDeposit
+    choice RefundInstruction : ContractId AssetDeposit
+      controller sender
         do
           time <- getTime
           assertMsg "Time lock has not expired" (time >= expiry)
@@ -52,15 +53,15 @@ template Instruction
               exercise cid AssetDeposit_Unlock
             None -> fail $ "Instruction [" <> instructionId <> "] of settlement [ " <> settlementId <> " ] is not allocated"
 
-    controller receiver can
-      Sign : ContractId Instruction
+    choice Sign : ContractId Instruction
+      controller receiver
         do
           create this with signed = receiver :: signed
 
-    controller operator, receiverAgent can
-      SettleInstruction : ContractId AssetDeposit
-        with
-          secret : Text
+    choice SettleInstruction : ContractId AssetDeposit
+      with
+        secret : Text
+      controller operator, receiverAgent
         do
           time <- getTime
           assertMsg "Expired" (time < expiry)

@@ -20,15 +20,15 @@ template Service
     key (operator, provider, customer) : (Party, Party, Party)
     maintainer key._1
 
-    controller customer can
-      nonconsuming SubmitBid : ContractId Bidding.Bid
-        with
-          auctionCid : ContractId Bidding.Auction
-          price : Decimal
-          quantity : Decimal
-          depositCid : ContractId AssetDeposit
-          receivableAccount : Account
-          allowPublishing : Bool
+    nonconsuming choice SubmitBid : ContractId Bidding.Bid
+      with
+        auctionCid : ContractId Bidding.Auction
+        price : Decimal
+        quantity : Decimal
+        depositCid : ContractId AssetDeposit
+        receivableAccount : Account
+        allowPublishing : Bool
+      controller customer
         do
           -- TODO: Check for parallism of this choice
           Bidding.Auction{asset; issuer; auctionId; quotedAssetId} <- fetch auctionCid
@@ -47,14 +47,14 @@ template Service
               assetId = asset.id
               ..
 
-    controller provider can
-      nonconsuming RequestBid : ContractId Bidding.Auction
-        with
-          issuer : Party
-          auctionId : Text
-          asset : Asset
-          quotedAssetId : Id
-          publishedBidCids : [ContractId Bidding.Bid]
+    nonconsuming choice RequestBid : ContractId Bidding.Auction
+      with
+        issuer : Party
+        auctionId : Text
+        asset : Asset
+        quotedAssetId : Id
+        publishedBidCids : [ContractId Bidding.Bid]
+      controller provider
         do
           publishedBids <- mapA (\bidCid -> do
             bid <- fetch bidCid
@@ -63,12 +63,13 @@ template Service
             pure Bidding.PublishedBid with investor = bid.customer; auctionId = bid.auctionId; quantity = bid.details.quantity) publishedBidCids
           create Bidding.Auction with ..
 
-      nonconsuming ProcessAllocation : (ContractId Bidding.Bid, ContractId AssetDeposit)
-        with
-          bidCid : ContractId Bidding.Bid
-          quantity : Decimal
-          amount : Decimal
-          price : Decimal
+    nonconsuming choice ProcessAllocation : (ContractId Bidding.Bid, ContractId AssetDeposit)
+      with
+        bidCid : ContractId Bidding.Bid
+        quantity : Decimal
+        amount : Decimal
+        price : Decimal
+      controller provider
         do
           -- Fetch Bid -> Extract their deposit -> Split and return unused allocation (if necessary) to the investor -> Update Bid Status
           bid <- fetch bidCid
@@ -87,10 +88,11 @@ template Service
           newBidCid <- exercise bidCid Bidding.UpdateStatus with newStatus
           pure (newBidCid, bidDepositCid)
 
-      nonconsuming RejectAllocation : (ContractId Bidding.Bid, ContractId AssetDeposit)
-        with
-          bidCid : ContractId Bidding.Bid
-          newStatus : Bidding.Status
+    nonconsuming choice RejectAllocation : (ContractId Bidding.Bid, ContractId AssetDeposit)
+      with
+        bidCid : ContractId Bidding.Bid
+        newStatus : Bidding.Status
+      controller provider
         do
           bid <- fetch bidCid
 
@@ -114,18 +116,20 @@ template Offer
     customer : Party
   where
     signatory operator, provider
+    observer customer
 
-    controller customer can
-      Accept : ContractId Service
+    choice Accept : ContractId Service
+      controller customer
         do
           createOrLookup Service with ..
 
-      Decline : ()
+    choice Decline : ()
+      controller provider
         do
           return ()
 
-    controller provider can
-      Withdraw : ()
+    choice Withdraw : ()
+      controller provider
         do pure ()
 
 template Request
@@ -136,12 +140,12 @@ template Request
     signatory customer
     observer provider
 
-    controller customer can
-      Cancel : ()
+    choice Cancel : ()
+      controller customer
         do pure ()
 
-    controller provider can
-      Reject : ()
+    choice Reject : ()
+      controller provider
         do pure ()
 
     choice Approve : ContractId Service

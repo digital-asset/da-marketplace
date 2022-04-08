@@ -137,10 +137,9 @@ setSecuritiesAccountForParty : Party -> Party -> Party -> ContractId Custody.Acc
 setSecuritiesAccountForParty operator party beneficiary accountInfoCid = do
   submit party do exerciseByKeyCmd @Custody.SettlementInfo (operator, party) Custody.SetSecuritiesAccount with beneficiary; accountInfoCid
 
-originate : Party -> Party -> Party -> Party -> Text -> Claim Observation Date Decimal Id -> Script (ContractId AssetDescription, AssetDescription)
-originate operator provider customer public assetLabel claims = do
+originate : Party -> Party -> Party -> Party -> Text -> CFI.CFI -> Claim Observation Date Decimal Id -> Script (ContractId AssetDescription, AssetDescription)
+originate operator provider customer public assetLabel cfi claims = do
   let
-    cfi = CFI.other
     description = assetLabel
     observers = [public]
   createOriginationCid <- submit customer do exerciseByKeyCmd @Issuance.Service (operator, provider, customer) Issuance.RequestOrigination with claims = serialize claims; ..

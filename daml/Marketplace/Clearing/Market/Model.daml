@@ -14,8 +14,8 @@ template FairValueCalculationRequest
     upTo : Time
   where
     signatory operator, provider
-    controller provider can
-      FairValueCalculationRequest_Ack : ()
+    choice FairValueCalculationRequest_Ack : ()
+      controller provider
         do return ()
 
 template ManualFairValueCalculation
@@ -30,12 +30,13 @@ template ManualFairValueCalculation
     observers : Set Party
   where
     signatory operator, provider
+    observer exchange
     let exchange = customer
 
-    controller exchange can
-      ManualFairValueCalculation_Calculate : ContractId FairValue
-        with
-          price : Decimal
+    choice ManualFairValueCalculation_Calculate : ContractId FairValue
+      with
+        price : Decimal
+      controller exchange
         do
           timestamp <- getTime
           create FairValue with ..

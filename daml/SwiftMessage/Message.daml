@@ -7,6 +7,7 @@ import SwiftMessage.Model.MT544
 import SwiftMessage.Model.MT545
 import SwiftMessage.Model.MT546
 import SwiftMessage.Model.MT547
+import SwiftMessage.Model.MT548
 import SwiftMessage.Model.MT564
 import SwiftMessage.Model.MT566
 import DA.Set (Set)
@@ -17,13 +18,14 @@ data SwiftMessage =
     | MT545 (MT545Details)
     | MT546 (MT546Details)
     | MT547 (MT547Details)
+    | MT548 (MT548Details)
     | MT564 (MT564Details)
     | MT566 (MT566Details)
     | MT535 (MT535Details)
     | MT940 (MT940Details)
   deriving (Eq, Show)
 
-data SwiftMessageType = MT544_t | MT545_t | MT546_t | MT547_t | MT564_t | MT566_t | MT535_t | MT940_t
+data SwiftMessageType = MT544_t | MT545_t | MT546_t | MT547_t | MT548_sell_t | MT548_buy_t | MT564_t | MT566_t | MT535_t | MT940_t
   deriving (Eq, Show)
 
 
@@ -40,31 +42,32 @@ template SwiftOutboundMessage
     status : MessageStatus
   where 
     signatory provider
-    observer observers
+    observer observers, consumer
 
     key (provider, referenceId, swiftMessageType) : (Party, RefId, SwiftMessageType)
     maintainer key._1
 
-    controller consumer can
-      RespondSuccess : ContractId SwiftOutboundMessage
+    choice RespondSuccess : ContractId SwiftOutboundMessage
+      controller consumer
         do create this with status = Processed
 
-      RespondFailed : ContractId SwiftOutboundMessage
-        with failedMessage : String
+    choice RespondFailed : ContractId SwiftOutboundMessage
+      with failedMessage : String
+      controller consumer
           do create this with status = Failed failedMessage
     
-    controller observers can
-      Finalize : ContractId SwiftOutboundMessage
+    choice Finalize : ContractId SwiftOutboundMessage
+      controller observers
         do create this with status = Finalized
 
-    controller provider can
-      Cancel : ()
+    choice Cancel : ()
+      controller provider
         do pure ()
     
-    controller provider can
-      AddObservers : ContractId SwiftOutboundMessage
-        with 
-          newObserver : Set Party 
+    choice AddObservers : ContractId SwiftOutboundMessage
+      with 
+        newObserver : Set Party 
+      controller provider
             do create this with observers = newObserver <> observers 
 
 finalizeSwiftMessage k = do

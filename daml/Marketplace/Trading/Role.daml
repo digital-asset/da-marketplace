@@ -22,55 +22,60 @@ template Role
     key (operator, provider) : (Party, Party)
     maintainer key._1
 
-    controller provider can
-
-      nonconsuming OfferTradingService : ContractId Trading.Offer
-        with
-          customer : Party
+    nonconsuming choice OfferTradingService : ContractId Trading.Offer
+      with
+        customer : Party
+      controller provider
         do
           create Trading.Offer with ..
 
-      nonconsuming ApproveTradingServiceRequest : ContractId Trading.T
-        with
-          tradingRequestCid : ContractId Trading.Request
+    nonconsuming choice ApproveTradingServiceRequest : ContractId Trading.T
+      with
+        tradingRequestCid : ContractId Trading.Request
+      controller provider
         do
           exercise tradingRequestCid Trading.Approve with ..
 
-      nonconsuming TerminateTradingService : ()
-        with
-          tradingServiceCid : ContractId Trading.T
+    nonconsuming choice TerminateTradingService : ()
+      with
+        tradingServiceCid : ContractId Trading.T
+      controller provider
         do
           archive tradingServiceCid
 
-      nonconsuming OfferListingService : ContractId Listing.Offer
-        with
-          customer : Party
+    nonconsuming choice OfferListingService : ContractId Listing.Offer
+      with
+        customer : Party
+      controller provider
         do
           create Listing.Offer with ..
 
-      nonconsuming ApproveListingServiceRequest : ContractId Listing.Service
-        with
-          listingRequestCid : ContractId Listing.Request
+    nonconsuming choice ApproveListingServiceRequest : ContractId Listing.Service
+      with
+        listingRequestCid : ContractId Listing.Request
+      controller provider
         do
           exercise listingRequestCid Listing.Approve with ..
 
-      nonconsuming TerminateListingService : ()
-        with
-          listingServiceCid : ContractId Listing.Service
+    nonconsuming choice TerminateListingService : ()
+      with
+        listingServiceCid : ContractId Listing.Service
+      controller provider
         do
           archive listingServiceCid
 
-      nonconsuming CreateFeeSchedule : ContractId Model.FeeSchedule
-        with
-          currency : Id
-          feeAccount : Account
-          quantity : Decimal
+    nonconsuming choice CreateFeeSchedule : ContractId Model.FeeSchedule
+      with
+        currency : Id
+        feeAccount : Account
+        quantity : Decimal
+      controller provider
         do
           time <- getTime
           create Model.FeeSchedule with currentFee = Model.Fee quantity currency time; pastFees = []; ..
 
-    controller operator can
-      TerminateRole : ()
+    choice TerminateRole : ()
+      controller operator
         do
           return ()
 
@@ -81,9 +86,10 @@ template Offer
     observers : Set Party
   where
     signatory operator
+    observer provider
 
-    controller provider can
-      Accept : (ContractId Role, ContractId Matching.Service, ContractId Listing.Service, ContractId Settlement.Service)
+    choice Accept : (ContractId Role, ContractId Matching.Service, ContractId Listing.Service, ContractId Settlement.Service)
+      controller provider
         do
           matchingCid   <- createOrLookup Matching.Service with ..
           settlementCid <- createOrLookup Settlement.Service with ..
@@ -92,7 +98,8 @@ template Offer
 
           return (roleCid, matchingCid, listingCid, settlementCid)
 
-      Decline : ()
+    choice Decline : ()
+      controller provider
         do
           return ()
 
@@ -102,11 +109,12 @@ template Request
     operator : Party
   where
     signatory provider
+    observer operator
 
-    controller operator can
-      Approve : (ContractId Role, ContractId Matching.Service,ContractId Listing.Service,  ContractId Settlement.Service)
-        with
-          observers : Set Party
+    choice Approve : (ContractId Role, ContractId Matching.Service,ContractId Listing.Service,  ContractId Settlement.Service)
+      with
+        observers : Set Party
+      controller operator
         do
           matchingCid   <- createOrLookup Matching.Service with ..
           settlementCid <- createOrLookup Settlement.Service with ..
@@ -114,6 +122,7 @@ template Request
           roleCid       <- createOrLookup Role with ..
           return (roleCid, matchingCid, listingCid, settlementCid)
 
-      Reject : ()
+    choice Reject : ()
+      controller operator
         do
           return ()

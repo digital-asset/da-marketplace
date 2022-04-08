@@ -29,147 +29,170 @@ template Role
     key operator : Party
     maintainer key
 
-    controller operator can
-      nonconsuming OfferCustodianRole : ContractId Custodian.Offer
-        with
-          provider : Party
+    nonconsuming choice OfferCustodianRole : ContractId Custodian.Offer
+      with
+        provider : Party
+      controller operator
         do
           create Custodian.Offer with ..
 
-      nonconsuming ApproveCustodianRequest : (ContractId Custodian.Role, ContractId Custody.SettlementInfo)
-        with
-          requestCid : ContractId Custodian.Request
+    nonconsuming choice ApproveCustodianRequest : (ContractId Custodian.Role, ContractId Custody.SettlementInfo)
+      with
+        requestCid : ContractId Custodian.Request
+      controller operator
         do
           exercise requestCid Custodian.Approve with ..
 
-      nonconsuming OfferExchangeRole : ContractId Exchange.Offer
-        with
-          provider : Party
+    nonconsuming choice OfferExchangeRole : ContractId Exchange.Offer
+      with
+        provider : Party
+      controller operator
         do
           create Exchange.Offer with ..
 
-      nonconsuming ApproveExchangeRequest : (ContractId Exchange.Role, ContractId Matching.Service, ContractId Listing.Service, ContractId Settlement.Service)
-        with
-          requestCid : ContractId Exchange.Request
+    nonconsuming choice ApproveExchangeRequest : (ContractId Exchange.Role, ContractId Matching.Service, ContractId Listing.Service, ContractId Settlement.Service)
+      with
+        requestCid : ContractId Exchange.Request
+      controller operator
         do
           exercise requestCid Exchange.Approve with ..
 
-      nonconsuming OfferRegulatorRole: ContractId Regulator.Offer
-        with
-          provider : Party
+    nonconsuming choice OfferRegulatorRole: ContractId Regulator.Offer
+      with
+        provider : Party
+      controller operator
         do
           create Regulator.Offer with ..
 
-      nonconsuming ApproveRegulatorRequest : ContractId Regulator.Role
-        with
-          requestCid : ContractId Regulator.Request
+    nonconsuming choice ApproveRegulatorRequest : ContractId Regulator.Role
+      with
+        requestCid : ContractId Regulator.Request
+      controller operator
         do
           exercise requestCid Regulator.Approve with ..
 
-      nonconsuming OfferInvestorRole: ContractId Investor.Offer
-        with
-          investor : Party
+    nonconsuming choice OfferInvestorRole: ContractId Investor.Offer
+      with
+        investor : Party
+      controller operator
         do
           create Investor.Offer with ..
 
-      nonconsuming ApproveInvestorRequest : (ContractId Investor.Role, ContractId Custody.SettlementInfo)
-        with
-          requestCid : ContractId Investor.Request
+    nonconsuming choice ApproveInvestorRequest : (ContractId Investor.Role, ContractId Custody.SettlementInfo)
+      with
+        requestCid : ContractId Investor.Request
+      controller operator
         do
           exercise requestCid Investor.Approve
 
-      nonconsuming OfferIssuerRole: ContractId Issuer.Offer
-        with
-          issuer : Party
+    nonconsuming choice OfferIssuerRole: ContractId Issuer.Offer
+      with
+        issuer : Party
+      controller operator
         do
           create Issuer.Offer with ..
 
-      nonconsuming ApproveIssuerRequest : (ContractId Issuer.Role, ContractId Custody.SettlementInfo)
-        with
-          issuerRequestCid : ContractId Issuer.Request
+    nonconsuming choice ApproveIssuerRequest : (ContractId Issuer.Role, ContractId Custody.SettlementInfo)
+      with
+        issuerRequestCid : ContractId Issuer.Request
+      controller operator
         do
           exercise issuerRequestCid Issuer.Approve
 
-      nonconsuming OfferMatchingService : ContractId Matching.Offer
-        with
-          provider : Party
+    nonconsuming choice OfferMatchingService : ContractId Matching.Offer
+      with
+        provider : Party
+      controller operator
         do
           create Matching.Offer with ..
 
-      nonconsuming ApproveMatchingRequest : ContractId Matching.Service
-        with
-          requestCid : ContractId Matching.Request
+    nonconsuming choice ApproveMatchingRequest : ContractId Matching.Service
+      with
+        requestCid : ContractId Matching.Request
+      controller operator
         do
           exercise requestCid Matching.Approve
 
-      nonconsuming OfferSettlementService : ContractId Settlement.Offer
-        with
-          provider : Party
+    nonconsuming choice OfferSettlementService : ContractId Settlement.Offer
+      with
+        provider : Party
+      controller operator
         do
           create Settlement.Offer with ..
 
-      nonconsuming ApproveSettlementRequest : ContractId Settlement.Service
-        with
-          requestCid : ContractId Settlement.Request
+    nonconsuming choice ApproveSettlementRequest : ContractId Settlement.Service
+      with
+        requestCid : ContractId Settlement.Request
+      controller operator
         do
           exercise requestCid Settlement.Approve
 
-      nonconsuming OfferTradingService : ContractId Trading.Offer
-        with
-          customer : Party
+    nonconsuming choice OfferTradingService : ContractId Trading.Offer
+      with
+        customer : Party
+      controller operator
         do
           create Trading.Offer with provider = operator; ..
 
-      nonconsuming ApproveTradingRequest : ContractId Trading.Service
-        with
-          requestCid : ContractId Trading.Request
+    nonconsuming choice ApproveTradingRequest : ContractId Trading.Service
+      with
+        requestCid : ContractId Trading.Request
+      controller operator
         do
           exercise requestCid Trading.Approve with operator
 
-      nonconsuming OfferAuctionDistributorRole : ContractId AuctionDistributor.Offer
-        with
-          provider : Party
+    nonconsuming choice OfferAuctionDistributorRole : ContractId AuctionDistributor.Offer
+      with
+        provider : Party
+      controller operator
         do
           create AuctionDistributor.Offer with ..
 
-      nonconsuming ApproveAuctionDistributorRequest : ContractId AuctionDistributor.Role
-        with
-          requestCid : ContractId AuctionDistributor.Request
+    nonconsuming choice ApproveAuctionDistributorRequest : ContractId AuctionDistributor.Role
+      with
+        requestCid : ContractId AuctionDistributor.Request
+      controller operator
         do
           exercise requestCid AuctionDistributor.Approve with ..
 
-      nonconsuming OfferSyndicationDistributorRole : ContractId SyndicationDistributor.Offer
-        with
-          provider : Party
+    nonconsuming choice OfferSyndicationDistributorRole : ContractId SyndicationDistributor.Offer
+      with
+        provider : Party
+      controller operator
         do
           create SyndicationDistributor.Offer with ..
 
-      nonconsuming ApproveSyndicationDistributorRequest : ContractId SyndicationDistributor.Role
-        with
-          requestCid : ContractId SyndicationDistributor.Request
+    nonconsuming choice ApproveSyndicationDistributorRequest : ContractId SyndicationDistributor.Role
+      with
+        requestCid : ContractId SyndicationDistributor.Request
+      controller operator
         do
           exercise requestCid SyndicationDistributor.Approve
 
-      nonconsuming OfferSyndicationStructurerRole : ContractId SyndicationStructurer.Offer
-        with
-          provider : Party
+    nonconsuming choice OfferSyndicationStructurerRole : ContractId SyndicationStructurer.Offer
+      with
+        provider : Party
+      controller operator
         do
           create SyndicationStructurer.Offer with ..
 
-      nonconsuming ApproveSyndicationStructurerRequest : ContractId SyndicationStructurer.Role
-        with
-          requestCid : ContractId SyndicationStructurer.Request
+    nonconsuming choice ApproveSyndicationStructurerRequest : ContractId SyndicationStructurer.Role
+      with
+        requestCid : ContractId SyndicationStructurer.Request
+      controller operator
         do
           exercise requestCid SyndicationStructurer.Approve
 
-      nonconsuming OfferClearingRole : ContractId Clearing.Offer
-        with
-          provider : Party
+    nonconsuming choice OfferClearingRole : ContractId Clearing.Offer
+      with
+        provider : Party
+      controller operator
         do
           create Clearing.Offer with ..
 
-      nonconsuming ApproveClearingRequest : (ContractId Clearing.Role, ContractId Market.Service)
-        with
-          requestCid : ContractId Clearing.Request
+    nonconsuming choice ApproveClearingRequest : (ContractId Clearing.Role, ContractId Market.Service)
+      with
+        requestCid : ContractId Clearing.Request
+      controller operator
         do
           exercise requestCid Clearing.Approve with ..

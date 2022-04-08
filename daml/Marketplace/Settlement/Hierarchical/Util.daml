@@ -13,6 +13,7 @@ data SettlementMode = Dvp | Fop | Htlc deriving (Eq, Show)
 data Status =
   Instructed
   | Settled
+  | Cancelled
   deriving (Eq, Show)
 
 createInstructions : Bool -> Party -> Party -> Party -> Account -> Account -> Text -> Int -> Asset -> Update [ContractId Instruction]

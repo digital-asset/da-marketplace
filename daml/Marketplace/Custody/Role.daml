@@ -18,58 +18,64 @@ template Role
     key (operator, provider) :  (Party, Party)
     maintainer key._1
 
-    controller provider can
-
-      nonconsuming OfferCustodyService : ContractId Custody.Offer
-        with
-          customer : Party
+    nonconsuming choice OfferCustodyService : ContractId Custody.Offer
+      with
+        customer : Party
+      controller provider
         do
           create Custody.Offer with ..
 
-      nonconsuming ApproveCustodyRequest : ContractId Custody.Service
-        with
-          custodyRequestCid : ContractId Custody.Request
+    nonconsuming choice ApproveCustodyRequest : ContractId Custody.Service
+      with
+        custodyRequestCid : ContractId Custody.Request
+      controller provider
         do
           exercise custodyRequestCid Custody.Approve with ..
 
-      nonconsuming TerminateCustodyService : ()
-        with
-          custodyServiceCid : ContractId Custody.Service
+    nonconsuming choice TerminateCustodyService : ()
+      with
+        custodyServiceCid : ContractId Custody.Service
+      controller provider
         do
           archive custodyServiceCid
 
-      nonconsuming OfferIssuanceService : ContractId Issuance.Offer
-        with
-          customer : Party
+    nonconsuming choice OfferIssuanceService : ContractId Issuance.Offer
+      with
+        customer : Party
+      controller provider
         do
           create Issuance.Offer with ..
 
-      nonconsuming ApproveIssuanceRequest : ContractId Issuance.Service
-        with
-          issuanceServiceRequestCid : ContractId Issuance.Request
+    nonconsuming choice ApproveIssuanceRequest : ContractId Issuance.Service
+      with
+        issuanceServiceRequestCid : ContractId Issuance.Request
+      controller provider
         do
           exercise issuanceServiceRequestCid Issuance.Approve with ..
 
-      nonconsuming TerminateIssuanceService : ()
-        with
-          issuanceServiceCid : ContractId Issuance.Service
+    nonconsuming choice TerminateIssuanceService : ()
+      with
+        issuanceServiceCid : ContractId Issuance.Service
+      controller provider
         do
           archive issuanceServiceCid
 
-      nonconsuming OfferInstrumentService : ContractId Instrument.Offer
-        with
-          customer : Party
+    nonconsuming choice OfferInstrumentService : ContractId Instrument.Offer
+      with
+        customer : Party
+      controller provider
         do
           create Instrument.Offer with ..
 
-      nonconsuming ApproveInstrumentRequest : ContractId Instrument.Service
-        with
-          requestCid : ContractId Instrument.Request
+    nonconsuming choice ApproveInstrumentRequest : ContractId Instrument.Service
+      with
+        requestCid : ContractId Instrument.Request
+      controller provider
         do
           exercise requestCid Instrument.Approve with ..
 
-    controller operator can
-      TerminateRole: ()
+    choice TerminateRole: ()
+      controller operator
         do
           return ()
 
@@ -79,16 +85,18 @@ template Offer
     provider : Party
   where
     signatory operator
+    observer provider
 
-    controller provider can
-      Accept : (ContractId Role, ContractId Custody.SettlementInfo)
+    choice Accept : (ContractId Role, ContractId Custody.SettlementInfo)
+      controller provider
         do
           let ownAccount = Some $ createAccount provider provider
           infoCid <- create Custody.SettlementInfo with operator; party = provider; ownAccount; omnibusCashAccount = None; omnibusSecuritiesAccount = None; cashAccounts = empty; securitiesAccounts = empty
           roleCid <- create Role with ..
           pure (roleCid, infoCid)
 
-      Decline : ()
+    choice Decline : ()
+      controller provider
         do
           return ()
 
@@ -98,17 +106,19 @@ template Request
     operator : Party
   where
     signatory provider
+    observer operator
 
-    controller operator can
-      Approve : (ContractId Role, ContractId Custody.SettlementInfo)
-        with
-          observers : Set Party
+    choice Approve : (ContractId Role, ContractId Custody.SettlementInfo)
+      with
+        observers : Set Party
+      controller operator
         do
           let ownAccount = Some $ createAccount provider provider
           infoCid <- create Custody.SettlementInfo with operator; party = provider; ownAccount; omnibusCashAccount = None; omnibusSecuritiesAccount = None; cashAccounts = empty; securitiesAccounts = empty
           roleCid <- create Role with ..
           pure (roleCid, infoCid)
 
-      Reject : ()
+    choice Reject : ()
+      controller operator
         do
           return ()

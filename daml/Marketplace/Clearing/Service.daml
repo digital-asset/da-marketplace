@@ -60,37 +60,39 @@ template Service
             newMarginSatisfied = True; ..
         exercise calculationCid MarginCalculation_Resolve with note = ""; ..
 
-    controller customer can
-      nonconsuming ApproveTrade : Bool
+    nonconsuming choice ApproveTrade : Bool
+      controller customer
         do
           (_,memberStanding) <- fetchByKey @MemberStanding (provider,customer)
           return $ memberStanding.marginSatisfied && memberStanding.mtmSatisfied
 
-    controller provider can
-      nonconsuming CreateMarginCalculation : ContractId MarginCalculation
-        with
-          targetAmount : Decimal
-          currency : Id -- TODO: make different currencies work
-          calculationId : Text
+    nonconsuming choice CreateMarginCalculation : ContractId MarginCalculation
+      with
+        targetAmount : Decimal
+        currency : Id -- TODO: make different currencies work
+        calculationId : Text
+      controller provider
         do
           calculationTime <- getTime
           create MarginCalculation with accountId = clearingAccount.id; ..
 
-      nonconsuming CreateMarkToMarket : ContractId MarkToMarketCalculation
-        with
-          mtmAmount : Decimal
-          currency : Id -- TODO: make different currencies work
-          calculationId : Text
+    nonconsuming choice CreateMarkToMarket : ContractId MarkToMarketCalculation
+      with
+        mtmAmount : Decimal
+        currency : Id -- TODO: make different currencies work
+        calculationId : Text
+      controller provider
         do
           calculationTime <- getTime
           create MarkToMarketCalculation with accountId = clearingAccount.id; ..
 
-      nonconsuming PerformMarginFill : CalculationResult FulfilledMarginCalculation
-                                                         RejectedMarginCalculation
-        with
-          depositCids : [ContractId AssetDeposit]
-          marginDepositCids : [ContractId AssetDeposit]
-          calculationCid : ContractId MarginCalculation
+    nonconsuming choice PerformMarginFill : CalculationResult FulfilledMarginCalculation
+                                                       RejectedMarginCalculation
+      with
+        depositCids : [ContractId AssetDeposit]
+        marginDepositCids : [ContractId AssetDeposit]
+        calculationCid : ContractId MarginCalculation
+      controller provider
         do
           targetAmount  <- (.targetAmount) <$> fetch calculationCid
           depositAmount <- getDepositQuantities depositCids
@@ -107,12 +109,13 @@ template Service
                  | otherwise   -> Some <$> exercise self TransferFromMargin with amount = abs diff; ..
             return $ CalculationSuccess cCid optDepositRemaing
 
-      nonconsuming PerformMarkToMarket : CalculationResult FulfilledMarkToMarketCalculation
-                                                           RejectedMarkToMarketCalculation
-        with
-          providerDepositCids : [ContractId AssetDeposit]
-          customerDepositCids : [ContractId AssetDeposit]
-          calculationCid : ContractId MarkToMarketCalculation
+    nonconsuming choice PerformMarkToMarket : CalculationResult FulfilledMarkToMarketCalculation
+                                                         RejectedMarkToMarketCalculation
+      with
+        providerDepositCids : [ContractId AssetDeposit]
+        customerDepositCids : [ContractId AssetDeposit]
+        calculationCid : ContractId MarkToMarketCalculation
+      controller provider
         do
           mtmAmount      <- (.mtmAmount) <$> fetch calculationCid
           providerAmount <- getDepositQuantities providerDepositCids
@@ -140,38 +143,42 @@ template Service
               then reject
               else succeed $ Some <$> exercise self TransferToProvider with amount = abs mtmAmount; depositCids = customerDepositCids
 
-      nonconsuming TransferFromProvider : DepositWithRemaining
-        with
-          depositCids : [ContractId AssetDeposit]
-          amount : Decimal
+    nonconsuming choice TransferFromProvider : DepositWithRemaining
+      with
+        depositCids : [ContractId AssetDeposit]
+        amount : Decimal
+      controller provider
         do
           assertMsg "deposits are not enough to transfer from provider" =<< (amount <=) <$> getDepositQuantities depositCids
           (depositCid::remainingCids) <- mergeAndSplit depositCids amount
           DepositWithRemaining <$> (transferDeposit depositCid clearingAccount >>= allocateDeposit) <*> pure remainingCids
 
       -- TODO: check that the deposit cid matches the clearing account?
-      nonconsuming TransferToProvider : DepositWithRemaining
-        with
-          amount : Decimal
-          depositCids : [ContractId AssetDeposit]
+    nonconsuming choice TransferToProvider : DepositWithRemaining
+      with
+        amount : Decimal
+        depositCids : [ContractId AssetDeposit]
+      controller provider
         do
           assertMsg "deposits are not enough to transfer to provider" =<< (amount <=) <$> getDepositQuantities depositCids
           (depositCid::remainingCids) <- mergeAndSplit depositCids amount
           DepositWithRemaining <$> transferDeposit depositCid ccpAccount <*> pure remainingCids
 
-      nonconsuming TransferFromMargin : DepositWithRemaining
-        with
-          marginDepositCids : [ContractId AssetDeposit]
-          amount : Decimal
+    nonconsuming choice TransferFromMargin : DepositWithRemaining
+      with
+        marginDepositCids : [ContractId AssetDeposit]
+        amount : Decimal
+      controller provider
         do
           assertMsg "deposits are not enough to transfer from margin" =<< (amount <=) <$> getDepositQuantities marginDepositCids
           (depositCid::remainingCids) <- mergeAndSplit marginDepositCids amount
           DepositWithRemaining <$> unlockDeposit depositCid <*> pure remainingCids
 
-      nonconsuming TransferToMargin : DepositWithRemaining
-        with
-          depositCids : [ContractId AssetDeposit]
-          amount : Decimal
+    nonconsuming choice TransferToMargin : DepositWithRemaining
+      with
+        depositCids : [ContractId AssetDeposit]
+        amount : Decimal
+      controller provider
         do
           assertMsg "deposits are not enough to transfer from provider" =<< (amount <=) <$> getDepositQuantities depositCids
           (depositCid::remainingCids) <- mergeAndSplit depositCids amount
@@ -195,21 +202,23 @@ template Offer
     ccpAccount : Account
   where
     signatory operator, provider
+    observer customer
 
-    controller customer can
-      Accept : ContractId Service
-        with
-          clearingAccount : Account
+    choice Accept : ContractId Service
+      with
+        clearingAccount : Account
+      controller customer
         do
           createOrLookup MemberStanding with marginSatisfied = True, mtmSatisfied = True, observers = mempty; ..
           createOrLookup Service with ..
 
-      Decline : ()
+    choice Decline : ()
+      controller customer
         do
           return ()
 
-    controller provider can
-      Withdraw : ()
+    choice Withdraw : ()
+      controller provider
         do pure ()
 
 template Request
@@ -219,13 +228,14 @@ template Request
     clearingAccount : Account
   where
     signatory customer
+    observer provider
 
-    controller customer can
-      Cancel : ()
+    choice Cancel : ()
+      controller customer
         do pure ()
 
-    controller provider can
-      Reject : ()
+    choice Reject : ()
+      controller provider
         do pure ()
 
     choice Approve : ContractId Service

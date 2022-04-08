@@ -2,12 +2,18 @@ module Marketplace.Trading.Otc.Model where
 
 import DA.Finance.Types (Asset, Account)
 import DA.Optional (fromSomeNote)
+import DA.Action (when)
+import DA.Set (empty)
 import Marketplace.Custody.Model qualified as Custody
+import Marketplace.Issuance.Instrument.Model(Bond(..))
 import Marketplace.Settlement.Hierarchical.Util (createInstructions, getAccount, Status(..), SettlementMode(..))
 import Marketplace.Settlement.Htlc.Util (createInstructionsHtlc, HtlcState(..))
 import Marketplace.Settlement.Htlc.Dvp qualified as Htlc
 import Marketplace.Settlement.Hierarchical.Dvp qualified as Hierarchical
 import Marketplace.Trading.Model (Side(..))
+import SwiftMessage.Util
+import SwiftMessage.Message(SwiftOutboundMessage(..), SwiftMessageType(..), SwiftMessage(..))
+import SwiftMessage.Model.MT548
 
 template Order
   with
@@ -30,7 +36,7 @@ template Order
     choice Accept : ContractId Match
       controller counterparty
       do
-        create Match with order = this
+        create Match with order = this; status = Match_Created
 
     choice Reject : ()
       controller counterparty
@@ -53,9 +59,16 @@ data SettlementResult = SettlementResult with
   payerSecAccount : Account
   payerCashAccount : Account
 
+createSettlementId : Order -> Text 
+createSettlementId order = 
+  order.id <> "-" <> partyToText order.customer <> "-" <> partyToText order.counterparty
+
+data MatchStatus = Match_Created | Match_Instructed deriving (Eq, Show)
+
 template Match
   with
     order : Order
+    status : MatchStatus
   where
     signatory signatory order, order.counterparty
 
@@ -63,7 +76,7 @@ template Match
       createSettlementResult : Order -> Update SettlementResult
       createSettlementResult Order{..} = do
         let
-          settlementId = id <> "-" <> partyToText customer <> "-" <> partyToText counterparty
+          settlementId = createSettlementId order
           payer = if side == Buy then customer else counterparty
           deliverer = if side == Buy then counterparty else customer
         (_, payerSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, payer)
@@ -74,11 +87,38 @@ template Match
           delivererSecAccount = getAccount False delivererSettlementInfo deliverer
           delivererCashAccount = getAccount True delivererSettlementInfo deliverer
         pure $ SettlementResult with ..
+      
+      createSettlementStatusAndProcessingAdvice : Order -> SettlementResult -> Date -> Update SettlementStatusAndProcessingAdvice
+      createSettlementStatusAndProcessingAdvice Order{..} SettlementResult{..} dateOfSettlement = do
+        (_, bond) <- fetchByKey @Bond (delivery.id.signatories, delivery.id.label)
+        let 
+          instrumentId = bond.isin <> "-" <> delivery.id.label
+          settledAmount = payment.quantity
+          settledQty = delivery.quantity
+          buyer = payer
+          buyerSafekeepingAcc = payerSecAccount
+          receivingAgent = payerSecAccount.provider
+          seller = deliverer
+          sellerSafekeepingAcc = delivererSecAccount
+          deliveringAgent = delivererSecAccount.provider
+          dateOfTrade = dateOfSettlement
+        pure $ SettlementStatusAndProcessingAdvice with ..
 
-    nonconsuming choice Instruct : ContractId Hierarchical.Dvp
+      sendSwiftMessage : Text -> SettlementStatusAndProcessingAdvice -> SettlementMode -> Party -> Update ()
+      sendSwiftMessage settlementId settlementStatusAndProcessingAdvice@SettlementStatusAndProcessingAdvice{..} settlementMode operator = do
+        let
+          paymentMode = if settlementMode == Fop then FREE else APMT
+          mt548_buy = createMT548Details settlementStatusAndProcessingAdvice RECE paymentMode  
+          mt548_sell = createMT548Details settlementStatusAndProcessingAdvice DELI paymentMode
+        create SwiftOutboundMessage with referenceId = settlementId; provider = operator; consumer = operator; status = Finalized; observers = empty; swiftMessage = MT548 (mt548_buy); swiftMessageType = MT548_buy_t
+        create SwiftOutboundMessage with referenceId = settlementId; provider = operator; consumer = operator; status = Finalized; observers = empty; swiftMessage = MT548 (mt548_sell); swiftMessageType = MT548_sell_t
+        pure ()
+
+    choice Instruct : (ContractId Match, ContractId Hierarchical.Dvp)
+      with dateOfSettlement : Date
       controller order.operator
       do
-        SettlementResult {..} <- createSettlementResult order
+        settlementResult@SettlementResult {..} <- createSettlementResult order
         let Order{..} = order
         deliverySis <- createInstructions False operator operator deliveryRegistrar delivererSecAccount payerSecAccount settlementId 0 delivery
         instructionIds <-
@@ -88,16 +128,95 @@ template Match
               map (.instructionId) <$> mapA fetch (deliverySis <> paymentSis)
             else do
               map (.instructionId) <$> mapA fetch deliverySis
-        create Hierarchical.Dvp with operator; agent = operator; deliverer; payer; settlementId; instructionIds; delivery; payment; status = Instructed; settlementMode
+
+        settlementStatusAndProcessingAdvice <- createSettlementStatusAndProcessingAdvice order settlementResult dateOfSettlement
+        sendSwiftMessage settlementId settlementStatusAndProcessingAdvice settlementMode operator
+        matchCid <- create this with status = Match_Instructed 
+        dvpCid <- create Hierarchical.Dvp with operator; agent = operator; deliverer; payer; settlementId; instructionIds; delivery; payment; status = Instructed; settlementMode
+        pure (matchCid, dvpCid)
       
-    nonconsuming choice InstructHtlc : ContractId Htlc.Dvp
+    choice InstructHtlc : (ContractId Match, ContractId Htlc.Dvp)
       with 
         expiry : Time
+        dateOfSettlement : Date
       controller order.operator
       do 
-        SettlementResult {..} <- createSettlementResult order
+        settlementResult@SettlementResult {..} <- createSettlementResult order
         let Order{..} = order
             hashlock = fromSomeNote "No hashlock specified for HTLC" hashlockOpt
         deliverySis <- createInstructionsHtlc False operator deliveryRegistrar deliverer delivererSecAccount payer payerSecAccount settlementId 0 delivery hashlock expiry
         instructionIds <- map (.instructionId) <$> mapA fetch deliverySis
-        create Htlc.Dvp with delivererAgent = deliverer; payerAgent = payer; status = Locked; ..
+        settlementStatusAndProcessingAdvice <- createSettlementStatusAndProcessingAdvice order settlementResult dateOfSettlement
+        sendSwiftMessage settlementId settlementStatusAndProcessingAdvice settlementMode operator
+        matchCid <- create this with status = Match_Instructed
+        dvpCid <- create Htlc.Dvp with delivererAgent = deliverer; payerAgent = payer; status = Locked; ..
+        pure (matchCid, dvpCid)
+
+    choice ProposeCancel: ContractId MatchCancelProposal
+      with ctrl : Party
+      controller ctrl
+      do 
+        assertMsg "only buyer and seller can cancel match" (ctrl `elem` [order.customer, order.counterparty])
+        create MatchCancelProposal with cancelProposer = ctrl; match = this
+
+template MatchCancelProposal 
+  with
+    match : Match
+    cancelProposer : Party
+  where 
+    signatory match.order.operator, match.order.provider, cancelProposer
+    observer cancelCounterParty
+    ensure cancelProposer `elem` [cancelProposer, cancelCounterParty]
+
+    let
+      findCounterParty: Order -> Party 
+      findCounterParty Order{..} = if cancelProposer == counterparty then customer else counterparty
+      cancelCounterParty = findCounterParty match.order
+
+    choice AcceptCancellation : ContractId MatchCancel
+      controller cancelCounterParty
+      do 
+        create MatchCancel with ..
+    
+    choice RejectCancellation : ContractId Match
+      controller cancelCounterParty
+      do 
+        create match
+
+
+template MatchCancel 
+  with
+    match : Match
+  where 
+    signatory signatory match
+
+    let 
+      cancelDvp : (Party, Text) -> Update (Either (ContractId Hierarchical.Dvp) (ContractId Htlc.Dvp))
+      cancelDvp dvpKey = do
+        if match.order.settlementMode == Htlc then
+          Right <$> exerciseByKey @Htlc.Dvp dvpKey Htlc.CancelDvp
+        else 
+          Left <$> exerciseByKey @Hierarchical.Dvp dvpKey Hierarchical.CancelDvp
+
+      sendCancelSwiftMessage : (ContractId SwiftOutboundMessage, SwiftOutboundMessage) -> Update ()
+      sendCancelSwiftMessage (cid, swiftOutboundMsg@SwiftOutboundMessage{swiftMessage = MT548 details}) = do
+          archive cid
+          create swiftOutboundMsg with swiftMessage = (MT548 (details with status = CAND))
+          pure ()
+      sendCancelSwiftMessage other =
+        pure ()
+
+    choice CancelMatch : ()
+      controller match.order.operator 
+      do 
+        -- archive or update status of dvp
+        let
+          order = match.order 
+          settlementId = createSettlementId order
+        when (match.status == Match_Instructed) do cancelDvp (order.operator, settlementId); pure ()        
+        -- fetch and send cancelled MT548
+        mt548_buy <- fetchByKey @SwiftOutboundMessage (order.operator, settlementId, MT548_buy_t)
+        mt548_sell <- fetchByKey @SwiftOutboundMessage (order.operator, settlementId, MT548_sell_t)
+        sendCancelSwiftMessage mt548_buy
+        sendCancelSwiftMessage mt548_sell
+  

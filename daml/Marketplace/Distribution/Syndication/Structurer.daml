@@ -14,28 +14,29 @@ template Role
     key (operator, provider) :  (Party, Party)
     maintainer key._1
 
-    controller provider can
-
-      nonconsuming OfferStructuringService : ContractId Structuring.Offer
-        with
-          customer : Party
+    nonconsuming choice OfferStructuringService : ContractId Structuring.Offer
+      with
+        customer : Party
+      controller provider
         do
           create Structuring.Offer with ..
 
-      nonconsuming ApproveStructuringRequest : ContractId Structuring.Service
-        with
-          structuringRequestCid : ContractId Structuring.Request
+    nonconsuming choice ApproveStructuringRequest : ContractId Structuring.Service
+      with
+        structuringRequestCid : ContractId Structuring.Request
+      controller provider
         do
           exercise structuringRequestCid Structuring.Approve with ..
 
-      nonconsuming TerminateStructuringService : ()
-        with
-          structuringServiceCid : ContractId Structuring.Service
+    nonconsuming choice TerminateStructuringService : ()
+      with
+        structuringServiceCid : ContractId Structuring.Service
+      controller provider
         do
           archive structuringServiceCid
 
-    controller operator can
-      TerminateRole: ()
+    choice TerminateRole: ()
+      controller operator
         do
           return ()
 
@@ -46,13 +47,15 @@ template Offer
     observers : Set Party
   where
     signatory operator
+    observer provider
 
-    controller provider can
-      Accept : ContractId Role
+    choice Accept : ContractId Role
+      controller provider
         do
           createOrLookup Role with ..
 
-      Decline : ()
+    choice Decline : ()
+      controller provider
         do
           return ()
 
@@ -62,12 +65,14 @@ template Request
     operator : Party
   where
     signatory provider
+    observer operator
 
-    controller operator can
-      Approve : ContractId Role
+    choice Approve : ContractId Role
+      controller operator
         do
           createOrLookup Role with ..
 
-      Reject : ()
+    choice Reject : ()
+      controller operator
         do
           return ()

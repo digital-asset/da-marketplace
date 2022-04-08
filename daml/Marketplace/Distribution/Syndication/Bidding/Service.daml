@@ -19,20 +19,20 @@ template Service
     key (operator, provider, customer) : (Party, Party, Party)
     maintainer key._1
 
-    controller customer can
-      nonconsuming SubmitBid : ContractId Bidding.Bid
-        with
-          bidRequestCid : ContractId Bidding.BidRequest
-          price : Decimal
-          quantity : Decimal
+    nonconsuming choice SubmitBid : ContractId Bidding.Bid
+      with
+        bidRequestCid : ContractId Bidding.BidRequest
+        price : Decimal
+        quantity : Decimal
+      controller customer
         do
           Bidding.BidRequest{..} <- fetchAndArchive bidRequestCid
           create Bidding.Bid with asset = (Asset with id = deliveryId; quantity); price = (Asset with id = paymentId; quantity = price); ..
 
-    controller provider can
-      nonconsuming RequestBid : ContractId Bidding.BidRequest
-        with
-          buildRequestCid : ContractId BookBuilding.BuildRequest
+    nonconsuming choice RequestBid : ContractId Bidding.BidRequest
+      with
+        buildRequestCid : ContractId BookBuilding.BuildRequest
+      controller provider
         do
           BookBuilding.BuildRequest{issuer, dealId, trancheId, deliveryId, paymentId, size} <- fetch buildRequestCid
           create Bidding.BidRequest with investor = customer; ..
@@ -44,18 +44,20 @@ template Offer
     customer : Party
   where
     signatory operator, provider
+    observer customer
 
-    controller customer can
-      Accept : ContractId Service
+    choice Accept : ContractId Service
+      controller customer
         do
           createOrLookup Service with ..
 
-      Decline : ()
+    choice Decline : ()
+      controller customer
         do
           return ()
 
-    controller provider can
-      Withdraw : ()
+    choice Withdraw : ()
+      controller provider
         do pure ()
 
 template Request
@@ -66,12 +68,12 @@ template Request
     signatory customer
     observer provider
 
-    controller customer can
-      Cancel : ()
+    choice Cancel : ()
+      controller customer
         do pure ()
 
-    controller provider can
-      Reject : ()
+    choice Reject : ()
+      controller provider
         do pure ()
 
     choice Approve : ContractId Service
