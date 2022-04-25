@@ -48,6 +48,7 @@ template Bond
     isPricedDirty : Bool
     isCallable : Bool
     observers : [Party]
+    claimTokenId : Optional Text -- None: does not support claim token, Some (claim token id): claim token id that current bond links to
   where
     signatory id.signatories
     observer observers

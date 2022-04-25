@@ -133,7 +133,7 @@ issuance Parties{..} Origination{..} = do
   settleTrades bondRegistrar [ dvpCid21, dvpCid22 ]
   settleTradeHtlc bndBank (secret, dvpCid23)
 
-  -- -- -- Step 3
+  -- Step 3
   dvpCids31 <- submit operator do exerciseCmd tranche1Cid Structuring.InstructInvestorSettlement with confirmationCids = confirmationCids1; price; dateOfSettlement; dateOfTrade
   dvpCids32 <- submit operator do exerciseCmd tranche2Cid Structuring.InstructInvestorSettlement with confirmationCids = confirmationCids2; price; dateOfSettlement; dateOfTrade
   dvpCids33 <- submit operator do exerciseCmd tranche3Cid Structuring.InstructInvestorSettlementHtlc with confirmationCids = confirmationCids3; price; dateOfSettlement; dateOfTrade; expiry

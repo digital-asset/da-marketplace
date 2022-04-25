@@ -1,0 +1,53 @@
+module Tests.Distribution.Syndication.ClaimToken where
+
+import ClaimToken.Model qualified as ClaimToken
+import ClaimToken.Service qualified as ClaimToken
+import DA.Finance.Asset(AssetDeposit)
+import DA.List (head)
+import Daml.Script
+import Marketplace.Custody.Model qualified as Custody
+import Marketplace.Settlement.Hierarchical.Util (getAccount)
+import Tests.Distribution.Syndication.Issuance (issuance)
+import Tests.Distribution.Syndication.Origination (origination, Origination(..))
+import Tests.Distribution.Syndication.Setup (setup, Parties(..))
+
+
+
+init : Script (Parties, Origination)
+init = do
+  parties@Parties{..} <- setup
+  orig <- origination parties
+  issuance parties orig
+  
+  requestCid1 <- submit operator do createCmd ClaimToken.Request with operator; provider = custodian5; owner = investor3
+  requestCid2 <- submit operator do createCmd ClaimToken.Request with operator; provider = custodian5; owner = investor4
+  submit custodian5 do exerciseCmd requestCid1 ClaimToken.Approve
+  submit custodian5 do exerciseCmd requestCid2 ClaimToken.Approve
+
+  pure (parties, orig)
+
+
+claimTokenTest : Script ()
+claimTokenTest = do
+  (Parties{..}, Origination{..}) <- init
+  Some (serviceId, _) <- queryContractKey @ClaimToken.Service operator (operator, custodian5, investor3)
+  Some (serviceId2, _) <- queryContractKey @ClaimToken.Service operator (operator, custodian5, investor4)
+  
+  -- mint
+  (assetDepositCid, assetDeposit) <- head <$> query @AssetDeposit investor3
+  let assetId = assetDeposit.asset.id
+  claimTokenAssetDepositCid <- submitMulti [investor3] [public] do exerciseCmd serviceId ClaimToken.Mint with assetDepositCid
+  
+  -- transfer
+  transferRelationshipOfferCid <- submit investor3 do exerciseCmd serviceId ClaimToken.OfferTransferRelationship with receiver = investor4
+  transferRelationshipCid <- submit investor4 do exerciseCmd transferRelationshipOfferCid ClaimToken.AcceptOffer
+  Some (_, settlementInfoReceiver) <- queryContractKey @Custody.SettlementInfo operator (operator, investor4)
+  let receiverAccount = getAccount False settlementInfoReceiver investor4
+  claimTokenAssetDepositCid <- submit investor3 do exerciseCmd transferRelationshipCid ClaimToken.TransferClaimToken with receiverAccount; assetDepositCid = claimTokenAssetDepositCid
+
+  -- burn
+  Some assetDeposit <- queryContractId @AssetDeposit investor4 claimTokenAssetDepositCid
+  let assetId = assetDeposit.asset.id
+  Some (_, claimToken) <- queryContractKey @ClaimToken.ClaimToken operator (assetId.signatories, assetId.label)
+  submitMulti [investor4] [public] do exerciseCmd serviceId2 ClaimToken.Burn with assetDepositCid = claimTokenAssetDepositCid
+  pure ()

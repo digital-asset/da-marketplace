@@ -1,0 +1,84 @@
+module ClaimToken.Service where
+
+import ClaimToken.Model
+import DA.Finance.Asset
+
+template Service with
+  operator: Party
+  provider: Party
+  owner: Party
+  isAllowed: Bool
+
+    where
+      signatory operator, provider
+      observer owner
+
+      key (operator, provider, owner) : (Party, Party, Party)
+      maintainer key._1
+
+      let 
+        preProcessCheck : ContractId AssetDeposit -> Update AssetDeposit
+        preProcessCheck assetDepositCid = do
+          assertMsg "claim token service is not allowed at the moment, please inquire operator" isAllowed
+          
+          originalAssetDeposit <- fetch assetDepositCid
+          let currentAccount = originalAssetDeposit.account
+          assertMsg "provider and owner of provided assetDeposit does not match with current Service" (currentAccount.owner == owner && currentAccount.provider == provider)
+          pure originalAssetDeposit
+          
+      controller owner can 
+        nonconsuming Mint : ContractId AssetDeposit
+          with 
+            assetDepositCid : ContractId AssetDeposit
+          do
+            bondAssetDeposit <- preProcessCheck assetDepositCid
+            archive assetDepositCid
+            let assetId = bondAssetDeposit.asset.id
+            claimTokenId <- exerciseByKey @ClaimTokenR (assetId.signatories, assetId.label) GetClaimTokenId with ctrl = owner
+            create bondAssetDeposit with asset = (bondAssetDeposit.asset with id = claimTokenId) -- bond -> claim token
+
+      controller owner can 
+        nonconsuming OfferTransferRelationship : ContractId TransferRelationshipOffer
+          with 
+            receiver: Party
+          do
+            create TransferRelationshipOffer with sender = owner; ..
+
+      controller owner can
+        nonconsuming Burn : ContractId AssetDeposit
+          with
+            assetDepositCid : ContractId AssetDeposit
+          do
+            claimTokenAssetDeposit <- preProcessCheck assetDepositCid
+            archive assetDepositCid
+            let assetId = claimTokenAssetDeposit.asset.id
+            originalId <- exerciseByKey @ClaimToken (assetId.signatories, assetId.label) GetOriginalId with ctrl = owner
+            create claimTokenAssetDeposit with asset = (claimTokenAssetDeposit.asset with id = originalId) -- claim token -> bond
+      
+      controller operator can
+        AllowService: ContractId Service
+          do
+            create this with isAllowed = True
+        
+      controller operator can
+        BanService: ContractId Service
+          do
+            create this with isAllowed = False
+
+template Request 
+  with
+    operator: Party
+    provider: Party
+    owner: Party
+
+  where 
+    signatory operator
+  
+    controller provider can 
+      Approve : ContractId Service
+        do
+          create Service with isAllowed = True; ..
+            
+
+
+    
