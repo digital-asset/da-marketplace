@@ -56,6 +56,12 @@ template Bond
     key (id.signatories, id.label) : (Set Party, Text)
     maintainer key._1
 
+    nonconsuming choice FetchBond: Bond
+      with ctrl: Party
+      controller ctrl
+      do 
+        pure this
+
 template Swap
   with
     id : Id
