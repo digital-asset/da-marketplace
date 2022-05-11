@@ -71,8 +71,8 @@ template Effect
       controller operator
       do
         let
-          sendSwiftMessage : Party -> Account -> Account -> Asset -> Bool -> Update (Optional PayoutRefId)
-          sendSwiftMessage receiver buyerSafekeepingAcc buyerCashAcc asset isRedempt = do
+          sendSwiftMessage : Party -> Account -> Account -> Asset -> Decimal -> Update (Optional PayoutRefId)
+          sendSwiftMessage receiver buyerSafekeepingAcc buyerCashAcc asset amount = do
             (_, description) <- fetchByKey @AssetDescription assetId
             if (description.cfi == CFI.bond) then do
               (_, bond) <- fetchByKey @Instrument.Bond (fromList [issuer, bondRegistrar], assetId.label)
@@ -85,6 +85,7 @@ template Effect
                 payoutDate = date
                 redemptionDate = getRedemptionDate maturityDate payoutDate
                 mt566 = createMT566Details instrumentId assetId description.cfi issuer buyerSafekeepingAcc buyerCashAcc CRED faceAmount currency maturityDate payoutDate redemptionDate
+                isRedempt = (amount == bond.unitPar)
                 refId = PayoutRefId with ..
               create SwiftOutboundMessage with referenceId = show refId; provider = operator ; consumer = operator; swiftMessage=MT566 (mt566); swiftMessageType=MT566_t; status=Pending; observers=fromList [payingAgent]
               pure $ Some refId
@@ -118,7 +119,7 @@ template Effect
 
             instructionCids <- createInstructions True operator payingAgent cashProvider senderAccount receiverCashAccount settlementId instructionIdx asset
             instructionIds <- map (.instructionId) <$> mapA fetch instructionCids
-            payoutRefIdOpt <- sendSwiftMessage receiver receiverSecAccount receiverCashAccount asset (amount == 1.0)
+            payoutRefIdOpt <- sendSwiftMessage receiver receiverSecAccount receiverCashAccount asset amount
             let refIdOpt = show <$> payoutRefIdOpt
             create Delivery with operator; agent = payingAgent; sender; receiver; settlementId; refIdOpt; instructionIds; asset; status = Instructed
 
