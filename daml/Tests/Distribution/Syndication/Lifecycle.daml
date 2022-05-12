@@ -65,22 +65,22 @@ testReporting = do
   setTime (time (date 2021 Jan 8) 0 0 0)
 
   -- security report
-  reporting operator bondRegistrar calendar False
-  reporting operator custodian1 calendar False
-  reporting operator custodian2 calendar False
-  reporting operator custodian4 calendar False
-  reporting operator custodian5 calendar False
+  reporting operator bondRegistrar public calendar False
+  reporting operator custodian1 public calendar False
+  reporting operator custodian2 public calendar False
+  reporting operator custodian4 public calendar False
+  reporting operator custodian5 public calendar False
 
   -- cash report
-  reporting operator cashProvider calendar True
+  reporting operator cashProvider public calendar True
 
-  -- make sure that we can submit reporting at the same date without failing
-  reporting operator bondRegistrar calendar False
-  reporting operator cashProvider calendar True
+  -- make sure that we can submit reporting at the public same date without failing
+  reporting operator bondRegistrar public calendar False
+  reporting operator cashProvider public calendar True
 
   -- prev business day of Jan 11 2021 is Jan 8 2021
   setTime (time (date 2021 Jan 11) 0 0 0)
-  reporting operator bondRegistrar calendar False
+  reporting operator bondRegistrar public calendar False
   pure ()
 
 testBond1 : Script ()
@@ -212,8 +212,8 @@ preNotify parties@Parties{..} date assetId = do
   submit operator do exerciseByKeyCmd @Lifecycle.Service (operator, issuer, payingAgent) Lifecycle.SendPrePayoutSwiftMessage with exDivDate = date; ..
   pure ()
 
-reporting : Party -> Party -> HolidayCalendar -> Bool -> Script ()
-reporting operator accountProvider calendar isCashReporting = do
+reporting : Party -> Party -> Party -> HolidayCalendar -> Bool -> Script ()
+reporting operator accountProvider public calendar isCashReporting = do
   depositCids <- map fst <$> queryFilter @AssetDeposit accountProvider (\deposit -> deposit.account.provider == accountProvider)
-  submit accountProvider do exerciseByKeyCmd @Reporting.Service (operator, accountProvider) Reporting.CreateReports with calendar; depositCids; isCashReporting
+  submitMulti [accountProvider] [public] do exerciseByKeyCmd @Reporting.Service (operator, accountProvider) Reporting.CreateReports with calendar; depositCids; isCashReporting
   pure ()

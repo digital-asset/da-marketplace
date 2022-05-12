@@ -149,15 +149,15 @@ createSchedule : Date -> Date -> PeriodEnum -> Int -> [Text] -> BusinessDayConve
 createSchedule startDate endDate period periodMultiplier calendarIds businessDayConvention dayCountConvention rollConvention =
   Instrument.InterestSchedule with ..
 
-createFixedRateBond : Id -> Text -> Id -> Party -> Date -> Date -> Instrument.InterestSchedule -> Decimal -> Bool -> Bool -> Bool -> [Party] -> Instrument.Bond
-createFixedRateBond id isin currencyId issuer issueDate maturityDate schedule annualRate isTradeable isPricedDirty isCallable observers =
+createFixedRateBond : Id -> Text -> Id -> Party -> Date -> Date -> Instrument.InterestSchedule -> Decimal -> Bool -> Bool -> Bool -> Decimal -> [Party] -> Instrument.Bond
+createFixedRateBond id isin currencyId issuer issueDate maturityDate schedule annualRate isTradeable isPricedDirty isCallable unitPar observers =
   let
     amount = Instrument.Fixed with annualRate
     stream = Some Instrument.InterestStream with schedule; amount
   in Instrument.Bond with ..
 
-createFloatingRateBond : Id -> Text -> Id -> Party -> Date -> Date -> Instrument.InterestSchedule -> Id -> Decimal -> Bool -> Bool -> Bool -> [Party] -> Instrument.Bond
-createFloatingRateBond id isin currencyId issuer issueDate maturityDate schedule rateId periodSpread isTradeable isPricedDirty isCallable observers =
+createFloatingRateBond : Id -> Text -> Id -> Party -> Date -> Date -> Instrument.InterestSchedule -> Id -> Decimal -> Bool -> Bool -> Bool -> Decimal -> [Party] -> Instrument.Bond
+createFloatingRateBond id isin currencyId issuer issueDate maturityDate schedule rateId periodSpread isTradeable isPricedDirty isCallable unitPar observers =
   let
     amount = Instrument.Float with rateId; periodSpread
     stream = Some Instrument.InterestStream with schedule; amount
@@ -165,7 +165,7 @@ createFloatingRateBond id isin currencyId issuer issueDate maturityDate schedule
 
 createZeroCouponBond : Id -> Text -> Id -> Party -> Date -> Date -> Bool -> Bool -> Bool -> [Party] -> Instrument.Bond
 createZeroCouponBond id isin currencyId issuer issueDate maturityDate isTradeable isPricedDirty isCallable observers =
-  Instrument.Bond with stream = None; ..
+  Instrument.Bond with unitPar = 1.0; stream = None; ..
 
 createSwap : Id -> Id -> Id -> Party -> Date -> Date -> Instrument.InterestStream -> Instrument.InterestStream -> Bool -> [Party] -> Instrument.Swap
 createSwap id payCurrencyId receiveCurrencyId issuer issueDate maturityDate pay receive isTradeable observers =

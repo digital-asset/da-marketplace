@@ -21,23 +21,31 @@ createInstructionsHtlc isCash operator rootProvider senderAgent senderAccount re
     createInstructionHtlc senderAccount.owner receiverAccount.owner senderAccount receiverAccount asset instructionIdx
   else if senderAccount.provider == rootProvider then do
     (_, providerSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, receiverAccount.provider)
-    let providerAccount = getAccount isCash providerSettlementInfo receiverAccount.owner
-    sis1 <- createInstructionHtlc receiverAccount.provider receiverAccount.owner (fromSome providerSettlementInfo.ownAccount) receiverAccount (asset with id.signatories = fromList [providerSettlementInfo.party]) instructionIdx
+    let 
+      providerAccount = getAccount isCash providerSettlementInfo receiverAccount.owner
+      assetForInstruction = if isCash then (asset with id.signatories = fromList [providerSettlementInfo.party]) else asset
+    sis1 <- createInstructionHtlc receiverAccount.provider receiverAccount.owner (fromSome providerSettlementInfo.ownAccount) receiverAccount assetForInstruction instructionIdx
     sis2 <- createInstructionsHtlc isCash operator rootProvider senderAgent senderAccount receiverAgent providerAccount settlementId (instructionIdx + 1) asset hashlock expiry
     pure $ sis1 <> sis2
   else if receiverAccount.provider == rootProvider then do
     (_, providerSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, senderAccount.provider)
-    let providerAccount = getAccount isCash providerSettlementInfo senderAccount.owner
-    sis1 <- createInstructionHtlc senderAccount.owner senderAccount.provider senderAccount (fromSome providerSettlementInfo.ownAccount) (asset with id.signatories = fromList [providerSettlementInfo.party]) instructionIdx
+    let 
+      providerAccount = getAccount isCash providerSettlementInfo senderAccount.owner
+      assetForInstruction = if isCash then (asset with id.signatories = fromList [providerSettlementInfo.party]) else asset
+    sis1 <- createInstructionHtlc senderAccount.owner senderAccount.provider senderAccount (fromSome providerSettlementInfo.ownAccount) assetForInstruction  instructionIdx
     sis2 <- createInstructionsHtlc isCash operator rootProvider senderAgent providerAccount receiverAgent receiverAccount settlementId (instructionIdx + 1) asset hashlock expiry
     pure $ sis1 <> sis2
   else do
     (_, senderProviderSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, senderAccount.provider)
-    let senderProviderAccount = getAccount isCash senderProviderSettlementInfo senderAccount.owner
-    sis1 <- createInstructionHtlc senderAccount.owner senderAccount.provider senderAccount (fromSome senderProviderSettlementInfo.ownAccount) (asset with id.signatories = fromList [senderProviderSettlementInfo.party]) instructionIdx
+    let 
+      senderProviderAccount = getAccount isCash senderProviderSettlementInfo senderAccount.owner
+      assetForInstruction = if isCash then (asset with id.signatories = fromList [senderProviderSettlementInfo.party]) else asset
+    sis1 <- createInstructionHtlc senderAccount.owner senderAccount.provider senderAccount (fromSome senderProviderSettlementInfo.ownAccount) assetForInstruction instructionIdx
     (_, receiverProviderSettlementInfo) <- fetchByKey @Custody.SettlementInfo (operator, receiverAccount.provider)
-    let receiverProviderAccount = getAccount isCash receiverProviderSettlementInfo receiverAccount.owner
-    sis2 <- createInstructionHtlc receiverAccount.provider receiverAccount.owner (fromSome receiverProviderSettlementInfo.ownAccount) receiverAccount (asset with id.signatories = fromList [receiverProviderSettlementInfo.party]) (instructionIdx + 1)
+    let 
+      receiverProviderAccount = getAccount isCash receiverProviderSettlementInfo receiverAccount.owner
+      assetForInstruction = if isCash then (asset with id.signatories = fromList [receiverProviderSettlementInfo.party]) else asset
+    sis2 <- createInstructionHtlc receiverAccount.provider receiverAccount.owner (fromSome receiverProviderSettlementInfo.ownAccount) receiverAccount assetForInstruction (instructionIdx + 1)
     sis3 <- createInstructionsHtlc isCash operator rootProvider senderAgent senderProviderAccount receiverAgent receiverProviderAccount settlementId (instructionIdx + 2) asset hashlock expiry
     pure $ sis1 <> sis2 <> sis3
 
