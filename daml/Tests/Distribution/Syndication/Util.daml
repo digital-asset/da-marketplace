@@ -165,7 +165,7 @@ createFloatingRateBond id isin currencyId issuer issueDate maturityDate schedule
 
 createZeroCouponBond : Id -> Text -> Id -> Party -> Date -> Date -> Bool -> Bool -> Bool -> [Party] -> Instrument.Bond
 createZeroCouponBond id isin currencyId issuer issueDate maturityDate isTradeable isPricedDirty isCallable observers =
-  Instrument.Bond with unitPar = 0.0; stream = None; ..
+  Instrument.Bond with unitPar = 1.0; stream = None; ..
 
 createSwap : Id -> Id -> Id -> Party -> Date -> Date -> Instrument.InterestStream -> Instrument.InterestStream -> Bool -> [Party] -> Instrument.Swap
 createSwap id payCurrencyId receiveCurrencyId issuer issueDate maturityDate pay receive isTradeable observers =
