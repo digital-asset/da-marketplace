@@ -48,12 +48,19 @@ template Bond
     isPricedDirty : Bool
     isCallable : Bool
     observers : [Party]
+    unitPar: Decimal
   where
     signatory id.signatories
     observer observers
 
     key (id.signatories, id.label) : (Set Party, Text)
     maintainer key._1
+
+    nonconsuming choice FetchBond: Bond
+      with ctrl: Party
+      controller ctrl
+      do 
+        pure this
 
 template Swap
   with
@@ -78,15 +85,15 @@ payment : Observation Date Decimal -> Id -> Date -> Claim Date Decimal Id
 payment amount asset date =
   When (TimeGte date) $ Scale amount (One asset)
 
-unitFloating : Observation Date Decimal -> Id -> [Date] -> Bool -> Claim Date Decimal Id
-unitFloating amount asset dates includeNotional =
-  And $ map (payment amount asset) dates <> if includeNotional then [payment (O.pure 1.0) asset (last dates)] else []
+unitFloating : Observation Date Decimal -> Id -> [Date] -> Bool -> Decimal -> Claim Date Decimal Id
+unitFloating amount asset dates includeNotional unitPar =
+  And $ map (payment amount asset) dates <> if includeNotional then [payment (O.pure unitPar) asset (last dates)] else []
 
-unitFixed : Decimal -> Id -> [Date] -> Bool -> Claim Date Decimal Id
+unitFixed : Decimal -> Id -> [Date] -> Bool -> Decimal -> Claim Date Decimal Id
 unitFixed amount asset dates includeNotional = unitFloating (O.pure amount) asset dates includeNotional
 
-getClaims : Party -> Party -> Optional InterestStream -> Id -> Date -> Bool -> Update (Claim Date Decimal Id)
-getClaims operator provider stream currencyId maturityDate includePrincipal = do
+getClaims : Party -> Party -> Optional InterestStream -> Id -> Date -> Bool -> Decimal -> Update (Claim Date Decimal Id)
+getClaims operator provider stream currencyId maturityDate includePrincipal unitPar = do
   case stream of
     Some s -> do
       let InterestSchedule{..} = s.schedule
@@ -115,10 +122,10 @@ getClaims operator provider stream currencyId maturityDate includePrincipal = do
         claims =
           case s.amount of
             Fixed{annualRate} ->
-              unitFixed (proRata annualRate) currencyId dates includePrincipal
+              unitFixed (proRata annualRate) currencyId dates includePrincipal unitPar
             Float{rateId, periodSpread} ->
               let amount = if periodSpread == 0.0 then O.observe rateId.label else O.observe rateId.label + O.pure periodSpread
-              in unitFloating amount currencyId dates includePrincipal
+              in unitFloating amount currencyId dates includePrincipal unitPar
       pure claims
     None -> do
       pure $ payment (O.pure 1.0) currencyId maturityDate
