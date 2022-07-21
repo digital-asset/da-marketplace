@@ -19,7 +19,7 @@ dependencies:
   - daml-prim
   - daml-stdlib
   - daml-trigger
-  - ../../.daml/dist/da-marketplace-0.1.22.dar
+  - ../../.daml/dist/da-marketplace-0.1.23.dar
 sandbox-options:
   - --wall-clock-time
 build-options:
