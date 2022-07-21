@@ -1,10 +1,10 @@
 {
     "name": "da-marketplace",
-    "version": "0.1.22",
+    "version": "0.1.23",
     "private": true,
     "dependencies": {
-        "@daml.js/da-marketplace": "file:../daml.js/da-marketplace-0.1.22",
-        "@daml/hub-react": "1.0.2",
+        "@daml.js/da-marketplace": "file:../daml.js/da-marketplace-0.1.23",
+        "@daml/hub-react": "1.1.1",
         "@daml/ledger": "1.18.1",
         "@daml/react": "1.18.1",
         "@daml/types": "1.18.1",
@@ -41,6 +41,9 @@
             "last 1 firefox version",
             "last 1 safari version"
         ]
+    },
+    "resolutions": {
+        "@types/react": "16.9.16"
     },
     "devDependencies": {
         "@types/classnames": "^2.2.11",
