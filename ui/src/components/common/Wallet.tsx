@@ -20,6 +20,7 @@ import WalletTransaction from './WalletTransaction'
 import PageSection from './PageSection'
 import Holdings from './Holdings'
 import Page from './Page'
+import { makePartyLabel } from './utils'
 
 const Wallet = (props: {
     sideNav: React.ReactElement;
@@ -65,7 +66,7 @@ const Wallet = (props: {
             const name = brokerMap.get(damlTupleToString(broker.key))?.name;
             return {
                 party,
-                label: `${name ? `${name} (${party})` : party} | Broker`
+                label: makePartyLabel(party, name, "Broker")
             }
         })
 
@@ -75,7 +76,7 @@ const Wallet = (props: {
             const name = exchangeMap.get(party)?.name;
             return {
                 party,
-                label: `${name ? `${name} (${party})` : party} | Exchange`
+                label: makePartyLabel(party, name, "Exchange")
             }
         });
 
@@ -85,7 +86,7 @@ const Wallet = (props: {
             const name = ccpMap.get(party)?.name;
             return {
                 party,
-                label: `${name ? `${name} (${party})` : party} | CCP`
+                label: makePartyLabel(party, name, "CCP")
             }
         });
 
@@ -95,7 +96,7 @@ const Wallet = (props: {
             const name = custodianMap.get(party)?.name;
             return {
                 party,
-                label: `${name ? `${name} (${party})` : party} | Custodian`
+                label: makePartyLabel(party, name, "Custodian")
             }
         }),
         ...exchangeProviders,

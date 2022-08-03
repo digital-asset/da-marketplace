@@ -34,6 +34,7 @@ import NotificationCenter, { useAllNotifications } from '../common/NotificationC
 import { useRelationshipRequestNotifications } from '../common/RelationshipRequestNotifications'
 import Clients from './Clients'
 import ClientHoldings from './ClientHoldings'
+import { makePartyLabel } from '../common/utils'
 
 type Props = {
     onLogout: () => void;
@@ -56,7 +57,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
             const name = broker.contractData.name;
             return {
                 party,
-                label: `${name} | ${party}`
+                label: makePartyLabel(party, name, "Broker")
             }
         })
 
@@ -67,7 +68,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
             const name = investor.contractData.name;
             return {
                 party,
-                label: `${name} | ${party}`
+                label: makePartyLabel(party, name, "Investor")
             }
         })
 

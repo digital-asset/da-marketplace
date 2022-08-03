@@ -10,7 +10,7 @@ import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
-import { countDecimals, preciseInputSteps } from '../common/utils'
+import { countDecimals, preciseInputSteps, makePartyLabel } from '../common/utils'
 import { TokenInfo, wrapDamlTuple } from '../common/damlTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
@@ -46,7 +46,7 @@ const CreateDeposit = () => {
             const name = broker.contractData.name;
             return {
                 party,
-                label: `${name ? `${name} (${party})` : party} | Broker`
+                label: makePartyLabel(party, name, "Broker")
             }
         })
 
@@ -57,7 +57,7 @@ const CreateDeposit = () => {
             const name = investor.contractData.name;
             return {
                 party,
-                label: `${name ? `${name} (${party})` : party} | Investor`
+                label: makePartyLabel(party, name, "Investor")
             }
         })
 

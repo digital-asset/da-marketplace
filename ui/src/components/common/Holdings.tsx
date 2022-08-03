@@ -13,7 +13,7 @@ import { useContractQuery } from '../../websocket/queryStream'
 
 import { IconClose } from '../../icons/Icons'
 import { DepositInfo, wrapDamlTuple, getAccountProvider } from './damlTypes'
-import { groupDepositsByAsset, groupDepositsByProvider, sumDepositArray, getPartyLabel, IPartyInfo } from './utils'
+import { groupDepositsByAsset, groupDepositsByProvider, sumDepositArray, getPartyLabel, IPartyInfo, formatParty } from './utils'
 import { useOperator } from './common'
 import { AppError } from './errorTypes'
 import FormErrorHandled from './FormErrorHandled'
@@ -53,7 +53,7 @@ const Holdings: React.FC<Props> = ({ deposits, clearingDeposits, marginDeposits,
                             {label}
                         </p>
                         <p className='p2'>
-                            {party}
+                            {formatParty(party)}
                         </p>
                      </div>
                     { Object.entries(assetDeposits).map(([assetLabel, deposits]) => (
@@ -80,7 +80,7 @@ const Holdings: React.FC<Props> = ({ deposits, clearingDeposits, marginDeposits,
                             {label}
                         </p>
                         <p className='p2'>
-                            {party}
+                            {formatParty(party)}
                         </p>
                      </div>
                     { Object.entries(assetDeposits).map(([assetLabel, deposits]) => (

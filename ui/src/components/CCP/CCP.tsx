@@ -43,6 +43,7 @@ import Members from './Members'
 import MemberAccounts from './MemberAccounts'
 import ExchangeRelationships from './ExchangeRelationships'
 import NotificationCenter, { useAllNotifications } from '../common/NotificationCenter'
+import {formatParty, makePartyLabel} from '../common/utils'
 
 type Props = {
     onLogout: () => void;
@@ -65,7 +66,7 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
             const name = broker.contractData.name;
             return {
                 party,
-                label: `${name} | ${party}`
+                label: makePartyLabel(party, name, "Broker")
             }
         })
 
@@ -76,7 +77,7 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
             const name = investor.contractData.name;
             return {
                 party,
-                label: `${name} | ${party}`
+                label: makePartyLabel(party, name, "Investor")
             }
         })
 
@@ -92,7 +93,7 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
             const name = exchange.contractData.name;
             return {
                 party,
-                label: `${name} | ${party}`
+                label: makePartyLabel(party, name, "Exchange")
             }
         })
 
