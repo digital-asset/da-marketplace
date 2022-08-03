@@ -2,7 +2,7 @@ import React from 'react'
 
 import { Header } from 'semantic-ui-react'
 
-import { getAbbreviation } from '../common/utils';
+import { getAbbreviation, formatParty } from '../common/utils';
 
 import { CustodianRelationshipInfo, RelationshipRequestChoice } from './damlTypes'
 
@@ -31,7 +31,7 @@ const MarketRelationships: React.FC<Props> = ({ relationshipRequestChoice, custo
                 </div>
                 <div className='relationship-info'>
                     <Header className='bold name' as='h3'>{custodian.name}</Header>
-                    <p>{custodian?.custodian}</p>
+                    <p>{formatParty(custodian?.custodian)}</p>
                 </div>
             </div>
         )

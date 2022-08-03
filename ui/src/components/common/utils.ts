@@ -144,6 +144,14 @@ export function getPartyLabel(partyId: string, parties: IPartyInfo[]) {
     return { party: partyInfo?.party || partyId , label: partyInfo?.label.substring(0, partyInfo.label.lastIndexOf('|')) || partyId}
 }
 
+export const formatParty = (party: string): string => {
+  return party.split("::")[0]
+}
+
+export const makePartyLabel = (party: string, name: string | undefined, role: string): string => {
+    return `${name ? `${name} (${formatParty(party)})` : formatParty(party)} | ${role}`
+}
+
 export function getAbbreviation(phrase: string) {
     const wordsToExclude =  ["and", "or", "of", "to", "the"]
     return phrase.split(' ')

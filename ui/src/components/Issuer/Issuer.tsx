@@ -37,6 +37,7 @@ import IssueAsset from './IssueAsset'
 import IssueDerivative from './IssueDerivative'
 import IssuedDerivative from './IssuedDerivative'
 import IssuedToken from './IssuedToken'
+import {formatParty, makePartyLabel} from '../common/utils'
 
 type Props = {
     onLogout: () => void;
@@ -69,7 +70,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
             const name = investorMap.get(damlTupleToString(investor.key))?.name;
             return {
                 party,
-                label: `${name ? `${name} (${party})` : party} | Investor`
+                label: makePartyLabel(party, name, "Investor")
             }
         })
 
@@ -79,7 +80,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
             const name = brokerMap.get(damlTupleToString(broker.key))?.name;
             return {
                 party,
-                label: `${name ? `${name} (${party})` : party} | Broker`
+                label: makePartyLabel(party, name, "Broker")
             }
         })
 
@@ -89,7 +90,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
             const name = exchangeMap.get(party)?.name;
             return {
                 party,
-                label: `${name ? `${name} (${party})` : party} | Exchange`
+                label: makePartyLabel(party, name, "Exchange")
             }
         });
 
@@ -99,7 +100,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
             const name = custodianMap.get(party)?.name;
             return {
                 party,
-                label: `${name ? `${name} (${party})` : party} | Custodian`
+                label: makePartyLabel(party, name, "Custodian")
             }
         }),
         ...exchangeProviders,
