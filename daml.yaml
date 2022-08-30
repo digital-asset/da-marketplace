@@ -1,4 +1,4 @@
-sdk-version: 2.0.0
+sdk-version: 2.3.2
 name: da-marketplace
 source: daml
 init-script: Demo:demo
